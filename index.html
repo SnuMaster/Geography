@@ -102,7 +102,7 @@
 
   <script>
     const SUPABASE_URL = 'https://aplhddasduwtlxeejvnk.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kUMRFC5dLAomRo9tiakqIg_Ob3j0ELs';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KUMRFC5dLAomRo9tiakqIg_0b3j0ELs';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
     const places = [
@@ -137,6 +137,7 @@
     const $ = id => document.getElementById(id);
     let marker = null;
     let pinRecords = [];
+    let deletedPinRecords = [];
     let quizAnswer = null;
     let currentUser = null;
     let quizCount = 0;
@@ -201,7 +202,9 @@
         user_id: currentUser ? currentUser.id : undefined,
         last_lat: lastPin ? lastPin.lat : null,
         last_lng: lastPin ? lastPin.lng : null,
-        pins: pinRecords,
+        // Deleted pins stay here as tiny "tombstone" records. This prevents a
+        // different device with an older copy from bringing a deleted pin back.
+        pins: [...pinRecords, ...deletedPinRecords],
         quiz_count: quizCount,
         best_distance_km: bestDistanceKm,
         updated_at: progressUpdatedAt
@@ -225,22 +228,48 @@
         Number(record.lng) >= 124 && Number(record.lng) <= 132;
     }
 
-    function normalisePins(progress, sourceLabel = '저장된 핀') {
-      if (!progress) return [];
-      const savedPins = Array.isArray(progress.pins)
-        ? progress.pins.filter(isValidPin).slice(-MAX_SAVED_PINS).map(record => ({
-          id: String(record.id || newPinId()),
-          lat: Number(Number(record.lat).toFixed(6)),
-          lng: Number(Number(record.lng).toFixed(6)),
-          label: String(record.label || sourceLabel),
-          created_at: record.created_at || progress.updated_at || new Date().toISOString()
-        }))
-        : [];
+    function isDeletedPin(record) {
+      return record && record.id && record.deleted_at &&
+        Number.isFinite(new Date(record.deleted_at).getTime());
+    }
 
-      if (!savedPins.length && progress.last_lat !== null && progress.last_lat !== undefined &&
+    function entryTime(entry) {
+      return new Date(entry.deleted_at || entry.created_at || 0).getTime() || 0;
+    }
+
+    function normalisePinEntries(progress, sourceLabel = '저장된 핀') {
+      if (!progress) return [];
+      const entriesById = new Map();
+      const keepNewest = entry => {
+        const existing = entriesById.get(entry.id);
+        // On an exact tie, deletion wins. It is safer to keep something deleted
+        // than to accidentally make an old pin visible again.
+        if (!existing || entryTime(entry) > entryTime(existing) ||
+          (entryTime(entry) === entryTime(existing) && entry.deleted_at && !existing.deleted_at)) {
+          entriesById.set(entry.id, entry);
+        }
+      };
+
+      if (Array.isArray(progress.pins)) {
+        progress.pins.forEach(record => {
+          if (isDeletedPin(record)) {
+            keepNewest({ id: String(record.id), deleted_at: record.deleted_at });
+          } else if (isValidPin(record)) {
+            keepNewest({
+              id: String(record.id || newPinId()),
+              lat: Number(Number(record.lat).toFixed(6)),
+              lng: Number(Number(record.lng).toFixed(6)),
+              label: String(record.label || sourceLabel),
+              created_at: record.created_at || progress.updated_at || new Date().toISOString()
+            });
+          }
+        });
+      }
+
+      if (!entriesById.size && progress.last_lat !== null && progress.last_lat !== undefined &&
           progress.last_lng !== null && progress.last_lng !== undefined &&
           isValidPin({ lat: progress.last_lat, lng: progress.last_lng })) {
-        savedPins.push({
+        keepNewest({
           id: 'legacy-' + (progress.user_id || newPinId()),
           lat: Number(Number(progress.last_lat).toFixed(6)),
           lng: Number(Number(progress.last_lng).toFixed(6)),
@@ -248,7 +277,20 @@
           created_at: progress.updated_at || new Date().toISOString()
         });
       }
-      return savedPins;
+      const allEntries = [...entriesById.values()];
+      const livePins = allEntries.filter(entry => !entry.deleted_at)
+        .sort((a, b) => entryTime(a) - entryTime(b)).slice(-MAX_SAVED_PINS);
+      const deletedPins = allEntries.filter(entry => entry.deleted_at)
+        .sort((a, b) => entryTime(a) - entryTime(b)).slice(-MAX_SAVED_PINS);
+      return [...livePins, ...deletedPins].sort((a, b) => entryTime(a) - entryTime(b));
+    }
+
+    function normalisePins(progress, sourceLabel = '저장된 핀') {
+      return normalisePinEntries(progress, sourceLabel).filter(entry => !entry.deleted_at);
+    }
+
+    function normaliseDeletedPins(progress, sourceLabel = '저장된 핀') {
+      return normalisePinEntries(progress, sourceLabel).filter(entry => entry.deleted_at);
     }
 
     function mergeProgress(...records) {
@@ -257,14 +299,21 @@
 
       const pinsById = new Map();
       available.forEach(record => {
-        normalisePins(record).forEach(pin => {
+        normalisePinEntries(record).forEach(pin => {
           const existing = pinsById.get(pin.id);
-          if (!existing || new Date(pin.created_at) > new Date(existing.created_at)) pinsById.set(pin.id, pin);
+          if (!existing || entryTime(pin) > entryTime(existing) ||
+            (entryTime(pin) === entryTime(existing) && pin.deleted_at && !existing.deleted_at)) {
+            pinsById.set(pin.id, pin);
+          }
         });
       });
-      const mergedPins = [...pinsById.values()]
-        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-        .slice(-MAX_SAVED_PINS);
+      const mergedEntries = [...pinsById.values()];
+      const mergedPins = mergedEntries.filter(pin => !pin.deleted_at)
+        .sort((a, b) => entryTime(a) - entryTime(b)).slice(-MAX_SAVED_PINS);
+      const mergedDeletedPins = mergedEntries.filter(pin => pin.deleted_at)
+        .sort((a, b) => entryTime(a) - entryTime(b)).slice(-MAX_SAVED_PINS);
+      const mergedPinEntries = [...mergedPins, ...mergedDeletedPins]
+        .sort((a, b) => entryTime(a) - entryTime(b));
       const newest = available.slice().sort((a, b) =>
         new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
       )[0];
@@ -278,7 +327,7 @@
         user_id: newest.user_id || (currentUser && currentUser.id),
         last_lat: lastPin ? lastPin.lat : null,
         last_lng: lastPin ? lastPin.lng : null,
-        pins: mergedPins,
+        pins: mergedPinEntries,
         quiz_count: Math.max(0, ...available.map(record => Number(record.quiz_count || 0))),
         best_distance_km: distances.length ? Math.min(...distances) : null,
         updated_at: newest.updated_at || new Date().toISOString()
@@ -288,7 +337,9 @@
     function sameProgressContent(first, second) {
       if (!first || !second) return false;
       const compact = progress => ({
-        pins: normalisePins(progress).map(pin => [pin.id, pin.lat, pin.lng, pin.label, pin.created_at]),
+        pins: normalisePinEntries(progress).map(pin => pin.deleted_at
+          ? [pin.id, 'deleted', pin.deleted_at]
+          : [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at]),
         quiz_count: Number(progress.quiz_count || 0),
         best_distance_km: progress.best_distance_km === null || progress.best_distance_km === undefined
           ? null : Number(progress.best_distance_km)
@@ -329,6 +380,10 @@
         deleteButton.textContent = '삭제';
         deleteButton.onclick = () => {
           pinRecords = pinRecords.filter(pin => pin.id !== record.id);
+          deletedPinRecords = [
+            ...deletedPinRecords.filter(pin => pin.id !== record.id),
+            { id: record.id, deleted_at: new Date().toISOString() }
+          ].slice(-MAX_SAVED_PINS);
           renderPins();
           $('notice').textContent = '핀 하나를 지웠어.';
           markProgressChanged();
@@ -385,6 +440,12 @@
     }
 
     function clearPin(persist = true) {
+      const deletedAt = new Date().toISOString();
+      const deletedIds = new Set(pinRecords.map(pin => pin.id));
+      deletedPinRecords = [
+        ...deletedPinRecords.filter(pin => !deletedIds.has(pin.id)),
+        ...pinRecords.map(pin => ({ id: pin.id, deleted_at: deletedAt }))
+      ].slice(-MAX_SAVED_PINS);
       pinRecords = [];
       renderPins();
       $('notice').textContent = '저장된 핀을 전부 지웠어.';
@@ -405,6 +466,7 @@
       progressUpdatedAt = progress.updated_at || new Date().toISOString();
 
       pinRecords = normalisePins(progress, sourceLabel || '저장된 핀');
+      deletedPinRecords = normaliseDeletedPins(progress, sourceLabel || '저장된 핀');
       renderPins();
       if (!pinRecords.length) $('notice').textContent = '저장된 핀이 없어.';
 
