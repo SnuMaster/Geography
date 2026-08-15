@@ -77,13 +77,6 @@
         <div id="pinList" class="pin-list" aria-label="저장한 핀 목록"></div>
       </div>
       
-      <div class="quiz">
-        <h2>랜덤 좌표 퀴즈</h2>
-        <div id="target" class="target">퀴즈 시작을 눌러봐.</div>
-        <div class="row"><button id="quizBtn">퀴즈 시작</button><button id="checkBtn" class="secondary" disabled>내 핀 채점</button></div>
-        <p id="quizResult" class="notice" aria-live="polite"></p>
-      </div>
-      
       <div class="quiz"><h2>주요 지점</h2><div id="places" class="places"></div></div>
       
       <div class="auth">
@@ -745,37 +738,6 @@
       };
       $('places').appendChild(button);
     });
-
-    $('quizBtn').onclick = () => {
-      quizAnswer = places[Math.floor(Math.random() * places.length)];
-      $('target').textContent = '“' + quizAnswer[0] + '”의 위치를 지도에 찍어봐!';
-      $('quizResult').textContent = '';
-      $('checkBtn').disabled = false;
-      marker = null;
-      $('notice').textContent = '퀴즈 답을 새 핀으로 찍어봐. 기존 핀은 그대로 남아 있어.';
-    };
-
-    $('checkBtn').onclick = () => {
-      if (!quizAnswer || !marker) {
-        $('quizResult').textContent = '먼저 지도 위에 핀을 찍어줘!';
-        return;
-      }
-
-      const point = marker.getLatLng();
-      const km = distanceKm(point.lat, point.lng, quizAnswer[1], quizAnswer[2]);
-      const message = km < 20 ? '완벽해!' : km < 70 ? '아주 가까워!' :
-        km < 150 ? '괜찮아, 위도·경도선을 다시 봐봐.' : '조금 멀어. 정답 위치를 확인해봐.';
-
-      quizCount++;
-      bestDistanceKm = bestDistanceKm === null ? km : Math.min(bestDistanceKm, km);
-      markProgressChanged();
-      queueSave();
-
-      $('quizResult').textContent = '정답과 약 ' + Math.round(km) + 'km 차이 — ' + message;
-      L.circleMarker([quizAnswer[1], quizAnswer[2]], {
-        radius: 9, color: '#14804a', fillColor: '#14804a', fillOpacity: .75
-      }).addTo(map).bindPopup('정답: ' + quizAnswer[0]).openPopup();
-    };
 
     $('offlineModeToggle').onchange = () => {
       offlinePracticeMode = $('offlineModeToggle').checked;
