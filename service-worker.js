@@ -1,9 +1,9 @@
-const APP_CACHE = 'geography-app-v2';
-const TILE_CACHE = 'geography-map-tiles-v2';
+const APP_CACHE = 'geography-app-v3';
+const TILE_CACHE = 'geography-map-tiles-v3';
 const APP_SHELL = [
   './',
   './index.html',
-  './favicon-photo.png',
+  './favicon-photo-v2.png',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
