@@ -205,9 +205,11 @@
     let syncInFlight = false;
     let syncQueued = false;
     let syncChannel = null;
+    let fallbackSyncTimer = null;
     let activeUserId = null;
     let offlinePracticeMode = localStorage.getItem('geography-offline-practice-mode') === 'true';
     const MAX_SAVED_PINS = 200;
+    const FALLBACK_SYNC_INTERVAL_MS = 15000;
 
     function formatTime(iso) {
       return new Intl.DateTimeFormat('ko-KR', {
@@ -475,6 +477,28 @@
       return data;
     }
 
+    function stopFallbackSync() {
+      if (fallbackSyncTimer) clearInterval(fallbackSyncTimer);
+      fallbackSyncTimer = null;
+    }
+
+    function startFallbackSync() {
+      if (fallbackSyncTimer || !currentUser || offlinePracticeMode) return;
+
+      fallbackSyncTimer = setInterval(async () => {
+        if (!currentUser || offlinePracticeMode || !navigator.onLine) return;
+        try {
+          const remote = await fetchRemoteProgress();
+          if (remote && new Date(remote.updated_at) > new Date(progressUpdatedAt)) {
+            applyProgress(remote, '다른 기기에서 찍은 핀');
+            setSyncStatus('자동 동기화됨 · ' + formatTime(remote.updated_at), 'success');
+          }
+        } catch {
+          // The local cache remains safe; a later interval retries automatically.
+        }
+      }, FALLBACK_SYNC_INTERVAL_MS);
+    }
+
     function newerProgress(...records) {
       return records.filter(Boolean).sort((a, b) =>
         new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
@@ -536,10 +560,12 @@
         })
         .subscribe(status => {
           if (status === 'SUBSCRIBED') {
+            stopFallbackSync();
             setSyncStatus('실시간 동기화 연결됨', 'success');
           }
           if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-            setSyncStatus('실시간 연결이 끊김 · 수동 동기화는 가능해.', 'error');
+            startFallbackSync();
+            setSyncStatus('실시간 연결 대신 15초마다 자동 동기화 중', 'pending');
           }
         });
     }
@@ -622,6 +648,7 @@
       if (offlinePracticeMode) {
         if (syncChannel) supabaseClient.removeChannel(syncChannel);
         syncChannel = null;
+        stopFallbackSync();
         if (currentUser) setSyncStatus('오프라인 연습 모드 · 이 기기에만 저장됨', 'pending');
       } else if (currentUser) {
         setSyncStatus('온라인 모드로 전환됨 · 동기화 중…', 'pending');
@@ -683,6 +710,7 @@
       if (!currentUser) {
         if (syncChannel) supabaseClient.removeChannel(syncChannel);
         syncChannel = null;
+        stopFallbackSync();
         return;
       }
 
