@@ -1,8 +1,9 @@
-const APP_CACHE = 'geography-app-v1';
-const TILE_CACHE = 'geography-map-tiles-v1';
+const APP_CACHE = 'geography-app-v2';
+const TILE_CACHE = 'geography-map-tiles-v2';
 const APP_SHELL = [
   './',
   './index.html',
+  './favicon-photo.png',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
@@ -101,7 +102,10 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  if (url.hostname.endsWith('tile.openstreetmap.org')) {
+  if (
+    url.hostname.endsWith('tile.openstreetmap.org') ||
+    url.hostname.endsWith('basemaps.cartocdn.com')
+  ) {
     event.respondWith(mapTileResponse(request));
     return;
   }
