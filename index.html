@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>한국지리 좌표 핀 학습</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #14213d; background: #f4f7fb; }
+    * { box-sizing: border-box; }
+    body { margin: 0; }
+    header { padding: 22px max(20px, calc((100% - 1100px) / 2)); background: #12355b; color: white; }
+    h1 { margin: 0; font-size: clamp(1.4rem, 3vw, 2rem); }
+    header p { margin: 6px 0 0; opacity: .88; }
+    main { display: grid; grid-template-columns: minmax(285px, 360px) 1fr; gap: 18px; max-width: 1100px; margin: 18px auto; padding: 0 18px; }
+    .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 3px 15px #17365d18; align-self: start; }
+    h2 { font-size: 1.05rem; margin: 0 0 12px; }
+    label { display: block; font-size: .9rem; font-weight: 650; margin: 12px 0 5px; }
+    input { width: 100%; border: 1px solid #b7c5d6; border-radius: 8px; padding: 10px; font: inherit; }
+    .row { display: flex; gap: 8px; margin-top: 12px; }
+    button { cursor: pointer; border: 0; border-radius: 8px; padding: 10px 12px; background: #1769aa; color: white; font: inherit; font-weight: 700; }
+    button.secondary { background: #e8f0f8; color: #164875; }
+    button:hover { filter: brightness(.95); }
+    .notice { min-height: 2.6em; margin: 12px 0 0; font-size: .9rem; line-height: 1.4; }
+    .quiz { border-top: 1px solid #dde6ef; margin-top: 18px; padding-top: 18px; }
+    .target { background: #fff5d8; color: #754900; padding: 10px; border-radius: 8px; font-weight: 700; }
+    .places { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 14px; }
+    .places button { background: #f0f5fa; color: #234c74; font-size: .86rem; padding: 8px; }
+    #map { height: min(74vh, 680px); min-height: 480px; border-radius: 14px; box-shadow: 0 3px 15px #17365d18; }
+    .legend { position: absolute; z-index: 500; bottom: 22px; left: 10px; background: #fffffff0; border-radius: 7px; padding: 8px 10px; font-size: .78rem; box-shadow: 0 1px 5px #0003; }
+    .dot { display:inline-block; width:10px; height:10px; border-radius:50%; background:#e63946; margin-right:4px; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; } #map { height: 57vh; min-height: 390px; } }
+  </style>
+</head>
+<body>
+  <header><h1>한국지리 좌표 핀 학습</h1><p>실제 지도 위에서 위도·경도의 감각을 익혀보자.</p></header>
+  <main>
+    <aside class="panel">
+      <h2>좌표로 핀 찍기</h2>
+      <label for="lat">위도 (북위)</label><input id="lat" type="number" step="0.0001" value="37.5665" min="32" max="44">
+      <label for="lng">경도 (동경)</label><input id="lng" type="number" step="0.0001" value="126.9780" min="124" max="132">
+      <div class="row"><button id="pinBtn">핀 표시</button><button id="clearBtn" class="secondary">핀 지우기</button></div>
+      <p id="notice" class="notice" aria-live="polite">지도를 클릭해도 원하는 위치에 핀을 찍을 수 있어.</p>
+      <div class="quiz">
+        <h2>랜덤 좌표 퀴즈</h2>
+        <div id="target" class="target">퀴즈 시작을 눌러봐.</div>
+        <div class="row"><button id="quizBtn">퀴즈 시작</button><button id="checkBtn" class="secondary" disabled>내 핀 채점</button></div>
+        <p id="quizResult" class="notice" aria-live="polite"></p>
+      </div>
+      <div class="quiz"><h2>주요 지점</h2><div id="places" class="places"></div></div>
+    </aside>
+    <section style="position:relative"><div id="map" aria-label="대한민국 지도"></div><div class="legend"><span class="dot"></span>내가 찍은 핀 · 지도 클릭 가능</div></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    const places = [
+      ["서울", 37.5665, 126.9780], ["제주", 33.4996, 126.5312], ["부산", 35.1796, 129.0756],
+      ["대구", 35.8714, 128.6014], ["강릉", 37.7519, 128.8761], ["독도", 37.2429, 131.8657],
+      ["마라도", 33.1180, 126.2679], ["백령도", 37.9677, 124.6303]
+    ];
+    const map = L.map('map', { zoomControl: true }).setView([38.25, 127.5], 6);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '&copy; OpenStreetMap contributors' }).addTo(map);
+    const graticule = L.layerGroup().addTo(map);
+    for (let lat = 33; lat <= 43; lat++) L.polyline([[lat, 124], [lat, 132]], { color:'#2f70a8', weight:1, opacity:.5, dashArray:'5 7' }).bindTooltip('북위 ' + lat + '°', { permanent:true, direction:'left', className:'coord-label' }).addTo(graticule);
+    for (let lng = 125; lng <= 131; lng++) L.polyline([[32.7, lng], [44, lng]], { color:'#2f70a8', weight:1, opacity:.35, dashArray:'5 7' }).addTo(graticule);
+    let marker, quizAnswer;
+    const $ = id => document.getElementById(id);
+    function pin(lat, lng, label = '내 핀') {
+      if (lat < 32 || lat > 44 || lng < 124 || lng > 132) { $('notice').textContent = '한반도 주변 범위(북위 32~44°, 동경 124~132°)에서 입력해줘.'; return false; }
+      if (marker) marker.remove();
+      marker = L.marker([lat, lng]).addTo(map).bindPopup(`<b>${label}</b><br>북위 ${lat.toFixed(4)}°, 동경 ${lng.toFixed(4)}°`).openPopup();
+      $('lat').value = lat.toFixed(4); $('lng').value = lng.toFixed(4);
+      $('notice').textContent = `${label}: 북위 ${lat.toFixed(4)}°, 동경 ${lng.toFixed(4)}°`;
+      return true;
+    }
+    $('pinBtn').onclick = () => { const a = Number($('lat').value), b = Number($('lng').value); if (pin(a,b)) map.setView([a,b], Math.max(map.getZoom(), 9)); };
+    $('clearBtn').onclick = () => { if(marker) marker.remove(); marker = null; $('notice').textContent = '핀을 지웠어.'; };
+    map.on('click', e => pin(e.latlng.lat, e.latlng.lng));
+    places.forEach(([name, lat, lng]) => { const b = document.createElement('button'); b.textContent = name; b.onclick = () => { pin(lat,lng,name); map.setView([lat,lng], 9); }; $('places').appendChild(b); });
+    function distanceKm(a, b, c, d) { const r=6371, x=(c-a)*Math.PI/180, y=(d-b)*Math.PI/180; const h=Math.sin(x/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(y/2)**2; return 2*r*Math.asin(Math.sqrt(h)); }
+    $('quizBtn').onclick = () => { quizAnswer = places[Math.floor(Math.random()*places.length)]; $('target').textContent = `“${quizAnswer[0]}”의 위치를 지도에 찍어봐!`; $('quizResult').textContent = ''; $('checkBtn').disabled = false; if(marker){marker.remove();marker=null;} };
+    $('checkBtn').onclick = () => { if(!quizAnswer || !marker) { $('quizResult').textContent='먼저 지도 위에 핀을 찍어줘!'; return; } const p=marker.getLatLng(), km=distanceKm(p.lat,p.lng,quizAnswer[1],quizAnswer[2]); const msg=km<20?'완벽해!':km<70?'아주 가까워!':km<150?'괜찮아, 위도·경도선을 다시 봐봐.':'조금 멀어. 정답 위치를 확인해봐.'; $('quizResult').textContent=`정답과 약 ${Math.round(km)}km 차이 — ${msg}`; L.circleMarker([quizAnswer[1],quizAnswer[2]], {radius:9,color:'#14804a',fillColor:'#14804a',fillOpacity:.75}).addTo(map).bindPopup(`정답: ${quizAnswer[0]}`).openPopup(); };
+  </script>
+</body>
+</html>
+
