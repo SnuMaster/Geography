@@ -71,6 +71,8 @@
       <label for="lng">경도 (동경)</label><input id="lng" type="number" step="0.0001" value="126.9780" min="124" max="132">
       <div class="row"><button id="pinBtn">핀 표시</button><button id="clearBtn" class="secondary">전체 핀 지우기</button></div>
       <p id="notice" class="notice" aria-live="polite">지도를 클릭해도 원하는 위치에 핀을 찍을 수 있어.</p>
+      <div class="row"><button id="pinBtn">선택한 위치에 핀 찍기</button><button id="clearBtn" class="secondary">전체 핀 지우기</button></div>
+      <p id="notice" class="notice" aria-live="polite">지도를 클릭해 좌표를 고른 뒤, 위 버튼을 눌러 핀을 저장해.</p>
       <div class="pin-history">
         <div class="pin-history-title"><h2>저장한 핀</h2><span id="pinCount" class="pin-count">0개</span></div>
         <p id="pinListEmpty" class="pin-list-empty">아직 저장한 핀이 없어.</p>
@@ -79,6 +81,7 @@
       
       <div class="quiz"><h2>주요 지점</h2><div id="places" class="places"></div></div>
       
+      <div class="auth">
       <div class="auth">
         <h2>기기 간 기록 동기화</h2>
         <label for="email">이메일로 로그인</label><input id="email" type="email" placeholder="you@example.com" autocomplete="email">
@@ -148,10 +151,14 @@
     let syncQueued = false;
     let syncChannel = null;
     let fallbackSyncTimer = null;
+    let fallbackSyncInFlight = false;
     let activeUserId = null;
     let offlinePracticeMode = localStorage.getItem('geography-offline-practice-mode') === 'true';
     const MAX_SAVED_PINS = 200;
+    // Realtime is normally instant. This short poll is the safety net for
+    // school/office networks that block WebSockets.
     const FALLBACK_SYNC_INTERVAL_MS = 15000;
+    const FALLBACK_SYNC_INTERVAL_MS = 2000;
 
     function formatTime(iso) {
       return new Intl.DateTimeFormat('ko-KR', {
@@ -517,6 +524,8 @@
       clearTimeout(syncTimer);
       setSyncStatus('동기화 대기 중…', 'pending');
       syncTimer = setTimeout(saveProgress, immediate ? 0 : 350);
+      setSyncStatus('바로 동기화 중…', 'pending');
+      syncTimer = setTimeout(saveProgress, 0);
     }
 
     async function saveProgress() {
@@ -587,6 +596,7 @@
     function stopFallbackSync() {
       if (fallbackSyncTimer) clearInterval(fallbackSyncTimer);
       fallbackSyncTimer = null;
+      fallbackSyncInFlight = false;
     }
 
     function startFallbackSync() {
@@ -594,6 +604,8 @@
 
       fallbackSyncTimer = setInterval(async () => {
         if (!currentUser || offlinePracticeMode || !navigator.onLine) return;
+        if (!currentUser || offlinePracticeMode || !navigator.onLine || fallbackSyncInFlight) return;
+        fallbackSyncInFlight = true;
         try {
           const remote = await fetchRemoteProgress();
           if (!remote) return;
@@ -608,6 +620,8 @@
           }
         } catch {
           // Keep local data and retry on the next interval.
+        } finally {
+          fallbackSyncInFlight = false;
         }
       }, FALLBACK_SYNC_INTERVAL_MS);
     }
@@ -648,6 +662,9 @@
       if (syncChannel) supabaseClient.removeChannel(syncChannel);
 
       const userId = currentUser.id;
+      // Keep a fast safety-net poll even while Realtime is connected: some
+      // restricted networks allow HTTPS but block delivery over WebSockets.
+      startFallbackSync();
       syncChannel = supabaseClient
         .channel('study-progress:' + userId)
         .on('postgres_changes', {
@@ -670,13 +687,16 @@
           }
         })
         .subscribe(status => {
+          .subscribe(status => {
           if (status === 'SUBSCRIBED') {
             stopFallbackSync();
             setSyncStatus('실시간 동기화 연결됨', 'success');
           }
           if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
+          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
             startFallbackSync();
             setSyncStatus('실시간 연결 대신 15초마다 자동 동기화 중', 'pending');
+            setSyncStatus('실시간 연결 대신 2초마다 자동 동기화 중', 'pending');
           }
         });
     }
@@ -728,6 +748,12 @@
         map.setView([lat, lng], 9);
       };
       $('places').appendChild(button);
+    map.on('click', event => {
+      const lat = Number(event.latlng.lat.toFixed(6));
+      const lng = Number(event.latlng.lng.toFixed(6));
+      $('lat').value = lat.toFixed(4);
+      $('lng').value = lng.toFixed(4);
+      $('notice').textContent = '좌표를 골랐어. “선택한 위치에 핀 찍기”를 눌러야 저장돼.';
     });
 
     $('offlineModeToggle').onchange = () => {
