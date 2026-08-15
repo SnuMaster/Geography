@@ -46,6 +46,17 @@
     .mode-control input { width: 18px; height: 18px; accent-color: #1769aa; }
     .mode-note { margin: 7px 0 0; font-size: .8rem; line-height: 1.4; color: #536b80; }
     body[data-practice-mode="offline"] .mode-control { background: #fff8e4; border-color: #f1c96c; }
+    .pin-history { border-top: 1px solid #dde6ef; margin-top: 18px; padding-top: 18px; }
+    .pin-history-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .pin-history-title h2 { margin: 0; }
+    .pin-count { background: #e8f0f8; color: #164875; border-radius: 999px; padding: 3px 8px; font-size: .78rem; font-weight: 750; }
+    .pin-list { display: grid; gap: 7px; max-height: 180px; overflow-y: auto; margin-top: 10px; padding-right: 2px; }
+    .pin-list-empty { margin: 9px 0 0; font-size: .82rem; color: #536b80; }
+    .pin-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; padding: 8px; border: 1px solid #dce7f1; border-radius: 8px; background: #fbfdff; }
+    .pin-item-name { display: block; font-size: .82rem; font-weight: 750; color: #173f68; }
+    .pin-item-coord { display: block; margin-top: 2px; font-size: .73rem; color: #536b80; }
+    .pin-item button { padding: 5px 7px; font-size: .73rem; }
+    .pin-item .pin-delete { background: #fff0ef; color: #ad3027; }
     @media (max-width: 760px) { main { grid-template-columns: 1fr; } #map { height: 57vh; min-height: 390px; } }
   </style>
 </head>
@@ -58,6 +69,11 @@
       <label for="lng">경도 (동경)</label><input id="lng" type="number" step="0.0001" value="126.9780" min="124" max="132">
       <div class="row"><button id="pinBtn">핀 표시</button><button id="clearBtn" class="secondary">전체 핀 지우기</button></div>
       <p id="notice" class="notice" aria-live="polite">지도를 클릭해도 원하는 위치에 핀을 찍을 수 있어.</p>
+      <div class="pin-history">
+        <div class="pin-history-title"><h2>저장한 핀</h2><span id="pinCount" class="pin-count">0개</span></div>
+        <p id="pinListEmpty" class="pin-list-empty">아직 저장한 핀이 없어.</p>
+        <div id="pinList" class="pin-list" aria-label="저장한 핀 목록"></div>
+      </div>
       
       <div class="quiz">
         <h2>랜덤 좌표 퀴즈</h2>
@@ -284,6 +300,120 @@
         Number(record.lng) >= 124 && Number(record.lng) <= 132;
     }
 
+    function normalisePins(progress, sourceLabel = '저장된 핀') {
+      if (!progress) return [];
+      const savedPins = Array.isArray(progress.pins)
+        ? progress.pins.filter(isValidPin).slice(-MAX_SAVED_PINS).map(record => ({
+          id: String(record.id || newPinId()),
+          lat: Number(Number(record.lat).toFixed(6)),
+          lng: Number(Number(record.lng).toFixed(6)),
+          label: String(record.label || sourceLabel),
+          created_at: record.created_at || progress.updated_at || new Date().toISOString()
+        }))
+        : [];
+
+      if (!savedPins.length && progress.last_lat !== null && progress.last_lat !== undefined &&
+          progress.last_lng !== null && progress.last_lng !== undefined &&
+          isValidPin({ lat: progress.last_lat, lng: progress.last_lng })) {
+        savedPins.push({
+          id: 'legacy-' + (progress.user_id || newPinId()),
+          lat: Number(Number(progress.last_lat).toFixed(6)),
+          lng: Number(Number(progress.last_lng).toFixed(6)),
+          label: sourceLabel,
+          created_at: progress.updated_at || new Date().toISOString()
+        });
+      }
+      return savedPins;
+    }
+
+    function mergeProgress(...records) {
+      const available = records.filter(Boolean);
+      if (!available.length) return null;
+
+      const pinsById = new Map();
+      available.forEach(record => {
+        normalisePins(record).forEach(pin => {
+          const existing = pinsById.get(pin.id);
+          if (!existing || new Date(pin.created_at) > new Date(existing.created_at)) pinsById.set(pin.id, pin);
+        });
+      });
+      const mergedPins = [...pinsById.values()]
+        .sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
+        .slice(-MAX_SAVED_PINS);
+      const newest = available.slice().sort((a, b) =>
+        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
+      )[0];
+      const distances = available
+        .map(record => record.best_distance_km)
+        .filter(value => value !== null && value !== undefined && Number.isFinite(Number(value)))
+        .map(Number);
+      const lastPin = mergedPins[mergedPins.length - 1] || null;
+
+      return {
+        user_id: newest.user_id || (currentUser && currentUser.id),
+        last_lat: lastPin ? lastPin.lat : null,
+        last_lng: lastPin ? lastPin.lng : null,
+        pins: mergedPins,
+        quiz_count: Math.max(0, ...available.map(record => Number(record.quiz_count || 0))),
+        best_distance_km: distances.length ? Math.min(...distances) : null,
+        updated_at: newest.updated_at || new Date().toISOString()
+      };
+    }
+
+    function sameProgressContent(first, second) {
+      if (!first || !second) return false;
+      const compact = progress => ({
+        pins: normalisePins(progress).map(pin => [pin.id, pin.lat, pin.lng, pin.label, pin.created_at]),
+        quiz_count: Number(progress.quiz_count || 0),
+        best_distance_km: progress.best_distance_km === null || progress.best_distance_km === undefined
+          ? null : Number(progress.best_distance_km)
+      });
+      return JSON.stringify(compact(first)) === JSON.stringify(compact(second));
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>'"]/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+      })[character]);
+    }
+
+    function renderPinList() {
+      $('pinCount').textContent = pinRecords.length + '개';
+      $('pinListEmpty').hidden = pinRecords.length > 0;
+      const list = $('pinList');
+      list.replaceChildren();
+
+      pinRecords.slice().reverse().forEach(record => {
+        const item = document.createElement('div');
+        item.className = 'pin-item';
+        const details = document.createElement('div');
+        details.innerHTML = '<span class="pin-item-name"></span><span class="pin-item-coord"></span>';
+        details.querySelector('.pin-item-name').textContent = record.label;
+        details.querySelector('.pin-item-coord').textContent =
+          '북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°';
+
+        const viewButton = document.createElement('button');
+        viewButton.type = 'button';
+        viewButton.className = 'secondary';
+        viewButton.textContent = '보기';
+        viewButton.onclick = () => map.setView([record.lat, record.lng], Math.max(map.getZoom(), 9));
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';
+        deleteButton.className = 'pin-delete';
+        deleteButton.textContent = '삭제';
+        deleteButton.onclick = () => {
+          pinRecords = pinRecords.filter(pin => pin.id !== record.id);
+          renderPins();
+          $('notice').textContent = '핀 하나를 지웠어.';
+          markProgressChanged();
+          queueSave();
+        };
+        item.append(details, viewButton, deleteButton);
+        list.appendChild(item);
+      });
+    }
+
     function renderPins(openLatest = false) {
       pinLayer.clearLayers();
       marker = null;
@@ -291,7 +421,7 @@
       pinRecords.forEach((record, index) => {
         const pinMarker = L.marker([record.lat, record.lng])
           .addTo(pinLayer)
-          .bindPopup('<b>' + record.label + '</b><br>북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°');
+          .bindPopup('<b>' + escapeHtml(record.label) + '</b><br>북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°');
         if (index === pinRecords.length - 1) marker = pinMarker;
       });
 
@@ -301,6 +431,7 @@
         $('lng').value = lastPin.lng.toFixed(4);
         if (openLatest && marker) marker.openPopup();
       }
+      renderPinList();
     }
 
     function pin(lat, lng, label = '내 핀', persist = true) {
@@ -330,8 +461,7 @@
 
     function clearPin(persist = true) {
       pinRecords = [];
-      pinLayer.clearLayers();
-      marker = null;
+      renderPins();
       $('notice').textContent = '저장된 핀을 전부 지웠어.';
 
       if (persist) {
@@ -349,28 +479,7 @@
         : Number(progress.best_distance_km);
       progressUpdatedAt = progress.updated_at || new Date().toISOString();
 
-      const savedPins = Array.isArray(progress.pins)
-        ? progress.pins.filter(isValidPin).slice(-MAX_SAVED_PINS).map(record => ({
-          id: record.id || newPinId(),
-          lat: Number(Number(record.lat).toFixed(6)),
-          lng: Number(Number(record.lng).toFixed(6)),
-          label: String(record.label || sourceLabel || '저장된 핀'),
-          created_at: record.created_at || progress.updated_at || new Date().toISOString()
-        }))
-        : [];
-
-      if (!savedPins.length && progress.last_lat !== null && progress.last_lat !== undefined &&
-          progress.last_lng !== null && progress.last_lng !== undefined) {
-        savedPins.push({
-          id: 'legacy-' + (progress.user_id || newPinId()),
-          lat: Number(Number(progress.last_lat).toFixed(6)),
-          lng: Number(Number(progress.last_lng).toFixed(6)),
-          label: sourceLabel || '저장된 마지막 핀',
-          created_at: progress.updated_at || new Date().toISOString()
-        });
-      }
-
-      pinRecords = savedPins;
+      pinRecords = normalisePins(progress, sourceLabel || '저장된 핀');
       renderPins();
       if (!pinRecords.length) $('notice').textContent = '저장된 핀이 없어.';
 
@@ -440,11 +549,22 @@
 
       syncInFlight = true;
       syncQueued = false;
-      const snapshot = currentProgress();
+      let snapshot = currentProgress();
       snapshot.user_id = currentUser.id;
       setSyncStatus('저장 중…', 'pending');
 
       try {
+        try {
+          const remoteBeforeSave = await fetchRemoteProgress();
+          const mergedBeforeSave = mergeProgress(snapshot, remoteBeforeSave);
+          if (mergedBeforeSave && !sameProgressContent(mergedBeforeSave, snapshot)) {
+            snapshot = { ...mergedBeforeSave, user_id: currentUser.id, updated_at: new Date().toISOString() };
+            applyProgress(snapshot, '기기 기록을 합치는 중');
+          }
+        } catch (error) {
+          console.warn('저장 전 서버 기록 확인 실패:', error.message);
+        }
+
         const { data, error } = await supabaseClient
           .from('study_progress')
           .upsert(snapshot, { onConflict: 'user_id' })
@@ -489,20 +609,20 @@
         if (!currentUser || offlinePracticeMode || !navigator.onLine) return;
         try {
           const remote = await fetchRemoteProgress();
-          if (remote && new Date(remote.updated_at) > new Date(progressUpdatedAt)) {
+          if (!remote) return;
+          const merged = mergeProgress(currentProgress(), remote);
+          if (!sameProgressContent(merged, remote)) {
+            merged.updated_at = new Date().toISOString();
+            applyProgress(merged, '다른 기기 기록을 합쳤어');
+            queueSave(true);
+          } else if (new Date(remote.updated_at) > new Date(progressUpdatedAt)) {
             applyProgress(remote, '다른 기기에서 찍은 핀');
             setSyncStatus('자동 동기화됨 · ' + formatTime(remote.updated_at), 'success');
           }
         } catch {
-          // The local cache remains safe; a later interval retries automatically.
+          // Keep local data and retry on the next interval.
         }
       }, FALLBACK_SYNC_INTERVAL_MS);
-    }
-
-    function newerProgress(...records) {
-      return records.filter(Boolean).sort((a, b) =>
-        new Date(b.updated_at || 0) - new Date(a.updated_at || 0)
-      )[0] || null;
     }
 
     async function reconcileProgress() {
@@ -517,21 +637,20 @@
         const remote = await fetchRemoteProgress();
         const cachedForUser = readCache(currentUser.id);
         const guestCache = readCache('guest');
-        const local = newerProgress(cachedForUser, guestCache);
+        const merged = mergeProgress(remote, cachedForUser, guestCache, currentProgress());
 
-        if (local && (!remote || new Date(local.updated_at) > new Date(remote.updated_at))) {
-          applyProgress(local, '이 기기에 저장된 핀');
-          await saveProgress();
-        } else if (remote) {
-          applyProgress(remote, '동기화된 마지막 핀');
-          setSyncStatus('동기화됨 · ' + formatTime(remote.updated_at), 'success');
-        } else if (local) {
-          applyProgress(local, '이 기기에 저장된 핀');
+        if (!merged) {
+          setSyncStatus('아직 저장된 기록이 없어.', 'success');
+        } else if (!remote || !sameProgressContent(merged, remote)) {
+          merged.updated_at = new Date().toISOString();
+          applyProgress(merged, '기기 기록을 합쳤어');
           await saveProgress();
         } else {
-          setSyncStatus('아직 저장된 기록이 없어.', 'success');
+          applyProgress(remote, '동기화된 마지막 핀');
+          setSyncStatus('동기화됨 · ' + formatTime(remote.updated_at), 'success');
         }
       } catch (error) {
+        writeCache(currentProgress());
         console.warn('기록 불러오기 실패:', error.message);
         setSyncStatus('서버 기록을 불러오지 못했어 · 다시 시도해.', 'error');
       }
@@ -553,7 +672,12 @@
           const remote = payload.new;
           if (!remote || remote.user_id !== userId) return;
 
-          if (new Date(remote.updated_at) >= new Date(progressUpdatedAt)) {
+          const merged = mergeProgress(currentProgress(), remote);
+          if (!sameProgressContent(merged, remote)) {
+            merged.updated_at = new Date().toISOString();
+            applyProgress(merged, '다른 기기 기록을 합쳤어');
+            queueSave(true);
+          } else if (new Date(remote.updated_at) >= new Date(progressUpdatedAt)) {
             applyProgress(remote, '다른 기기에서 찍은 핀');
             setSyncStatus('다른 기기 변경사항 반영됨 · ' + formatTime(remote.updated_at), 'success');
           }
@@ -580,8 +704,15 @@
       try {
         const remote = await fetchRemoteProgress();
         if (remote) {
-          applyProgress(remote, '서버에 저장된 마지막 핀');
-          setSyncStatus('서버 기록을 불러왔어 · ' + formatTime(remote.updated_at), 'success');
+          const merged = mergeProgress(currentProgress(), remote);
+          if (!sameProgressContent(merged, remote)) {
+            merged.updated_at = new Date().toISOString();
+            applyProgress(merged, '기기 기록을 합쳤어');
+            queueSave(true);
+          } else {
+            applyProgress(remote, '서버에 저장된 마지막 핀');
+            setSyncStatus('서버 기록을 불러왔어 · ' + formatTime(remote.updated_at), 'success');
+          }
         } else {
           setSyncStatus('서버에 저장된 기록이 아직 없어.', 'success');
         }
@@ -596,7 +727,10 @@
       if (pin(lat, lng)) map.setView([lat, lng], Math.max(map.getZoom(), 9));
     };
 
-    $('clearBtn').onclick = () => clearPin();
+    $('clearBtn').onclick = () => {
+      if (pinRecords.length && !window.confirm('저장한 핀 ' + pinRecords.length + '개를 전부 지울까?')) return;
+      clearPin();
+    };
     map.on('click', event => pin(event.latlng.lat, event.latlng.lng));
 
     places.forEach(([name, lat, lng]) => {
