@@ -50,7 +50,7 @@
     .pin-count { background: #e8f0f8; color: #164875; border-radius: 999px; padding: 3px 8px; font-size: .78rem; font-weight: 750; }
     .pin-list { display: grid; gap: 7px; max-height: 180px; overflow-y: auto; margin-top: 10px; padding-right: 2px; }
     .pin-list-empty { margin: 9px 0 0; font-size: .82rem; color: #536b80; }
-    .pin-item { display: grid; grid-template-columns: 1fr auto auto; align-items: center; gap: 6px; padding: 8px; border: 1px solid #dce7f1; border-radius: 8px; background: #fbfdff; }
+    .pin-item { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; padding: 8px; border: 1px solid #dce7f1; border-radius: 8px; background: #fbfdff; }
     .pin-item-name { display: block; font-size: .82rem; font-weight: 750; color: #173f68; }
     .pin-item-coord { display: block; margin-top: 2px; font-size: .73rem; color: #536b80; }
     .pin-item button { padding: 5px 7px; font-size: .73rem; }
@@ -110,8 +110,6 @@
     for (let lat = 33; lat <= 43; lat++) {
       L.polyline([[lat, 124], [lat, 132]], {
         color: '#2f70a8', weight: 1, opacity: .5, dashArray: '5 7'
-      }).bindTooltip('북위 ' + lat + '°', {
-        permanent: true, direction: 'left', className: 'coord-label'
       }).addTo(graticule);
     }
     for (let lng = 125; lng <= 131; lng++) {
@@ -221,7 +219,7 @@
     }
 
     function entryTime(entry) {
-      return new Date(entry.deleted_at || entry.created_at || 0).getTime() || 0;
+      return new Date(entry.deleted_at || entry.updated_at || entry.created_at || 0).getTime() || 0;
     }
 
     function normalisePinEntries(progress, sourceLabel = '저장된 핀') {
@@ -245,7 +243,8 @@
               lat: Number(Number(record.lat).toFixed(6)),
               lng: Number(Number(record.lng).toFixed(6)),
               label: String(record.label || sourceLabel),
-              created_at: record.created_at || progress.updated_at || new Date().toISOString()
+              created_at: record.created_at || progress.updated_at || new Date().toISOString(),
+              updated_at: record.updated_at || record.created_at || progress.updated_at || new Date().toISOString()
             });
           }
         });
@@ -324,7 +323,7 @@
       const compact = progress => ({
         pins: normalisePinEntries(progress).map(pin => pin.deleted_at
           ? [pin.id, 'deleted', pin.deleted_at]
-          : [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at]),
+          : [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at, pin.updated_at]),
         quiz_count: Number(progress.quiz_count || 0),
         best_distance_km: progress.best_distance_km === null || progress.best_distance_km === undefined
           ? null : Number(progress.best_distance_km)
@@ -359,6 +358,28 @@
         viewButton.textContent = '보기';
         viewButton.onclick = () => map.setView([record.lat, record.lng], Math.max(map.getZoom(), 9));
 
+        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'secondary';
+        editButton.textContent = '이름 수정';
+        editButton.onclick = () => {
+          const nextLabel = window.prompt('핀 이름 수정', record.label);
+          if (nextLabel === null) return;
+          const trimmedLabel = nextLabel.trim();
+          if (!trimmedLabel) {
+            $('notice').textContent = '핀 이름은 비워둘 수 없어.';
+            return;
+          }
+          const target = pinRecords.find(pin => pin.id === record.id);
+          if (!target) return;
+          target.label = trimmedLabel;
+          target.updated_at = new Date().toISOString();
+          renderPins();
+          $('notice').textContent = '핀 이름을 “' + trimmedLabel + '”으로 바꿨어.';
+          markProgressChanged();
+          queueSave(true);
+        };
+
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.className = 'pin-delete';
@@ -374,7 +395,7 @@
           markProgressChanged();
           queueSave();
         };
-        item.append(details, viewButton, deleteButton);
+        item.append(details, viewButton, editButton, deleteButton);
         list.appendChild(item);
       });
     }
@@ -384,7 +405,13 @@
       marker = null;
 
       pinRecords.forEach((record, index) => {
-        const pinMarker = L.marker([record.lat, record.lng])
+        const pinMarker = L.circleMarker([record.lat, record.lng], {
+          radius: 7,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: '#e63946',
+          fillOpacity: 1
+        })
           .addTo(pinLayer)
           .bindPopup('<b>' + escapeHtml(record.label) + '</b><br>북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°');
         if (index === pinRecords.length - 1) marker = pinMarker;
@@ -405,12 +432,14 @@
         return false;
       }
 
+      const now = new Date().toISOString();
       const savedPin = {
         id: newPinId(),
         lat: Number(Number(lat).toFixed(6)),
         lng: Number(Number(lng).toFixed(6)),
         label: String(label || '내 핀'),
-        created_at: new Date().toISOString()
+        created_at: now,
+        updated_at: now
       };
       pinRecords.push(savedPin);
       if (pinRecords.length > MAX_SAVED_PINS) pinRecords = pinRecords.slice(-MAX_SAVED_PINS);
