@@ -15,8 +15,8 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Update pin UI and map markers
-        shell: python
         run: |
+          python3 - <<'PY'
           from pathlib import Path
 
           path = Path('index.html')
@@ -121,6 +121,7 @@ jobs:
               text = text.replace(old, new, 1)
 
           path.write_bytes(text.encode('utf-8'))
+          PY
 
       - name: Commit the fix and remove this one-time workflow
         run: |
