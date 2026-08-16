@@ -95,7 +95,7 @@
 
   <script>
     const SUPABASE_URL = 'https://aplhddasduwtlxeejvnk.supabase.co';
-    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KUMRFC5dLAomRo9tiakqIg_0b3j0ELs';
+    const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kUMRFC5dLAomRo9tiakqIg_Ob3j0ELs';
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
 
     const map = L.map('map', { zoomControl: true }).setView([38.25, 127.5], 6);
@@ -191,8 +191,6 @@
         user_id: currentUser ? currentUser.id : undefined,
         last_lat: lastPin ? lastPin.lat : null,
         last_lng: lastPin ? lastPin.lng : null,
-        // Deleted pins stay here as tiny "tombstone" records. This prevents a
-        // different device with an older copy from bringing a deleted pin back.
         pins: [...pinRecords, ...deletedPinRecords],
         quiz_count: quizCount,
         best_distance_km: bestDistanceKm,
@@ -231,8 +229,6 @@
       const entriesById = new Map();
       const keepNewest = entry => {
         const existing = entriesById.get(entry.id);
-        // On an exact tie, deletion wins. It is safer to keep something deleted
-        // than to accidentally make an old pin visible again.
         if (!existing || entryTime(entry) > entryTime(existing) ||
           (entryTime(entry) === entryTime(existing) && entry.deleted_at && !existing.deleted_at)) {
           entriesById.set(entry.id, entry);
@@ -598,7 +594,6 @@
             setSyncStatus('자동 동기화됨 · ' + formatTime(remote.updated_at), 'success');
           }
         } catch {
-          // Keep local data and retry on the next interval.
         } finally {
           fallbackSyncInFlight = false;
         }
@@ -641,8 +636,6 @@
       if (syncChannel) supabaseClient.removeChannel(syncChannel);
 
       const userId = currentUser.id;
-      // Keep a fast safety-net poll even while Realtime is connected: some
-      // restricted networks allow HTTPS but block delivery over WebSockets.
       startFallbackSync();
       syncChannel = supabaseClient
         .channel('study-progress:' + userId)
