@@ -1,0 +1,53 @@
+name: Apply uploaded banner photo and quote
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-uploaded-banner.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-banner:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update banner and cache
+        shell: python
+        run: |
+          from pathlib import Path
+
+          html_path = Path('index.html')
+          html = html_path.read_text(encoding='utf-8')
+
+          replacements = {
+              '<h2>지리는 그냥 외우는 게 아니라,<br>지도에 직접 꽂아 넣는 거다.</h2>': '<h2>대학이 점점 교회화되고 있는데..</h2>',
+              'https://img.megastudy.net/teacher_v2/pic_teacher_main_n/pi_lksbutt.jpg': './teacher-photo.svg',
+              'alt="이기상 선생님 프로필 사진"': 'alt="업로드한 프로필 사진"'
+          }
+
+          for old, new in replacements.items():
+              if old not in html:
+                  raise SystemExit('Expected text not found: ' + old)
+              html = html.replace(old, new, 1)
+
+          html_path.write_text(html, encoding='utf-8')
+
+          sw_path = Path('service-worker.js')
+          sw = sw_path.read_text(encoding='utf-8')
+          sw = sw.replace("geography-app-v7", "geography-app-v8")
+          sw = sw.replace("geography-map-tiles-v7", "geography-map-tiles-v8")
+          if "'./teacher-photo.svg'" not in sw:
+              sw = sw.replace("  './favicon.ico',", "  './favicon.ico',\n  './teacher-photo.svg',")
+          sw_path.write_text(sw, encoding='utf-8')
+
+      - name: Commit and remove one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-uploaded-banner.yml
+          git add index.html service-worker.js teacher-photo.svg
+          git commit -m "Update banner photo and quote"
+          git push
