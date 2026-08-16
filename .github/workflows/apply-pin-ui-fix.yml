@@ -28,96 +28,20 @@ jobs:
               return value.replace('\n', nl)
 
           replacements = [
-              (
-                  "grid-template-columns: 1fr auto auto;",
-                  "grid-template-columns: 1fr auto auto auto;"
-              ),
-              (
-                  block("""}).bindTooltip('북위 ' + lat + '°', {
-        permanent: true, direction: 'left', className: 'coord-label'
-      }).addTo(graticule);"""),
-                  "}).addTo(graticule);"
-              ),
-              (
-                  "return new Date(entry.deleted_at || entry.created_at || 0).getTime() || 0;",
-                  "return new Date(entry.deleted_at || entry.updated_at || entry.created_at || 0).getTime() || 0;"
-              ),
-              (
-                  "created_at: record.created_at || progress.updated_at || new Date().toISOString()",
-                  "created_at: record.created_at || progress.updated_at || new Date().toISOString()," + nl +
-                  "              updated_at: record.updated_at || record.created_at || progress.updated_at || new Date().toISOString()"
-              ),
-              (
-                  ": [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at]),",
-                  ": [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at, pin.updated_at]),"
-              ),
-              (
-                  block("""        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';"""),
-                  block("""        const editButton = document.createElement('button');
-        editButton.type = 'button';
-        editButton.className = 'secondary';
-        editButton.textContent = '이름 수정';
-        editButton.onclick = () => {
-          const nextLabel = window.prompt('핀 이름 수정', record.label);
-          if (nextLabel === null) return;
-          const trimmedLabel = nextLabel.trim();
-          if (!trimmedLabel) {
-            $('notice').textContent = '핀 이름은 비워둘 수 없어.';
-            return;
-          }
-          const target = pinRecords.find(pin => pin.id === record.id);
-          if (!target) return;
-          target.label = trimmedLabel;
-          target.updated_at = new Date().toISOString();
-          renderPins();
-          $('notice').textContent = '핀 이름을 “' + trimmedLabel + '”으로 바꿨어.';
-          markProgressChanged();
-          queueSave(true);
-        };
-
-        const deleteButton = document.createElement('button');
-        deleteButton.type = 'button';""")
-              ),
-              (
-                  "item.append(details, viewButton, deleteButton);",
-                  "item.append(details, viewButton, editButton, deleteButton);"
-              ),
-              (
-                  block("""        const pinMarker = L.marker([record.lat, record.lng])
-          .addTo(pinLayer)"""),
-                  block("""        const pinMarker = L.circleMarker([record.lat, record.lng], {
-          radius: 7,
-          color: '#ffffff',
-          weight: 2,
-          fillColor: '#e63946',
-          fillOpacity: 1
-        })
-          .addTo(pinLayer)""")
-              ),
-              (
-                  block("""      const savedPin = {
-        id: newPinId(),
-        lat: Number(Number(lat).toFixed(6)),
-        lng: Number(Number(lng).toFixed(6)),
-        label: String(label || '내 핀'),
-        created_at: new Date().toISOString()
-      };"""),
-                  block("""      const now = new Date().toISOString();
-      const savedPin = {
-        id: newPinId(),
-        lat: Number(Number(lat).toFixed(6)),
-        lng: Number(Number(lng).toFixed(6)),
-        label: String(label || '내 핀'),
-        created_at: now,
-        updated_at: now
-      };""")
-              )
+              ("grid-template-columns: 1fr auto auto;", "grid-template-columns: 1fr auto auto auto;"),
+              (block("}).bindTooltip('북위 ' + lat + '°', {\n        permanent: true, direction: 'left', className: 'coord-label'\n      }).addTo(graticule);"), "}).addTo(graticule);"),
+              ("return new Date(entry.deleted_at || entry.created_at || 0).getTime() || 0;", "return new Date(entry.deleted_at || entry.updated_at || entry.created_at || 0).getTime() || 0;"),
+              ("created_at: record.created_at || progress.updated_at || new Date().toISOString()", "created_at: record.created_at || progress.updated_at || new Date().toISOString()," + nl + "              updated_at: record.updated_at || record.created_at || progress.updated_at || new Date().toISOString()"),
+              (": [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at]),", ": [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at, pin.updated_at]),"),
+              (block("        const deleteButton = document.createElement('button');\n        deleteButton.type = 'button';"), block("        const editButton = document.createElement('button');\n        editButton.type = 'button';\n        editButton.className = 'secondary';\n        editButton.textContent = '이름 수정';\n        editButton.onclick = () => {\n          const nextLabel = window.prompt('핀 이름 수정', record.label);\n          if (nextLabel === null) return;\n          const trimmedLabel = nextLabel.trim();\n          if (!trimmedLabel) {\n            $('notice').textContent = '핀 이름은 비워둘 수 없어.';\n            return;\n          }\n          const target = pinRecords.find(pin => pin.id === record.id);\n          if (!target) return;\n          target.label = trimmedLabel;\n          target.updated_at = new Date().toISOString();\n          renderPins();\n          $('notice').textContent = '핀 이름을 “' + trimmedLabel + '”으로 바꿨어.';\n          markProgressChanged();\n          queueSave(true);\n        };\n\n        const deleteButton = document.createElement('button');\n        deleteButton.type = 'button';")),
+              ("item.append(details, viewButton, deleteButton);", "item.append(details, viewButton, editButton, deleteButton);"),
+              (block("        const pinMarker = L.marker([record.lat, record.lng])\n          .addTo(pinLayer)"), block("        const pinMarker = L.circleMarker([record.lat, record.lng], {\n          radius: 7,\n          color: '#ffffff',\n          weight: 2,\n          fillColor: '#e63946',\n          fillOpacity: 1\n        })\n          .addTo(pinLayer)")),
+              (block("      const savedPin = {\n        id: newPinId(),\n        lat: Number(Number(lat).toFixed(6)),\n        lng: Number(Number(lng).toFixed(6)),\n        label: String(label || '내 핀'),\n        created_at: new Date().toISOString()\n      };"), block("      const now = new Date().toISOString();\n      const savedPin = {\n        id: newPinId(),\n        lat: Number(Number(lat).toFixed(6)),\n        lng: Number(Number(lng).toFixed(6)),\n        label: String(label || '내 핀'),\n        created_at: now,\n        updated_at: now\n      };"))
           ]
 
           for old, new in replacements:
               if old not in text:
-                  raise SystemExit('Expected pattern not found:\n' + old)
+                  raise SystemExit('Expected pattern not found: ' + repr(old))
               text = text.replace(old, new, 1)
 
           path.write_bytes(text.encode('utf-8'))
