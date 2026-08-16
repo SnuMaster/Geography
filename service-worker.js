@@ -1,5 +1,5 @@
-const APP_CACHE = 'geography-app-v6';
-const TILE_CACHE = 'geography-map-tiles-v6';
+const APP_CACHE = 'geography-app-v7';
+const TILE_CACHE = 'geography-map-tiles-v7';
 const APP_SHELL = [
   './',
   './index.html',
