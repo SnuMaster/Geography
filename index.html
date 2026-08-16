@@ -10,21 +10,41 @@
   <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico?v=20260815-2">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
-    :root { color-scheme: light; font-family: system-ui, -apple-system, "Segoe UI", sans-serif; color: #14213d; background: #f4f7fb; }
+    :root { color-scheme: light; font-family: Pretendard, "Noto Sans KR", system-ui, -apple-system, "Segoe UI", sans-serif; color: #14213d; background: #eef3f9; }
     * { box-sizing: border-box; }
-    body { margin: 0; }
-    header { padding: 22px max(20px, calc((100% - 1100px) / 2)); background: #12355b; color: white; }
-    h1 { margin: 0; font-size: clamp(1.4rem, 3vw, 2rem); }
-    header p { margin: 6px 0 0; opacity: .88; }
-    main { display: grid; grid-template-columns: minmax(285px, 360px) 1fr; gap: 18px; max-width: 1100px; margin: 18px auto; padding: 0 18px; }
-    .panel { background: white; border-radius: 14px; padding: 18px; box-shadow: 0 3px 15px #17365d18; align-self: start; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 10% 0%, #dceaff 0, transparent 34rem),
+        linear-gradient(180deg, #f7faff 0%, #edf3f9 100%);
+    }
+    header {
+      padding: 26px max(20px, calc((100% - 1180px) / 2));
+      background: linear-gradient(120deg, #0b2748 0%, #123f72 58%, #1769aa 100%);
+      color: white;
+      box-shadow: 0 8px 28px #0b27482b;
+    }
+    h1 { margin: 0; font-size: clamp(1.55rem, 3vw, 2.25rem); letter-spacing: -.03em; }
+    header p { margin: 7px 0 0; opacity: .88; font-weight: 600; }
+    main { display: grid; grid-template-columns: minmax(300px, 380px) 1fr; gap: 20px; max-width: 1180px; margin: 20px auto 36px; padding: 0 18px; }
+    .panel {
+      background: #ffffffed;
+      border: 1px solid #ffffff;
+      border-radius: 20px;
+      padding: 20px;
+      box-shadow: 0 15px 40px #17365d17;
+      backdrop-filter: blur(10px);
+      align-self: start;
+    }
     h2 { font-size: 1.05rem; margin: 0 0 12px; }
     label { display: block; font-size: .9rem; font-weight: 650; margin: 12px 0 5px; }
     input { width: 100%; border: 1px solid #b7c5d6; border-radius: 8px; padding: 10px; font: inherit; }
     .row { display: flex; gap: 8px; margin-top: 12px; }
-    button { cursor: pointer; border: 0; border-radius: 8px; padding: 10px 12px; background: #1769aa; color: white; font: inherit; font-weight: 700; }
-    button.secondary { background: #e8f0f8; color: #164875; }
-    button:hover { filter: brightness(.95); }
+    button { cursor: pointer; border: 0; border-radius: 11px; padding: 10px 12px; background: #1769aa; color: white; font: inherit; font-weight: 800; box-shadow: 0 5px 14px #1769aa20; transition: transform .14s ease, filter .14s ease; }
+    button.secondary { background: #e8f0f8; color: #164875; box-shadow: none; }
+    button:hover { filter: brightness(.96); transform: translateY(-1px); }
+    button:active { transform: translateY(0); }
     .notice { min-height: 2.6em; margin: 12px 0 0; font-size: .9rem; line-height: 1.4; }
     #map { height: min(74vh, 680px); min-height: 480px; border-radius: 14px; box-shadow: 0 3px 15px #17365d18; }
     .legend { position: absolute; z-index: 500; bottom: 22px; left: 10px; background: #fffffff0; border-radius: 7px; padding: 8px 10px; font-size: .78rem; box-shadow: 0 1px 5px #0003; }
@@ -50,17 +70,64 @@
     .pin-count { background: #e8f0f8; color: #164875; border-radius: 999px; padding: 3px 8px; font-size: .78rem; font-weight: 750; }
     .pin-list { display: grid; gap: 7px; max-height: 180px; overflow-y: auto; margin-top: 10px; padding-right: 2px; }
     .pin-list-empty { margin: 9px 0 0; font-size: .82rem; color: #536b80; }
-    .pin-item { display: grid; grid-template-columns: 1fr auto auto auto; align-items: center; gap: 6px; padding: 8px; border: 1px solid #dce7f1; border-radius: 8px; background: #fbfdff; }
-    .pin-item-name { display: block; font-size: .82rem; font-weight: 750; color: #173f68; }
+    .pin-item { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, auto); align-items: center; gap: 6px; padding: 10px; border: 1px solid #dce7f1; border-radius: 12px; background: #fbfdff; box-shadow: 0 4px 12px #17365d0a; }
+    .pin-item-name { display: block; font-size: .84rem; font-weight: 850; color: #173f68; }
     .pin-item-coord { display: block; margin-top: 2px; font-size: .73rem; color: #536b80; }
-    .pin-item button { padding: 5px 7px; font-size: .73rem; }
-    .pin-item .pin-delete { background: #fff0ef; color: #ad3027; }
-    @media (max-width: 760px) { main { grid-template-columns: 1fr; } #map { height: 57vh; min-height: 390px; } }
+    .pin-item-note { display: block; margin-top: 5px; font-size: .76rem; line-height: 1.35; color: #31516e; white-space: pre-wrap; }
+    .pin-item-note.is-empty { color: #8a9aaa; font-style: italic; }
+    .pin-item button { padding: 6px 8px; font-size: .72rem; white-space: nowrap; }
+    .pin-item .pin-delete { background: #fff0ef; color: #ad3027; box-shadow: none; }
+    .teacher-card {
+      grid-column: 1 / -1;
+      min-height: 210px;
+      display: grid;
+      grid-template-columns: 1fr minmax(190px, 280px);
+      overflow: hidden;
+      position: relative;
+      border-radius: 24px;
+      background: linear-gradient(120deg, #081f3a 0%, #12355b 56%, #174c82 100%);
+      color: white;
+      box-shadow: 0 18px 45px #102c4d2b;
+    }
+    .teacher-copy { padding: clamp(22px, 4vw, 38px); position: relative; z-index: 2; }
+    .teacher-kicker { margin: 0 0 8px; font-size: .78rem; font-weight: 900; letter-spacing: .08em; color: #8dd6ff; }
+    .teacher-card h2 { margin: 0; max-width: 720px; font-size: clamp(1.55rem, 3vw, 2.55rem); line-height: 1.12; letter-spacing: -.045em; color: #fff; }
+    .teacher-line { margin: 14px 0 0; max-width: 720px; font-size: clamp(.93rem, 1.8vw, 1.08rem); line-height: 1.65; color: #dcecff; font-weight: 650; }
+    .teacher-note { display: block; margin-top: 14px; font-size: .72rem; color: #9fb8d3; }
+    .teacher-photo-wrap { position: relative; min-height: 210px; overflow: hidden; background: #0c2b4d; }
+    .teacher-photo { width: 100%; height: 100%; min-height: 210px; object-fit: cover; object-position: center 18%; display: block; filter: saturate(.9) contrast(1.03); }
+    .teacher-photo-wrap::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, #12355b 0%, transparent 45%); pointer-events: none; }
+    .teacher-chip { display: inline-flex; align-items: center; gap: 6px; margin-top: 15px; padding: 7px 10px; border-radius: 999px; background: #ffffff14; border: 1px solid #ffffff24; color: #eaf6ff; font-size: .78rem; font-weight: 800; }
+    #map { outline: 1px solid #d7e4f0; }
+    @media (max-width: 760px) {
+      main { grid-template-columns: 1fr; }
+      #map { height: 57vh; min-height: 390px; }
+      .teacher-card { grid-template-columns: 1fr; }
+      .teacher-photo-wrap { min-height: 190px; max-height: 240px; order: -1; }
+      .teacher-photo-wrap::after { background: linear-gradient(180deg, transparent 55%, #12355b 100%); }
+    }
+    @media (max-width: 520px) {
+      .pin-item { grid-template-columns: repeat(4, 1fr); }
+      .pin-item > div:first-child { grid-column: 1 / -1; }
+      .pin-item button { width: 100%; }
+    }
   </style>
 </head>
 <body>
   <header><h1>한국지리 좌표 핀 학습</h1><p>실제 지도 위에서 위도·경도의 감각을 익혀보자.</p></header>
   <main>
+    <section class="teacher-card" aria-label="지리 학습 응원 배너">
+      <div class="teacher-copy">
+        <p class="teacher-kicker">기상쌤 모드 · 비공식 팬메이드</p>
+        <h2>지리는 그냥 외우는 게 아니라,<br>지도에 직접 꽂아 넣는 거다.</h2>
+        <p class="teacher-line">핀 찍고 → 이름 붙이고 → 특징 한 줄. 위치랑 개념을 같이 묶어두면 복습할 때 훨씬 빨리 떠오른다.</p>
+        <span class="teacher-chip">📍 위치 먼저 박고, 특징까지 연결</span>
+        <small class="teacher-note">※ 학습용 팬메이드 문구이며 실제 발언을 그대로 인용한 문장이 아닙니다.</small>
+      </div>
+      <div class="teacher-photo-wrap">
+        <img class="teacher-photo" src="https://img.megastudy.net/teacher_v2/pic_teacher_main_n/pi_lksbutt.jpg" alt="이기상 선생님 프로필 사진">
+      </div>
+    </section>
     <aside class="panel">
       <h2>좌표로 핀 찍기</h2>
       <label for="lat">위도 (북위)</label><input id="lat" type="number" step="0.0001" value="37.5665" min="32" max="44">
@@ -243,6 +310,7 @@
               lat: Number(Number(record.lat).toFixed(6)),
               lng: Number(Number(record.lng).toFixed(6)),
               label: String(record.label || sourceLabel),
+              note: String(record.note || ''),
               created_at: record.created_at || progress.updated_at || new Date().toISOString(),
               updated_at: record.updated_at || record.created_at || progress.updated_at || new Date().toISOString()
             });
@@ -323,7 +391,7 @@
       const compact = progress => ({
         pins: normalisePinEntries(progress).map(pin => pin.deleted_at
           ? [pin.id, 'deleted', pin.deleted_at]
-          : [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at, pin.updated_at]),
+          : [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.note || '', pin.created_at, pin.updated_at]),
         quiz_count: Number(progress.quiz_count || 0),
         best_distance_km: progress.best_distance_km === null || progress.best_distance_km === undefined
           ? null : Number(progress.best_distance_km)
@@ -347,10 +415,13 @@
         const item = document.createElement('div');
         item.className = 'pin-item';
         const details = document.createElement('div');
-        details.innerHTML = '<span class="pin-item-name"></span><span class="pin-item-coord"></span>';
+        details.innerHTML = '<span class="pin-item-name"></span><span class="pin-item-coord"></span><span class="pin-item-note"></span>';
         details.querySelector('.pin-item-name').textContent = record.label;
         details.querySelector('.pin-item-coord').textContent =
           '북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°';
+        const noteEl = details.querySelector('.pin-item-note');
+        noteEl.textContent = record.note ? '특징 · ' + record.note : '특징을 아직 안 적었어.';
+        noteEl.classList.toggle('is-empty', !record.note);
 
         const viewButton = document.createElement('button');
         viewButton.type = 'button';
@@ -380,6 +451,23 @@
           queueSave(true);
         };
 
+        const noteButton = document.createElement('button');
+        noteButton.type = 'button';
+        noteButton.className = 'secondary';
+        noteButton.textContent = '특징';
+        noteButton.onclick = () => {
+          const nextNote = window.prompt('이 핀의 특징을 적어줘. (비워서 저장하면 특징 삭제)', record.note || '');
+          if (nextNote === null) return;
+          const target = pinRecords.find(pin => pin.id === record.id);
+          if (!target) return;
+          target.note = nextNote.trim();
+          target.updated_at = new Date().toISOString();
+          renderPins();
+          $('notice').textContent = target.note ? '핀 특징을 저장했어.' : '핀 특징을 지웠어.';
+          markProgressChanged();
+          queueSave(true);
+        };
+
         const deleteButton = document.createElement('button');
         deleteButton.type = 'button';
         deleteButton.className = 'pin-delete';
@@ -395,7 +483,7 @@
           markProgressChanged();
           queueSave();
         };
-        item.append(details, viewButton, editButton, deleteButton);
+        item.append(details, viewButton, editButton, noteButton, deleteButton);
         list.appendChild(item);
       });
     }
@@ -405,15 +493,10 @@
       marker = null;
 
       pinRecords.forEach((record, index) => {
-        const pinMarker = L.circleMarker([record.lat, record.lng], {
-          radius: 7,
-          color: '#ffffff',
-          weight: 2,
-          fillColor: '#e63946',
-          fillOpacity: 1
-        })
+        const popupNote = record.note ? '<br>📝 ' + escapeHtml(record.note) : '';
+        const pinMarker = L.marker([record.lat, record.lng])
           .addTo(pinLayer)
-          .bindPopup('<b>' + escapeHtml(record.label) + '</b><br>북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°');
+          .bindPopup('<b>' + escapeHtml(record.label) + '</b><br>북위 ' + record.lat.toFixed(4) + '°, 동경 ' + record.lng.toFixed(4) + '°' + popupNote);
         if (index === pinRecords.length - 1) marker = pinMarker;
       });
 
@@ -438,6 +521,7 @@
         lat: Number(Number(lat).toFixed(6)),
         lng: Number(Number(lng).toFixed(6)),
         label: String(label || '내 핀'),
+        note: '',
         created_at: now,
         updated_at: now
       };
