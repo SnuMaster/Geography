@@ -1,0 +1,132 @@
+name: Apply pin UI fix
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-pin-ui-fix.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply-fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Update pin UI and map markers
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('index.html')
+          raw = path.read_bytes()
+          text = raw.decode('utf-8')
+          nl = '\r\n' if '\r\n' in text else '\n'
+
+          def block(value):
+              return value.replace('\n', nl)
+
+          replacements = [
+              (
+                  "grid-template-columns: 1fr auto auto;",
+                  "grid-template-columns: 1fr auto auto auto;"
+              ),
+              (
+                  block("""}).bindTooltip('북위 ' + lat + '°', {
+        permanent: true, direction: 'left', className: 'coord-label'
+      }).addTo(graticule);"""),
+                  "}).addTo(graticule);"
+              ),
+              (
+                  "return new Date(entry.deleted_at || entry.created_at || 0).getTime() || 0;",
+                  "return new Date(entry.deleted_at || entry.updated_at || entry.created_at || 0).getTime() || 0;"
+              ),
+              (
+                  "created_at: record.created_at || progress.updated_at || new Date().toISOString()",
+                  "created_at: record.created_at || progress.updated_at || new Date().toISOString()," + nl +
+                  "              updated_at: record.updated_at || record.created_at || progress.updated_at || new Date().toISOString()"
+              ),
+              (
+                  ": [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at]),",
+                  ": [pin.id, 'live', pin.lat, pin.lng, pin.label, pin.created_at, pin.updated_at]),"
+              ),
+              (
+                  block("""        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';"""),
+                  block("""        const editButton = document.createElement('button');
+        editButton.type = 'button';
+        editButton.className = 'secondary';
+        editButton.textContent = '이름 수정';
+        editButton.onclick = () => {
+          const nextLabel = window.prompt('핀 이름 수정', record.label);
+          if (nextLabel === null) return;
+          const trimmedLabel = nextLabel.trim();
+          if (!trimmedLabel) {
+            $('notice').textContent = '핀 이름은 비워둘 수 없어.';
+            return;
+          }
+          const target = pinRecords.find(pin => pin.id === record.id);
+          if (!target) return;
+          target.label = trimmedLabel;
+          target.updated_at = new Date().toISOString();
+          renderPins();
+          $('notice').textContent = '핀 이름을 “' + trimmedLabel + '”으로 바꿨어.';
+          markProgressChanged();
+          queueSave(true);
+        };
+
+        const deleteButton = document.createElement('button');
+        deleteButton.type = 'button';""")
+              ),
+              (
+                  "item.append(details, viewButton, deleteButton);",
+                  "item.append(details, viewButton, editButton, deleteButton);"
+              ),
+              (
+                  block("""        const pinMarker = L.marker([record.lat, record.lng])
+          .addTo(pinLayer)"""),
+                  block("""        const pinMarker = L.circleMarker([record.lat, record.lng], {
+          radius: 7,
+          color: '#ffffff',
+          weight: 2,
+          fillColor: '#e63946',
+          fillOpacity: 1
+        })
+          .addTo(pinLayer)""")
+              ),
+              (
+                  block("""      const savedPin = {
+        id: newPinId(),
+        lat: Number(Number(lat).toFixed(6)),
+        lng: Number(Number(lng).toFixed(6)),
+        label: String(label || '내 핀'),
+        created_at: new Date().toISOString()
+      };"""),
+                  block("""      const now = new Date().toISOString();
+      const savedPin = {
+        id: newPinId(),
+        lat: Number(Number(lat).toFixed(6)),
+        lng: Number(Number(lng).toFixed(6)),
+        label: String(label || '내 핀'),
+        created_at: now,
+        updated_at: now
+      };""")
+              )
+          ]
+
+          for old, new in replacements:
+              if old not in text:
+                  raise SystemExit('Expected pattern not found:\n' + old)
+              text = text.replace(old, new, 1)
+
+          path.write_bytes(text.encode('utf-8'))
+
+      - name: Commit the fix and remove this one-time workflow
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git rm .github/workflows/apply-pin-ui-fix.yml
+          git add index.html
+          git commit -m "Improve pin labels and precise marker display"
+          git push
