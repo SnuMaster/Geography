@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#163f68">
-  <title>시·군·구 빈칸 지도 | 한국지리</title>
+  <title>클릭형 시·군 빈칸 지도 | 한국지리</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
     :root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -15,34 +15,35 @@
     header a:hover { text-decoration: underline; }
     h1 { margin: 8px 0 4px; font-size: clamp(1.45rem, 3vw, 2rem); }
     header p { margin: 0; color: #d8e7f4; font-size: .92rem; }
-    main { display: grid; grid-template-columns: minmax(320px, 460px) minmax(0, 1fr); align-items: start; gap: 18px; min-height: calc(100vh - 126px); padding: 18px clamp(14px, 3vw, 42px) 28px; }
+    main { display: grid; grid-template-columns: minmax(320px, 430px) minmax(0, 1fr); align-items: start; gap: 18px; min-height: calc(100vh - 126px); padding: 18px clamp(14px, 3vw, 42px) 28px; }
     .panel { align-self: start; background: #fff; border-radius: 16px; box-shadow: 0 10px 28px #173f6820; padding: clamp(18px, 3vw, 26px); }
     h2 { margin: 0; font-size: 1.15rem; }
     .intro { margin: 8px 0 16px; color: #536b80; font-size: .88rem; line-height: 1.5; }
-    .account-card, .mistake-card, .sheet-card, .answer-sheet-card { margin: 15px 0; border: 1px solid #cfe0ee; border-radius: 12px; background: #f8fbff; padding: 13px; }
+    .account-card, .mistake-card, .selection-card { margin: 15px 0; border: 1px solid #cfe0ee; border-radius: 12px; background: #f8fbff; padding: 13px; }
     .card-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 9px; }
     .card-heading h3 { margin: 0; color: #173f68; font-size: .98rem; }
     .card-heading span { color: #637a8e; font-size: .76rem; font-weight: 700; text-align: right; }
-    .account-card p, .mistake-card p, .sheet-card p { margin: 7px 0 0; color: #536b80; font-size: .8rem; line-height: 1.45; }
-    .auth-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 10px; }
+    .account-card p, .mistake-card p, .selection-card p { margin: 7px 0 0; color: #536b80; font-size: .8rem; line-height: 1.45; }
+    .auth-fields { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 10px; }
     .auth-fields input { min-height: 40px; padding: 8px 9px; font-size: .84rem; }
-    .auth-actions, .mistake-actions, .sheet-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
-    .auth-actions button, .mistake-actions button, .sheet-actions button { min-height: 38px; font-size: .8rem; }
+    .auth-actions { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 8px; }
+    .mistake-actions, .board-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
+    .auth-actions button, .mistake-actions button, .board-actions button { min-height: 38px; font-size: .8rem; }
     .auth-actions button:first-child, #mistakePracticeBtn, #gradeBtn { background: #1769aa; color: #fff; }
-    .auth-actions button:last-child, #allPracticeBtn, .mistake-clear, #clearSheetBtn { background: #e8f0f8; color: #254f79; }
+    #allPracticeBtn, .mistake-clear, #clearSheetBtn { background: #e8f0f8; color: #254f79; }
     .account-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .account-summary strong { display: block; color: #173f68; font-size: .84rem; overflow-wrap: anywhere; }
     .account-summary button { min-height: 36px; padding: 7px 10px; background: #e8f0f8; color: #254f79; font-size: .78rem; }
-    .auth-status, .mistake-status, .sheet-result { min-height: 1.35em; margin-top: 9px !important; font-weight: 700; }
+    .auth-status, .mistake-status, .board-result, .selected-answer-status { min-height: 1.35em; margin-top: 9px !important; font-weight: 700; }
     .auth-status[data-state="error"], .mistake-status[data-state="error"] { color: #b0342b; }
-    .auth-status[data-state="success"], .mistake-status[data-state="success"], .sheet-result[data-state="success"] { color: #147442; }
-    .sheet-result[data-state="warning"] { color: #875d0b; }
+    .auth-status[data-state="success"], .mistake-status[data-state="success"], .board-result[data-state="success"], .selected-answer-status[data-state="success"] { color: #147442; }
+    .board-result[data-state="warning"], .selected-answer-status[data-state="warning"] { color: #875d0b; }
     .mistake-list { display: grid; gap: 7px; margin: 10px 0 0; padding: 0; list-style: none; }
     .mistake-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-radius: 8px; background: #fff; padding: 9px 10px; box-shadow: inset 0 0 0 1px #dde8f1; }
     .mistake-item strong { display: block; color: #173f68; font-size: .86rem; }
     .mistake-item small { display: block; margin-top: 2px; color: #637a8e; font-size: .73rem; }
     .mistake-clear { min-height: 34px; padding: 6px 9px; white-space: nowrap; font-size: .74rem; }
-    button:disabled { cursor: not-allowed; opacity: .56; }
+    button:disabled, input:disabled { cursor: not-allowed; opacity: .56; }
     .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
     button, input { font: inherit; }
     button { min-height: 42px; border: 0; border-radius: 9px; cursor: pointer; font-weight: 750; }
@@ -50,34 +51,20 @@
     .mode-grid button[aria-pressed="true"] { border-color: #1769aa; background: #1769aa; color: #fff; }
     .score-row { display: flex; gap: 8px; margin: 17px 0 13px; }
     .score { flex: 1; border-radius: 9px; background: #eaf3fb; color: #164875; padding: 9px 10px; font-size: .8rem; font-weight: 750; text-align: center; }
-    .sheet-card { background: #f6fbff; }
-    .sheet-actions { grid-template-columns: 1.15fr .85fr; }
-    .answer-sheet-card { background: #fff; }
-    .answer-sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
-    .sheet-item { min-width: 0; border: 1px solid #d8e5f0; border-radius: 9px; background: #fbfdff; padding: 8px; transition: border-color .15s, background .15s; }
-    .sheet-item[data-result="correct"] { border-color: #7ccca3; background: #effbf4; }
-    .sheet-item[data-result="wrong"] { border-color: #ef9a93; background: #fff2f1; }
-    .sheet-item[data-result="blank"] { border-color: #e5c56c; background: #fff9e8; }
-    .sheet-item label { display: grid; grid-template-columns: 29px minmax(0, 1fr); align-items: center; gap: 7px; margin: 0; color: #315677; font-size: .82rem; font-weight: 750; }
-    .sheet-number { display: grid; place-items: center; width: 29px; height: 29px; border-radius: 50%; background: #e4f0fa; color: #164875; font-size: .73rem; }
-    .sheet-item input { width: 100%; min-height: 39px; border: 1px solid #afc4d8; border-radius: 7px; background: #fff; color: #102c4d; padding: 7px 8px; font-size: .88rem; outline: none; }
-    .sheet-item input:focus { border-color: #1769aa; box-shadow: 0 0 0 3px #1769aa25; }
-    .sheet-correction { display: block; min-height: 1.2em; margin: 6px 0 0 36px; color: #4d667d; font-size: .72rem; font-weight: 700; line-height: 1.3; }
-    .sheet-item[data-result="correct"] .sheet-correction { color: #147442; }
-    .sheet-item[data-result="wrong"] .sheet-correction { color: #b0342b; }
-    .sheet-item[data-result="blank"] .sheet-correction { color: #875d0b; }
-    .empty-sheet { margin: 10px 0 0; color: #536b80; font-size: .85rem; line-height: 1.45; }
-    .map-card { position: sticky; top: 14px; min-height: min(84vh, 780px); overflow: hidden; border: 1px solid #d5e2ed; border-radius: 16px; background: #e8f0f6; box-shadow: 0 10px 28px #173f6815; }
+    .selection-card { background: #f6fbff; }
+    .selection-card[data-selected="true"] { border-color: #8cbcdc; background: #f3f9fe; }
+    label { display: block; margin: 12px 0 7px; color: #315677; font-size: .82rem; font-weight: 750; }
+    input { width: 100%; min-height: 46px; border: 1px solid #afc4d8; border-radius: 9px; background: #fff; color: #102c4d; padding: 9px 11px; font-size: 1rem; outline: none; }
+    input:focus { border-color: #1769aa; box-shadow: 0 0 0 3px #1769aa25; }
+    .selection-help { margin-top: 10px !important; border-top: 1px solid #dce8f2; padding-top: 9px; }
+    .board-actions { grid-template-columns: 1.15fr .85fr; }
+    .map-card { position: sticky; top: 14px; min-height: min(86vh, 820px); overflow: hidden; border: 1px solid #d5e2ed; border-radius: 16px; background: #e8f0f6; box-shadow: 0 10px 28px #173f6815; }
     #map { position: absolute; inset: 0; background: #e8f0f6; }
-    .map-note { position: absolute; z-index: 500; left: 14px; bottom: 14px; max-width: min(350px, calc(100% - 28px)); border-radius: 9px; background: #ffffffeb; box-shadow: 0 3px 12px #173f6825; padding: 9px 11px; color: #294f73; font-size: .8rem; font-weight: 700; line-height: 1.4; }
-    .number-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 5px; border: 2px solid #204c72; border-radius: 50%; background: #fff; color: #204c72; font-size: .65rem; vertical-align: -3px; }
-    .map-status { position: absolute; z-index: 500; right: 14px; top: 14px; max-width: 260px; border-radius: 9px; background: #ffffffeb; box-shadow: 0 3px 12px #173f6820; padding: 8px 10px; color: #536b80; font-size: .75rem; line-height: 1.4; }
+    .map-note { position: absolute; z-index: 500; left: 14px; bottom: 14px; max-width: min(370px, calc(100% - 28px)); border-radius: 9px; background: #ffffffeb; box-shadow: 0 3px 12px #173f6825; padding: 9px 11px; color: #294f73; font-size: .8rem; font-weight: 700; line-height: 1.4; }
+    .click-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 5px; border: 2px solid #1769aa; border-radius: 50%; background: #dceefa; color: #1769aa; font-size: .8rem; font-weight: 900; vertical-align: -3px; }
+    .map-status { position: absolute; z-index: 500; right: 14px; top: 14px; max-width: 285px; border-radius: 9px; background: #ffffffeb; box-shadow: 0 3px 12px #173f6820; padding: 8px 10px; color: #536b80; font-size: .75rem; line-height: 1.4; }
     .map-status[data-state="error"] { color: #a0342b; }
-    .admin-number { display: flex; align-items: center; justify-content: center; width: 27px !important; height: 23px !important; margin: 0 !important; border: 2px solid #204c72; border-radius: 999px; background: #fff; box-shadow: 0 1px 4px #173f6840; color: #173f68; font-size: 11px; font-weight: 800; line-height: 1; }
-    .admin-number.is-correct { border-color: #167346; background: #effbf4; color: #126438; }
-    .admin-number.is-wrong { border-color: #c9443d; background: #fff2f1; color: #a7342e; }
-    .admin-number.is-blank { border-color: #ad7d10; background: #fff9e8; color: #795600; }
-    .admin-number.is-focused { box-shadow: 0 0 0 4px #1769aa50, 0 1px 4px #173f6840; transform: scale(1.15); }
+    .leaflet-container { cursor: crosshair; }
     .leaflet-control-attribution { font-size: 10px; }
     footer { padding: 0 18px 20px; color: #667d90; font-size: .73rem; text-align: center; }
     footer a { color: inherit; }
@@ -86,7 +73,7 @@
       .map-card { position: relative; top: auto; min-height: 58vh; }
     }
     @media (max-width: 410px) {
-      .mode-grid, .auth-fields, .answer-sheet { grid-template-columns: 1fr; }
+      .mode-grid, .auth-fields { grid-template-columns: 1fr; }
       .score-row { flex-direction: column; }
       .account-summary { align-items: flex-start; flex-direction: column; }
     }
@@ -95,13 +82,13 @@
 <body>
   <header>
     <a href="../">← 좌표 핀 학습으로 돌아가기</a>
-    <h1>시·군·구 빈칸 지도</h1>
-    <p>한 장의 번호 지도와 답안지를 모두 채운 뒤, 채점 버튼을 눌러.</p>
+    <h1>클릭형 시·군 빈칸 지도</h1>
+    <p>지도에서 지역을 직접 누르고 답을 입력한 뒤, 전체를 한 번에 채점해.</p>
   </header>
   <main>
     <section class="panel" aria-labelledby="quizTitle">
-      <h2 id="quizTitle">전체 빈칸 답안지</h2>
-      <p class="intro">지도에는 지명 없이 번호만 보여. 번호와 같은 빈칸에 이름을 전부 적고 <b>전체 채점하기</b>를 눌러.</p>
+      <h2 id="quizTitle">한 장으로 풀기</h2>
+      <p class="intro">번호는 없어. 지도 속 시·군을 하나씩 클릭해 답을 넣고, 마지막에 <b>전체 채점하기</b>를 눌러.</p>
 
       <section class="account-card" aria-labelledby="accountTitle">
         <div class="card-heading">
@@ -109,14 +96,12 @@
           <span>다른 기기에서도 이어서</span>
         </div>
         <div id="quizLoggedOut">
-          <p>메인 페이지와 같은 계정으로 로그인하면 오답이 계정에 저장돼.</p>
+          <p>메인 페이지와 같은 이메일로 로그인하면 오답이 계정에 저장돼.</p>
           <div class="auth-fields">
             <input id="quizEmail" type="email" autocomplete="email" placeholder="이메일">
-            <input id="quizPassword" type="password" autocomplete="current-password" placeholder="비밀번호">
           </div>
           <div class="auth-actions">
-            <button id="quizLoginBtn" type="button">로그인</button>
-            <button id="quizSignupBtn" type="button">회원가입</button>
+            <button id="quizLoginBtn" type="button">로그인 링크 받기</button>
           </div>
         </div>
         <div id="quizLoggedIn" hidden>
@@ -138,7 +123,7 @@
 
       <div class="score-row" aria-live="polite">
         <div id="score" class="score">작성 0 / 164</div>
-        <div id="streak" class="score">아직 미채점</div>
+        <div id="streak" class="score">선택 0 / 164</div>
       </div>
 
       <section class="mistake-card" aria-labelledby="mistakeTitle">
@@ -147,39 +132,36 @@
           <span id="mistakeCount">로그인하면 저장돼</span>
         </div>
         <div class="mistake-actions">
-          <button id="mistakePracticeBtn" type="button" disabled>현재 모드 오답 답안지 만들기</button>
-          <button id="allPracticeBtn" type="button" hidden>전체 답안지로 돌아가기</button>
+          <button id="mistakePracticeBtn" type="button" disabled>현재 모드 오답 지도 열기</button>
+          <button id="allPracticeBtn" type="button" hidden>전체 지도판으로 돌아가기</button>
         </div>
         <p id="mistakeStatus" class="mistake-status" aria-live="polite">로그인하면 전체 채점의 오답을 계정에 저장해.</p>
         <ul id="mistakeList" class="mistake-list" hidden></ul>
       </section>
 
-      <section class="sheet-card" aria-labelledby="sheetTitle">
+      <section id="selectionCard" class="selection-card" aria-labelledby="selectionTitle">
         <div class="card-heading">
-          <h3 id="sheetTitle">전체 빈칸 답안지</h3>
-          <span id="sheetProgress">작성 0 / 164</span>
+          <h3 id="selectionTitle">지도에서 시·군을 클릭해</h3>
+          <span id="selectionProgress">선택 0 / 164</span>
         </div>
-        <p id="sheetDescription">지도 속 번호에 맞춰 빈칸을 전부 채운 뒤 채점해.</p>
-        <div class="sheet-actions">
-          <button id="gradeBtn" type="button">전체 채점하기</button>
-          <button id="clearSheetBtn" type="button">답안 지우기</button>
-        </div>
-        <p id="sheetResult" class="sheet-result" aria-live="polite"></p>
+        <p id="selectionHint">지도의 빈 영역을 누르면, 그 지역의 답을 여기서 적을 수 있어.</p>
+        <label for="selectedAnswerInput">선택한 지역의 답안</label>
+        <input id="selectedAnswerInput" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="먼저 지도에서 지역을 클릭해" disabled>
+        <p id="selectedAnswerStatus" class="selected-answer-status" aria-live="polite"></p>
+        <p class="selection-help">입력 내용은 자동으로 임시 저장돼. 지도에서 다른 지역을 눌러 계속 채우면 돼.</p>
       </section>
 
-      <form id="sheetForm" class="answer-sheet-card" novalidate>
-        <div class="card-heading">
-          <h3>번호별 답안</h3>
-          <span>Enter: 다음 빈칸</span>
-        </div>
-        <ol id="answerSheet" class="answer-sheet" aria-label="번호별 답안지"></ol>
-      </form>
+      <div class="board-actions">
+        <button id="gradeBtn" type="button">전체 채점하기</button>
+        <button id="clearSheetBtn" type="button">답안 지우기</button>
+      </div>
+      <p id="sheetResult" class="board-result" aria-live="polite"></p>
     </section>
 
     <section class="map-card" aria-label="이름 없는 행정구역 지도">
       <div id="map"></div>
       <div id="mapStatus" class="map-status">행정구역 경계를 불러오는 중…</div>
-      <div class="map-note"><span class="number-dot">1</span>지도 속 번호와 답안지 번호를 맞춰 입력해 · 지도 클릭은 핀을 만들지 않아</div>
+      <div class="map-note"><span class="click-dot">+</span>시·군을 직접 클릭해 답을 입력해 · 굵은 진한 선은 시·도 경계야</div>
     </section>
   </main>
   <footer>행정구역 경계: <a href="https://sgis.kostat.go.kr/" target="_blank" rel="noopener">통계청 통계지리정보서비스(SGIS)</a>, 2018 · 공공누리 제1유형</footer>
@@ -188,7 +170,7 @@
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="../quiz-data.js"></script>
-  <script src="./quiz-app.js?v=20260818-board"></script>
+  <script src="./quiz-app.js"></script>
 </body>
 </html>
 
