@@ -2,40 +2,48 @@
   'use strict';
 
   const SUPABASE_URL = 'https://aplhddasduwtlxeejvnk.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kUMRFC5dLAomRo9tiakqIg_Ob3j0ELs';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KUMRFC5dLAomRo9tiakqIg_0b3j0ELs';
   const supabaseClient = window.supabase && window.supabase.createClient
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
     : null;
 
-  const BOUNDARY_URL = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-municipalities-2018-topo-simple.json';
+  const MUNICIPALITY_URL = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-municipalities-2018-topo-simple.json';
+  const PROVINCE_URL = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-topo-simple.json';
   const WRONG_ACTIONS_KEY = 'geography-quiz-wrong-actions-v2';
-  const SHEET_DRAFT_KEY = 'geography-quiz-sheet-draft-v2:';
+  const SHEET_DRAFT_KEY = 'geography-click-board-draft-v1:';
   const REGION_PREFIX = /^(경기도|강원|경남|인천|울산)\s+/;
   const ENDING = /(특별자치시|특별시|광역시|시|군|구)$/;
-  const BASE_STYLE = { color: '#5b6d79', weight: .72, opacity: .82, fillColor: '#f8fbfd', fillOpacity: .9 };
+  const BASE_STYLE = { color: '#91a4b2', weight: .7, opacity: .92, fillColor: '#f9fcfe', fillOpacity: .9 };
+  const VISITED_STYLE = { color: '#5983a6', weight: 1.1, opacity: .95, fillColor: '#dbeaf6', fillOpacity: .55 };
+  const SELECTED_STYLE = { color: '#1769aa', weight: 2.25, opacity: 1, fillColor: '#b9dbf3', fillOpacity: .8 };
+  const OUT_OF_SCOPE_STYLE = { color: '#d5e0e7', weight: .35, opacity: .35, fillColor: '#f6f9fb', fillOpacity: .1 };
+  const HOVER_STYLE = { color: '#1769aa', weight: 1.7, opacity: 1, fillColor: '#cfe8fa', fillOpacity: .72 };
   const RESULT_STYLES = {
-    correct: { color: '#167346', weight: 1.75, opacity: .96, fillColor: '#58bf82', fillOpacity: .44 },
-    wrong: { color: '#c9443d', weight: 1.75, opacity: .96, fillColor: '#e9746b', fillOpacity: .44 },
-    blank: { color: '#ad7d10', weight: 1.75, opacity: .96, fillColor: '#f4d579', fillOpacity: .52 }
+    correct: { color: '#167346', weight: 1.8, opacity: .98, fillColor: '#58bf82', fillOpacity: .5 },
+    wrong: { color: '#c9443d', weight: 1.8, opacity: .98, fillColor: '#e9746b', fillOpacity: .5 },
+    blank: { color: '#ad7d10', weight: 1.8, opacity: .98, fillColor: '#f4d579', fillOpacity: .58 }
   };
 
   const $ = id => document.getElementById(id);
   const { data: QUIZ_DATA, titles: QUIZ_TITLES } = window.GEOGRAPHY_QUIZ_DATA;
   const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([36.1, 127.7], 7);
-  const boundaryLayer = L.layerGroup().addTo(map);
-  const numberLayer = L.layerGroup().addTo(map);
-  const canvasRenderer = L.canvas({ padding: .25 });
+  map.createPane('provinceOutline');
+  map.getPane('provinceOutline').style.zIndex = '450';
+  map.getPane('provinceOutline').style.pointerEvents = 'none';
+  const municipalityLayer = L.layerGroup().addTo(map);
+  const provinceLayer = L.layerGroup().addTo(map);
+  const municipalityRenderer = L.canvas({ pane: 'overlayPane', padding: .25 });
+  const provinceRenderer = L.canvas({ pane: 'provinceOutline', padding: .25 });
 
   let boundaryFeatures = [];
   let boundaryFeatureLayers = new Map();
-  let featureMatches = new Map();
-  let numberMarkers = new Map();
+  let activeFeatureItems = new Map();
+  let municipalityReady = false;
   let currentUser = null;
   let wrongAnswers = new Map();
   let pendingWrongActions = loadPendingWrongActions();
   let wrongSyncInFlight = false;
   let state = { mode: 'sigun', source: 'all', sheet: null };
-  let sheetElements = new Map();
 
   function normalise(value) {
     return String(value || '').normalize('NFC').trim().replace(/[\s·ㆍ\-‐‑–—]/g, '').toLowerCase();
@@ -80,6 +88,18 @@
     return SHEET_DRAFT_KEY + mode + ':' + source;
   }
 
+  function featureCode(feature) {
+    return String(feature?.properties?.code || '').padStart(5, '0');
+  }
+
+  function featureName(feature) {
+    return normalise(withoutPrefix(feature?.properties?.name || ''));
+  }
+
+  function entryName(entry) {
+    return normalise(withoutPrefix(entry.name));
+  }
+
   function loadPendingWrongActions() {
     try {
       const parsed = JSON.parse(localStorage.getItem(WRONG_ACTIONS_KEY));
@@ -104,11 +124,17 @@
   function loadSheetDraft(sheet) {
     try {
       const parsed = JSON.parse(localStorage.getItem(sheet.draftKey));
-      const values = parsed && typeof parsed.answers === 'object' ? parsed.answers : {};
       const validKeys = new Set(sheet.items.map(item => item.key));
+      const values = parsed && typeof parsed.answers === 'object' ? parsed.answers : {};
       Object.entries(values || {}).forEach(([key, value]) => {
         if (validKeys.has(key) && typeof value === 'string' && value.trim()) sheet.answers.set(key, value);
       });
+      if (Array.isArray(parsed?.selected)) {
+        parsed.selected.forEach(key => {
+          if (validKeys.has(key)) sheet.selectedKeys.add(key);
+        });
+      }
+      if (validKeys.has(parsed?.selectedKey)) sheet.selectedKey = parsed.selectedKey;
     } catch {}
   }
 
@@ -120,7 +146,11 @@
       sheet.answers.forEach((value, key) => {
         if (String(value || '').trim()) answers[key] = value;
       });
-      localStorage.setItem(sheet.draftKey, JSON.stringify({ answers }));
+      localStorage.setItem(sheet.draftKey, JSON.stringify({
+        answers,
+        selected: [...sheet.selectedKeys],
+        selectedKey: sheet.selectedKey
+      }));
     } catch {}
   }
 
@@ -138,7 +168,7 @@
     $('mistakeStatus').dataset.state = status;
   }
 
-  function setSheetResult(message, status = '') {
+  function setBoardResult(message, status = '') {
     $('sheetResult').textContent = message || '';
     $('sheetResult').dataset.state = status;
   }
@@ -185,8 +215,8 @@
       : '로그인하면 저장돼';
     $('mistakePracticeBtn').disabled = !hasUser || currentModeCount === 0;
     $('mistakePracticeBtn').textContent = currentModeCount
-      ? '현재 모드 오답 ' + currentModeCount + '개 답안지 만들기'
-      : '현재 모드 오답 답안지 만들기';
+      ? '현재 모드 오답 ' + currentModeCount + '개 지도 열기'
+      : '현재 모드 오답 지도 열기';
     $('allPracticeBtn').hidden = state.source !== 'mistakes';
 
     list.replaceChildren();
@@ -365,40 +395,21 @@
       return;
     }
     const email = $('quizEmail').value.trim();
-    const password = $('quizPassword').value;
-    if (!email || !password) {
-      setAuthStatus('이메일과 비밀번호를 둘 다 입력해줘.', 'error');
+    if (!email) {
+      setAuthStatus('이메일 주소를 입력해줘.', 'error');
       return;
     }
-    setAuthStatus('로그인 중…', '');
-    const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-    if (error) setAuthStatus('로그인 실패: ' + error.message, 'error');
-  }
-
-  async function signUp() {
-    if (!supabaseClient) {
-      setAuthStatus('회원가입 기능을 불러오지 못했어. 새로고침해줘.', 'error');
-      return;
-    }
-    const email = $('quizEmail').value.trim();
-    const password = $('quizPassword').value;
-    if (!email || !password) {
-      setAuthStatus('이메일과 비밀번호를 둘 다 입력해줘.', 'error');
-      return;
-    }
-    if (password.length < 6) {
-      setAuthStatus('비밀번호는 6자 이상으로 만들어줘.', 'error');
-      return;
-    }
-    setAuthStatus('회원가입 중…', '');
-    const { data, error } = await supabaseClient.auth.signUp({ email, password });
-    if (error) {
-      setAuthStatus('회원가입 실패: ' + error.message, 'error');
-      return;
-    }
+    setAuthStatus('로그인 링크 전송 중…', '');
+    const { error } = await supabaseClient.auth.signInWithOtp({
+      email,
+      // 메인 페이지는 이미 Supabase Redirect URL로 등록되어 있어 로그인 실패를 피할 수 있어.
+      options: { emailRedirectTo: window.location.origin + '/Geography/' }
+    });
     setAuthStatus(
-      data.session ? '회원가입 완료 · 오답노트를 동기화하는 중이야.' : '회원가입은 됐어. 이메일 확인 설정이 켜져 있으면 메일을 확인해줘.',
-      'success'
+      error
+        ? '로그인 링크 전송 실패: ' + error.message
+        : '메일 링크를 누르면 메인 페이지가 열려. 그다음 퀴즈로 다시 들어오면 같은 계정으로 바로 이어져.',
+      error ? 'error' : 'success'
     );
   }
 
@@ -412,19 +423,26 @@
     const sheet = {
       mode,
       source,
-      items: entriesFor(mode, source).map((entry, index) => ({
-        no: index + 1,
-        entry,
-        key: questionKey(mode, entry)
-      })),
+      items: entriesFor(mode, source).map(entry => ({ entry, key: questionKey(mode, entry) })),
       answers: new Map(),
       results: new Map(),
+      selectedKeys: new Set(),
+      selectedKey: null,
       wasGraded: false,
       dirty: false,
       draftKey: sheetDraftKey(mode, source)
     };
     loadSheetDraft(sheet);
     return sheet;
+  }
+
+  function currentSelectedItem() {
+    const sheet = state.sheet;
+    return sheet?.items.find(item => item.key === sheet.selectedKey) || null;
+  }
+
+  function filledCount(sheet) {
+    return sheet.items.reduce((count, item) => count + (String(sheet.answers.get(item.key) || '').trim() ? 1 : 0), 0);
   }
 
   function resultCounts(sheet) {
@@ -436,20 +454,17 @@
     return counts;
   }
 
-  function filledCount(sheet) {
-    return sheet.items.reduce((count, item) => count + (String(sheet.answers.get(item.key) || '').trim() ? 1 : 0), 0);
-  }
-
-  function renderSheetSummary() {
+  function renderBoardSummary() {
     const sheet = state.sheet;
     if (!sheet) return;
     const total = sheet.items.length;
     const filled = filledCount(sheet);
-    $('sheetProgress').textContent = '작성 ' + filled + ' / ' + total;
+    const selected = sheet.selectedKeys.size;
+    $('selectionProgress').textContent = '선택 ' + selected + ' / ' + total;
 
     if (!sheet.wasGraded) {
       $('score').textContent = '작성 ' + filled + ' / ' + total;
-      $('streak').textContent = total ? '아직 미채점' : '문제 없음';
+      $('streak').textContent = '선택 ' + selected + ' / ' + total;
       return;
     }
 
@@ -458,284 +473,240 @@
     $('streak').textContent = '오답 ' + (counts.wrong + counts.blank) + '개';
   }
 
-  function renderSheetResult() {
+  function renderBoardResult() {
     const sheet = state.sheet;
     if (!sheet || !sheet.items.length) {
-      setSheetResult(sheet?.source === 'mistakes' ? '현재 모드의 오답을 전부 정리했어.' : '표시할 문제가 없어.', 'warning');
+      setBoardResult(sheet?.source === 'mistakes' ? '현재 모드의 오답을 전부 정리했어.' : '표시할 문제가 없어.', 'warning');
       return;
     }
     if (!sheet.wasGraded) {
-      setSheetResult('', '');
+      setBoardResult('', '');
+      return;
+    }
+    if (sheet.dirty) {
+      setBoardResult('수정한 답이 있어. 다시 전체 채점하기를 눌러 반영해.', 'warning');
       return;
     }
 
     const counts = resultCounts(sheet);
-    if (sheet.dirty) {
-      setSheetResult('수정한 답안이 있어. 다시 전체 채점하기를 눌러 반영해.', 'warning');
-      return;
-    }
-
     const note = currentUser
       ? ' · 틀린 문제는 오답노트에 반영했어.'
       : ' · 로그인하면 틀린 문제를 오답노트에 저장할 수 있어.';
-    setSheetResult(
+    setBoardResult(
       '정답 ' + counts.correct + ' / ' + sheet.items.length + ' · 오답 ' + counts.wrong + ' · 미입력 ' + counts.blank + note,
       counts.wrong || counts.blank ? 'warning' : 'success'
     );
   }
 
-  function renderSheetHeader() {
+  function renderSelection({ preserveInput = false } = {}) {
     const sheet = state.sheet;
-    if (!sheet) return;
-    const title = QUIZ_TITLES[sheet.mode] || sheet.mode;
-    $('sheetTitle').textContent = sheet.source === 'mistakes'
-      ? title + ' 오답 답안지'
-      : title + ' 전체 빈칸 답안지';
-    $('sheetDescription').textContent = sheet.items.length
-      ? '지도 속 번호와 같은 빈칸을 모두 채운 뒤 전체 채점하기를 눌러.'
-      : '현재 모드의 오답을 전부 정리했어. 전체 답안지로 다시 연습해봐.';
-    $('gradeBtn').disabled = !sheet.items.length;
-    $('clearSheetBtn').disabled = !sheet.items.length || !sheet.answers.size;
-    $('gradeBtn').textContent = sheet.wasGraded
-      ? (sheet.dirty ? '수정한 답안 다시 채점하기' : '전체 다시 채점하기')
+    const selected = currentSelectedItem();
+    const card = $('selectionCard');
+    const input = $('selectedAnswerInput');
+    card.dataset.selected = String(Boolean(selected));
+
+    if (!selected) {
+      $('selectionTitle').textContent = '지도에서 행정구역을 클릭해';
+      $('selectionHint').textContent = sheet?.source === 'mistakes'
+        ? '지도에서 노란색·빨간색 영역을 눌러 오답만 다시 채워.'
+        : '지도의 경계를 누르면, 그 지역의 답을 여기서 적을 수 있어.';
+      input.disabled = true;
+      if (!preserveInput) input.value = '';
+      input.placeholder = '먼저 지도에서 지역을 클릭해';
+      $('selectedAnswerStatus').textContent = '';
+      $('selectedAnswerStatus').dataset.state = '';
+      return;
+    }
+
+    $('selectionTitle').textContent = '선택한 지역의 답을 입력해';
+    $('selectionHint').textContent = '정답은 아직 보이지 않아. 입력 후 지도에서 다음 지역을 눌러 계속 채워.';
+    input.disabled = false;
+    if (!preserveInput) input.value = sheet.answers.get(selected.key) || '';
+    input.placeholder = '예: 김제';
+
+    const result = sheet.wasGraded ? sheet.results.get(selected.key) : '';
+    if (sheet.dirty && sheet.wasGraded) {
+      $('selectedAnswerStatus').textContent = '답을 수정했어. 전체 채점하기를 다시 눌러.';
+      $('selectedAnswerStatus').dataset.state = 'warning';
+    } else if (result === 'correct') {
+      $('selectedAnswerStatus').textContent = '정답';
+      $('selectedAnswerStatus').dataset.state = 'success';
+    } else if (result === 'wrong') {
+      $('selectedAnswerStatus').textContent = '정답: ' + shortName(selected.entry);
+      $('selectedAnswerStatus').dataset.state = 'warning';
+    } else if (result === 'blank') {
+      $('selectedAnswerStatus').textContent = '미입력 · 정답: ' + shortName(selected.entry);
+      $('selectedAnswerStatus').dataset.state = 'warning';
+    } else {
+      $('selectedAnswerStatus').textContent = '입력 내용은 자동으로 임시 저장돼.';
+      $('selectedAnswerStatus').dataset.state = '';
+    }
+  }
+
+  function renderBoardControls() {
+    const sheet = state.sheet;
+    const hasItems = Boolean(sheet?.items.length);
+    $('gradeBtn').disabled = !hasItems || !municipalityReady;
+    $('clearSheetBtn').disabled = !hasItems || (!sheet.answers.size && !sheet.selectedKeys.size);
+    $('gradeBtn').textContent = sheet?.wasGraded
+      ? (sheet.dirty ? '수정한 답 다시 채점하기' : '전체 다시 채점하기')
       : '전체 채점하기';
   }
 
-  function renderSheetRows() {
-    const sheet = state.sheet;
-    if (!sheet) return;
-    sheet.items.forEach(item => {
-      const elements = sheetElements.get(item.key);
-      if (!elements) return;
-      const result = sheet.results.get(item.key) || '';
-      elements.row.dataset.result = result;
-      if (result === 'correct') elements.correction.textContent = '정답';
-      else if (result === 'wrong') elements.correction.textContent = '정답: ' + shortName(item.entry);
-      else if (result === 'blank') elements.correction.textContent = '미입력 · 정답: ' + shortName(item.entry);
-      else elements.correction.textContent = '';
-    });
+  function specialSigunItemForCode(sheet, code) {
+    let targetName = '';
+    if (code.startsWith('11')) targetName = '서울특별시';
+    else if (code.startsWith('21')) targetName = '부산광역시';
+    else if (code.startsWith('22') || code === '37310') targetName = '대구광역시';
+    else if (code === '23310') targetName = '인천 강화군';
+    else if (code === '23320') targetName = '인천 옹진군';
+    else if (code.startsWith('23')) targetName = '인천광역시';
+    else if (code.startsWith('24')) targetName = '광주광역시';
+    else if (code.startsWith('25')) targetName = '대전광역시';
+    else if (code === '26310') targetName = '울산 울주군';
+    else if (code.startsWith('26')) targetName = '울산광역시';
+    else if (code === '29010') targetName = '세종특별자치시';
+    return targetName ? sheet.items.find(item => item.entry.name === targetName) || null : null;
   }
 
-  function updateSheetAfterInput() {
+  function resolveSigunGroupItem(sheet, groupCode, groupFeatures, groupCache) {
+    if (groupCache.has(groupCode)) return groupCache.get(groupCode);
+    const fixedNames = {
+      '3240': '강원 고성군',
+      '3834': '경남 고성군'
+    };
+    let item = fixedNames[groupCode]
+      ? sheet.items.find(candidate => candidate.entry.name === fixedNames[groupCode]) || null
+      : null;
+
+    if (!item) {
+      const names = new Set(groupFeatures.map(featureName));
+      const candidates = sheet.items.filter(candidate => {
+        const target = entryName(candidate.entry);
+        return [...names].some(name => name === target || (target.endsWith('시') && name.startsWith(target)));
+      });
+      if (candidates.length === 1) item = candidates[0];
+    }
+    groupCache.set(groupCode, item);
+    return item;
+  }
+
+  function resolveFeatureItem(sheet, feature, groupCache) {
+    const code = featureCode(feature);
+    if (!code || code.length !== 5) return null;
+
+    if (sheet.mode === 'sigun') {
+      const special = specialSigunItemForCode(sheet, code);
+      if (special) return special;
+      const groupCode = code.slice(0, 4);
+      const groupFeatures = boundaryFeatures.filter(candidate => featureCode(candidate).slice(0, 4) === groupCode);
+      return resolveSigunGroupItem(sheet, groupCode, groupFeatures, groupCache);
+    }
+
+    const permitted = sheet.mode === 'seoul'
+      ? code.startsWith('11')
+      : sheet.mode === 'busan'
+        ? code.startsWith('21')
+        : code.startsWith('22') || code === '37310';
+    if (!permitted) return null;
+    const name = featureName(feature);
+    return sheet.items.find(item => entryName(item.entry) === name) || null;
+  }
+
+  function rebuildActiveFeatureItems() {
+    activeFeatureItems = new Map();
     const sheet = state.sheet;
-    if (!sheet) return;
+    if (!sheet || !boundaryFeatures.length) return { mappedItems: new Set(), unmappedItems: [] };
+    const groupCache = new Map();
+    boundaryFeatures.forEach(feature => {
+      const item = resolveFeatureItem(sheet, feature, groupCache);
+      if (item) activeFeatureItems.set(feature, item);
+    });
+
+    const mappedItems = new Set([...activeFeatureItems.values()].map(item => item.key));
+    const unmappedItems = sheet.items
+      .filter(item => !mappedItems.has(item.key))
+      .map(item => item.entry.name);
+    console.info(
+      '클릭형 행정구역 매핑: mode=' + sheet.mode +
+      ', features=' + activeFeatureItems.size + '/' + boundaryFeatures.length +
+      ', items=' + mappedItems.size + '/' + sheet.items.length
+    );
+    if (unmappedItems.length) {
+      console.warn('클릭 가능한 경계를 찾지 못한 답안:', unmappedItems.join(', '));
+    }
+    return { mappedItems, unmappedItems };
+  }
+
+  function renderMappingStatus(mapping) {
+    if (!boundaryFeatures.length || !mapping) return;
+    if (mapping.unmappedItems.length) {
+      $('mapStatus').textContent = '일부 경계가 답안과 연결되지 않았어. 새로고침해줘.';
+      $('mapStatus').dataset.state = 'error';
+      return;
+    }
+    $('mapStatus').textContent = '지명 없는 시·군 지도 · 영역을 클릭해서 답 입력';
+    $('mapStatus').dataset.state = '';
+  }
+
+  function styleForFeature(feature) {
+    const sheet = state.sheet;
+    const item = activeFeatureItems.get(feature);
+    if (!sheet || !item) return OUT_OF_SCOPE_STYLE;
+    const result = sheet.wasGraded ? sheet.results.get(item.key) : '';
+    if (result) return RESULT_STYLES[result];
+    if (item.key === sheet.selectedKey) return SELECTED_STYLE;
+    if (sheet.selectedKeys.has(item.key) || sheet.answers.has(item.key)) return VISITED_STYLE;
+    return BASE_STYLE;
+  }
+
+  function applyFeatureStyle(feature, layer) {
+    layer.setStyle(styleForFeature(feature));
+  }
+
+  function applyMapStyles() {
+    boundaryFeatureLayers.forEach((layer, feature) => applyFeatureStyle(feature, layer));
+  }
+
+  function selectItem(item) {
+    const sheet = state.sheet;
+    if (!sheet || !item) return;
+    sheet.selectedKeys.add(item.key);
+    sheet.selectedKey = item.key;
+    saveSheetDraft();
+    renderBoardSummary();
+    renderBoardControls();
+    renderSelection();
+    applyMapStyles();
+    requestAnimationFrame(() => $('selectedAnswerInput').focus());
+  }
+
+  function onSelectedAnswerInput() {
+    const sheet = state.sheet;
+    const item = currentSelectedItem();
+    if (!sheet || !item) return;
+    const value = $('selectedAnswerInput').value;
+    if (value.trim()) sheet.answers.set(item.key, value);
+    else sheet.answers.delete(item.key);
     if (sheet.wasGraded) sheet.dirty = true;
     saveSheetDraft();
-    renderSheetHeader();
-    renderSheetSummary();
-    renderSheetResult();
-  }
-
-  function moveToNextInput(item) {
-    const sheet = state.sheet;
-    if (!sheet) return;
-    const index = sheet.items.findIndex(candidate => candidate.key === item.key);
-    const next = sheet.items[index + 1];
-    if (next) {
-      sheetElements.get(next.key)?.input.focus();
-    } else {
-      $('gradeBtn').focus();
-    }
-  }
-
-  function focusSheetInput(key, scroll = false) {
-    const elements = sheetElements.get(key);
-    if (!elements) return;
-    if (scroll) elements.row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    elements.input.focus({ preventScroll: !scroll });
-  }
-
-  function renderSheet() {
-    const sheet = state.sheet;
-    const root = $('answerSheet');
-    sheetElements = new Map();
-    root.replaceChildren();
-    if (!sheet || !sheet.items.length) {
-      const empty = document.createElement('li');
-      empty.className = 'empty-sheet';
-      empty.textContent = sheet?.source === 'mistakes'
-        ? '현재 모드의 오답이 없어. 전체 답안지로 돌아가면 새로 연습할 수 있어.'
-        : '표시할 문제가 없어.';
-      root.append(empty);
-      renderSheetHeader();
-      renderSheetSummary();
-      renderSheetResult();
-      return;
-    }
-
-    sheet.items.forEach(item => {
-      const row = document.createElement('li');
-      row.className = 'sheet-item';
-
-      const label = document.createElement('label');
-      label.htmlFor = 'sheet-answer-' + item.no;
-      const number = document.createElement('span');
-      number.className = 'sheet-number';
-      number.textContent = String(item.no);
-      const input = document.createElement('input');
-      input.id = 'sheet-answer-' + item.no;
-      input.type = 'text';
-      input.autocomplete = 'off';
-      input.autocapitalize = 'off';
-      input.spellcheck = false;
-      input.placeholder = '이름';
-      input.value = sheet.answers.get(item.key) || '';
-      input.setAttribute('aria-label', item.no + '번 답안');
-      input.addEventListener('input', () => {
-        if (input.value.trim()) sheet.answers.set(item.key, input.value);
-        else sheet.answers.delete(item.key);
-        updateSheetAfterInput();
-      });
-      input.addEventListener('focus', () => showItemOnMap(item));
-      input.addEventListener('keydown', event => {
-        if (event.key === 'Enter') {
-          event.preventDefault();
-          moveToNextInput(item);
-        }
-      });
-      label.append(number, input);
-
-      const correction = document.createElement('small');
-      correction.className = 'sheet-correction';
-      correction.setAttribute('aria-live', 'polite');
-      row.append(label, correction);
-      root.append(row);
-      sheetElements.set(item.key, { row, input, correction });
-    });
-
-    renderSheetHeader();
-    renderSheetRows();
-    renderSheetSummary();
-    renderSheetResult();
-  }
-
-  function simpleBoundaryName(value) {
-    return normalise(String(value || '').replace(REGION_PREFIX, ''));
-  }
-
-  function featureDistance(feature, entry) {
-    const layer = boundaryFeatureLayers.get(feature);
-    const bounds = layer?.getBounds ? layer.getBounds() : L.geoJSON(feature).getBounds();
-    return bounds?.isValid?.() ? map.distance([entry.lat, entry.lng], bounds.getCenter()) : Number.POSITIVE_INFINITY;
-  }
-
-  function matchingFeatures(mode, entry) {
-    const cacheKey = questionKey(mode, entry);
-    if (featureMatches.has(cacheKey)) return featureMatches.get(cacheKey);
-
-    const target = simpleBoundaryName(withoutPrefix(entry.name));
-    const isCity = /시$/.test(withoutPrefix(entry.name));
-    const exact = boundaryFeatures.filter(feature =>
-      simpleBoundaryName(feature.properties && feature.properties.name) === target
-    );
-    let matches = exact;
-    if (isCity) {
-      const grouped = boundaryFeatures.filter(feature =>
-        simpleBoundaryName(feature.properties && feature.properties.name).startsWith(target)
-      );
-      if (grouped.length) matches = grouped;
-    }
-    if (matches.length > 1 && !isCity) {
-      matches = [matches.slice().sort((a, b) => featureDistance(a, entry) - featureDistance(b, entry))[0]];
-    }
-    featureMatches.set(cacheKey, matches);
-    return matches;
-  }
-
-  function resetBoundaryStyles() {
-    boundaryFeatureLayers.forEach(layer => layer.setStyle(BASE_STYLE));
-  }
-
-  function resultForItem(item) {
-    return state.sheet?.wasGraded ? state.sheet.results.get(item.key) || '' : '';
-  }
-
-  function makeNumberIcon(number, result) {
-    return L.divIcon({
-      className: 'admin-number' + (result ? ' is-' + result : ''),
-      html: String(number),
-      iconSize: [27, 23],
-      iconAnchor: [13, 12]
-    });
-  }
-
-  function renderNumberMarkers() {
-    const sheet = state.sheet;
-    numberLayer.clearLayers();
-    numberMarkers = new Map();
-    if (!sheet) return;
-
-    sheet.items.forEach(item => {
-      const marker = L.marker([item.entry.lat, item.entry.lng], {
-        icon: makeNumberIcon(item.no, resultForItem(item)),
-        keyboard: false,
-        title: item.no + '번'
-      }).addTo(numberLayer);
-      marker.on('click', () => focusSheetInput(item.key, true));
-      numberMarkers.set(item.key, marker);
-    });
-  }
-
-  function applyMapResults() {
-    const sheet = state.sheet;
-    resetBoundaryStyles();
-    if (!sheet?.wasGraded) return;
-    sheet.items.forEach(item => {
-      const result = sheet.results.get(item.key);
-      if (!result) return;
-      matchingFeatures(sheet.mode, item.entry).forEach(feature => {
-        boundaryFeatureLayers.get(feature)?.setStyle(RESULT_STYLES[result]);
-      });
-    });
-  }
-
-  function fitMapToSheet() {
-    const sheet = state.sheet;
-    if (!sheet?.items.length) return;
-    if (sheet.mode === 'sigun') {
-      map.fitBounds([[32.25, 124.0], [38.85, 131.25]], { padding: [18, 18], maxZoom: 7, animate: false });
-      return;
-    }
-    const bounds = L.latLngBounds(sheet.items.map(item => [item.entry.lat, item.entry.lng]));
-    if (bounds.isValid()) map.fitBounds(bounds.pad(.22), { padding: [18, 18], maxZoom: 12, animate: false });
-  }
-
-  function renderSheetMap({ fit = false } = {}) {
-    renderNumberMarkers();
-    applyMapResults();
-    if (fit) {
-      requestAnimationFrame(() => {
-        map.invalidateSize();
-        fitMapToSheet();
-      });
-    }
-  }
-
-  function markFocusedNumber(key) {
-    numberMarkers.forEach(marker => marker.getElement()?.classList.remove('is-focused'));
-    const marker = numberMarkers.get(key);
-    marker?.getElement()?.classList.add('is-focused');
-  }
-
-  function showItemOnMap(item) {
-    const sheet = state.sheet;
-    if (!sheet) return;
-    markFocusedNumber(item.key);
-    const layers = matchingFeatures(sheet.mode, item.entry)
-      .map(feature => boundaryFeatureLayers.get(feature))
-      .filter(Boolean);
-    const group = layers.length ? L.featureGroup(layers) : null;
-    const bounds = group?.getBounds();
-    if (bounds?.isValid?.()) {
-      map.fitBounds(bounds.pad(.4), { padding: [18, 18], maxZoom: sheet.mode === 'sigun' ? 10 : 13, animate: true });
-    } else {
-      map.flyTo([item.entry.lat, item.entry.lng], sheet.mode === 'sigun' ? 9 : 12, { animate: true });
-    }
+    renderBoardSummary();
+    renderBoardControls();
+    renderBoardResult();
+    renderSelection({ preserveInput: true });
   }
 
   function gradeSheet() {
     const sheet = state.sheet;
     if (!sheet?.items.length) return;
+    if (!municipalityReady) {
+      setBoardResult('지도의 행정구역 경계를 불러오는 중이야. 잠시 뒤 다시 눌러줘.', 'warning');
+      return;
+    }
+    const blanksBeforeGrading = sheet.items.length - filledCount(sheet);
+    if (!sheet.wasGraded && blanksBeforeGrading > 0 && !window.confirm(
+      blanksBeforeGrading + '개가 비어 있어. 빈칸도 오답으로 처리해서 채점할까?'
+    )) return;
 
     const actions = [];
     sheet.items.forEach(item => {
@@ -768,16 +739,16 @@
     sheet.wasGraded = true;
     sheet.dirty = false;
     saveSheetDraft();
-    renderSheetHeader();
-    renderSheetRows();
-    renderSheetSummary();
-    renderSheetResult();
-    renderSheetMap();
+    renderBoardSummary();
+    renderBoardControls();
+    renderBoardResult();
+    renderSelection();
+    applyMapStyles();
 
     if (actions.length) {
       queueWrongActions(actions);
     } else if (currentUser) {
-      setMistakeStatus('이번 답안지의 오답은 없어.', 'success');
+      setMistakeStatus('이번 지도판의 오답은 없어.', 'success');
     } else {
       setMistakeStatus('로그인하면 전체 채점의 오답을 계정에 저장해.', '');
     }
@@ -786,22 +757,47 @@
   function clearSheet() {
     const sheet = state.sheet;
     if (!sheet?.items.length) return;
-    if (sheet.answers.size && !window.confirm('이 답안지에 쓴 내용을 모두 지울까?')) return;
+    if ((sheet.answers.size || sheet.selectedKeys.size) && !window.confirm('이 지도판에 쓴 답과 선택 표시를 모두 지울까?')) return;
     sheet.answers.clear();
     sheet.results.clear();
+    sheet.selectedKeys.clear();
+    sheet.selectedKey = null;
     sheet.wasGraded = false;
     sheet.dirty = false;
     clearSheetDraft(sheet);
-    renderSheet();
-    renderSheetMap();
+    renderBoardSummary();
+    renderBoardControls();
+    renderBoardResult();
+    renderSelection();
+    applyMapStyles();
+  }
+
+  function fitMapToSheet() {
+    const sheet = state.sheet;
+    if (!sheet?.items.length) return;
+    if (sheet.mode === 'sigun') {
+      map.fitBounds([[32.25, 124.0], [38.85, 131.25]], { padding: [18, 18], maxZoom: 7, animate: false });
+      return;
+    }
+    const bounds = L.latLngBounds(sheet.items.map(item => [item.entry.lat, item.entry.lng]));
+    if (bounds.isValid()) map.fitBounds(bounds.pad(.22), { padding: [18, 18], maxZoom: 12, animate: false });
   }
 
   function startSheet(mode = state.mode, source = state.source) {
     state = { mode, source, sheet: makeSheet(mode, source) };
     updateModeButtons();
+    const mapping = rebuildActiveFeatureItems();
+    renderMappingStatus(mapping);
     renderMistakeTools();
-    renderSheet();
-    renderSheetMap({ fit: true });
+    renderBoardSummary();
+    renderBoardControls();
+    renderBoardResult();
+    renderSelection();
+    applyMapStyles();
+    requestAnimationFrame(() => {
+      map.invalidateSize();
+      fitMapToSheet();
+    });
   }
 
   function updateModeButtons() {
@@ -810,31 +806,72 @@
     });
   }
 
-  async function loadBoundaries() {
-    try {
-      const response = await fetch(BOUNDARY_URL);
-      if (!response.ok) throw new Error('경계 데이터 응답 오류');
-      const topology = await response.json();
-      const object = topology.objects && topology.objects.skorea_municipalities_2018_geo;
-      if (!object || !window.topojson) throw new Error('경계 데이터 형식 오류');
+  function bindMunicipalityLayer(feature, layer) {
+    boundaryFeatureLayers.set(feature, layer);
+    layer.on('click', () => {
+      const item = activeFeatureItems.get(feature);
+      if (item) selectItem(item);
+    });
+    layer.on('mouseover', () => {
+      const item = activeFeatureItems.get(feature);
+      if (item && !state.sheet?.wasGraded) layer.setStyle(HOVER_STYLE);
+    });
+    layer.on('mouseout', () => applyFeatureStyle(feature, layer));
+  }
 
-      boundaryFeatures = window.topojson.feature(topology, object).features;
-      boundaryFeatureLayers = new Map();
-      featureMatches = new Map();
-      L.geoJSON(boundaryFeatures, {
-        interactive: false,
-        renderer: canvasRenderer,
-        style: BASE_STYLE,
-        onEachFeature(feature, layer) {
-          boundaryFeatureLayers.set(feature, layer);
-        }
-      }).addTo(boundaryLayer);
-      $('mapStatus').textContent = '이름 없는 시·군·구 경계 · 번호만 표시';
-      $('mapStatus').dataset.state = '';
-      renderSheetMap({ fit: true });
-    } catch (error) {
-      console.warn('경계 지도 불러오기 실패:', error?.message || error);
-      $('mapStatus').textContent = '경계 데이터를 못 불러왔어. 번호 지도와 답안지는 계속 쓸 수 있어.';
+  async function loadMunicipalityBoundaries() {
+    const response = await fetch(MUNICIPALITY_URL);
+    if (!response.ok) throw new Error('시·군 경계 데이터 응답 오류');
+    const topology = await response.json();
+    const object = topology.objects && topology.objects.skorea_municipalities_2018_geo;
+    if (!object || !window.topojson) throw new Error('시·군 경계 데이터 형식 오류');
+
+    boundaryFeatures = window.topojson.feature(topology, object).features;
+    boundaryFeatureLayers = new Map();
+    L.geoJSON(boundaryFeatures, {
+      renderer: municipalityRenderer,
+      interactive: true,
+      style: BASE_STYLE,
+      onEachFeature: bindMunicipalityLayer
+    }).addTo(municipalityLayer);
+    municipalityReady = true;
+    const mapping = rebuildActiveFeatureItems();
+    applyMapStyles();
+    renderMappingStatus(mapping);
+    renderBoardControls();
+    requestAnimationFrame(() => {
+      map.invalidateSize();
+      fitMapToSheet();
+    });
+  }
+
+  async function loadProvinceOutlines() {
+    const response = await fetch(PROVINCE_URL);
+    if (!response.ok) throw new Error('시·도 경계 데이터 응답 오류');
+    const topology = await response.json();
+    const object = topology.objects && topology.objects.skorea_provinces_2018_geo;
+    if (!object || !window.topojson) throw new Error('시·도 경계 데이터 형식 오류');
+    const features = window.topojson.feature(topology, object).features;
+    L.geoJSON(features, {
+      pane: 'provinceOutline',
+      renderer: provinceRenderer,
+      interactive: false,
+      style: { color: '#173f68', weight: 2.45, opacity: .98, fill: false, fillOpacity: 0 }
+    }).addTo(provinceLayer);
+  }
+
+  async function loadMapData() {
+    const [municipality, provinces] = await Promise.allSettled([
+      loadMunicipalityBoundaries(),
+      loadProvinceOutlines()
+    ]);
+    if (municipality.status === 'rejected') {
+      console.warn('시·군 지도 불러오기 실패:', municipality.reason);
+      $('mapStatus').textContent = '경계 데이터를 못 불러왔어. 인터넷 연결 후 새로고침해줘.';
+      $('mapStatus').dataset.state = 'error';
+    } else if (provinces.status === 'rejected') {
+      console.warn('시·도 경계 불러오기 실패:', provinces.reason);
+      $('mapStatus').textContent = '시·군은 클릭할 수 있어. 시·도 진한 경계만 나중에 다시 불러올게.';
       $('mapStatus').dataset.state = 'error';
     }
   }
@@ -842,13 +879,20 @@
   document.querySelectorAll('[data-mode]').forEach(button => {
     button.onclick = () => startSheet(button.dataset.mode, 'all');
   });
-  $('sheetForm').onsubmit = event => event.preventDefault();
   $('gradeBtn').onclick = gradeSheet;
   $('clearSheetBtn').onclick = clearSheet;
+  $('selectedAnswerInput').addEventListener('input', onSelectedAnswerInput);
+  $('selectedAnswerInput').addEventListener('keydown', event => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      $('selectedAnswerStatus').textContent = '저장됨 · 지도에서 다음 지역을 클릭해.';
+      $('selectedAnswerStatus').dataset.state = 'success';
+      $('selectedAnswerInput').blur();
+    }
+  });
   $('mistakePracticeBtn').onclick = () => startSheet(state.mode, 'mistakes');
   $('allPracticeBtn').onclick = () => startSheet(state.mode, 'all');
   $('quizLoginBtn').onclick = signIn;
-  $('quizSignupBtn').onclick = signUp;
   $('quizLogoutBtn').onclick = signOut;
 
   window.addEventListener('online', () => {
@@ -862,7 +906,7 @@
   }, 45000);
 
   startSheet();
-  loadBoundaries();
+  loadMapData();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('../service-worker.js').catch(() => {});
 
   if (!supabaseClient) {
