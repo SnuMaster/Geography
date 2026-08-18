@@ -7,8 +7,9 @@
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
     : null;
 
-  const MUNICIPALITY_URL = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-municipalities-2018-topo-simple.json';
-  const PROVINCE_URL = 'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-topo-simple.json';
+  // 외부 도메인이 막힌 환경에서도 지도가 열리도록 경계 파일도 이 사이트 안에서 불러온다.
+  const MUNICIPALITY_URL = './data/korea-municipalities-2018.topo.json';
+  const PROVINCE_URL = './data/korea-provinces-2018.topo.json';
   const WRONG_ACTIONS_KEY = 'geography-quiz-wrong-actions-v2';
   const SHEET_DRAFT_KEY = 'geography-click-board-draft-v1:';
   const REGION_PREFIX = /^(경기도|강원|경남|인천|울산)\s+/;
