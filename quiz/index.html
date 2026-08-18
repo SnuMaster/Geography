@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#163f68">
-  <title>클릭형 시·군 빈칸 지도 | 한국지리</title>
+  <title>클릭형 행정구역 빈칸 지도 | 한국지리</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
   <style>
     :root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
@@ -82,13 +82,13 @@
 <body>
   <header>
     <a href="../">← 좌표 핀 학습으로 돌아가기</a>
-    <h1>클릭형 시·군 빈칸 지도</h1>
-    <p>지도에서 지역을 직접 누르고 답을 입력한 뒤, 전체를 한 번에 채점해.</p>
+    <h1>클릭형 행정구역 빈칸 지도</h1>
+    <p>서울·부산·대구만 구·군까지, 나머지는 시·군 단위로 직접 풀어.</p>
   </header>
   <main>
     <section class="panel" aria-labelledby="quizTitle">
       <h2 id="quizTitle">한 장으로 풀기</h2>
-      <p class="intro">번호는 없어. 지도 속 시·군을 하나씩 클릭해 답을 넣고, 마지막에 <b>전체 채점하기</b>를 눌러.</p>
+      <p class="intro">번호는 없어. 지도에서 행정구역을 하나씩 클릭해 답을 넣고, 마지막에 <b>전체 채점하기</b>를 눌러.</p>
 
       <section class="account-card" aria-labelledby="accountTitle">
         <div class="card-heading">
@@ -122,8 +122,8 @@
       </div>
 
       <div class="score-row" aria-live="polite">
-        <div id="score" class="score">작성 0 / 164</div>
-        <div id="streak" class="score">선택 0 / 164</div>
+        <div id="score" class="score">작성 0 / 208</div>
+        <div id="streak" class="score">선택 0 / 208</div>
       </div>
 
       <section class="mistake-card" aria-labelledby="mistakeTitle">
@@ -141,8 +141,8 @@
 
       <section id="selectionCard" class="selection-card" aria-labelledby="selectionTitle">
         <div class="card-heading">
-          <h3 id="selectionTitle">지도에서 시·군을 클릭해</h3>
-          <span id="selectionProgress">선택 0 / 164</span>
+          <h3 id="selectionTitle">지도에서 행정구역을 클릭해</h3>
+          <span id="selectionProgress">선택 0 / 208</span>
         </div>
         <p id="selectionHint">지도의 빈 영역을 누르면, 그 지역의 답을 여기서 적을 수 있어.</p>
         <label for="selectedAnswerInput">선택한 지역의 답안</label>
@@ -161,7 +161,7 @@
     <section class="map-card" aria-label="이름 없는 행정구역 지도">
       <div id="map"></div>
       <div id="mapStatus" class="map-status">행정구역 경계를 불러오는 중…</div>
-      <div class="map-note"><span class="click-dot">+</span>시·군을 직접 클릭해 답을 입력해 · 굵은 진한 선은 시·도 경계야</div>
+      <div class="map-note"><span class="click-dot">+</span>행정구역을 직접 클릭해 답을 입력해 · 굵은 진한 선은 시·도 경계야</div>
     </section>
   </main>
   <footer>행정구역 경계: <a href="https://sgis.kostat.go.kr/" target="_blank" rel="noopener">통계청 통계지리정보서비스(SGIS)</a>, 2018 · 공공누리 제1유형</footer>
@@ -169,8 +169,7 @@
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <script src="../quiz-data.js"></script>
-  <script src="./quiz-app.js?v=20260818-clickboard-v5"></script>
+  <script src="../quiz-data.js?v=20260818-adminscope-v1"></script>
+  <script src="./quiz-app.js?v=20260818-adminscope-v1"></script>
 </body>
 </html>
-
