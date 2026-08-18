@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v18';
+const APP_CACHE = 'geography-app-v19';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -6,17 +6,17 @@ const APP_SHELL = [
   './quiz/',
   './quiz/index.html',
   './quiz/quiz-app.js',
-  './quiz/quiz-app.js?v=20260818-adminscope-v1',
+  './quiz/quiz-app.js?v=20260818-adminscope-v2',
   './sigun-quiz.html',
   './quiz-data.js',
-  './quiz-data.js?v=20260818-adminscope-v1',
+  './quiz-data.js?v=20260818-adminscope-v2',
+  './quiz/data/korea-municipalities-2018.topo.json',
+  './quiz/data/korea-provinces-2018.topo.json',
   './favicon.ico',
   './teacher-photo-v3.webp?v=20260816-1432',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
   'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js',
-  'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-municipalities-2018-topo-simple.json',
-  'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-provinces-2018-topo-simple.json',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
 ];
 const MAX_CACHED_TILES = 240;
