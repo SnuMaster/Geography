@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v20';
+const APP_CACHE = 'geography-app-v21';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -8,6 +8,7 @@ const APP_SHELL = [
   './quiz/index.html',
   './quiz/quiz-app.js',
   './quiz/quiz-app.js?v=20260818-adminscope-v2',
+  './quiz/username-auth-override.js',
   './sigun-quiz.html',
   './quiz-data.js',
   './quiz-data.js?v=20260818-adminscope-v2',
@@ -80,23 +81,30 @@ async function cachedOrNetwork(request) {
   }
 }
 
-function shouldInjectUsernameAuth(url) {
+function pageAuthScript(url) {
   const path = url.pathname;
-  if (path.includes('/quiz/') || path.endsWith('/sigun-quiz.html')) return false;
-  return path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html';
+  if (path.includes('/quiz/')) {
+    return '<script src="./username-auth-override.js?v=20260819-username-v2"></script>';
+  }
+  if (path.endsWith('/sigun-quiz.html')) return '';
+  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') {
+    return '<script src="./username-auth.js?v=20260819-username-v2"></script>';
+  }
+  return '';
 }
 
-async function injectUsernameAuth(response, requestUrl) {
-  if (!response || !response.ok || !shouldInjectUsernameAuth(requestUrl)) return response;
+async function injectAuthScript(response, requestUrl) {
+  if (!response || !response.ok) return response;
+  const scriptTag = pageAuthScript(requestUrl);
+  if (!scriptTag) return response;
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
 
   const html = await response.text();
-  if (html.includes('username-auth.js')) {
+  if (html.includes(scriptTag.split('?')[0].replace('<script src="', ''))) {
     return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
   }
 
-  const scriptTag = '<script src="./username-auth.js?v=20260818-username-v1"></script>';
   const transformed = html.includes('</body>')
     ? html.replace('</body>', '  ' + scriptTag + '\n</body>')
     : html + scriptTag;
@@ -109,14 +117,14 @@ async function injectUsernameAuth(response, requestUrl) {
 async function navigationResponse(request) {
   const requestUrl = new URL(request.url);
   try {
-    const response = await fetch(request);
-    const transformed = await injectUsernameAuth(response, requestUrl);
+    const response = await fetch(request, { cache: 'no-store' });
+    const transformed = await injectAuthScript(response, requestUrl);
     return cacheResponse(APP_CACHE, request, transformed);
   } catch {
     const cached = (await caches.match(request)) ||
       (await caches.match('./')) ||
       (await caches.match('./index.html'));
-    return cached ? injectUsernameAuth(cached, requestUrl) : cached;
+    return cached ? injectAuthScript(cached, requestUrl) : cached;
   }
 }
 
