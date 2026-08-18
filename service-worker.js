@@ -1,12 +1,18 @@
-const APP_CACHE = 'geography-app-v11';
+const APP_CACHE = 'geography-app-v12';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
   './index.html',
+  './quiz/',
+  './quiz/index.html',
+  './quiz-data.js',
+  './sigun-quiz.html',
   './favicon.ico',
   './teacher-photo-v3.webp?v=20260816-1432',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js',
+  'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js',
+  'https://raw.githubusercontent.com/southkorea/southkorea-maps/master/kostat/2018/json/skorea-municipalities-2018-topo-simple.json',
   'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js'
 ];
 const MAX_CACHED_TILES = 240;
@@ -113,7 +119,8 @@ self.addEventListener('fetch', event => {
 
   if (
     url.origin === self.location.origin ||
-    url.hostname === 'cdn.jsdelivr.net'
+    url.hostname === 'cdn.jsdelivr.net' ||
+    url.hostname === 'raw.githubusercontent.com'
   ) {
     event.respondWith(cachedOrNetwork(request));
   }
