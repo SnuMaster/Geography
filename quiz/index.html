@@ -26,11 +26,11 @@
     .account-card p, .mistake-card p, .selection-card p { margin: 7px 0 0; color: #536b80; font-size: .8rem; line-height: 1.45; }
     .auth-fields { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 10px; }
     .auth-fields input { min-height: 40px; padding: 8px 9px; font-size: .84rem; }
-    .auth-actions { display: grid; grid-template-columns: 1fr; gap: 7px; margin-top: 8px; }
+    .auth-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
     .mistake-actions, .board-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 8px; }
     .auth-actions button, .mistake-actions button, .board-actions button { min-height: 38px; font-size: .8rem; }
     .auth-actions button:first-child, #mistakePracticeBtn, #gradeBtn { background: #1769aa; color: #fff; }
-    #allPracticeBtn, .mistake-clear, #clearSheetBtn { background: #e8f0f8; color: #254f79; }
+    #quizSignupBtn, #allPracticeBtn, .mistake-clear, #clearSheetBtn { background: #e8f0f8; color: #254f79; }
     .account-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
     .account-summary strong { display: block; color: #173f68; font-size: .84rem; overflow-wrap: anywhere; }
     .account-summary button { min-height: 36px; padding: 7px 10px; background: #e8f0f8; color: #254f79; font-size: .78rem; }
@@ -73,7 +73,7 @@
       .map-card { position: relative; top: auto; min-height: 58vh; }
     }
     @media (max-width: 410px) {
-      .mode-grid, .auth-fields { grid-template-columns: 1fr; }
+      .mode-grid, .auth-fields, .auth-actions { grid-template-columns: 1fr; }
       .score-row { flex-direction: column; }
       .account-summary { align-items: flex-start; flex-direction: column; }
     }
@@ -96,12 +96,14 @@
           <span>다른 기기에서도 이어서</span>
         </div>
         <div id="quizLoggedOut">
-          <p>메인 페이지와 같은 이메일로 로그인하면 오답이 계정에 저장돼.</p>
+          <p>아이디와 비밀번호로 로그인하면 오답이 계정에 저장돼.</p>
           <div class="auth-fields">
-            <input id="quizEmail" type="email" autocomplete="email" placeholder="이메일">
+            <input id="quizUsername" type="text" autocomplete="username" placeholder="아이디" minlength="3" maxlength="24" autocapitalize="none" spellcheck="false">
+            <input id="quizPassword" type="password" autocomplete="current-password" placeholder="비밀번호 (6자 이상)" minlength="6">
           </div>
           <div class="auth-actions">
-            <button id="quizLoginBtn" type="button">로그인 링크 받기</button>
+            <button id="quizLoginBtn" type="button">로그인</button>
+            <button id="quizSignupBtn" type="button">회원가입</button>
           </div>
         </div>
         <div id="quizLoggedIn" hidden>
@@ -171,5 +173,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="../quiz-data.js?v=20260818-adminscope-v2"></script>
   <script src="./quiz-app.js?v=20260818-adminscope-v2"></script>
+  <script src="./username-auth-override.js?v=20260819-username-v3"></script>
 </body>
 </html>
