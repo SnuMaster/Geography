@@ -1,0 +1,110 @@
+(() => {
+  const USER_DOMAIN = 'users.korgeo.app';
+  const USERNAME_RE = /^[a-z0-9._-]{3,24}$/;
+
+  const $ = id => document.getElementById(id);
+  const usernameInput = $('email');
+  const passwordInput = $('password');
+  const loginBtn = $('loginBtn');
+  const signupBtn = $('signupBtn');
+  const logoutBtn = $('logoutBtn');
+  const account = $('account');
+
+  if (!usernameInput || !passwordInput || !loginBtn || !signupBtn || !account || typeof supabaseClient === 'undefined') return;
+
+  const usernameLabel = document.querySelector('label[for="email"]');
+  const passwordLabel = document.querySelector('label[for="password"]');
+
+  if (usernameLabel) usernameLabel.textContent = '아이디';
+  usernameInput.type = 'text';
+  usernameInput.placeholder = '영문 소문자·숫자 3~24자';
+  usernameInput.autocomplete = 'username';
+  usernameInput.setAttribute('autocapitalize', 'none');
+  usernameInput.setAttribute('spellcheck', 'false');
+  usernameInput.minLength = 3;
+  usernameInput.maxLength = 24;
+
+  function parseUsername(email) {
+    if (!email) return '';
+    const suffix = '@' + USER_DOMAIN;
+    return email.endsWith(suffix) ? email.slice(0, -suffix.length) : email.split('@')[0];
+  }
+
+  function credentials() {
+    const username = usernameInput.value.trim().toLowerCase();
+    const password = passwordInput.value;
+
+    if (!username || !password) return { error: '아이디와 비밀번호를 둘 다 입력해줘.' };
+    if (!USERNAME_RE.test(username)) {
+      return { error: '아이디는 영문 소문자, 숫자, 점(.), 밑줄(_), 하이픈(-)만 써서 3~24자로 만들어줘.' };
+    }
+    if (password.length < 6) return { error: '비밀번호는 6자 이상으로 만들어줘.' };
+
+    return { username, password, email: `${username}@${USER_DOMAIN}` };
+  }
+
+  function renderUsernameSession(user) {
+    const loggedIn = Boolean(user);
+    if (usernameLabel) usernameLabel.hidden = loggedIn;
+    if (passwordLabel) passwordLabel.hidden = loggedIn;
+
+    if (loggedIn) {
+      const username = user.user_metadata?.username || parseUsername(user.email);
+      account.textContent = `${username} 아이디로 로그인됨 · 모든 기기에서 같은 기록을 사용해.`;
+    } else {
+      account.textContent = '아이디와 비밀번호로 로그인하면 모든 기기에서 같은 기록을 사용해.';
+    }
+  }
+
+  loginBtn.onclick = async () => {
+    const c = credentials();
+    if (c.error) {
+      account.textContent = c.error;
+      return;
+    }
+
+    account.textContent = '로그인 중…';
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: c.email, password: c.password });
+    account.textContent = error
+      ? '로그인 실패 · 아이디 또는 비밀번호를 확인해줘.'
+      : '로그인 완료 · 기록을 불러오는 중이야.';
+  };
+
+  signupBtn.onclick = async () => {
+    const c = credentials();
+    if (c.error) {
+      account.textContent = c.error;
+      return;
+    }
+
+    account.textContent = '회원가입 중…';
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: c.email,
+      password: c.password,
+      options: { data: { username: c.username } }
+    });
+
+    if (error) {
+      account.textContent = /already|registered|exists/i.test(error.message || '')
+        ? '이미 사용 중인 아이디야. 다른 아이디를 골라줘.'
+        : '회원가입 실패: ' + error.message;
+      return;
+    }
+
+    account.textContent = data.session
+      ? `회원가입 완료 · ${c.username} 아이디로 바로 로그인됐어.`
+      : '회원가입은 됐지만 로그인 세션이 만들어지지 않았어. Confirm email 설정을 확인해줘.';
+  };
+
+  passwordInput.addEventListener('keydown', event => {
+    if (event.key === 'Enter' && !loginBtn.hidden) loginBtn.click();
+  });
+
+  supabaseClient.auth.onAuthStateChange((_event, session) => {
+    queueMicrotask(() => renderUsernameSession(session?.user || null));
+  });
+
+  supabaseClient.auth.getSession().then(({ data }) => {
+    renderUsernameSession(data.session?.user || null);
+  });
+})();
