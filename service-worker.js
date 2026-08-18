@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v16';
+const APP_CACHE = 'geography-app-v17';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -6,7 +6,7 @@ const APP_SHELL = [
   './quiz/',
   './quiz/index.html',
   './quiz/quiz-app.js',
-  './quiz/quiz-app.js?v=20260818-clickboard-v4',
+  './quiz/quiz-app.js?v=20260818-clickboard-v5',
   './quiz-data.js',
   './sigun-quiz.html',
   './favicon.ico',
