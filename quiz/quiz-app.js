@@ -402,8 +402,8 @@
     setAuthStatus('로그인 링크 전송 중…', '');
     const { error } = await supabaseClient.auth.signInWithOtp({
       email,
-      // 메인 페이지는 이미 Supabase Redirect URL로 등록되어 있어 로그인 실패를 피할 수 있어.
-      options: { emailRedirectTo: window.location.origin + '/Geography/' }
+      // 현재 도메인의 메인 화면으로 돌려보내면 메인과 퀴즈가 같은 로그인 세션을 공유해.
+      options: { emailRedirectTo: new URL('../', window.location.href).href }
     });
     setAuthStatus(
       error
