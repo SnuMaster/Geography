@@ -2,8 +2,7 @@
   const entries = rows => rows.map(([name, lat, lng]) => ({ name, lat, lng }));
 
   // The nationwide list follows the city/county map used in the study sheet.
-  // Major metropolitan cities are included as whole-city questions; their
-  // districts are in the dedicated modes below.
+  // 전국은 시·군 단위다. 단, 서울·대구·부산만 구·군까지 나누어 연습한다.
   const data = {
     sigun: entries([
       ['서울특별시', 37.5665, 126.9780], ['인천광역시', 37.4563, 126.7052], ['광주광역시', 35.1595, 126.8526],
@@ -58,8 +57,7 @@
       ['함안군', 35.2726, 128.4065], ['창녕군', 35.5446, 128.4924], ['남해군', 34.8377, 127.8925],
       ['하동군', 35.0672, 127.7515], ['산청군', 35.4156, 127.8735], ['함양군', 35.5205, 127.7253],
       ['거창군', 35.6867, 127.9095], ['합천군', 35.5666, 128.1658], ['경남 고성군', 34.9730, 128.3222],
-      ['제주시', 33.4996, 126.5312], ['서귀포시', 33.2541, 126.5601], ['세종특별자치시', 36.4800, 127.2890],
-      ['인천 강화군', 37.7469, 126.4882], ['인천 옹진군', 37.4467, 126.6385], ['울산 울주군', 35.5224, 129.2420]
+      ['제주시', 33.4996, 126.5312], ['서귀포시', 33.2541, 126.5601], ['세종특별자치시', 36.4800, 127.2890]
     ]),
     seoul: entries([
       ['종로구', 37.5735, 126.9790], ['중구', 37.5641, 126.9979], ['용산구', 37.5326, 126.9900],
@@ -92,6 +90,28 @@
     busan: '부산 구·군'
   };
 
+  // 전국판에서는 서울·부산·대구만 구·군까지 나누고, 다른 도시는 시·군 단위로 묶는다.
+  const nationalDistrictEntries = (city, source, codes) => source.map((entry, index) => ({
+    ...entry,
+    id: 'sigun-' + city + '-' + codes[index],
+    name: city + ' ' + entry.name,
+    answerName: entry.name,
+    requireEnding: true,
+    featureCodes: [codes[index]]
+  }));
+  const seoulCodes = Array.from({ length: 25 }, (_, index) => String(11010 + index * 10));
+  const busanCodes = [
+    '21010', '21020', '21030', '21040', '21050', '21060', '21070', '21080',
+    '21090', '21100', '21110', '21120', '21130', '21140', '21150', '21310'
+  ];
+  const daeguCodes = ['22010', '22020', '22030', '22040', '22050', '22060', '22070', '22310', '37310'];
+  const wholeMetroNames = new Set(['서울특별시', '부산광역시', '대구광역시']);
+  data.sigun = [
+    ...data.sigun.filter(entry => !wholeMetroNames.has(entry.name)),
+    ...nationalDistrictEntries('서울', data.seoul, seoulCodes),
+    ...nationalDistrictEntries('부산', data.busan, busanCodes),
+    ...nationalDistrictEntries('대구', data.daegu, daeguCodes)
+  ];
+
   window.GEOGRAPHY_QUIZ_DATA = { data, titles };
 })();
-
