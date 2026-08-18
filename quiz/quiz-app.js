@@ -13,6 +13,11 @@
   const SHEET_DRAFT_KEY = 'geography-click-board-draft-v1:';
   const REGION_PREFIX = /^(경기도|강원|경남|인천|울산)\s+/;
   const ENDING = /(특별자치시|특별시|광역시|시|군|구)$/;
+  const DISTRICT_MODE_PREFIXES = {
+    seoul: ['서울', '서울특별시'],
+    daegu: ['대구', '대구광역시'],
+    busan: ['부산', '부산광역시']
+  };
   const BASE_STYLE = { color: '#91a4b2', weight: .7, opacity: .92, fillColor: '#f9fcfe', fillOpacity: .9 };
   const VISITED_STYLE = { color: '#5983a6', weight: 1.1, opacity: .95, fillColor: '#dbeaf6', fillOpacity: .55 };
   const SELECTED_STYLE = { color: '#1769aa', weight: 2.25, opacity: 1, fillColor: '#b9dbf3', fillOpacity: .8 };
@@ -27,16 +32,26 @@
   const $ = id => document.getElementById(id);
   const { data: QUIZ_DATA, titles: QUIZ_TITLES } = window.GEOGRAPHY_QUIZ_DATA;
   const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([36.1, 127.7], 7);
+  map.createPane('municipalityFill');
+  map.getPane('municipalityFill').style.zIndex = '400';
+  map.createPane('municipalityBorder');
+  map.getPane('municipalityBorder').style.zIndex = '410';
+  map.getPane('municipalityBorder').style.pointerEvents = 'none';
   map.createPane('provinceOutline');
   map.getPane('provinceOutline').style.zIndex = '450';
   map.getPane('provinceOutline').style.pointerEvents = 'none';
-  const municipalityLayer = L.layerGroup().addTo(map);
+  const municipalityFillLayer = L.layerGroup().addTo(map);
+  const municipalityBorderLayer = L.layerGroup().addTo(map);
   const provinceLayer = L.layerGroup().addTo(map);
-  const municipalityRenderer = L.canvas({ pane: 'overlayPane', padding: .25 });
+  const municipalityRenderer = L.canvas({ pane: 'municipalityFill', padding: .25 });
+  const municipalityBorderRenderer = L.canvas({ pane: 'municipalityBorder', padding: .25 });
   const provinceRenderer = L.canvas({ pane: 'provinceOutline', padding: .25 });
 
   let boundaryFeatures = [];
-  let boundaryFeatureLayers = new Map();
+  let boundaryTopology = null;
+  let boundaryTopologyObject = null;
+  let topologyGeometryByCode = new Map();
+  let itemBoundaryLayers = new Map();
   let activeFeatureItems = new Map();
   let municipalityReady = false;
   let currentUser = null;
@@ -57,13 +72,28 @@
     return withoutPrefix(entry.name).replace(ENDING, '');
   }
 
+  function displayAnswer(mode, entry) {
+    if (entry.answerName) return entry.name;
+    return DISTRICT_MODE_PREFIXES[mode]
+      ? withoutPrefix(entry.name)
+      : shortName(entry);
+  }
+
   function endingOf(entry) {
     const match = withoutPrefix(entry.name).match(ENDING);
     return match ? match[0] : '';
   }
 
-  function acceptedAnswers(entry) {
+  function acceptedAnswers(mode, entry) {
     const withoutSido = withoutPrefix(entry.name);
+    const expected = entry.answerName || withoutSido;
+    if (entry.requireEnding || DISTRICT_MODE_PREFIXES[mode]) {
+      const answers = [expected, entry.name];
+      if (DISTRICT_MODE_PREFIXES[mode]) {
+        answers.push(...DISTRICT_MODE_PREFIXES[mode].map(prefix => prefix + expected));
+      }
+      return new Set(answers.map(normalise));
+    }
     const short = shortName(entry);
     const ending = endingOf(entry);
     const answers = new Set([short, withoutSido, entry.name]);
@@ -72,8 +102,21 @@
     return new Set([...answers].map(normalise));
   }
 
+  function answerRule(mode, entry = null) {
+    if (entry?.requireEnding) {
+      return { placeholder: '예: 중구', detail: '서울·부산·대구는 구 또는 군을 꼭 붙여 적어.' };
+    }
+    if (mode === 'seoul') {
+      return { placeholder: '예: 강남구', detail: '구를 꼭 붙여 적어.' };
+    }
+    if (mode === 'daegu' || mode === 'busan') {
+      return { placeholder: '예: 달성군', detail: '구 또는 군을 꼭 붙여 적어.' };
+    }
+    return { placeholder: '예: 김제', detail: '전국은 시·군 단위야. 시·군은 생략해도 돼.' };
+  }
+
   function questionKey(mode, entry) {
-    return mode + ':' + normalise(entry.name);
+    return mode + ':' + (entry.id || normalise(entry.name));
   }
 
   function wrongMapKey(mode, key) {
@@ -203,9 +246,14 @@
     return source === 'mistakes' ? wrongEntriesForMode(mode) : QUIZ_DATA[mode];
   }
 
+  function entryForQuestionKey(mode, key) {
+    return QUIZ_DATA[mode]?.find(entry => questionKey(mode, entry) === key) || null;
+  }
+
   function renderMistakeTools() {
     const hasUser = Boolean(currentUser);
     const allMistakes = [...wrongAnswers.values()]
+      .filter(record => entryForQuestionKey(record.quiz_mode, record.question_key))
       .sort((a, b) => Date.parse(b.state_changed_at || 0) - Date.parse(a.state_changed_at || 0));
     const currentModeCount = wrongEntriesForMode(state.mode).length;
     const list = $('mistakeList');
@@ -228,10 +276,12 @@
     allMistakes.forEach(record => {
       const item = document.createElement('li');
       item.className = 'mistake-item';
+      const entry = entryForQuestionKey(record.quiz_mode, record.question_key);
+      const answerLabel = entry ? displayAnswer(record.quiz_mode, entry) : record.answer_label;
 
       const copy = document.createElement('div');
       const title = document.createElement('strong');
-      title.textContent = record.answer_label;
+      title.textContent = answerLabel;
       const detail = document.createElement('small');
       detail.textContent = (QUIZ_TITLES[record.quiz_mode] || record.quiz_mode) + ' · 아직 복습할 문제';
       copy.append(title, detail);
@@ -243,7 +293,7 @@
       clear.onclick = () => queueWrongActions([{
         quizMode: record.quiz_mode,
         questionKey: record.question_key,
-        answerLabel: record.answer_label,
+        answerLabel,
         nextState: 'cleared'
       }]);
 
@@ -501,6 +551,7 @@
   function renderSelection({ preserveInput = false } = {}) {
     const sheet = state.sheet;
     const selected = currentSelectedItem();
+    const rule = answerRule(sheet?.mode, selected?.entry);
     const card = $('selectionCard');
     const input = $('selectedAnswerInput');
     card.dataset.selected = String(Boolean(selected));
@@ -509,7 +560,7 @@
       $('selectionTitle').textContent = '지도에서 행정구역을 클릭해';
       $('selectionHint').textContent = sheet?.source === 'mistakes'
         ? '지도에서 노란색·빨간색 영역을 눌러 오답만 다시 채워.'
-        : '지도의 경계를 누르면, 그 지역의 답을 여기서 적을 수 있어.';
+        : rule.detail;
       input.disabled = true;
       if (!preserveInput) input.value = '';
       input.placeholder = '먼저 지도에서 지역을 클릭해';
@@ -519,10 +570,10 @@
     }
 
     $('selectionTitle').textContent = '선택한 지역의 답을 입력해';
-    $('selectionHint').textContent = '정답은 아직 보이지 않아. 입력 후 지도에서 다음 지역을 눌러 계속 채워.';
+    $('selectionHint').textContent = rule.detail + ' 입력 후 지도에서 다음 지역을 눌러 계속 채워.';
     input.disabled = false;
     if (!preserveInput) input.value = sheet.answers.get(selected.key) || '';
-    input.placeholder = '예: 김제';
+    input.placeholder = rule.placeholder;
 
     const result = sheet.wasGraded ? sheet.results.get(selected.key) : '';
     if (sheet.dirty && sheet.wasGraded) {
@@ -532,10 +583,10 @@
       $('selectedAnswerStatus').textContent = '정답';
       $('selectedAnswerStatus').dataset.state = 'success';
     } else if (result === 'wrong') {
-      $('selectedAnswerStatus').textContent = '정답: ' + shortName(selected.entry);
+      $('selectedAnswerStatus').textContent = '정답: ' + displayAnswer(sheet.mode, selected.entry);
       $('selectedAnswerStatus').dataset.state = 'warning';
     } else if (result === 'blank') {
-      $('selectedAnswerStatus').textContent = '미입력 · 정답: ' + shortName(selected.entry);
+      $('selectedAnswerStatus').textContent = '미입력 · 정답: ' + displayAnswer(sheet.mode, selected.entry);
       $('selectedAnswerStatus').dataset.state = 'warning';
     } else {
       $('selectedAnswerStatus').textContent = '입력 내용은 자동으로 임시 저장돼.';
@@ -554,16 +605,12 @@
   }
 
   function specialSigunItemForCode(sheet, code) {
+    const districtItem = sheet.items.find(item => item.entry.featureCodes?.includes(code));
+    if (districtItem) return districtItem;
     let targetName = '';
-    if (code.startsWith('11')) targetName = '서울특별시';
-    else if (code.startsWith('21')) targetName = '부산광역시';
-    else if (code.startsWith('22') || code === '37310') targetName = '대구광역시';
-    else if (code === '23310') targetName = '인천 강화군';
-    else if (code === '23320') targetName = '인천 옹진군';
-    else if (code.startsWith('23')) targetName = '인천광역시';
+    if (code.startsWith('23')) targetName = '인천광역시';
     else if (code.startsWith('24')) targetName = '광주광역시';
     else if (code.startsWith('25')) targetName = '대전광역시';
-    else if (code === '26310') targetName = '울산 울주군';
     else if (code.startsWith('26')) targetName = '울산광역시';
     else if (code === '29010') targetName = '세종특별자치시';
     return targetName ? sheet.items.find(item => item.entry.name === targetName) || null : null;
@@ -645,27 +692,86 @@
       $('mapStatus').dataset.state = 'error';
       return;
     }
-    $('mapStatus').textContent = '지명 없는 시·군 지도 · 영역을 클릭해서 답 입력';
+    $('mapStatus').textContent = '지명 없는 행정구역 지도 · 영역을 클릭해서 답 입력';
     $('mapStatus').dataset.state = '';
   }
 
-  function styleForFeature(feature) {
+  function styleForItem(item) {
     const sheet = state.sheet;
-    const item = activeFeatureItems.get(feature);
-    if (!sheet || !item) return OUT_OF_SCOPE_STYLE;
+    if (!sheet || !item) return { ...OUT_OF_SCOPE_STYLE, stroke: false };
     const result = sheet.wasGraded ? sheet.results.get(item.key) : '';
-    if (result) return RESULT_STYLES[result];
-    if (item.key === sheet.selectedKey) return SELECTED_STYLE;
-    if (sheet.selectedKeys.has(item.key) || sheet.answers.has(item.key)) return VISITED_STYLE;
-    return BASE_STYLE;
-  }
-
-  function applyFeatureStyle(feature, layer) {
-    layer.setStyle(styleForFeature(feature));
+    const style = result
+      ? RESULT_STYLES[result]
+      : item.key === sheet.selectedKey
+        ? SELECTED_STYLE
+        : sheet.selectedKeys.has(item.key) || sheet.answers.has(item.key)
+          ? VISITED_STYLE
+          : BASE_STYLE;
+    return { ...style, stroke: false };
   }
 
   function applyMapStyles() {
-    boundaryFeatureLayers.forEach((layer, feature) => applyFeatureStyle(feature, layer));
+    const sheet = state.sheet;
+    if (!sheet) return;
+    const itemsByKey = new Map(sheet.items.map(item => [item.key, item]));
+    itemBoundaryLayers.forEach((layer, key) => {
+      const item = itemsByKey.get(key);
+      if (item) layer.setStyle(styleForItem(item));
+    });
+  }
+
+  function bindItemLayer(layer, item) {
+    layer.on('click', () => selectItem(item));
+    layer.on('mouseover', () => {
+      if (!state.sheet?.wasGraded) layer.setStyle({ ...HOVER_STYLE, stroke: false });
+    });
+    layer.on('mouseout', () => layer.setStyle(styleForItem(item)));
+  }
+
+  function renderMunicipalityLayers() {
+    municipalityFillLayer.clearLayers();
+    municipalityBorderLayer.clearLayers();
+    itemBoundaryLayers = new Map();
+
+    const sheet = state.sheet;
+    if (!sheet || !boundaryTopology || !boundaryTopologyObject) return;
+
+    const geometriesByKey = new Map(sheet.items.map(item => [item.key, []]));
+    const itemByKey = new Map(sheet.items.map(item => [item.key, item]));
+    const keyByGeometry = new Map();
+    activeFeatureItems.forEach((item, feature) => {
+      const geometry = topologyGeometryByCode.get(featureCode(feature));
+      if (!geometry || !geometriesByKey.has(item.key)) return;
+      geometriesByKey.get(item.key).push(geometry);
+      keyByGeometry.set(geometry, item.key);
+    });
+
+    sheet.items.forEach(item => {
+      const geometries = geometriesByKey.get(item.key) || [];
+      if (!geometries.length) return;
+      const feature = {
+        type: 'Feature',
+        properties: { answerKey: item.key },
+        geometry: window.topojson.merge(boundaryTopology, geometries)
+      };
+      const itemLayer = L.geoJSON(feature, {
+        renderer: municipalityRenderer,
+        interactive: true,
+        style: () => styleForItem(item)
+      }).addTo(municipalityFillLayer);
+      itemLayer.eachLayer(layer => bindItemLayer(layer, item));
+      itemBoundaryLayers.set(item.key, itemLayer);
+    });
+
+    const boundaryMesh = window.topojson.mesh(boundaryTopology, boundaryTopologyObject, (a, b) => {
+      if (a === b || !b) return true;
+      return keyByGeometry.get(a) !== keyByGeometry.get(b);
+    });
+    L.geoJSON({ type: 'Feature', properties: {}, geometry: boundaryMesh }, {
+      renderer: municipalityBorderRenderer,
+      interactive: false,
+      style: { color: '#91a4b2', weight: .7, opacity: .92, fill: false }
+    }).addTo(municipalityBorderLayer);
   }
 
   function selectItem(item) {
@@ -713,7 +819,7 @@
       const typed = normalise(sheet.answers.get(item.key));
       const result = !typed
         ? 'blank'
-        : acceptedAnswers(item.entry).has(typed) ? 'correct' : 'wrong';
+        : acceptedAnswers(sheet.mode, item.entry).has(typed) ? 'correct' : 'wrong';
       sheet.results.set(item.key, result);
 
       const existingKey = wrongMapKey(sheet.mode, item.key);
@@ -722,7 +828,7 @@
           actions.push({
             quizMode: sheet.mode,
             questionKey: item.key,
-            answerLabel: shortName(item.entry),
+            answerLabel: displayAnswer(sheet.mode, item.entry),
             nextState: 'cleared'
           });
         }
@@ -730,7 +836,7 @@
         actions.push({
           quizMode: sheet.mode,
           questionKey: item.key,
-          answerLabel: shortName(item.entry),
+          answerLabel: displayAnswer(sheet.mode, item.entry),
           nextState: 'wrong'
         });
       }
@@ -787,6 +893,7 @@
     state = { mode, source, sheet: makeSheet(mode, source) };
     updateModeButtons();
     const mapping = rebuildActiveFeatureItems();
+    renderMunicipalityLayers();
     renderMappingStatus(mapping);
     renderMistakeTools();
     renderBoardSummary();
@@ -806,19 +913,6 @@
     });
   }
 
-  function bindMunicipalityLayer(feature, layer) {
-    boundaryFeatureLayers.set(feature, layer);
-    layer.on('click', () => {
-      const item = activeFeatureItems.get(feature);
-      if (item) selectItem(item);
-    });
-    layer.on('mouseover', () => {
-      const item = activeFeatureItems.get(feature);
-      if (item && !state.sheet?.wasGraded) layer.setStyle(HOVER_STYLE);
-    });
-    layer.on('mouseout', () => applyFeatureStyle(feature, layer));
-  }
-
   async function loadMunicipalityBoundaries() {
     const response = await fetch(MUNICIPALITY_URL);
     if (!response.ok) throw new Error('시·군 경계 데이터 응답 오류');
@@ -826,16 +920,16 @@
     const object = topology.objects && topology.objects.skorea_municipalities_2018_geo;
     if (!object || !window.topojson) throw new Error('시·군 경계 데이터 형식 오류');
 
+    boundaryTopology = topology;
+    boundaryTopologyObject = object;
     boundaryFeatures = window.topojson.feature(topology, object).features;
-    boundaryFeatureLayers = new Map();
-    L.geoJSON(boundaryFeatures, {
-      renderer: municipalityRenderer,
-      interactive: true,
-      style: BASE_STYLE,
-      onEachFeature: bindMunicipalityLayer
-    }).addTo(municipalityLayer);
+    topologyGeometryByCode = new Map((object.geometries || []).map(geometry => [
+      String(geometry?.properties?.code || '').padStart(5, '0'),
+      geometry
+    ]));
     municipalityReady = true;
     const mapping = rebuildActiveFeatureItems();
+    renderMunicipalityLayers();
     applyMapStyles();
     renderMappingStatus(mapping);
     renderBoardControls();
@@ -922,4 +1016,3 @@
       });
   }
 })();
-
