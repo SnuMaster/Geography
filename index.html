@@ -211,7 +211,7 @@
     const MAX_SAVED_PINS = 200;
     // Realtime is normally instant. This short poll is the safety net for
     // school/office networks that block WebSockets.
-    const FALLBACK_SYNC_INTERVAL_MS = 2000;
+    const FALLBACK_SYNC_INTERVAL_MS = 15000;
 
     function formatTime(iso) {
       return new Intl.DateTimeFormat('ko-KR', {
