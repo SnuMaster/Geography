@@ -1,9 +1,12 @@
-const APP_CACHE = 'geography-app-v23';
+const APP_CACHE = 'geography-app-v24';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
   './index.html',
   './username-auth.js',
+  './public-tools.js',
+  './admin.html',
+  './admin.js',
   './quiz/',
   './quiz/index.html',
   './quiz/quiz-app.js',
@@ -26,14 +29,10 @@ const MAX_CACHED_TILES = 240;
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(APP_CACHE);
-
     await Promise.allSettled(APP_SHELL.map(async url => {
       const response = await fetch(url, { cache: 'reload' });
-      if (response.ok || response.type === 'opaque') {
-        await cache.put(url, response.clone());
-      }
+      if (response.ok || response.type === 'opaque') await cache.put(url, response.clone());
     }));
-
     await self.skipWaiting();
   })());
 });
@@ -51,25 +50,19 @@ self.addEventListener('activate', event => {
 
 async function cacheResponse(cacheName, request, response, maxEntries) {
   if (!response || (!response.ok && response.type !== 'opaque')) return response;
-
   const cache = await caches.open(cacheName);
   await cache.put(request, response.clone());
-
   if (maxEntries) {
     const keys = await cache.keys();
     const excess = keys.length - maxEntries;
-    if (excess > 0) {
-      await Promise.all(keys.slice(0, excess).map(key => cache.delete(key)));
-    }
+    if (excess > 0) await Promise.all(keys.slice(0, excess).map(key => cache.delete(key)));
   }
-
   return response;
 }
 
 async function cachedOrNetwork(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
-
   try {
     const response = await fetch(request);
     return cacheResponse(APP_CACHE, request, response);
@@ -83,12 +76,10 @@ async function cachedOrNetwork(request) {
 
 function pageAuthScript(url) {
   const path = url.pathname;
-  if (path.includes('/quiz/')) {
-    return '<script src="./username-auth-override.js?v=20260819-username-v2"></script>';
-  }
+  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260819-username-v4"></script>';
   if (path.endsWith('/sigun-quiz.html')) return '';
   if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') {
-    return '<script src="./username-auth.js?v=20260819-username-v2"></script>';
+    return '<script src="./username-auth.js?v=20260819-username-v4"></script>';
   }
   return '';
 }
@@ -99,12 +90,10 @@ async function injectAuthScript(response, requestUrl) {
   if (!scriptTag) return response;
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
-
   const html = await response.text();
   if (html.includes(scriptTag.split('?')[0].replace('<script src="', ''))) {
     return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
   }
-
   const transformed = html.includes('</body>')
     ? html.replace('</body>', '  ' + scriptTag + '\n</body>')
     : html + scriptTag;
@@ -121,9 +110,7 @@ async function navigationResponse(request) {
     const transformed = await injectAuthScript(response, requestUrl);
     return cacheResponse(APP_CACHE, request, transformed);
   } catch {
-    const cached = (await caches.match(request)) ||
-      (await caches.match('./')) ||
-      (await caches.match('./index.html'));
+    const cached = (await caches.match(request)) || (await caches.match('./')) || (await caches.match('./index.html'));
     return cached ? injectAuthScript(cached, requestUrl) : cached;
   }
 }
@@ -131,7 +118,6 @@ async function navigationResponse(request) {
 async function mapTileResponse(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
-
   try {
     const response = await fetch(request);
     return cacheResponse(TILE_CACHE, request, response, MAX_CACHED_TILES);
@@ -143,27 +129,16 @@ async function mapTileResponse(request) {
 self.addEventListener('fetch', event => {
   const request = event.request;
   if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
-
   if (request.mode === 'navigate') {
     event.respondWith(navigationResponse(request));
     return;
   }
-
-  if (
-    url.hostname.endsWith('tile.openstreetmap.org') ||
-    url.hostname.endsWith('basemaps.cartocdn.com')
-  ) {
+  if (url.hostname.endsWith('tile.openstreetmap.org') || url.hostname.endsWith('basemaps.cartocdn.com')) {
     event.respondWith(mapTileResponse(request));
     return;
   }
-
-  if (
-    url.origin === self.location.origin ||
-    url.hostname === 'cdn.jsdelivr.net' ||
-    url.hostname === 'raw.githubusercontent.com'
-  ) {
+  if (url.origin === self.location.origin || url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'raw.githubusercontent.com') {
     event.respondWith(cachedOrNetwork(request));
   }
 });
