@@ -3,6 +3,7 @@
   const SUPABASE_URL='https://aplhddasduwtlxeejvnk.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY='sb_publishable_kUMRFC5dLAomRo9tiakqIg_Ob3j0ELs';
   const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+  window.korgeoAdminSupabase=sb;
   const $=id=>document.getElementById(id);
   const fmt=iso=>iso?new Intl.DateTimeFormat('ko-KR',{dateStyle:'short',timeStyle:'short'}).format(new Date(iso)):'-';
   function setStatus(msg,kind=''){ $('status').textContent=msg||''; $('status').className='status '+kind; }
@@ -68,6 +69,8 @@
       const delBtn=document.createElement('button');delBtn.className='danger';delBtn.textContent='계정 삭제';delBtn.onclick=()=>action(u.login_id+' 계정 삭제',()=>sb.rpc('admin_delete_user',{p_target_user_id:u.user_id}));
       td.append(adminBtn,resetBtn,delBtn);tr.appendChild(td);tbody.appendChild(tr);
     });
+    window.korgeoAdminUsers=rows;
+    window.dispatchEvent(new CustomEvent('korgeo-admin-users',{detail:rows}));
   }
 
   async function load(){
@@ -84,6 +87,7 @@
     }catch(e){setStatus('불러오기 실패: '+(e.message||e),'error');}
   }
 
+  window.korgeoAdminReload=load;
   $('refreshBtn').onclick=load;
   $('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.href='./';};
   $('saveAnnouncementBtn').onclick=()=>saveAnnouncement();
