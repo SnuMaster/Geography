@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v25';
+const APP_CACHE = 'geography-app-v26';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -7,6 +7,7 @@ const APP_SHELL = [
   './public-tools.js',
   './admin.html',
   './admin.js',
+  './admin-ops.js',
   './quiz/',
   './quiz/index.html',
   './quiz/quiz-app.js',
@@ -41,9 +42,7 @@ self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const keep = new Set([APP_CACHE, TILE_CACHE]);
     const names = await caches.keys();
-    await Promise.all(names
-      .filter(name => name.startsWith('geography-') && !keep.has(name))
-      .map(name => caches.delete(name)));
+    await Promise.all(names.filter(name => name.startsWith('geography-') && !keep.has(name)).map(name => caches.delete(name)));
     await self.clients.claim();
   })());
 });
@@ -63,24 +62,15 @@ async function cacheResponse(cacheName, request, response, maxEntries) {
 async function cachedOrNetwork(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    return cacheResponse(APP_CACHE, request, response);
-  } catch {
-    return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {
-      status: 503,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
-    });
-  }
+  try { return cacheResponse(APP_CACHE, request, await fetch(request)); }
+  catch { return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}}); }
 }
 
 function pageAuthScript(url) {
   const path = url.pathname;
-  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260819-username-v5"></script>';
+  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260819-username-v6"></script>';
   if (path.endsWith('/sigun-quiz.html')) return '';
-  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') {
-    return '<script src="./username-auth.js?v=20260819-username-v5"></script>';
-  }
+  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') return '<script src="./username-auth.js?v=20260819-username-v6"></script>';
   return '';
 }
 
@@ -91,54 +81,26 @@ async function injectAuthScript(response, requestUrl) {
   const contentType = response.headers.get('content-type') || '';
   if (!contentType.includes('text/html')) return response;
   const html = await response.text();
-  if (html.includes(scriptTag.split('?')[0].replace('<script src="', ''))) {
-    return new Response(html, { status: response.status, statusText: response.statusText, headers: response.headers });
-  }
-  const transformed = html.includes('</body>')
-    ? html.replace('</body>', '  ' + scriptTag + '\n</body>')
-    : html + scriptTag;
-  const headers = new Headers(response.headers);
-  headers.delete('content-length');
-  headers.delete('content-encoding');
-  return new Response(transformed, { status: response.status, statusText: response.statusText, headers });
+  if (html.includes(scriptTag.split('?')[0].replace('<script src="', ''))) return new Response(html,{status:response.status,statusText:response.statusText,headers:response.headers});
+  const transformed = html.includes('</body>') ? html.replace('</body>', '  ' + scriptTag + '\n</body>') : html + scriptTag;
+  const headers = new Headers(response.headers);headers.delete('content-length');headers.delete('content-encoding');
+  return new Response(transformed,{status:response.status,statusText:response.statusText,headers});
 }
 
 async function navigationResponse(request) {
   const requestUrl = new URL(request.url);
-  try {
-    const response = await fetch(request, { cache: 'no-store' });
-    const transformed = await injectAuthScript(response, requestUrl);
-    return cacheResponse(APP_CACHE, request, transformed);
-  } catch {
-    const cached = (await caches.match(request)) || (await caches.match('./')) || (await caches.match('./index.html'));
-    return cached ? injectAuthScript(cached, requestUrl) : cached;
-  }
+  try { const response=await fetch(request,{cache:'no-store'}); return cacheResponse(APP_CACHE,request,await injectAuthScript(response,requestUrl)); }
+  catch { const cached=(await caches.match(request))||(await caches.match('./'))||(await caches.match('./index.html')); return cached?injectAuthScript(cached,requestUrl):cached; }
 }
 
 async function mapTileResponse(request) {
-  const cached = await caches.match(request);
-  if (cached) return cached;
-  try {
-    const response = await fetch(request);
-    return cacheResponse(TILE_CACHE, request, response, MAX_CACHED_TILES);
-  } catch {
-    return new Response('', { status: 504 });
-  }
+  const cached=await caches.match(request);if(cached)return cached;
+  try{return cacheResponse(TILE_CACHE,request,await fetch(request),MAX_CACHED_TILES);}catch{return new Response('',{status:504});}
 }
 
 self.addEventListener('fetch', event => {
-  const request = event.request;
-  if (request.method !== 'GET') return;
-  const url = new URL(request.url);
-  if (request.mode === 'navigate') {
-    event.respondWith(navigationResponse(request));
-    return;
-  }
-  if (url.hostname.endsWith('tile.openstreetmap.org') || url.hostname.endsWith('basemaps.cartocdn.com')) {
-    event.respondWith(mapTileResponse(request));
-    return;
-  }
-  if (url.origin === self.location.origin || url.hostname === 'cdn.jsdelivr.net' || url.hostname === 'raw.githubusercontent.com') {
-    event.respondWith(cachedOrNetwork(request));
-  }
+  const request=event.request;if(request.method!=='GET')return;const url=new URL(request.url);
+  if(request.mode==='navigate'){event.respondWith(navigationResponse(request));return;}
+  if(url.hostname.endsWith('tile.openstreetmap.org')||url.hostname.endsWith('basemaps.cartocdn.com')){event.respondWith(mapTileResponse(request));return;}
+  if(url.origin===self.location.origin||url.hostname==='cdn.jsdelivr.net'||url.hostname==='raw.githubusercontent.com')event.respondWith(cachedOrNetwork(request));
 });
