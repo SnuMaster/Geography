@@ -7,20 +7,31 @@
   <title>관리자 | korgeo</title>
   <style>
     :root{font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#102c4d;background:#eef4f9}
-    *{box-sizing:border-box} body{margin:0;min-width:320px} header{padding:22px clamp(18px,4vw,58px);background:#163f68;color:#fff} header a{color:#d8ecff;text-decoration:none;font-weight:700} h1{margin:8px 0 4px} main{max-width:1180px;margin:20px auto;padding:0 18px 40px}.card{background:#fff;border:1px solid #d6e3ee;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 10px 28px #173f6812}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.stat{background:#f4f9fd;border-radius:12px;padding:14px}.stat b{display:block;font-size:1.45rem;margin-top:4px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{min-height:1.4em;margin:8px 0 0;font-weight:700}.status.error{color:#b0342b}.status.ok{color:#147442}button{border:0;border-radius:9px;padding:9px 11px;cursor:pointer;font:inherit;font-weight:750;background:#1769aa;color:#fff}button.secondary{background:#e8f0f8;color:#254f79}button.danger{background:#b42318}button:disabled{opacity:.5;cursor:not-allowed}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.86rem}th,td{padding:9px 8px;border-bottom:1px solid #e3ebf2;text-align:left;vertical-align:top}th{color:#536b80;font-size:.78rem}.user-actions{display:flex;gap:5px;flex-wrap:wrap}.user-actions button{font-size:.74rem;padding:6px 8px}.muted{color:#637a8e;font-size:.8rem}.hidden{display:none!important}@media(max-width:760px){table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{padding:10px 0;border-bottom:1px solid #dbe6ef}td{border:0;padding:4px 0}td::before{content:attr(data-label);display:block;color:#637a8e;font-size:.7rem;font-weight:800}}
+    *{box-sizing:border-box} body{margin:0;min-width:320px} header{padding:22px clamp(18px,4vw,58px);background:#163f68;color:#fff} header a{color:#d8ecff;text-decoration:none;font-weight:700} h1{margin:8px 0 4px} main{max-width:1180px;margin:20px auto;padding:0 18px 40px}.card{background:#fff;border:1px solid #d6e3ee;border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 10px 28px #173f6812}.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.stat{background:#f4f9fd;border-radius:12px;padding:14px}.stat b{display:block;font-size:1.45rem;margin-top:4px}.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.status{min-height:1.4em;margin:8px 0 0;font-weight:700}.status.error{color:#b0342b}.status.ok{color:#147442}button{border:0;border-radius:9px;padding:9px 11px;cursor:pointer;font:inherit;font-weight:750;background:#1769aa;color:#fff}button.secondary{background:#e8f0f8;color:#254f79}button.danger{background:#b42318}button:disabled{opacity:.5;cursor:not-allowed}table{width:100%;border-collapse:collapse;margin-top:10px;font-size:.86rem}th,td{padding:9px 8px;border-bottom:1px solid #e3ebf2;text-align:left;vertical-align:top}th{color:#536b80;font-size:.78rem}.user-actions{display:flex;gap:5px;flex-wrap:wrap}.user-actions button{font-size:.74rem;padding:6px 8px}.muted{color:#637a8e;font-size:.8rem}.hidden{display:none!important}.form-grid{display:grid;grid-template-columns:1fr 180px;gap:10px}.form-grid .wide{grid-column:1/-1}label{display:block;font-size:.8rem;font-weight:800;color:#315677;margin-bottom:5px}input,textarea,select{width:100%;border:1px solid #afc4d8;border-radius:9px;padding:9px 10px;font:inherit;background:#fff;color:#102c4d}textarea{min-height:90px;resize:vertical}.check{display:flex;gap:8px;align-items:center}.check input{width:auto}.check label{margin:0}@media(max-width:760px){.form-grid{grid-template-columns:1fr}table,thead,tbody,tr,th,td{display:block}thead{display:none}tr{padding:10px 0;border-bottom:1px solid #dbe6ef}td{border:0;padding:4px 0}td::before{content:attr(data-label);display:block;color:#637a8e;font-size:.7rem;font-weight:800}}
   </style>
 </head>
 <body>
-<header><a href="./">← 학습 사이트</a><h1>관리자</h1><p>사용자·오답노트·진도 관리</p></header>
+<header><a href="./">← 학습 사이트</a><h1>관리자</h1><p>사용자·오답노트·진도·공지·트래픽 관리</p></header>
 <main>
   <section id="gate" class="card"><b>관리자 권한 확인 중…</b><p id="gateStatus" class="status"></p></section>
   <div id="app" class="hidden">
     <section class="card"><div class="toolbar"><button id="refreshBtn">새로고침</button><button id="logoutBtn" class="secondary">로그아웃</button></div><p id="status" class="status"></p></section>
     <section class="card"><h2>사용 현황</h2><div id="stats" class="stats"></div></section>
+    <section class="card">
+      <h2>사이트 공지</h2><p class="muted">저장하면 메인과 퀴즈 페이지 상단에 표시돼.</p>
+      <div class="form-grid">
+        <div class="wide"><label for="announcementText">공지 내용</label><textarea id="announcementText" maxlength="500" placeholder="예: 오늘 23:00~23:10 점검 예정"></textarea></div>
+        <div><label for="announcementLevel">종류</label><select id="announcementLevel"><option value="info">일반</option><option value="warn">주의</option><option value="urgent">긴급</option></select></div>
+        <div><label for="announcementLink">링크 (선택)</label><input id="announcementLink" maxlength="500" placeholder="https://..."></div>
+        <div class="wide check"><input id="announcementEnabled" type="checkbox"><label for="announcementEnabled">공지 표시 켜기</label></div>
+      </div>
+      <div class="toolbar" style="margin-top:10px"><button id="saveAnnouncementBtn">공지 저장</button><button id="hideAnnouncementBtn" class="secondary">공지 끄기</button></div>
+      <p id="announcementStatus" class="status"></p>
+    </section>
     <section class="card"><h2>사용자</h2><p class="muted">최근 가입 순. 관리자 기능은 서버 RPC에서 다시 권한 검사함.</p><div style="overflow:auto"><table><thead><tr><th>아이디</th><th>가입</th><th>최근 로그인</th><th>오답</th><th>진도</th><th>권한/관리</th></tr></thead><tbody id="users"></tbody></table></div></section>
   </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="./admin.js?v=20260819-admin-v1"></script>
+<script src="./admin.js?v=20260819-admin-v2"></script>
 </body>
 </html>
