@@ -15,7 +15,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = './public-tools.js?v=20260819-public-v1';
+      script.src = './public-tools.js?v=20260819-public-v2';
       script.dataset.korgeoPublicTools = '1';
       script.onload = script.onerror = resolve;
       document.head.appendChild(script);
@@ -107,6 +107,8 @@
       account.textContent = data.session
         ? `회원가입 완료 · ${c.username} 아이디로 바로 로그인됐어.`
         : '회원가입은 됐지만 로그인 세션이 만들어지지 않았어. Confirm email 설정을 확인해줘.';
+    } catch (error) {
+      account.textContent = '회원가입 실패: ' + (error?.message || '잠시 후 다시 시도해줘.');
     } finally {
       setTimeout(() => { signupBtn.disabled = false; }, 3000);
     }
