@@ -6,18 +6,55 @@
   const $=id=>document.getElementById(id);
   const fmt=iso=>iso?new Intl.DateTimeFormat('ko-KR',{dateStyle:'short',timeStyle:'short'}).format(new Date(iso)):'-';
   function setStatus(msg,kind=''){ $('status').textContent=msg||''; $('status').className='status '+kind; }
+  function setAnnouncementStatus(msg,kind=''){ $('announcementStatus').textContent=msg||''; $('announcementStatus').className='status '+kind; }
+
   async function ensureAdmin(){
     const {data:{session}}=await sb.auth.getSession();
     if(!session){ $('gateStatus').textContent='먼저 사이트에서 로그인해줘.'; return false; }
-    const {data,error}=await sb.rpc('is_app_admin');
+    const {data,error}=await sb.rpc('is_app_admin',{p_user_id:session.user.id});
     if(error||!data){ $('gateStatus').textContent='이 계정에는 관리자 권한이 없어.'; return false; }
     $('gate').classList.add('hidden'); $('app').classList.remove('hidden'); return true;
   }
-  function renderStats(d){
-    const items=[['전체 사용자',d.users_total],['7일 내 로그인',d.users_active_7d],['진도 저장 계정',d.progress_rows],['현재 오답',d.wrong_rows],['관리자',d.admins_total]];
+
+  function renderStats(base,traffic){
+    const items=[
+      ['전체 사용자',base.users_total],['7일 내 로그인',base.users_active_7d],['진도 저장 계정',base.progress_rows],['현재 오답',base.wrong_rows],['관리자',base.admins_total],
+      ['오늘 방문자',traffic.visitors_today],['7일 방문자',traffic.visitors_7d],['오늘 메인',traffic.main_today],['오늘 퀴즈',traffic.quiz_today]
+    ];
     $('stats').replaceChildren(...items.map(([k,v])=>{const el=document.createElement('div');el.className='stat';el.innerHTML=`<span>${k}</span><b>${v??0}</b>`;return el;}));
   }
-  async function action(label,fn){ if(!confirm(label+' 실행할까?')) return; try{ setStatus('처리 중…'); const {error}=await fn(); if(error) throw error; setStatus('완료','ok'); await load(); }catch(e){ setStatus('실패: '+(e.message||e),'error'); } }
+
+  function renderAnnouncement(v){
+    v=v||{};
+    $('announcementText').value=v.text||'';
+    $('announcementLevel').value=['info','warn','urgent'].includes(v.level)?v.level:'info';
+    $('announcementLink').value=v.link||'';
+    $('announcementEnabled').checked=Boolean(v.enabled);
+  }
+
+  async function saveAnnouncement(enabledOverride=null){
+    try{
+      setAnnouncementStatus('저장 중…');
+      const enabled=enabledOverride===null?$('announcementEnabled').checked:Boolean(enabledOverride);
+      const payload={
+        p_text:$('announcementText').value.trim(),
+        p_enabled:enabled,
+        p_level:$('announcementLevel').value,
+        p_link:$('announcementLink').value.trim()
+      };
+      const {data,error}=await sb.rpc('admin_set_announcement',payload);
+      if(error) throw error;
+      renderAnnouncement(data);
+      setAnnouncementStatus(enabled?'공지 켜짐 · 사이트에 반영됐어.':'공지 꺼짐','ok');
+    }catch(e){setAnnouncementStatus('공지 저장 실패: '+(e.message||e),'error');}
+  }
+
+  async function action(label,fn){
+    if(!confirm(label+' 실행할까?')) return;
+    try{ setStatus('처리 중…'); const {error}=await fn(); if(error) throw error; setStatus('완료','ok'); await load(); }
+    catch(e){ setStatus('실패: '+(e.message||e),'error'); }
+  }
+
   function renderUsers(rows){
     const tbody=$('users'); tbody.replaceChildren();
     rows.forEach(u=>{
@@ -32,14 +69,24 @@
       td.append(adminBtn,resetBtn,delBtn);tr.appendChild(td);tbody.appendChild(tr);
     });
   }
+
   async function load(){
     try{
       setStatus('불러오는 중…');
-      const [a,b]=await Promise.all([sb.rpc('admin_dashboard'),sb.rpc('admin_list_users',{p_limit:200})]);
-      if(a.error) throw a.error;if(b.error) throw b.error;renderStats(a.data||{});renderUsers(b.data||[]);setStatus('최신 상태','ok');
+      const [a,b,c,d]=await Promise.all([
+        sb.rpc('admin_dashboard'),
+        sb.rpc('admin_list_users',{p_limit:200}),
+        sb.rpc('admin_traffic_stats'),
+        sb.rpc('get_public_announcement')
+      ]);
+      if(a.error) throw a.error;if(b.error) throw b.error;if(c.error) throw c.error;if(d.error) throw d.error;
+      renderStats(a.data||{},c.data||{});renderUsers(b.data||[]);renderAnnouncement(d.data||{});setStatus('최신 상태','ok');
     }catch(e){setStatus('불러오기 실패: '+(e.message||e),'error');}
   }
+
   $('refreshBtn').onclick=load;
   $('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.href='./';};
+  $('saveAnnouncementBtn').onclick=()=>saveAnnouncement();
+  $('hideAnnouncementBtn').onclick=()=>saveAnnouncement(false);
   ensureAdmin().then(ok=>{if(ok) load();});
 })();
