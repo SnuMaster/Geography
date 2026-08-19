@@ -4,8 +4,17 @@
   const SUPABASE_URL = 'https://aplhddasduwtlxeejvnk.supabase.co';
   const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kUMRFC5dLAomRo9tiakqIg_Ob3j0ELs';
   if (!window.supabase?.createClient) return;
+
+  // IMPORTANT: this client is only for anonymous public RPCs (visit counts,
+  // announcements, signup throttling). It must never touch the login session
+  // used by the main/quiz auth clients.
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
-    auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+      storageKey: 'korgeo-public-tools-no-auth'
+    }
   });
 
   function stableId(key) {
