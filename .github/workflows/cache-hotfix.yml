@@ -1,0 +1,48 @@
+name: Cache hotfix
+on:
+  push:
+    paths:
+      - '.github/workflows/cache-hotfix.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bump frontend cache versions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          for path in ['username-auth.js','quiz/username-auth-override.js']:
+              p=Path(path); s=p.read_text(encoding='utf-8')
+              s=s.replace('20260820-public-v5','20260820-public-v6')
+              p.write_text(s,encoding='utf-8')
+
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r'\./username-auth\.js\?v=[^"\']+', './username-auth.js?v=20260820-username-v10', s)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('quiz/index.html'); s=p.read_text(encoding='utf-8')
+          s=re.sub(r'\./username-auth-override\.js\?v=[^"\']+', './username-auth-override.js?v=20260820-username-v10', s)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('service-worker.js'); s=p.read_text(encoding='utf-8')
+          s=s.replace("const APP_CACHE = 'geography-app-v29';", "const APP_CACHE = 'geography-app-v31';")
+          s=s.replace('20260820-username-v9','20260820-username-v10')
+          old='''async function cachedOrNetwork(request) {\n  const cached = await caches.match(request);\n  if (cached) return cached;\n  try { return cacheResponse(APP_CACHE, request, await fetch(request)); }\n  catch { return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}}); }\n}'''
+          new='''async function cachedOrNetwork(request) {\n  const url = new URL(request.url);\n  const networkFirst = url.origin === self.location.origin && (url.pathname.endsWith('.js') || url.pathname.endsWith('.html'));\n  if (networkFirst) {\n    try { return cacheResponse(APP_CACHE, request, await fetch(request, { cache: 'no-store' })); }\n    catch {\n      const cached = await caches.match(request);\n      if (cached) return cached;\n      return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});\n    }\n  }\n  const cached = await caches.match(request);\n  if (cached) return cached;\n  try { return cacheResponse(APP_CACHE, request, await fetch(request)); }\n  catch { return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}}); }\n}'''
+          if old not in s:
+              raise SystemExit('cachedOrNetwork block not found')
+          s=s.replace(old,new)
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit hotfix
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add username-auth.js quiz/username-auth-override.js index.html quiz/index.html service-worker.js
+          git diff --cached --quiet || git commit -m "Bust stale frontend caches"
+          git push
