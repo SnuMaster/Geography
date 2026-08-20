@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v30';
+const APP_CACHE = 'geography-app-v31';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
