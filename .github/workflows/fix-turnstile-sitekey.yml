@@ -1,0 +1,50 @@
+name: Fix Turnstile site key
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-turnstile-sitekey.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix key and bust auth cache
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          wrong='0x4AAAAAAAEWxvCtzvng0Tn8-'
+          right='0x4AAAAAAEWxvCtzvng0Tn8-'
+          for path in ['username-auth.js','quiz/username-auth-override.js']:
+              p=Path(path)
+              s=p.read_text(encoding='utf-8')
+              if wrong not in s:
+                  raise SystemExit(f'wrong key not found in {path}')
+              p.write_text(s.replace(wrong,right),encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'\./username-auth\.js\?v=[^\"\']+', './username-auth.js?v=20260821-username-v12', s)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('quiz/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'\./username-auth-override\.js\?v=[^\"\']+', './username-auth-override.js?v=20260821-username-v12', s)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('service-worker.js')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r"const APP_CACHE = 'geography-app-v\d+';", "const APP_CACHE = 'geography-app-v33';", s, count=1)
+          s=s.replace('20260820-username-v11','20260821-username-v12')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add username-auth.js quiz/username-auth-override.js index.html quiz/index.html service-worker.js
+          git diff --cached --quiet || git commit -m "Fix Cloudflare Turnstile site key"
+          git push
