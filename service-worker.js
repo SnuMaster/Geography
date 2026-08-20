@@ -62,6 +62,16 @@ async function cacheResponse(cacheName, request, response, maxEntries) {
 }
 
 async function cachedOrNetwork(request) {
+  const url = new URL(request.url);
+  const networkFirst = url.origin === self.location.origin && (url.pathname.endsWith('.js') || url.pathname.endsWith('.html'));
+  if (networkFirst) {
+    try { return cacheResponse(APP_CACHE, request, await fetch(request, { cache: 'no-store' })); }
+    catch {
+      const cached = await caches.match(request);
+      if (cached) return cached;
+      return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}});
+    }
+  }
   const cached = await caches.match(request);
   if (cached) return cached;
   try { return cacheResponse(APP_CACHE, request, await fetch(request)); }
@@ -70,9 +80,9 @@ async function cachedOrNetwork(request) {
 
 function pageAuthScript(url) {
   const path = url.pathname;
-  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260820-username-v9"></script>';
+  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260820-username-v10"></script>';
   if (path.endsWith('/sigun-quiz.html')) return '';
-  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') return '<script src="./username-auth.js?v=20260820-username-v9"></script>';
+  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') return '<script src="./username-auth.js?v=20260820-username-v10"></script>';
   return '';
 }
 

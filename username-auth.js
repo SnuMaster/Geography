@@ -5,7 +5,7 @@
   const TURNSTILE_SITE_KEY='0x4AAAAAAAEWxvCtzvng0Tn8-';
   const $=id=>document.getElementById(id);
 
-  function ensurePublicTools(){if(window.korgeoClaimSignupSlot)return Promise.resolve();return new Promise(resolve=>{if(document.querySelector('script[data-korgeo-public-tools]')){const timer=setInterval(()=>{if(window.korgeoClaimSignupSlot){clearInterval(timer);resolve();}},50);setTimeout(()=>{clearInterval(timer);resolve();},2500);return;}const script=document.createElement('script');script.src='./public-tools.js?v=20260820-public-v5';script.dataset.korgeoPublicTools='1';script.onload=script.onerror=resolve;document.head.appendChild(script);});}
+  function ensurePublicTools(){if(window.korgeoClaimSignupSlot)return Promise.resolve();return new Promise(resolve=>{if(document.querySelector('script[data-korgeo-public-tools]')){const timer=setInterval(()=>{if(window.korgeoClaimSignupSlot){clearInterval(timer);resolve();}},50);setTimeout(()=>{clearInterval(timer);resolve();},2500);return;}const script=document.createElement('script');script.src='./public-tools.js?v=20260820-public-v6';script.dataset.korgeoPublicTools='1';script.onload=script.onerror=resolve;document.head.appendChild(script);});}
   void ensurePublicTools();
 
   const usernameInput=$('email');const passwordInput=$('password');const loginBtn=$('loginBtn');const signupBtn=$('signupBtn');const account=$('account');
