@@ -25,7 +25,7 @@
         const render=()=>{
           if(!window.turnstile){resolve(false);return;}
           if(!captchaWrap){captchaWrap=document.createElement('div');captchaWrap.id='korgeoTurnstileQuiz';captchaWrap.style.cssText='margin:10px 0;min-height:65px;display:flex;justify-content:center;';fields.insertAdjacentElement('afterend',captchaWrap);}
-          if(captchaWidgetId===null){try{captchaWidgetId=window.turnstile.render(captchaWrap,{sitekey:TURNSTILE_SITE_KEY,theme:'auto',callback:token=>{captchaToken=token||'';},'expired-callback':()=>{captchaToken='';},'error-callback':()=>{captchaToken='';}});}catch{resolve(false);return;}}
+          if(captchaWidgetId===null){try{captchaWidgetId=window.turnstile.render(captchaWrap,{sitekey:TURNSTILE_SITE_KEY,theme:'auto',callback:token=>{captchaToken=token||'';},'expired-callback':()=>{captchaToken='';},'error-callback':code=>{captchaToken='';setStatus('Cloudflare 보안 확인 오류 ('+code+').','error');return true;}});}catch{resolve(false);return;}}
           resolve(true);
         };
         if(window.turnstile){render();return;}
