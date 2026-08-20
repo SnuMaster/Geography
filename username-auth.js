@@ -2,7 +2,7 @@
   'use strict';
   const USER_DOMAIN='users.korgeo.app';
   const USERNAME_RE=/^[a-z0-9._-]{3,24}$/;
-  const TURNSTILE_SITE_KEY='0x4AAAAAAAEWxvCtzvng0Tn8-';
+  const TURNSTILE_SITE_KEY='0x4AAAAAAEWxvCtzvng0Tn8-';
   const $=id=>document.getElementById(id);
 
   function ensurePublicTools(){if(window.korgeoClaimSignupSlot)return Promise.resolve();return new Promise(resolve=>{if(document.querySelector('script[data-korgeo-public-tools]')){const timer=setInterval(()=>{if(window.korgeoClaimSignupSlot){clearInterval(timer);resolve();}},50);setTimeout(()=>{clearInterval(timer);resolve();},2500);return;}const script=document.createElement('script');script.src='./public-tools.js?v=20260820-public-v6';script.dataset.korgeoPublicTools='1';script.onload=script.onerror=resolve;document.head.appendChild(script);});}
