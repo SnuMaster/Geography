@@ -60,14 +60,31 @@
     const tbody=$('users'); tbody.replaceChildren();
     rows.forEach(u=>{
       const tr=document.createElement('tr');
-      const cells=[u.login_id,fmt(u.created_at),fmt(u.last_sign_in_at),String(u.wrong_count),u.has_progress?'있음':'없음'];
-      const labels=['아이디','가입','최근 로그인','오답','진도'];
+      const statusText=u.is_admin?'관리자':u.suspended?'이용정지':'정상';
+      const statusDetail=u.suspended&&u.suspension_reason?` · ${u.suspension_reason}`:'';
+      const cells=[u.login_id,fmt(u.created_at),fmt(u.last_sign_in_at),String(u.wrong_count),u.has_progress?'있음':'없음',statusText+statusDetail];
+      const labels=['아이디','가입','최근 로그인','오답','진도','상태'];
       cells.forEach((v,i)=>{const td=document.createElement('td');td.dataset.label=labels[i];td.textContent=v;tr.appendChild(td);});
+
       const td=document.createElement('td');td.dataset.label='권한/관리';td.className='user-actions';
       const adminBtn=document.createElement('button');adminBtn.className='secondary';adminBtn.textContent=u.is_admin?'관리자 해제':'관리자 부여';adminBtn.onclick=()=>action(adminBtn.textContent,()=>sb.rpc('admin_set_admin',{p_target_user_id:u.user_id,p_make_admin:!u.is_admin}));
+
+      const suspendBtn=document.createElement('button');suspendBtn.className=u.suspended?'secondary':'danger';suspendBtn.textContent=u.is_admin?'관리자 보호':u.suspended?'정지 해제':'이용정지';suspendBtn.disabled=Boolean(u.is_admin);
+      suspendBtn.onclick=async()=>{
+        if(u.is_admin)return;
+        let reason=u.suspension_reason||'';
+        if(!u.suspended){reason=prompt('이용정지 사유를 적어줘. 사용자에게도 표시돼.',reason||'운영 정책 위반');if(reason===null)return;}
+        await action(`${u.login_id} ${u.suspended?'이용정지 해제':'이용정지'}`,()=>sb.rpc('admin_set_user_control',{p_target_user_id:u.user_id,p_suspended:!u.suspended,p_suspension_reason:u.suspended?'':reason,p_internal_note:u.internal_note||''}));
+      };
+
+      const noteBtn=document.createElement('button');noteBtn.className='secondary';noteBtn.textContent=u.internal_note?'메모 수정':'관리자 메모';noteBtn.title=u.internal_note||'';noteBtn.onclick=async()=>{
+        const note=prompt('이 메모는 관리자에게만 보여.',u.internal_note||'');if(note===null)return;
+        try{setStatus('메모 저장 중…');const{error}=await sb.rpc('admin_set_user_control',{p_target_user_id:u.user_id,p_suspended:Boolean(u.suspended),p_suspension_reason:u.suspension_reason||'',p_internal_note:note});if(error)throw error;setStatus('메모 저장 완료','ok');await load();}catch(e){setStatus('메모 저장 실패: '+(e.message||e),'error');}
+      };
+
       const resetBtn=document.createElement('button');resetBtn.className='secondary';resetBtn.textContent='데이터 초기화';resetBtn.onclick=()=>action(u.login_id+'의 진도/오답 초기화',()=>sb.rpc('admin_reset_user_data',{p_target_user_id:u.user_id,p_reset_progress:true,p_reset_mistakes:true}));
       const delBtn=document.createElement('button');delBtn.className='danger';delBtn.textContent='계정 삭제';delBtn.onclick=()=>action(u.login_id+' 계정 삭제',()=>sb.rpc('admin_delete_user',{p_target_user_id:u.user_id}));
-      td.append(adminBtn,resetBtn,delBtn);tr.appendChild(td);tbody.appendChild(tr);
+      td.append(adminBtn,suspendBtn,noteBtn,resetBtn,delBtn);tr.appendChild(td);tbody.appendChild(tr);
     });
     window.korgeoAdminUsers=rows;
     window.dispatchEvent(new CustomEvent('korgeo-admin-users',{detail:rows}));
@@ -78,7 +95,7 @@
       setStatus('불러오는 중…');
       const [a,b,c,d]=await Promise.all([
         sb.rpc('admin_dashboard'),
-        sb.rpc('admin_list_users',{p_limit:200}),
+        sb.rpc('admin_list_users_v2',{p_limit:200}),
         sb.rpc('admin_traffic_stats'),
         sb.rpc('get_public_announcement')
       ]);
