@@ -31,3 +31,4 @@ jobs:
           git add index.html quiz/index.html
           git diff --cached --quiet || git commit -m "Refresh direct auth loaders"
           git push
+# trigger 2026-08-20-v8
