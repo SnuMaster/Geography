@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v32';
+const APP_CACHE = 'geography-app-v33';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -80,9 +80,9 @@ async function cachedOrNetwork(request) {
 
 function pageAuthScript(url) {
   const path = url.pathname;
-  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260820-username-v11"></script>';
+  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260821-username-v12"></script>';
   if (path.endsWith('/sigun-quiz.html')) return '';
-  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') return '<script src="./username-auth.js?v=20260820-username-v11"></script>';
+  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') return '<script src="./username-auth.js?v=20260821-username-v12"></script>';
   return '';
 }
 
