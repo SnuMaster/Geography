@@ -56,7 +56,7 @@ async function cacheResponse(cacheName, request, response, maxEntries) {
   if (maxEntries) {
     const keys = await cache.keys();
     const excess = keys.length - maxEntries;
-    if (excess > 0) await Promise.all(keys.slice(0, excess).map(key => caches.delete(key)));
+    if (excess > 0) await Promise.all(keys.slice(0, excess).map(key => cache.delete(key)));
   }
   return response;
 }
