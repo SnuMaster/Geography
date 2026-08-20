@@ -37,7 +37,7 @@
               theme:'auto',
               callback:token=>{captchaToken=token||'';},
               'expired-callback':()=>{captchaToken='';},
-              'error-callback':()=>{captchaToken='';}
+              'error-callback':code=>{captchaToken='';account.textContent='Cloudflare 보안 확인 오류 ('+code+').';return true;}
             });
           }catch{resolve(false);return;}
         }
