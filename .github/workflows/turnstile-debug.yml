@@ -1,0 +1,51 @@
+name: Turnstile debug patch
+on:
+  push:
+    paths:
+      - '.github/workflows/turnstile-debug.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Show Turnstile error codes and bump frontend versions
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          p=Path('username-auth.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("'error-callback':()=>{captchaToken='';}", "'error-callback':code=>{captchaToken='';account.textContent='Cloudflare 보안 확인 오류 ('+code+').';return true;}")
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('quiz/username-auth-override.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("'error-callback':()=>{captchaToken='';}", "'error-callback':code=>{captchaToken='';setStatus('Cloudflare 보안 확인 오류 ('+code+').','error');return true;}")
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'\./username-auth\.js\?v=[^\"\']+', './username-auth.js?v=20260820-username-v11', s)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('quiz/index.html')
+          s=p.read_text(encoding='utf-8')
+          s=re.sub(r'\./username-auth-override\.js\?v=[^\"\']+', './username-auth-override.js?v=20260820-username-v11', s)
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('service-worker.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("const APP_CACHE = 'geography-app-v31';", "const APP_CACHE = 'geography-app-v32';")
+          s=s.replace('20260820-username-v10','20260820-username-v11')
+          p.write_text(s,encoding='utf-8')
+          PY
+      - name: Commit patch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add username-auth.js quiz/username-auth-override.js index.html quiz/index.html service-worker.js
+          git diff --cached --quiet || git commit -m "Show Turnstile error codes"
+          git push
