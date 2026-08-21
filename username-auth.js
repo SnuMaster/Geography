@@ -23,7 +23,7 @@
         return;
       }
       const script = document.createElement('script');
-      script.src = './public-tools.js?v=20260820-public-v6';
+      script.src = './public-tools.js?v=20260821-public-v7';
       script.dataset.korgeoPublicTools = '1';
       script.onload = script.onerror = resolve;
       document.head.appendChild(script);
@@ -37,113 +37,6 @@
   const signupBtn = $('signupBtn');
   const account = $('account');
   if (!usernameInput || !passwordInput || !loginBtn || !signupBtn || !account || typeof supabaseClient === 'undefined') return;
-
-  function currentKoreanTime() {
-    return new Intl.DateTimeFormat('ko-KR', {
-      timeZone: 'Asia/Seoul',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).format(new Date());
-  }
-
-  function installSyncClockFix() {
-    if (typeof setSyncStatus !== 'function' || window.__korgeoSyncClockFixed) return;
-    window.__korgeoSyncClockFixed = true;
-    const originalSetSyncStatus = setSyncStatus;
-    window.setSyncStatus = function(message, state) {
-      let next = String(message || '');
-      if (/^(동기화됨|자동 동기화됨|다른 기기 변경사항 반영됨)\s*·/.test(next)) {
-        next = next.replace(/·.*$/, '· ' + currentKoreanTime());
-      }
-      return originalSetSyncStatus(next, state);
-    };
-  }
-  installSyncClockFix();
-
-  function installScaleMode() {
-    try {
-      if (typeof syncChannel !== 'undefined' && syncChannel) {
-        try { supabaseClient.removeChannel(syncChannel); } catch {}
-        syncChannel = null;
-      }
-      if (typeof stopFallbackSync === 'function') stopFallbackSync();
-
-      if (typeof subscribeToProgress === 'function') {
-        window.subscribeToProgress = function() {
-          if (typeof currentUser === 'undefined' || !currentUser || (typeof offlinePracticeMode !== 'undefined' && offlinePracticeMode)) return;
-          if (typeof syncChannel !== 'undefined' && syncChannel) {
-            try { supabaseClient.removeChannel(syncChannel); } catch {}
-            syncChannel = null;
-          }
-          if (typeof stopFallbackSync === 'function') stopFallbackSync();
-          if (typeof setSyncStatus === 'function') setSyncStatus('저부하 동기화 모드 · 변경 즉시 저장', 'success');
-        };
-      }
-
-      if (typeof saveProgress === 'function') {
-        window.saveProgress = async function() {
-          if (typeof currentUser === 'undefined' || !currentUser) return;
-          if (typeof offlinePracticeMode !== 'undefined' && offlinePracticeMode) {
-            if (typeof setSyncStatus === 'function') setSyncStatus('오프라인 연습 모드 · 이 기기에만 저장됨', 'pending');
-            return;
-          }
-          if (!navigator.onLine) {
-            if (typeof setSyncStatus === 'function') setSyncStatus('오프라인 · 이 기기에 임시 저장됨', 'pending');
-            return;
-          }
-          if (typeof syncInFlight !== 'undefined' && syncInFlight) {
-            syncQueued = true;
-            return;
-          }
-
-          syncInFlight = true;
-          syncQueued = false;
-          const snapshot = currentProgress();
-          snapshot.user_id = currentUser.id;
-          if (typeof setSyncStatus === 'function') setSyncStatus('저장 중…', 'pending');
-          try {
-            const { data, error } = await supabaseClient.rpc('merge_my_study_progress', { p_snapshot: snapshot });
-            if (error) throw error;
-            if (typeof applyProgress === 'function') applyProgress(data, '동기화된 마지막 핀');
-            if (typeof setSyncStatus === 'function') setSyncStatus('동기화됨 · ' + currentKoreanTime(), 'success');
-            try { localStorage.removeItem(cacheKey('guest')); } catch {}
-          } catch (error) {
-            if (typeof writeCache === 'function') writeCache(snapshot);
-            console.warn('기록 저장 실패:', error?.message || error);
-            if (typeof setSyncStatus === 'function') setSyncStatus('저장 실패 · 인터넷 연결을 확인한 뒤 다시 시도해.', 'error');
-          } finally {
-            syncInFlight = false;
-            if (syncQueued && typeof queueSave === 'function') queueSave(true);
-          }
-        };
-      }
-
-      if (typeof queueSave === 'function') {
-        window.queueSave = function(immediate = false) {
-          if (typeof currentUser === 'undefined' || !currentUser) return;
-          if (typeof offlinePracticeMode !== 'undefined' && offlinePracticeMode) {
-            if (typeof setSyncStatus === 'function') setSyncStatus('오프라인 연습 모드 · 이 기기에만 저장됨', 'pending');
-            return;
-          }
-          if (!navigator.onLine) {
-            if (typeof setSyncStatus === 'function') setSyncStatus('오프라인 · 이 기기에 임시 저장됨', 'pending');
-            return;
-          }
-          if (typeof syncInFlight !== 'undefined' && syncInFlight) {
-            syncQueued = true;
-            return;
-          }
-          clearTimeout(syncTimer);
-          if (typeof setSyncStatus === 'function') setSyncStatus('동기화 예약됨…', 'pending');
-          syncTimer = setTimeout(saveProgress, immediate ? 0 : 650);
-        };
-      }
-    } catch (error) {
-      console.warn('저부하 동기화 모드 적용 실패:', error?.message || error);
-    }
-  }
-  installScaleMode();
 
   const usernameLabel = document.querySelector('label[for="email"]');
   const passwordLabel = document.querySelector('label[for="password"]');
