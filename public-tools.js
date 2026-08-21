@@ -23,6 +23,16 @@
     document.body.insertBefore(el,document.body.firstChild);
   }
 
+  function renderSuneungDday(){
+    const old=document.getElementById('korgeoSuneungDday');if(old)old.remove();
+    const parts=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date()).filter(p=>p.type!=='literal').map(p=>[p.type,p.value]));
+    const today=Date.UTC(Number(parts.year),Number(parts.month)-1,Number(parts.day));
+    const target=Date.UTC(2026,10,19);
+    const days=Math.round((target-today)/86400000);
+    const dday=days>0?`D-${days}`:days===0?'D-DAY':`D+${Math.abs(days)}`;
+    bar('korgeoSuneungDday',`📚 2027학년도 수능 ${dday} · 2026.11.19 (목)`,'background:#0b2748;color:#fff;border-bottom:1px solid #ffffff26;letter-spacing:-.01em',false);
+  }
+
   function renderAnnouncement(value){
     const old=document.getElementById('korgeoAnnouncement');if(old)old.remove();
     if(!value?.enabled||!String(value.text||'').trim())return;
@@ -61,6 +71,7 @@
       if(!a.error)renderAnnouncement(a.data);
       if(!r.error)renderRuntime(r.data);
     }catch{}
+    renderSuneungDday();
   }
 
   window.korgeoGetRuntimeConfig=async function(){try{const{data,error}=await sb.rpc('get_public_runtime_config');if(error)return window.korgeoRuntimeConfig||{};renderRuntime(data);return data||{};}catch{return window.korgeoRuntimeConfig||{};}};
@@ -95,4 +106,5 @@
   trackVisit();
   const boot=()=>loadPublicState();
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
+  setInterval(renderSuneungDday,60000);
 })();
