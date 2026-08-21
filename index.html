@@ -203,18 +203,16 @@
     let syncTimer = null;
     let syncInFlight = false;
     let syncQueued = false;
-    let syncChannel = null;
-    let fallbackSyncTimer = null;
-    let fallbackSyncInFlight = false;
     let activeUserId = null;
+    let lastReconcileAt = 0;
     let offlinePracticeMode = localStorage.getItem('geography-offline-practice-mode') === 'true';
     const MAX_SAVED_PINS = 200;
-    // Realtime is normally instant. This short poll is the safety net for
-    // school/office networks that block WebSockets.
-    const FALLBACK_SYNC_INTERVAL_MS = 15000;
+    const SAVE_DEBOUNCE_MS = 650;
+    const RECONCILE_MIN_INTERVAL_MS = 30000;
 
     function formatTime(iso) {
       return new Intl.DateTimeFormat('ko-KR', {
+        timeZone: 'Asia/Seoul',
         hour: '2-digit', minute: '2-digit', second: '2-digit'
       }).format(new Date(iso));
     }
@@ -232,7 +230,7 @@
       $('refreshBtn').disabled = offlinePracticeMode;
       $('modeNote').textContent = offlinePracticeMode
         ? '오프라인 연습 모드 · 기록은 이 기기에만 저장되고 서버에는 전송하지 않아.'
-        : '온라인 모드 · 기록을 자동으로 동기화해.';
+        : '온라인 모드 · 변경사항을 잠깐 모아 자동 저장해.';
     }
 
     function cacheKey(userId) {
@@ -621,8 +619,8 @@
       }
 
       clearTimeout(syncTimer);
-      setSyncStatus('바로 동기화 중…', 'pending');
-      syncTimer = setTimeout(saveProgress, 0);
+      setSyncStatus(immediate ? '바로 동기화 중…' : '변경사항 저장 대기 중…', 'pending');
+      syncTimer = setTimeout(saveProgress, immediate ? 0 : SAVE_DEBOUNCE_MS);
     }
 
     async function saveProgress() {
@@ -642,28 +640,12 @@
 
       syncInFlight = true;
       syncQueued = false;
-      let snapshot = currentProgress();
+      const snapshot = currentProgress();
       snapshot.user_id = currentUser.id;
       setSyncStatus('저장 중…', 'pending');
 
       try {
-        try {
-          const remoteBeforeSave = await fetchRemoteProgress();
-          const mergedBeforeSave = mergeProgress(snapshot, remoteBeforeSave);
-          if (mergedBeforeSave && !sameProgressContent(mergedBeforeSave, snapshot)) {
-            snapshot = { ...mergedBeforeSave, user_id: currentUser.id, updated_at: new Date().toISOString() };
-            applyProgress(snapshot, '기기 기록을 합치는 중');
-          }
-        } catch (error) {
-          console.warn('저장 전 서버 기록 확인 실패:', error.message);
-        }
-
-        const { data, error } = await supabaseClient
-          .from('study_progress')
-          .upsert(snapshot, { onConflict: 'user_id' })
-          .select()
-          .single();
-
+        const { data, error } = await supabaseClient.rpc('merge_my_study_progress', { p_snapshot: snapshot });
         if (error) throw error;
 
         applyProgress(data, '동기화된 마지막 핀');
@@ -690,43 +672,15 @@
       return data;
     }
 
-    function stopFallbackSync() {
-      if (fallbackSyncTimer) clearInterval(fallbackSyncTimer);
-      fallbackSyncTimer = null;
-      fallbackSyncInFlight = false;
-    }
-
-    function startFallbackSync() {
-      if (fallbackSyncTimer || !currentUser || offlinePracticeMode) return;
-
-      fallbackSyncTimer = setInterval(async () => {
-        if (!currentUser || offlinePracticeMode || !navigator.onLine || fallbackSyncInFlight) return;
-        fallbackSyncInFlight = true;
-        try {
-          const remote = await fetchRemoteProgress();
-          if (!remote) return;
-          const merged = mergeProgress(currentProgress(), remote);
-          if (!sameProgressContent(merged, remote)) {
-            merged.updated_at = new Date().toISOString();
-            applyProgress(merged, '다른 기기 기록을 합쳤어');
-            queueSave(true);
-          } else if (new Date(remote.updated_at) > new Date(progressUpdatedAt)) {
-            applyProgress(remote, '다른 기기에서 찍은 핀');
-            setSyncStatus('자동 동기화됨 · ' + formatTime(remote.updated_at), 'success');
-          }
-        } catch {
-        } finally {
-          fallbackSyncInFlight = false;
-        }
-      }, FALLBACK_SYNC_INTERVAL_MS);
-    }
-
-    async function reconcileProgress() {
+    async function reconcileProgress(force = false) {
       if (!currentUser) return;
       if (offlinePracticeMode) {
         setSyncStatus('오프라인 연습 모드에서는 서버와 동기화하지 않아.', 'pending');
         return;
       }
+      const now = Date.now();
+      if (!force && now - lastReconcileAt < RECONCILE_MIN_INTERVAL_MS) return;
+      lastReconcileAt = now;
       setSyncStatus('서버 기록 확인 중…', 'pending');
 
       try {
@@ -750,44 +704,6 @@
         console.warn('기록 불러오기 실패:', error.message);
         setSyncStatus('서버 기록을 불러오지 못했어 · 다시 시도해.', 'error');
       }
-    }
-
-    function subscribeToProgress() {
-      if (!currentUser || offlinePracticeMode) return;
-      if (syncChannel) supabaseClient.removeChannel(syncChannel);
-
-      const userId = currentUser.id;
-      startFallbackSync();
-      syncChannel = supabaseClient
-        .channel('study-progress:' + userId)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'study_progress',
-          filter: 'user_id=eq.' + userId
-        }, payload => {
-          const remote = payload.new;
-          if (!remote || remote.user_id !== userId) return;
-
-          const merged = mergeProgress(currentProgress(), remote);
-          if (!sameProgressContent(merged, remote)) {
-            merged.updated_at = new Date().toISOString();
-            applyProgress(merged, '다른 기기 기록을 합쳤어');
-            queueSave(true);
-          } else if (new Date(remote.updated_at) >= new Date(progressUpdatedAt)) {
-            applyProgress(remote, '다른 기기에서 찍은 핀');
-            setSyncStatus('다른 기기 변경사항 반영됨 · ' + formatTime(remote.updated_at), 'success');
-          }
-        })
-          .subscribe(status => {
-          if (status === 'SUBSCRIBED') {
-            setSyncStatus('실시간 동기화 연결됨', 'success');
-          }
-          if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
-            startFallbackSync();
-            setSyncStatus('실시간 연결 대신 2초마다 자동 동기화 중', 'pending');
-          }
-        });
     }
 
     async function refreshFromServer() {
@@ -841,18 +757,14 @@
       updatePracticeModeUI();
 
       if (offlinePracticeMode) {
-        if (syncChannel) supabaseClient.removeChannel(syncChannel);
-        syncChannel = null;
-        stopFallbackSync();
         if (currentUser) setSyncStatus('오프라인 연습 모드 · 이 기기에만 저장됨', 'pending');
       } else if (currentUser) {
         setSyncStatus('온라인 모드로 전환됨 · 동기화 중…', 'pending');
-        reconcileProgress();
-        subscribeToProgress();
+        reconcileProgress(true);
       }
     };
 
-    $('syncNowBtn').onclick = () => reconcileProgress();
+    $('syncNowBtn').onclick = () => reconcileProgress(true);
     $('refreshBtn').onclick = () => refreshFromServer();
 
     $('loginBtn').onclick = async () => {
@@ -895,7 +807,7 @@
     window.addEventListener('online', () => {
       if (currentUser && !offlinePracticeMode) {
         setSyncStatus('인터넷 연결 복구됨 · 동기화 중…', 'pending');
-        reconcileProgress();
+        reconcileProgress(true);
       }
     });
     window.addEventListener('offline', () => {
@@ -916,19 +828,13 @@
       activeUserId = nextUser ? nextUser.id : null;
       updateAccount();
 
-      if (!currentUser) {
-        if (syncChannel) supabaseClient.removeChannel(syncChannel);
-        syncChannel = null;
-        stopFallbackSync();
-        return;
-      }
+      if (!currentUser) return;
 
       if (previousId !== activeUserId) {
         if (offlinePracticeMode) {
           setSyncStatus('오프라인 연습 모드 · 이 기기에만 저장됨', 'pending');
         } else {
-          reconcileProgress();
-          subscribeToProgress();
+          reconcileProgress(true);
         }
       }
     });
@@ -941,6 +847,6 @@
       });
     }
   </script>
-  <script src="./username-auth.js?v=20260821-username-v12"></script>
+  <script src="./username-auth.js?v=20260821-username-v15"></script>
 </body>
 </html>
