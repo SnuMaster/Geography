@@ -1,5 +1,6 @@
 /*
   X-Frame-Options: DENY
+  Content-Security-Policy: frame-ancestors 'none';
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 
 https://geography-3tt.pages.dev/*
