@@ -1,0 +1,6 @@
+/*
+  X-Frame-Options: DENY
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+https://geography-3tt.pages.dev/*
+  X-Robots-Tag: noindex
