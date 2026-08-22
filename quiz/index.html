@@ -11,8 +11,11 @@
     * { box-sizing: border-box; }
     body { margin: 0; min-width: 320px; background: #eef4f9; color: #102c4d; }
     header { padding: 22px clamp(18px, 4vw, 58px); background: #163f68; color: #fff; }
+    .header-links { display: flex; flex-wrap: wrap; align-items: center; gap: 9px; }
     header a { color: #d8ecff; font-size: .88rem; font-weight: 700; text-decoration: none; }
     header a:hover { text-decoration: underline; }
+    .answer-link { display: inline-flex; align-items: center; min-height: 38px; padding: 8px 12px; border: 1px solid #8ec9f4; border-radius: 10px; background: #ffffff14; color: #fff; font-weight: 850; }
+    .answer-link:hover { background: #ffffff22; text-decoration: none; }
     h1 { margin: 8px 0 4px; font-size: clamp(1.45rem, 3vw, 2rem); }
     header p { margin: 0; color: #d8e7f4; font-size: .92rem; }
     main { display: grid; grid-template-columns: minmax(320px, 430px) minmax(0, 1fr); align-items: start; gap: 18px; min-height: calc(100vh - 126px); padding: 18px clamp(14px, 3vw, 42px) 28px; }
@@ -81,7 +84,10 @@
 </head>
 <body>
   <header>
-    <a href="../">← 좌표 핀 학습으로 돌아가기</a>
+    <div class="header-links">
+      <a href="../">← 좌표 핀 학습으로 돌아가기</a>
+      <a class="answer-link" href="./answer/">🗺️ 행정구역 답지 보기</a>
+    </div>
     <h1>클릭형 행정구역 빈칸 지도</h1>
     <p>서울·부산·대구만 구·군까지, 나머지는 시·군 단위로 직접 풀어.</p>
   </header>
