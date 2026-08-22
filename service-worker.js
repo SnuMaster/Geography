@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v38';
+const APP_CACHE = 'geography-app-v39';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -13,6 +13,9 @@ const APP_SHELL = [
   './quiz/',
   './quiz/quiz-app.js?v=20260818-adminscope-v2',
   './quiz/username-auth-override.js?v=20260821-username-v12',
+  './quiz/answer/',
+  './quiz/answer/index.html',
+  './quiz/answer/answer.js?v=20260823-answer-v1',
   './sigun-quiz',
   './quiz-data.js?v=20260818-adminscope-v2',
   './quiz/data/korea-municipalities-2018.topo.json',
