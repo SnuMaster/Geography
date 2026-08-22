@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#163f68">
+  <meta name="description" content="행정구역을 클릭하면 정답을 바로 확인할 수 있는 한국지리 답지 지도">
+  <title>클릭형 행정구역 답지 | 한국지리</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root { color-scheme: light; font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: #eef4f9; color: #102c4d; }
+    header { padding: 20px clamp(18px, 4vw, 58px); background: #163f68; color: #fff; }
+    header a { color: #d8ecff; font-size: .88rem; font-weight: 750; text-decoration: none; }
+    header a:hover { text-decoration: underline; }
+    h1 { margin: 8px 0 4px; font-size: clamp(1.45rem, 3vw, 2rem); }
+    header p { margin: 0; color: #d8e7f4; font-size: .92rem; }
+    main { display: grid; grid-template-columns: minmax(300px, 390px) minmax(0, 1fr); gap: 18px; padding: 18px clamp(14px, 3vw, 42px) 28px; align-items: start; }
+    .panel { background: #fff; border-radius: 16px; box-shadow: 0 10px 28px #173f6820; padding: clamp(18px, 3vw, 24px); }
+    h2 { margin: 0; font-size: 1.1rem; }
+    .intro { margin: 8px 0 16px; color: #536b80; font-size: .88rem; line-height: 1.55; }
+    .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button, a.action { min-height: 42px; border: 0; border-radius: 9px; cursor: pointer; font: inherit; font-weight: 780; }
+    .mode-grid button { border: 1px solid #cbdbea; background: #f5f9fd; color: #164875; font-size: .84rem; }
+    .mode-grid button[aria-pressed="true"] { border-color: #1769aa; background: #1769aa; color: #fff; }
+    .answer-card { margin-top: 15px; border: 1px solid #cfe0ee; border-radius: 13px; background: #f7fbff; padding: 15px; }
+    .answer-kicker { margin: 0; color: #6a8093; font-size: .74rem; font-weight: 800; }
+    .answer-name { margin: 5px 0 0; color: #123f68; font-size: clamp(1.5rem, 5vw, 2.15rem); letter-spacing: -.04em; line-height: 1.15; }
+    .answer-full { margin: 7px 0 0; color: #536b80; font-size: .86rem; line-height: 1.45; }
+    .answer-card[data-empty="true"] .answer-name { color: #8aa0b2; font-size: 1.05rem; letter-spacing: 0; }
+    .counter { margin-top: 10px; color: #315677; font-size: .8rem; font-weight: 750; }
+    .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .actions button { background: #e8f0f8; color: #254f79; }
+    .actions button.primary { background: #1769aa; color: #fff; }
+    .hint { margin: 12px 0 0; color: #637a8e; font-size: .78rem; line-height: 1.5; }
+    .map-card { position: sticky; top: 14px; min-height: min(84vh, 820px); overflow: hidden; border: 1px solid #d5e2ed; border-radius: 16px; background: #e8f0f6; box-shadow: 0 10px 28px #173f6815; }
+    #map { position: absolute; inset: 0; background: #e8f0f6; }
+    .map-status { position: absolute; z-index: 500; right: 14px; top: 14px; max-width: 310px; border-radius: 9px; background: #ffffffed; box-shadow: 0 3px 12px #173f6820; padding: 8px 10px; color: #536b80; font-size: .76rem; font-weight: 700; line-height: 1.4; }
+    .map-status[data-state="error"] { color: #a0342b; }
+    .map-note { position: absolute; z-index: 500; left: 14px; bottom: 14px; max-width: min(430px, calc(100% - 28px)); border-radius: 9px; background: #ffffffed; box-shadow: 0 3px 12px #173f6825; padding: 9px 11px; color: #294f73; font-size: .8rem; font-weight: 750; line-height: 1.4; }
+    .leaflet-container { cursor: pointer; }
+    .leaflet-control-attribution { font-size: 10px; }
+    .answer-label { pointer-events: none; white-space: nowrap; border-radius: 5px; background: #fffffff0; border: 1px solid #adc6d9; color: #173f68; padding: 2px 4px; font-size: 10px; font-weight: 800; box-shadow: 0 1px 3px #173f6820; }
+    footer { padding: 0 18px 20px; color: #667d90; font-size: .73rem; text-align: center; }
+    footer a { color: inherit; }
+    @media (max-width: 820px) {
+      main { grid-template-columns: 1fr; }
+      .map-card { position: relative; top: auto; min-height: 62vh; }
+    }
+    @media (max-width: 420px) {
+      .mode-grid, .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <a href="../">← 빈칸 지도 퀴즈로 돌아가기</a>
+    <h1>클릭형 행정구역 답지</h1>
+    <p>지도를 클릭하면 그 행정구역의 정답을 바로 보여줘.</p>
+  </header>
+  <main>
+    <section class="panel" aria-labelledby="answerTitle">
+      <h2 id="answerTitle">어디인지 눌러봐</h2>
+      <p class="intro">퀴즈와 같은 경계 데이터를 사용해. 전국 시·군 또는 서울·대구·부산 구·군 모드를 고르고 지도를 클릭하면 돼.</p>
+
+      <div class="mode-grid" aria-label="답지 종류">
+        <button type="button" data-mode="sigun" aria-pressed="true">전국 시·군</button>
+        <button type="button" data-mode="seoul" aria-pressed="false">서울 구</button>
+        <button type="button" data-mode="daegu" aria-pressed="false">대구 구·군</button>
+        <button type="button" data-mode="busan" aria-pressed="false">부산 구·군</button>
+      </div>
+
+      <section id="answerCard" class="answer-card" data-empty="true" aria-live="polite">
+        <p class="answer-kicker" id="answerKicker">선택 없음</p>
+        <h3 class="answer-name" id="answerName">지도에서 행정구역을 클릭해</h3>
+        <p class="answer-full" id="answerFull">클릭한 영역이 파란색으로 표시되고 여기에 정답이 나와.</p>
+        <p class="counter" id="answerCounter">확인 0개</p>
+      </section>
+
+      <div class="actions">
+        <button id="toggleLabelsBtn" type="button" class="primary">전체 이름 보기</button>
+        <button id="resetBtn" type="button">선택 초기화</button>
+      </div>
+      <p class="hint">전체 이름 보기를 켜면 현재 모드의 모든 답이 지도 위에 표시돼. 다시 누르면 숨겨져.</p>
+    </section>
+
+    <section class="map-card" aria-label="클릭형 행정구역 답지 지도">
+      <div id="map"></div>
+      <div id="mapStatus" class="map-status">행정구역 경계를 불러오는 중…</div>
+      <div class="map-note">영역 클릭 → 정답 확인 · 굵은 진한 선은 시·도 경계</div>
+    </section>
+  </main>
+  <footer>행정구역 경계: <a href="https://sgis.kostat.go.kr/" target="_blank" rel="noopener">통계청 통계지리정보서비스(SGIS)</a>, 2018 · 공공누리 제1유형</footer>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
+  <script src="../../quiz-data.js?v=20260818-adminscope-v2"></script>
+  <script src="./answer.js?v=20260823-answer-v1"></script>
+</body>
+</html>
