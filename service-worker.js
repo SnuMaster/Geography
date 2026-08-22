@@ -1,22 +1,19 @@
-const APP_CACHE = 'geography-app-v37';
+const APP_CACHE = 'geography-app-v38';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
   './index.html',
-  './username-auth.js',
-  './public-tools.js',
-  './admin.html',
-  './admin.js',
-  './admin-ops.js',
-  './admin-extra.js',
-  './admin-power.js',
+  './username-auth.js?v=20260821-username-v15',
+  './public-tools.js?v=20260821-public-v7',
+  './admin',
+  './admin.js?v=20260820-admin-v4',
+  './admin-ops.js?v=20260819-ops-v1',
+  './admin-extra.js?v=20260820-extra-v1',
+  './admin-power.js?v=20260820-power-v1',
   './quiz/',
-  './quiz/index.html',
-  './quiz/quiz-app.js',
   './quiz/quiz-app.js?v=20260818-adminscope-v2',
-  './quiz/username-auth-override.js',
-  './sigun-quiz.html',
-  './quiz-data.js',
+  './quiz/username-auth-override.js?v=20260821-username-v12',
+  './sigun-quiz',
   './quiz-data.js?v=20260818-adminscope-v2',
   './quiz/data/korea-municipalities-2018.topo.json',
   './quiz/data/korea-provinces-2018.topo.json',
@@ -51,12 +48,16 @@ self.addEventListener('activate', event => {
 
 async function cacheResponse(cacheName, request, response, maxEntries) {
   if (!response || (!response.ok && response.type !== 'opaque')) return response;
-  const cache = await caches.open(cacheName);
-  await cache.put(request, response.clone());
-  if (maxEntries) {
-    const keys = await cache.keys();
-    const excess = keys.length - maxEntries;
-    if (excess > 0) await Promise.all(keys.slice(0, excess).map(key => cache.delete(key)));
+  try {
+    const cache = await caches.open(cacheName);
+    await cache.put(request, response.clone());
+    if (maxEntries) {
+      const keys = await cache.keys();
+      const excess = keys.length - maxEntries;
+      if (excess > 0) await Promise.all(keys.slice(0, excess).map(key => cache.delete(key)));
+    }
+  } catch (error) {
+    console.warn('Cache write skipped:', error);
   }
   return response;
 }
@@ -78,31 +79,12 @@ async function cachedOrNetwork(request) {
   catch { return new Response('오프라인 상태입니다. 인터넷에 연결한 뒤 다시 시도해 주세요.', {status:503,headers:{'Content-Type':'text/plain; charset=utf-8'}}); }
 }
 
-function pageAuthScript(url) {
-  const path = url.pathname;
-  if (path.includes('/quiz/')) return '<script src="./username-auth-override.js?v=20260821-username-v14"></script>';
-  if (path.endsWith('/sigun-quiz.html')) return '';
-  if (path === '/' || path.endsWith('/Geography/') || path.endsWith('/Geography/index.html') || path === '/index.html') return '<script src="./username-auth.js?v=20260821-username-v15"></script>';
-  return '';
-}
-
-async function injectAuthScript(response, requestUrl) {
-  if (!response || !response.ok) return response;
-  const scriptTag = pageAuthScript(requestUrl);
-  if (!scriptTag) return response;
-  const contentType = response.headers.get('content-type') || '';
-  if (!contentType.includes('text/html')) return response;
-  const html = await response.text();
-  if (html.includes(scriptTag.split('?')[0].replace('<script src="', ''))) return new Response(html,{status:response.status,statusText:response.statusText,headers:response.headers});
-  const transformed = html.includes('</body>') ? html.replace('</body>', '  ' + scriptTag + '\n</body>') : html + scriptTag;
-  const headers = new Headers(response.headers);headers.delete('content-length');headers.delete('content-encoding');
-  return new Response(transformed,{status:response.status,statusText:response.statusText,headers});
-}
-
 async function navigationResponse(request) {
-  const requestUrl = new URL(request.url);
-  try { const response=await fetch(request,{cache:'no-store'}); return cacheResponse(APP_CACHE,request,await injectAuthScript(response,requestUrl)); }
-  catch { const cached=(await caches.match(request))||(await caches.match('./'))||(await caches.match('./index.html')); return cached?injectAuthScript(cached,requestUrl):cached; }
+  try {
+    return cacheResponse(APP_CACHE, request, await fetch(request, {cache:'no-store'}));
+  } catch {
+    return (await caches.match(request)) || (await caches.match('./')) || (await caches.match('./index.html'));
+  }
 }
 
 async function mapTileResponse(request) {

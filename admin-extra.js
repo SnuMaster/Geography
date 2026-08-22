@@ -57,6 +57,7 @@
 
   (async()=>{
     addStyles();buildUI();const sb=await waitForClient();if(!sb)return;
+    const ready=window.korgeoAdminReady?await window.korgeoAdminReady:false;if(!ready)return;
     const loadAll=()=>Promise.all([loadHealth(sb),loadFeedback(sb)]);
     try{await loadAll();}catch(e){console.warn('추가 관리자 패널 로드 실패',e);}
     $('refreshHealthBtn').onclick=()=>loadHealth(sb);

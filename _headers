@@ -1,7 +1,10 @@
 /*
   X-Frame-Options: DENY
-  Content-Security-Policy: frame-ancestors 'none';
+  Content-Security-Policy: base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+
+/admin*
+  X-Robots-Tag: noindex, nofollow
 
 https://geography-3tt.pages.dev/*
   X-Robots-Tag: noindex

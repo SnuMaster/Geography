@@ -138,6 +138,7 @@
 
   (async()=>{
     addStyles();buildUI();const sb=await waitForClient();if(!sb)return;
+    const ready=window.korgeoAdminReady?await window.korgeoAdminReady:false;if(!ready)return;
     try{await Promise.all([loadFlags(sb),loadSignups(sb),loadSchedule(sb)]);}catch(e){console.warn('고급 운영 패널 로드 실패',e);}
     $('saveFlagsBtn').onclick=()=>saveFlags(sb).catch(()=>{});$('panicBtn').onclick=()=>panic(sb);$('normalBtn').onclick=()=>normalize(sb);$('saveScheduleBtn').onclick=()=>saveSchedule(sb);
     window.addEventListener('korgeo-admin-users',e=>wireUserDetailButtons(sb,e.detail||window.korgeoAdminUsers||[]));

@@ -1,1 +1,0 @@
-Force GitHub Pages deployment for verified teacher photo update.

@@ -14,13 +14,16 @@
 
   async function trackVisit(){try{await sb.rpc('track_public_visit',{p_session_id:visitorId,p_page:page});}catch{}}
 
-  function bar(id,text,css,closable=true){
+  function bar(id,text,css,closable=true,placement='top'){
     if(!text||document.getElementById(id))return;
-    const el=document.createElement('div');el.id=id;el.setAttribute('role','status');
+    const el=document.createElement('div');el.id=id;el.dataset.korgeoBanner='1';el.setAttribute('role','status');
     el.style.cssText='position:relative;z-index:9999;padding:10px 44px 10px 14px;text-align:center;font:700 14px/1.45 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;'+css;
     const span=document.createElement('span');span.textContent=text;el.appendChild(span);
     if(closable){const close=document.createElement('button');close.type='button';close.textContent='×';close.setAttribute('aria-label','닫기');close.style.cssText='position:absolute;right:10px;top:50%;transform:translateY(-50%);border:0;background:transparent;color:inherit;font-size:22px;cursor:pointer;padding:2px 7px';close.onclick=()=>el.remove();el.appendChild(close);}
-    document.body.insertBefore(el,document.body.firstChild);
+    if(placement==='after-banners'){
+      const firstContent=[...document.body.children].find(child=>child.dataset.korgeoBanner!=='1');
+      document.body.insertBefore(el,firstContent||null);
+    }else document.body.insertBefore(el,document.body.firstChild);
   }
 
   function renderSuneungDday(){
@@ -30,7 +33,16 @@
     const target=Date.UTC(2026,10,19);
     const days=Math.round((target-today)/86400000);
     const dday=days>0?`D-${days}`:days===0?'D-DAY':`D+${Math.abs(days)}`;
-    bar('korgeoSuneungDday',`📚 2027학년도 수능 ${dday} · 2026.11.19 (목)`,'background:#0b2748;color:#fff;border-bottom:1px solid #ffffff26;letter-spacing:-.01em',false);
+    bar('korgeoSuneungDday',`📚 2027학년도 수능 ${dday} · 2026.11.19 (목)`,'background:#0b2748;color:#fff;border-bottom:1px solid #ffffff26;letter-spacing:-.01em',false,'after-banners');
+  }
+
+  function safeAnnouncementLink(value){
+    const raw=String(value||'').trim();
+    if(!raw||raw.startsWith('//'))return '';
+    try{
+      const url=new URL(raw,window.location.origin);
+      return ['http:','https:'].includes(url.protocol)?url.href:'';
+    }catch{return '';}
   }
 
   function renderAnnouncement(value){
@@ -39,8 +51,8 @@
     const level=['info','warn','urgent'].includes(value.level)?value.level:'info';
     const css=level==='urgent'?'background:#9f1d1d;color:#fff':level==='warn'?'background:#fff2bf;color:#6e4b00':'background:#dff1ff;color:#164875';
     bar('korgeoAnnouncement',String(value.text||''),css,true);
-    const link=String(value.link||'').trim();
-    if(link){const el=document.getElementById('korgeoAnnouncement');const a=document.createElement('a');a.textContent=' 자세히';a.href=link;a.rel='noopener';a.style.cssText='color:inherit;text-decoration:underline;margin-left:5px';el?.querySelector('span')?.appendChild(a);}
+    const safeLink=safeAnnouncementLink(value.link);
+    if(safeLink){const el=document.getElementById('korgeoAnnouncement');const a=document.createElement('a');a.textContent=' 자세히';a.href=safeLink;a.rel='noopener noreferrer';a.style.cssText='color:inherit;text-decoration:underline;margin-left:5px';el?.querySelector('span')?.appendChild(a);}
   }
 
   function setFeatureOverlay(disabled){
@@ -66,16 +78,17 @@
   }
 
   async function loadPublicState(){
-    try{
-      const[a,r]=await Promise.all([sb.rpc('get_public_announcement'),sb.rpc('get_public_runtime_config')]);
-      if(!a.error)renderAnnouncement(a.data);
-      if(!r.error)renderRuntime(r.data);
-    }catch{}
     renderSuneungDday();
+    const [announcement,runtime]=await Promise.allSettled([
+      sb.rpc('get_public_announcement'),
+      sb.rpc('get_public_runtime_config')
+    ]);
+    if(announcement.status==='fulfilled'&&!announcement.value.error)renderAnnouncement(announcement.value.data);
+    if(runtime.status==='fulfilled'&&!runtime.value.error)renderRuntime(runtime.value.data);
   }
 
   window.korgeoGetRuntimeConfig=async function(){try{const{data,error}=await sb.rpc('get_public_runtime_config');if(error)return window.korgeoRuntimeConfig||{};renderRuntime(data);return data||{};}catch{return window.korgeoRuntimeConfig||{};}};
-  window.korgeoClaimSignupSlot=async function(){try{const{data,error}=await sb.rpc('claim_signup_slot',{p_client_key:signupClientKey});if(error||!data)return{allowed:true,retry_after:0};return data;}catch{return{allowed:true,retry_after:0};}};
+  window.korgeoClaimSignupSlot=async function(){try{const{data,error}=await sb.rpc('claim_signup_slot',{p_client_key:signupClientKey});if(error||!data||typeof data.allowed!=='boolean')return{allowed:false,unavailable:true};return data;}catch{return{allowed:false,unavailable:true};}};
   window.korgeoSubmitFeedback=async function(category,message){try{const{data,error}=await sb.rpc('submit_feedback',{p_client_key:feedbackClientKey,p_page:page,p_category:category,p_message:message});if(error)throw error;return data||{ok:false};}catch(e){return{ok:false,error:e?.message||'failed'};}};
 
   function renderFeedbackWidget(){
