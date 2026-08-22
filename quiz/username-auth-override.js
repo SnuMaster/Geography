@@ -9,25 +9,28 @@
   const $ = id => document.getElementById(id);
 
   function ensurePublicTools() {
-    if (window.korgeoClaimSignupSlot) return Promise.resolve();
+    if (typeof window.korgeoClaimSignupSlot === 'function') return Promise.resolve(true);
     return new Promise(resolve => {
+      let settled = false;
+      let timer = null;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
+        if (timer) clearInterval(timer);
+        resolve(typeof window.korgeoClaimSignupSlot === 'function');
+      };
       if (document.querySelector('script[data-korgeo-public-tools]')) {
-        const timer = setInterval(() => {
-          if (window.korgeoClaimSignupSlot) {
-            clearInterval(timer);
-            resolve();
-          }
+        timer = setInterval(() => {
+          if (typeof window.korgeoClaimSignupSlot === 'function') finish();
         }, 50);
-        setTimeout(() => {
-          clearInterval(timer);
-          resolve();
-        }, 2500);
+        setTimeout(finish, 2500);
         return;
       }
       const script = document.createElement('script');
-      script.src = '../public-tools.js?v=20260820-public-v6';
+      script.src = '../public-tools.js?v=20260821-public-v7';
       script.dataset.korgeoPublicTools = '1';
-      script.onload = script.onerror = resolve;
+      script.onload = finish;
+      script.onerror = () => resolve(false);
       document.head.appendChild(script);
     });
   }
@@ -101,6 +104,8 @@
       actualSignupBtn.textContent = '회원가입';
       loginBtn.parentElement.appendChild(actualSignupBtn);
     }
+    loginBtn.disabled = false;
+    actualSignupBtn.disabled = false;
 
     let captchaToken = '';
     let captchaWidgetId = null;
@@ -258,10 +263,13 @@
       actualSignupBtn.disabled = true;
       setStatus('회원가입 확인 중…');
       try {
-        await ensurePublicTools();
-        const slot = window.korgeoClaimSignupSlot ? await window.korgeoClaimSignupSlot() : { allowed: true };
+        const publicToolsReady = await ensurePublicTools();
+        const slot = publicToolsReady && typeof window.korgeoClaimSignupSlot === 'function'
+          ? await window.korgeoClaimSignupSlot()
+          : { allowed: false, unavailable: true };
         if (!slot.allowed) {
           if (slot.registration_disabled) return setStatus('현재 관리자가 신규 회원가입을 잠시 꺼둔 상태야.', 'error');
+          if (slot.unavailable) return setStatus('가입 상태를 확인하지 못했어. 잠시 후 다시 시도해줘.', 'error');
           const sec = Math.max(1, Number(slot.retry_after || 60));
           return setStatus(`가입 시도가 너무 많아. 약 ${Math.ceil(sec / 60)}분 뒤 다시 해줘.`, 'error');
         }

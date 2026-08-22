@@ -109,5 +109,14 @@
   $('logoutBtn').onclick=async()=>{await sb.auth.signOut();location.href='./';};
   $('saveAnnouncementBtn').onclick=()=>saveAnnouncement();
   $('hideAnnouncementBtn').onclick=()=>saveAnnouncement(false);
-  ensureAdmin().then(ok=>{if(ok) load();});
+  window.korgeoAdminReady = ensureAdmin()
+    .then(async ok => {
+      if (!ok) return false;
+      await load();
+      return true;
+    })
+    .catch(() => {
+      $('gateStatus').textContent = '관리자 권한을 확인하지 못했어. 잠시 후 다시 시도해줘.';
+      return false;
+    });
 })();

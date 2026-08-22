@@ -987,7 +987,7 @@
   });
   $('mistakePracticeBtn').onclick = () => startSheet(state.mode, 'mistakes');
   $('allPracticeBtn').onclick = () => startSheet(state.mode, 'all');
-  $('quizLoginBtn').onclick = signIn;
+  // username-auth-override.js owns credential handling and keeps it Turnstile-protected.
   $('quizLogoutBtn').onclick = signOut;
 
   window.addEventListener('online', () => {
