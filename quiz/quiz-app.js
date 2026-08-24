@@ -708,11 +708,12 @@
     const sheet = state.sheet;
     if (!sheet || !item) return { ...OUT_OF_SCOPE_STYLE, stroke: false };
     const result = sheet.wasGraded ? sheet.results.get(item.key) : '';
+    const hasAnswer = Boolean(String(sheet.answers.get(item.key) || '').trim());
     const style = result
       ? RESULT_STYLES[result]
-      : item.key === sheet.selectedKey
+      : hasAnswer && item.key === sheet.selectedKey
         ? SELECTED_STYLE
-        : sheet.selectedKeys.has(item.key) || sheet.answers.has(item.key)
+        : hasAnswer
           ? VISITED_STYLE
           : BASE_STYLE;
     return { ...style, stroke: false };
@@ -808,6 +809,7 @@
     renderBoardControls();
     renderBoardResult();
     renderSelection({ preserveInput: true });
+    applyMapStyles();
   }
 
   function gradeSheet() {
