@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v39';
+const APP_CACHE = 'geography-app-v40';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -11,7 +11,7 @@ const APP_SHELL = [
   './admin-extra.js?v=20260820-extra-v1',
   './admin-power.js?v=20260820-power-v1',
   './quiz/',
-  './quiz/quiz-app.js?v=20260818-adminscope-v2',
+  './quiz/quiz-app.js?v=20260824-hanriver-v1',
   './quiz/username-auth-override.js?v=20260821-username-v12',
   './quiz/answer/',
   './quiz/answer/index.html',
@@ -20,6 +20,7 @@ const APP_SHELL = [
   './quiz-data.js?v=20260818-adminscope-v2',
   './quiz/data/korea-municipalities-2018.topo.json',
   './quiz/data/korea-provinces-2018.topo.json',
+  './quiz/data/han-river-main-stem.geojson',
   './favicon.ico',
   './teacher-photo-v3.webp?v=20260816-1432',
   'https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css',
