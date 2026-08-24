@@ -65,6 +65,9 @@
     #map { position: absolute; inset: 0; background: #e8f0f6; }
     .map-note { position: absolute; z-index: 500; left: 14px; bottom: 14px; max-width: min(370px, calc(100% - 28px)); border-radius: 9px; background: #ffffffeb; box-shadow: 0 3px 12px #173f6825; padding: 9px 11px; color: #294f73; font-size: .8rem; font-weight: 700; line-height: 1.4; }
     .click-dot { display: inline-grid; place-items: center; width: 18px; height: 18px; margin-right: 5px; border: 2px solid #1769aa; border-radius: 50%; background: #dceefa; color: #1769aa; font-size: .8rem; font-weight: 900; vertical-align: -3px; }
+    .han-river-legend { display: inline-flex; align-items: center; gap: 6px; margin-top: 4px; color: #267fb4; font-size: .76rem; font-weight: 800; }
+    .han-river-legend[hidden] { display: none; }
+    .han-river-swatch { width: 22px; border-top: 4px solid #2196d3; border-radius: 999px; }
     .map-status { position: absolute; z-index: 500; right: 14px; top: 14px; max-width: 285px; border-radius: 9px; background: #ffffffeb; box-shadow: 0 3px 12px #173f6820; padding: 8px 10px; color: #536b80; font-size: .75rem; line-height: 1.4; }
     .map-status[data-state="error"] { color: #a0342b; }
     .leaflet-container { cursor: crosshair; }
@@ -169,16 +172,16 @@
     <section class="map-card" aria-label="이름 없는 행정구역 지도">
       <div id="map"></div>
       <div id="mapStatus" class="map-status">행정구역 경계를 불러오는 중…</div>
-      <div class="map-note"><span class="click-dot">+</span>행정구역을 직접 클릭해 답을 입력해 · 굵은 진한 선은 시·도 경계야</div>
+      <div class="map-note"><span class="click-dot">+</span>행정구역을 직접 클릭해 답을 입력해 · 굵은 진한 선은 시·도 경계야<br><span id="hanRiverLegend" class="han-river-legend" hidden><span class="han-river-swatch" aria-hidden="true"></span>파란 선은 한강 본류 · 답안 아님</span></div>
     </section>
   </main>
-  <footer>행정구역 경계: <a href="https://sgis.kostat.go.kr/" target="_blank" rel="noopener">통계청 통계지리정보서비스(SGIS)</a>, 2018 · 공공누리 제1유형</footer>
+  <footer>행정구역 경계: <a href="https://sgis.kostat.go.kr/" target="_blank" rel="noopener">통계청 통계지리정보서비스(SGIS)</a>, 2018 · 공공누리 제1유형 · 한강 본류: <a href="https://www.openstreetmap.org/relation/5488151" target="_blank" rel="noopener">© OpenStreetMap contributors</a> (<a href="https://opendatacommons.org/licenses/odbl/1-0/" target="_blank" rel="noopener">ODbL 1.0</a>)</footer>
 
   <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <script src="../quiz-data.js?v=20260818-adminscope-v2"></script>
-  <script src="./quiz-app.js?v=20260818-adminscope-v2"></script>
+  <script src="./quiz-app.js?v=20260824-hanriver-v1"></script>
   <script src="./username-auth-override.js?v=20260821-username-v12"></script>
 </body>
 </html>

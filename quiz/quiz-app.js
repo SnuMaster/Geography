@@ -10,6 +10,7 @@
   // 외부 도메인이 막힌 환경에서도 지도가 열리도록 경계 파일도 이 사이트 안에서 불러온다.
   const MUNICIPALITY_URL = './data/korea-municipalities-2018.topo.json';
   const PROVINCE_URL = './data/korea-provinces-2018.topo.json';
+  const HAN_RIVER_URL = './data/han-river-main-stem.geojson';
   const WRONG_ACTIONS_KEY = 'geography-quiz-wrong-actions-v2';
   const SHEET_DRAFT_KEY = 'geography-click-board-draft-v1:';
   const REGION_PREFIX = /^(경기도|강원|경남|인천|울산)\s+/;
@@ -35,6 +36,9 @@
   const map = L.map('map', { zoomControl: true, attributionControl: true }).setView([36.1, 127.7], 7);
   map.createPane('municipalityFill');
   map.getPane('municipalityFill').style.zIndex = '400';
+  map.createPane('hanRiverOverlay');
+  map.getPane('hanRiverOverlay').style.zIndex = '405';
+  map.getPane('hanRiverOverlay').style.pointerEvents = 'none';
   map.createPane('municipalityBorder');
   map.getPane('municipalityBorder').style.zIndex = '410';
   map.getPane('municipalityBorder').style.pointerEvents = 'none';
@@ -42,9 +46,11 @@
   map.getPane('provinceOutline').style.zIndex = '450';
   map.getPane('provinceOutline').style.pointerEvents = 'none';
   const municipalityFillLayer = L.layerGroup().addTo(map);
+  const hanRiverLayer = L.layerGroup();
   const municipalityBorderLayer = L.layerGroup().addTo(map);
   const provinceLayer = L.layerGroup().addTo(map);
   const municipalityRenderer = L.canvas({ pane: 'municipalityFill', padding: .25 });
+  const hanRiverRenderer = L.canvas({ pane: 'hanRiverOverlay', padding: .25 });
   const municipalityBorderRenderer = L.canvas({ pane: 'municipalityBorder', padding: .25 });
   const provinceRenderer = L.canvas({ pane: 'provinceOutline', padding: .25 });
 
@@ -55,6 +61,7 @@
   let itemBoundaryLayers = new Map();
   let activeFeatureItems = new Map();
   let municipalityReady = false;
+  let hanRiverReady = false;
   let currentUser = null;
   let wrongAnswers = new Map();
   let pendingWrongActions = loadPendingWrongActions();
@@ -893,6 +900,7 @@
   function startSheet(mode = state.mode, source = state.source) {
     state = { mode, source, sheet: makeSheet(mode, source) };
     updateModeButtons();
+    syncHanRiverOverlay();
     const mapping = rebuildActiveFeatureItems();
     renderMunicipalityLayers();
     renderMappingStatus(mapping);
@@ -938,6 +946,48 @@
       map.invalidateSize();
       fitMapToSheet();
     });
+  }
+
+  function syncHanRiverOverlay() {
+    const show = state.mode === 'seoul' && hanRiverReady;
+    if (show) {
+      if (!map.hasLayer(hanRiverLayer)) hanRiverLayer.addTo(map);
+    } else if (map.hasLayer(hanRiverLayer)) {
+      map.removeLayer(hanRiverLayer);
+    }
+    const legend = $('hanRiverLegend');
+    if (legend) legend.hidden = !show;
+  }
+
+  async function loadHanRiverOverlay() {
+    try {
+      const response = await fetch(HAN_RIVER_URL);
+      if (!response.ok) throw new Error('한강 본류 데이터 응답 오류');
+      const geojson = await response.json();
+      const features = geojson?.type === 'FeatureCollection' ? geojson.features : [geojson];
+      const hasLine = features.some(feature => ['LineString', 'MultiLineString'].includes(feature?.geometry?.type));
+      if (!hasLine) throw new Error('한강 본류 데이터 형식 오류');
+
+      hanRiverLayer.clearLayers();
+      L.geoJSON(geojson, {
+        pane: 'hanRiverOverlay',
+        renderer: hanRiverRenderer,
+        interactive: false,
+        bubblingMouseEvents: false,
+        style: {
+          color: '#2196d3',
+          weight: 4.5,
+          opacity: .8,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }
+      }).addTo(hanRiverLayer);
+      hanRiverReady = true;
+    } catch (error) {
+      console.warn('한강 본류 레이어 불러오기 실패:', error);
+      hanRiverReady = false;
+    }
+    syncHanRiverOverlay();
   }
 
   async function loadProvinceOutlines() {
@@ -1002,6 +1052,7 @@
 
   startSheet();
   loadMapData();
+  void loadHanRiverOverlay();
   if ('serviceWorker' in navigator) navigator.serviceWorker.register('../service-worker.js').catch(() => {});
 
   if (!supabaseClient) {
