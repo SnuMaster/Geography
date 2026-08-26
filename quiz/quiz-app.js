@@ -2,7 +2,7 @@
   'use strict';
 
   const SUPABASE_URL = 'https://aplhddasduwtlxeejvnk.supabase.co';
-  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_KUMRFC5dLAomRo9tiakqIg_0b3j0ELs';
+  const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_kUMRFC5dLAomRo9tiakqIg_Ob3j0ELs';
   const supabaseClient = window.supabase && window.supabase.createClient
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
     : null;
