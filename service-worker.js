@@ -1,4 +1,4 @@
-const APP_CACHE = 'geography-app-v41';
+const APP_CACHE = 'geography-app-v42';
 const TILE_CACHE = 'geography-map-tiles-v11';
 const APP_SHELL = [
   './',
@@ -11,7 +11,7 @@ const APP_SHELL = [
   './admin-extra.js?v=20260820-extra-v1',
   './admin-power.js?v=20260820-power-v1',
   './quiz/',
-  './quiz/quiz-app.js?v=20260824-emptyselection-v1',
+  './quiz/quiz-app.js?v=20260826-authkey-v1',
   './quiz/username-auth-override.js?v=20260821-username-v12',
   './quiz/answer/',
   './quiz/answer/index.html',
