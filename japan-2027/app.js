@@ -138,7 +138,7 @@ function setVariant(id){stopPlay();state.variant=id;state.selected=-1;renderHead
 function updateUrl(){const u=new URL(location.href);u.searchParams.set('day',state.day);if(state.variant!=='main')u.searchParams.set('variant',state.variant);else u.searchParams.delete('variant');if(state.view==='overview')u.searchParams.set('view','overview');else u.searchParams.delete('view');history.replaceState(null,'',u);try{localStorage.setItem('routebook-day',String(state.day));}catch{}}
 function overviewStops(){return [
  {name:'동대구',lat:35.8797,lng:128.6283,modeFromPrevious:'walk',days:'1/8 출발 · 1/29 귀가',n:1},
- {name:'청주공항',lat:36.7221,lng:127.4959,modeFromPrevious:'rail',days:'동대구 → 오송 → 청주',n:1},
+ {name:'대구공항',lat:35.8941,lng:128.6589,modeFromPrevious:'taxi',days:'동대구 → 대구공항',n:1},
  {name:'도쿄',lat:35.7007,lng:139.774,modeFromPrevious:'flight',days:'1/8–19 · 11박',n:2},
  {name:'오사카',lat:34.6674,lng:135.501,modeFromPrevious:'flight',days:'1/19–25 · 6박 · 교토·나라·고베',n:12},
  {name:'후쿠오카',lat:33.5917,lng:130.4207,modeFromPrevious:'flight',days:'1/25–28 · 3박',n:18},
@@ -148,10 +148,10 @@ function overviewStops(){return [
 function renderOverviewMap(){const stops=overviewStops();for(let i=1;i<stops.length;i++){const a=stops[i-1],b=stops[i],color=MODE[b.modeFromPrevious].color,pts=pathPoints(a,b);L.polyline(pts,{color:'#fff',weight:7,opacity:.8,interactive:false}).addTo(routeLayer);L.polyline(pts,{color,weight:3.2,dashArray:'7 7',opacity:.9}).addTo(routeLayer);arrowFor(pts,color);}stops.slice(0,-1).forEach((s,i)=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker',html:`<div class="pin-number ${i===1?'airport':''}"><span>${i+1}</span></div>`,iconSize:[30,35],iconAnchor:[15,33]})}).addTo(routeLayer);mk.bindTooltip(esc(s.name),{permanent:true,direction:'right',offset:[17,-14],className:'stop-tooltip'});mk.bindPopup(`<div class="popup-title">${esc(s.name)}</div><div class="popup-desc">${esc(s.days)}</div><div class="popup-links"><a href="?day=${s.n}">그날의 일정 보기 ↗</a></div>`);});fitRoute();}
 function showOverview(){
  stopPlay();state.view='overview';renderDays();$('#dailyView').classList.remove('active');$('#overviewView').classList.add('active');$('#nightBtn').disabled=true;
- $('#mapTitle').innerHTML='<div class="map-kicker"><span class="city-dot"></span>JAN 08 — JAN 29, 2027</div><h2>도쿄에서 시작해,<br>배로 돌아오는 여행.</h2><div class="map-route-subtitle">청주 → 도쿄 → 오사카 → 후쿠오카 → 부산</div><div class="map-card-stats"><span>'+icon('calendar')+'21박 22일</span><span>'+icon('flight')+'항공 3구간</span><span>'+icon('ferry')+'뉴 카멜리아호</span></div>';
+ $('#mapTitle').innerHTML='<div class="map-kicker"><span class="city-dot"></span>JAN 08 — JAN 29, 2027</div><h2>도쿄에서 시작해,<br>배로 돌아오는 여행.</h2><div class="map-route-subtitle">대구 → 도쿄 → 오사카 → 후쿠오카 → 부산</div><div class="map-card-stats"><span>'+icon('calendar')+'21박 22일</span><span>'+icon('flight')+'항공 3구간</span><span>'+icon('ferry')+'뉴 카멜리아호</span></div>';
  $('#dayHeader').innerHTML='<div class="detail-date-row"><span class="detail-date">THE WHOLE JOURNEY</span><span class="detail-badge">JANUARY 2027</span></div><h2>겨울 여행, 전체 동선</h2><p>각 도시를 누르면 그곳에서의 첫날로 이동해요.</p>';
  $('#dayNote').innerHTML='';$('#stopList').innerHTML=`<div class="overview-stats">${[['22','여행 일수'],['21','숙박 일수'],['3','일본 내 거점'],['1','매일 카페 한 시간']].map(([a,b])=>`<div class="overview-stat"><strong>${a}</strong><span>${b}</span></div>`).join('')}</div>${[['도쿄','1/8–19 · 이리야 숙소 · 근교 3일',2],['오사카·교토·나라·고베','1/19–25 · 주오 오아시스',12],['후쿠오카','1/25–28 · 하카타 숙소 · 시내 중심',18],['부산·동대구','1/28–29 · 배로 입국 후 부산 1박',21]].map(([a,b,n])=>`<button class="overview-city" data-open-day="${n}"><span class="overview-city-dot"></span><span><strong>${a}</strong><small>${b}</small></span>${icon('chevronRight')}</button>`).join('')}`;
- $('#routeDetails').innerHTML='<h3>선택한 교통편</h3><p>1/8 청주 에어로케이 15:50–18:05<br>1/19 JAL 하네다 → 이타미 12:35–13:45<br>1/25 ANA NH1189 10:45–12:00<br>1/28 뉴 카멜리아호 정규 12:30–18:30<br>1/29 부산 → 동대구 열차, 점심 무렵</p><p>예약·결제는 미실행. 날짜별 실제 운항·편명과 최종 조건은 발권 전 확인하세요.</p>';
+ $('#routeDetails').innerHTML='<h3>선택한 교통편</h3><p>1/8 대구 TW251 11:10–13:20 · 나리타T2<br>1/19 JAL 하네다 → 이타미 12:35–13:45<br>1/25 ANA NH1189 10:45–12:00<br>1/28 뉴 카멜리아호 정규 12:30–18:30<br>1/29 부산 → 동대구 열차, 점심 무렵</p><p>예약·결제는 미실행. 날짜별 실제 운항·편명과 최종 조건은 발권 전 확인하세요.</p>';
  $$('[data-open-day]').forEach(b=>b.addEventListener('click',()=>setDay(Number(b.dataset.openDay),{scrollNav:true})));renderMap();updateUrl();
 }
 
@@ -170,7 +170,7 @@ function bindEvents(){
 }
 
 async function main(){
- try{const response=await fetch('data.json');if(!response.ok)throw Error('일정 데이터를 불러오지 못했어요.');state.data=await response.json();if(!window.L)throw Error('지도 구성 요소를 불러오지 못했어요.');initMap();bindEvents();const q=new URLSearchParams(location.search);let n=Number(q.get('day'));if(!Number.isInteger(n)||n<1||n>22)n=2;setDay(n);if(q.get('variant')==='kawagoe'&&n===8)setVariant('kawagoe');if(q.get('view')==='overview')showOverview();$('#mapLoading').classList.add('done');setTimeout(()=>$('#mapLoading').remove(),400);window.__routebook={state,map,getStops,setDay,setVariant,selectStop,showOverview,stopPlay};}
+ try{const response=await fetch('data.json?v=20261023-daegu');if(!response.ok)throw Error('일정 데이터를 불러오지 못했어요.');state.data=await response.json();if(!window.L)throw Error('지도 구성 요소를 불러오지 못했어요.');initMap();bindEvents();const q=new URLSearchParams(location.search);let n=Number(q.get('day'));if(!Number.isInteger(n)||n<1||n>22)n=2;setDay(n);if(q.get('variant')==='kawagoe'&&n===8)setVariant('kawagoe');if(q.get('view')==='overview')showOverview();$('#mapLoading').classList.add('done');setTimeout(()=>$('#mapLoading').remove(),400);window.__routebook={state,map,getStops,setDay,setVariant,selectStop,showOverview,stopPlay};}
  catch(e){$('#mapLoading').innerHTML=`${icon('info')}<strong>${esc(e.message)}</strong><button class="outline-button" onclick="location.reload()">다시 불러오기</button>`;console.error(e);}
 }
 main();
