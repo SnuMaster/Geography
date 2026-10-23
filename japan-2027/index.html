@@ -8,7 +8,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/pretendard.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="vendor/leaflet.css"><link rel="stylesheet" href="style.css">
-  <script src="vendor/leaflet.js" defer></script><script src="app.js" defer></script>
+  <script src="vendor/leaflet.js" defer></script><script src="app.js?v=20261023-daegu" defer></script>
 </head>
 <body>
   <header class="topbar">
@@ -21,7 +21,7 @@
       <div class="sidebar-intro"><div class="eyebrow">YOUR WINTER JOURNEY</div><h1>하루씩, 지도를 따라.</h1><p>골목과 바다, 그리고 도시의 밤.</p></div>
       <div class="sidebar-tools"><label class="search"><span data-icon="search"></span><input id="daySearch" type="search" placeholder="날짜·도시·장소 찾기" autocomplete="off" aria-label="여행 일정 검색"><kbd>/</kbd></label><div class="city-filters" id="cityFilters" aria-label="지역 필터"><button data-city="all" class="active">전체</button><button data-city="tokyo">도쿄</button><button data-city="kansai">간사이</button><button data-city="fukuoka">후쿠오카</button><button data-city="korea">출국·귀국</button></div></div>
       <div class="day-list" id="dayList"><div class="list-loading">일정을 불러오는 중…</div></div>
-      <div class="sidebar-footer"><span class="tiny-route">청주 <i>↗</i> 도쿄 <i>→</i> 오사카 <i>→</i> 후쿠오카 <i>↗</i> 부산</span><span>2026.10.23 수정 일정 기준</span></div>
+      <div class="sidebar-footer"><span class="tiny-route">대구 <i>↗</i> 도쿄 <i>→</i> 오사카 <i>→</i> 후쿠오카 <i>↗</i> 부산</span><span>2026.10.23 수정 일정 기준</span></div>
     </aside>
     <main class="workspace">
       <div class="workspace-toolbar"><div class="view-tabs" role="group" aria-label="지도 범위"><button id="dailyView" class="active"><span data-icon="calendar"></span>하루 동선</button><button id="overviewView"><span data-icon="globe"></span>전체 여정</button></div><div class="toolbar-right"><button id="nightBtn" class="outline-button" aria-pressed="false"><span data-icon="moon"></span>야경 강조</button><button class="icon-button" id="shareBtn" aria-label="현재 날짜 링크 복사" title="현재 날짜 링크 복사"><span data-icon="link"></span></button></div></div>
