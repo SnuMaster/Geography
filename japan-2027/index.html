@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#193e3a">
+  <meta name="description" content="2027년 1월 8일부터 29일까지. 일본 여행의 하루하루를 화살표 지도와 교통편으로 따라가는 개인 여행 지도.">
+  <title>일본 여행 지도 · JAN 2027</title>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="assets/pretendard.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="vendor/leaflet.css"><link rel="stylesheet" href="style.css">
+  <script src="vendor/leaflet.js" defer></script><script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="일본 여행 지도 처음으로"><span class="brandmark"><svg viewBox="0 0 30 30" fill="none"><path d="M7 22V12c0-7 16-7 16 0v5" stroke="currentColor" stroke-width="2.6"/><path d="m18 13 5 5 5-5" stroke="currentColor" stroke-width="2.6"/><circle cx="7" cy="23" r="3.1" fill="currentColor"/></svg></span><span>ROUTEBOOK<span class="brand-year">JAPAN, 2027</span></span></a>
+    <div class="trip-summary"><span class="live-dot"></span>01.08 <span class="muted">—</span> 01.29 <span class="summary-divider"></span><strong>21박 22일</strong><span class="summary-cities">도쿄 · 오사카 · 후쿠오카 · 부산</span></div>
+    <div class="header-actions"><button class="text-button" id="aboutBtn" type="button" aria-label="지도 이용 안내"><span data-icon="info"></span><span class="desktop-label">이용 안내</span></button><a class="pdf-button" href="assets/travel-plan.pdf" target="_blank" rel="noopener"><span data-icon="file"></span><span>전체 계획 PDF</span><span data-icon="arrowUpRight"></span></a></div>
+  </header>
+  <div class="app-layout">
+    <aside class="days-sidebar" aria-label="날짜별 일정 선택">
+      <div class="sidebar-intro"><div class="eyebrow">YOUR WINTER JOURNEY</div><h1>하루씩, 지도를 따라.</h1><p>골목과 바다, 그리고 도시의 밤.</p></div>
+      <div class="sidebar-tools"><label class="search"><span data-icon="search"></span><input id="daySearch" type="search" placeholder="날짜·도시·장소 찾기" autocomplete="off" aria-label="여행 일정 검색"><kbd>/</kbd></label><div class="city-filters" id="cityFilters" aria-label="지역 필터"><button data-city="all" class="active">전체</button><button data-city="tokyo">도쿄</button><button data-city="kansai">간사이</button><button data-city="fukuoka">후쿠오카</button><button data-city="korea">출국·귀국</button></div></div>
+      <div class="day-list" id="dayList"><div class="list-loading">일정을 불러오는 중…</div></div>
+      <div class="sidebar-footer"><span class="tiny-route">청주 <i>↗</i> 도쿄 <i>→</i> 오사카 <i>→</i> 후쿠오카 <i>↗</i> 부산</span><span>2026.10.23 수정 일정 기준</span></div>
+    </aside>
+    <main class="workspace">
+      <div class="workspace-toolbar"><div class="view-tabs" role="group" aria-label="지도 범위"><button id="dailyView" class="active"><span data-icon="calendar"></span>하루 동선</button><button id="overviewView"><span data-icon="globe"></span>전체 여정</button></div><div class="toolbar-right"><button id="nightBtn" class="outline-button" aria-pressed="false"><span data-icon="moon"></span>야경 강조</button><button class="icon-button" id="shareBtn" aria-label="현재 날짜 링크 복사" title="현재 날짜 링크 복사"><span data-icon="link"></span></button></div></div>
+      <div class="route-workspace">
+        <section class="map-panel" aria-label="화살표 여행 지도">
+          <div id="map"></div><div class="map-loading" id="mapLoading"><span class="loader"></span><strong>여행 지도를 펼치는 중</strong></div>
+          <div class="map-title-card" id="mapTitle"></div>
+          <div class="map-top-actions"><button class="map-action" id="fitBtn" title="하루 전체 경로 보기"><span data-icon="expand"></span><span>전체 동선</span></button><button class="map-action" id="focusBtn" title="방문 장소를 크게 보기"><span data-icon="pin"></span><span>관광지 확대</span></button></div>
+          <div class="tile-error hidden" id="tileError">배경 지도를 불러오지 못했어요. 장소와 경로는 확인할 수 있어요. <button id="retryTiles">다시 불러오기</button></div>
+          <div class="map-bottom"><div class="map-legend"><span><i class="legend-line walk"></i>도보</span><span><i class="legend-line rail"></i>전철·버스</span><span><i class="legend-line flight"></i>항공·배</span></div><div class="route-caution">화살표는 방문 순서예요. 실제 경로는 구간별 길찾기에서 확인하세요.</div></div>
+          <div class="map-playbar"><button class="icon-button" id="previousStop" aria-label="이전 장소"><span data-icon="chevronLeft"></span></button><button id="playBtn" class="play-button"><span data-icon="play"></span><span>동선 따라가기</span></button><button class="icon-button" id="nextStop" aria-label="다음 장소"><span data-icon="chevronRight"></span></button></div>
+        </section>
+        <section class="itinerary-panel" aria-label="선택한 날짜의 상세 일정"><div class="day-detail-header" id="dayHeader"></div><div class="itinerary-scroll" id="itineraryScroll"><div id="dayNote"></div><div id="stopList" class="stop-list"></div><div class="route-details" id="routeDetails"></div></div><div class="day-pagination"><button id="prevDay"><span data-icon="arrowLeft"></span>이전 날</button><span id="dayCounter"></span><button id="nextDay">다음 날<span data-icon="arrowRight"></span></button></div></section>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <dialog id="aboutDialog"><div class="dialog-header"><span class="eyebrow">HOW TO USE</span><button class="icon-button" id="closeAbout" aria-label="안내 닫기"><span data-icon="close"></span></button></div><h2>오늘의 동선을 한눈에.</h2><p>날짜를 고른 뒤 지도 번호나 일정 카드를 눌러 보세요. 교통수단과 방문 순서를 따라 여행을 살펴볼 수 있어요.</p><ul><li><strong>번호·화살표</strong>는 방문 순서입니다. 도로·철도의 실제 주행 경로와 다를 수 있습니다.</li><li><strong>구간별 길찾기</strong>에서 실제 도보·대중교통 경로를 열 수 있습니다. 비행기·배 구간은 출발·도착 장소를 확인해 주세요.</li><li><strong>1/15</strong>에는 후지산과 가와고에 대체안이 있습니다. 두 일정을 동시에 진행하지 않습니다.</li><li>주소를 기준으로 한 위치라 실제 출입구는 다를 수 있습니다. 부산 숙소는 미정이며 역 주변으로 표시했습니다.</li><li>모든 시각은 현지 시각입니다. 항공·배·식당의 예약과 결제는 실행하지 않았으며 운영·시간표는 방문 전 확인해야 합니다.</li></ul><div class="source-note">일정: 2026.10.23 여행계획 수정본<br>지도: OpenStreetMap contributors · CARTO<br>위치 참고: 일본 국토지리원 GSI 주소 검색 · OpenStreetMap · 각 장소의 공개 주소</div></dialog>
+</body></html>
