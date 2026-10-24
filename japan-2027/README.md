@@ -25,3 +25,12 @@
 - 글꼴: Pretendard.
 
 빌드 없이 정적 파일로 실행합니다. 지도 타일 외의 경로 데이터는 이 저장소에 포함되어 있습니다.
+
+## 2026-10-24 노선 표시 개선
+
+- 이동선 호버 안내를 지도 안에 고정 폭으로 배치해 좁은 세로 상자로 줄바꿈되던 문제를 해결합니다. 모바일에서도 지도 경계 안에 표시합니다.
+- 철도 선·방향 화살표에 노선 색을 적용하고 지도 위, 이동 카드, 상세창, 날짜별 노선 안내에 노선 기호를 표시합니다. 지하철은 원형, JR은 사각형 기호로 구분합니다.
+- 스카이라이너는 나리타 스카이액세스/게이세이 본선, 후지회유는 JR/후지급행 구간으로 나눠 색을 표시합니다. 선의 분할은 시각적 구분이며 직통 열차의 환승을 추가하지 않습니다. 기존 거리·운임·일정 데이터는 변경하지 않습니다.
+- 글자 기호는 공식 역 번호 안내를 바탕으로 자체 표시하며, 화면 색은 노선 색의 근사값입니다.
+
+노선 표기 참고: [도쿄메트로](https://www.tokyometro.jp/station/index.html), [도에이 지하철 노선도](https://www.kotsu.metro.tokyo.jp/subway/line.pdf), [JR 동일본 역 번호 안내](https://www.jreast.co.jp/press/2016/20160402.pdf), [게이오](https://www.keio.co.jp/global/routes/), [오다큐](https://www.odakyu.jp/station/index.html), [도부 도조선](https://www.tobu.co.jp/railway/guide/line/tojo_line.html), [에노덴](https://www.enoden.co.jp/train/station/), [후지급행](https://www.fujikyu-railway.jp/station/).
