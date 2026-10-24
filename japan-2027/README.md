@@ -34,3 +34,15 @@
 - 글자 기호는 공식 역 번호 안내를 바탕으로 자체 표시하며, 화면 색은 노선 색의 근사값입니다.
 
 노선 표기 참고: [도쿄메트로](https://www.tokyometro.jp/station/index.html), [도에이 지하철 노선도](https://www.kotsu.metro.tokyo.jp/subway/line.pdf), [JR 동일본 역 번호 안내](https://www.jreast.co.jp/press/2016/20160402.pdf), [게이오](https://www.keio.co.jp/global/routes/), [오다큐](https://www.odakyu.jp/station/index.html), [도부 도조선](https://www.tobu.co.jp/railway/guide/line/tojo_line.html), [에노덴](https://www.enoden.co.jp/train/station/), [후지급행](https://www.fujikyu-railway.jp/station/).
+
+
+## 2026-10-24 간사이·후쿠오카 개정
+
+- `west-data.json`은1/19~27만 덮어씁니다. 도쿄의 두 가지1/18안과 한국 귀환은 유지합니다.
+- 23시전후 숙소 귀환, 카페1시간, 야마자키 예약 유무 선택을 반영합니다.
+- 장소별 특징·할 일·체류·비용과 철도 노선색·기호, 보행·철도 거리와 계획 운임을 제공합니다.
+- 철도 선형은国土交通省 国土数値情報 鉄道N02(2024) / CC BY4.0을 편집했습니다. 출처:https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-2024.html
+- 보행 경로는FOSSGIS OSRM / OpenStreetMap contributors. 역내 연결은 개략입니다.
+- 운임 범위는 계획값이며 실제 발권 운임과 다를 수 있습니다. 도쿄72시간권은 간사이·후쿠오카에서 사용할 수 없습니다.
+- 항공·일부 공항 접근 구간은 기존 표시를 유지하고 길찾기를 연결합니다. PDF는10/23판입니다.
+- 예약·구매·발권을 실행하지 않았습니다. 일부 식당·카페는 지역만 정한 후보로 명시했습니다.
