@@ -60,7 +60,7 @@ function splitRailService(part){
  railSectionCache.set(part,result);return result;
 }
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
-function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=info.code+'|'+info.color+'|'+p.lineId;if(seen.has(key))return false;seen.add(key);return true;});}
+function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=info.code+'|'+info.color;if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(){
  const legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[];
@@ -71,9 +71,9 @@ function initRailHover(){
  map.on('movestart zoomstart click',hideRailHover);
 }
 function hideRailHover(){if(railHoverCard)railHoverCard.hidden=true;}
-function railHoverHtml(leg,part){
+function railHoverHtml(leg,part){if(leg.travel)return `<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(leg.travel.depart)} <span>→</span> ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>개략 항로 · 클릭하면 상세</span></div>`;
  const walk=['walk','transfer'].includes(part.mode),fare=walk?'추가 0엔':fareText(leg.fare);
- return `<div class="rail-hover-heading">${railBadge(part)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(part.from)} <span>→</span> ${esc(part.to)}</div><div class="rail-hover-metrics"><div><small>이동 거리</small><b>${distanceText(part.distanceM)}</b></div><div><small>${walk?'이 선의 요금':'전체 구간 예상 운임'}</small><b>${esc(fare)}</b></div></div>${part.throughService?'<div class="rail-hover-through">직통 열차 · 색이 바뀌어도 계속 탑승</div>':''}<div class="rail-hover-footer">전체 이동 ${esc(leg.durationLabel)}<br><span>클릭하면 노선·환승 상세</span></div>`;
+ return `<div class="rail-hover-heading">${railBadge(part)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(part.from)} <span>→</span> ${esc(part.to)}</div><div class="rail-hover-metrics"><div><small>이동 거리</small><b>${distanceText(part.distanceM)}</b></div><div><small>${walk?'이 선의 요금':'전체 구간 운임'}</small><b>${esc(fare)}</b></div></div>${part.throughService?'<div class="rail-hover-through">직통 열차 · 색이 바뀌어도 계속 탑승</div>':''}<div class="rail-hover-footer">전체 이동 ${esc(leg.durationLabel)}<br><span>클릭하면 노선·환승 상세</span></div>`;
 }
 function positionRailHover(event){
  if(!railHoverCard||railHoverCard.hidden)return;
@@ -93,7 +93,7 @@ function railMidpoint(coords,fraction=.5){
  return coords[Math.floor(coords.length/2)];
 }
 function addRailMapSymbol(part,leg){
- const info=railInfo(part);if(!info||part.distanceM<350)return;
+ const info=railInfo(part)||(['flight','ferry'].includes(part.mode)?{code:part.mode==='flight'?'항공':'선박',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
  const point=railMidpoint(part.coords),key=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(',');if(railSymbolKeys.has(key))return;railSymbolKeys.add(key);
  const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol',html:railBadge(part),iconSize:[34,34],iconAnchor:[17,17]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 상세',alt:info.code+' '+part.line+' 이동 상세'}).addTo(routeLayer);
  const wireFocus=()=>{const el=marker.getElement();if(!el)return;el.setAttribute('aria-label',info.code+' '+part.line+' 이동 상세');el.addEventListener('focus',()=>showRailHover({latlng:point},leg,part));el.addEventListener('blur',hideRailHover);};
