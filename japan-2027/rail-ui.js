@@ -1,4 +1,11 @@
 'use strict';
+const AIRLINE_BRANDS={
+ trinity:{name:'트리니티항공',src:'assets/airlines/trinity.svg'},
+ jal:{name:'JAL 일본항공',src:'assets/airlines/jal.svg'},
+ ana:{name:'ANA 전일본공수',src:'assets/airlines/ana.svg'}
+};
+function airlineFor(part){if(part?.mode!=='flight')return null;const line=part.line||'';return /TW251|트리니티|Trinity/i.test(line)?'trinity':/\bJAL\b/.test(line)?'jal':/\bANA\b/.test(line)?'ana':null;}
+function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return '';const b=AIRLINE_BRANDS[key];return `<img class="airline-logo airline-${key} ${extra}" src="${b.src}" alt="${b.name} 로고" width="96" height="30" decoding="async">`;}
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
@@ -71,7 +78,7 @@ function initRailHover(){
  map.on('movestart zoomstart click',hideRailHover);
 }
 function hideRailHover(){if(railHoverCard)railHoverCard.hidden=true;}
-function railHoverHtml(leg,part){if(leg.travel)return `<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(leg.travel.depart)} <span>→</span> ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>개략 항로 · 클릭하면 상세</span></div>`;
+function railHoverHtml(leg,part){if(leg.travel)return `${airlineLogo(part,'airline-hover-logo')}<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(leg.travel.depart)} <span>→</span> ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>개략 항로 · 클릭하면 상세</span></div>`;
  const walk=['walk','transfer'].includes(part.mode),fare=walk?'추가 0엔':fareText(leg.fare);
  return `<div class="rail-hover-heading">${railBadge(part)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(part.from)} <span>→</span> ${esc(part.to)}</div><div class="rail-hover-metrics"><div><small>이동 거리</small><b>${distanceText(part.distanceM)}</b></div><div><small>${walk?'이 선의 요금':'전체 구간 운임'}</small><b>${esc(fare)}</b></div></div>${part.throughService?'<div class="rail-hover-through">직통 열차 · 색이 바뀌어도 계속 탑승</div>':''}<div class="rail-hover-footer">전체 이동 ${esc(leg.durationLabel)}<br><span>클릭하면 노선·환승 상세</span></div>`;
 }
@@ -95,7 +102,8 @@ function railMidpoint(coords,fraction=.5){
 function addRailMapSymbol(part,leg){
  const info=railInfo(part)||(['flight','ferry'].includes(part.mode)?{code:part.mode==='flight'?'항공':'선박',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
  const point=railMidpoint(part.coords),key=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(',');if(railSymbolKeys.has(key))return;railSymbolKeys.add(key);
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol',html:railBadge(part),iconSize:[34,34],iconAnchor:[17,17]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 상세',alt:info.code+' '+part.line+' 이동 상세'}).addTo(routeLayer);
+ const airline=airlineFor(part);
+ const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':''),html:airline?airlineLogo(part):railBadge(part),iconSize:airline?(airline==='jal'?[44,40]:[96,40]):[34,34],iconAnchor:airline?(airline==='jal'?[22,20]:[48,20]):[17,17]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 상세',alt:info.code+' '+part.line+' 이동 상세'}).addTo(routeLayer);
  const wireFocus=()=>{const el=marker.getElement();if(!el)return;el.setAttribute('aria-label',info.code+' '+part.line+' 이동 상세');el.addEventListener('focus',()=>showRailHover({latlng:point},leg,part));el.addEventListener('blur',hideRailHover);};
  if(marker.getElement())wireFocus();else marker.once('add',wireFocus);
  marker.bindPopup(()=>legHtml(leg,part),{maxWidth:340,maxHeight:390,className:'route-info-popup'});
