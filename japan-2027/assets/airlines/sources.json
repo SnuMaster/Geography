@@ -1,0 +1,9 @@
+{
+  "retrievedAt": "2026-10-24",
+  "note": "Airline trademarks belong to their respective owners. Official ANA and Trinity artwork is unchanged. The JAL compact crane uses the red mark paths from the official header SVG without altering their geometry; the accompanying wordmark is omitted.",
+  "sources": {
+    "trinity": "https://brand.trinityairways.com/images/logo.svg?01",
+    "ana": "https://www.ana.co.jp/group/recruit/ana-recruit/assets/images/brand/logo_ana2.svg",
+    "jal": "https://www.jal.com/sites/common/img_sites/header_logo.svg"
+  }
+}
