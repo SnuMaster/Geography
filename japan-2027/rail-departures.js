@@ -67,7 +67,7 @@ const RailDepartures = (() => {
  function html(day,leg,part){
   if(!supported(day,leg,part))return '';
   const keys=keysFor(leg,part);
-  const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+p.from+' → '+p.to)}</option>`;}).join('')}</select><small>선택한 역의 현재 시각 기준 · 환승 연결편 검색은 길찾기에서 확인</small></label>`:'';
+  const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+p.from+' → '+p.to)}</option>`;}).join('')}</select><small>선택한 날짜·승차 구간 기준 · 도보·환승 연결편은 길찾기에서 확인</small></label>`:'';
   return `<div class="departure-panel">${select}${sectionHtml(keys[0],travelDate(leg.dayNumber||day),leg.departureAt)}</div>`;
  }
  async function loadData(key,force=false){
@@ -110,7 +110,7 @@ const RailDepartures = (() => {
   const selectedDate=section.dataset.serviceDate,currentServiceDate=globalThis.RideCore?.serviceDateForNow(now)||DepartureCore.japanDate(now),future=section.dataset.queryMode!=='current';
   const reference=Number(section.dataset.referenceAt),queryNow=future?(reference>0?reference-60000:Date.parse(selectedDate+'T07:00:00+09:00')):now;
   section.querySelector('.departure-heading strong').textContent=future?'여행일 기준 참고 시간표':'현재 다음 열차';
-  clock.textContent=future?`${selectedDate} 일정 출발 ${DepartureCore.formatTime(queryNow+60000)} 기준 · 예정 시각 · 실시간 지연 미반영`:`현재 ${p.country==='KR'?'한국':'일본'} ${local.toISOString().slice(5,10).replace('-','/')} ${local.toISOString().slice(11,19)} · 예정 시각 · 실시간 지연 미반영`;
+  clock.textContent=future?`${selectedDate} 일정 출발 ${DepartureCore.formatTime(queryNow+60000)} 기준 · 참고 시각 · 승차역까지 도보·환승 연결 미계산 · 실시간 지연 미반영`:`현재 ${p.country==='KR'?'한국':'일본'} ${local.toISOString().slice(5,10).replace('-','/')} ${local.toISOString().slice(11,19)} · 예정 시각 · 실시간 지연 미반영`;
   const date=DepartureCore.japanDate(queryNow),calendarFrom=p.calendarFrom||manifest.calendarFrom,calendarThrough=p.calendarThrough||manifest.calendarThrough;
   if(calendarFrom&&date<calendarFrom){stateMessage(body,'out-of-range','해당 날짜에 적용할 시간표 자료가 없어요. 공식 시간표를 확인해 주세요.');return;}
   const options={limit:3,...calendarOptions(key)};
@@ -126,7 +126,7 @@ const RailDepartures = (() => {
     ${first.arrivalAt!==null&&first.arrivalAt<=now?'<p class="departure-stop-note">시간표상 도착 시각이 지났어요. 출발까지 남은 시간을 표시해요.</p>':''}
     <div class="departure-journey"><span>${esc(p.from)} 출발 <b>${timeLabel(first.departureAt,now)}</b></span>${first.destinationArrivalAt!==null?`<span>${esc(p.to)} 도착 예정 <b>${timeLabel(first.destinationArrivalAt,now)}</b></span>`:''}</div>
     ${trains.length>1?`<div class="departure-following" aria-label="그다음 열차"><div class="departure-following-head"><span>그다음 열차</span><span>출발 예정 / 남은 시간</span></div>${trains.slice(1).map(t=>`<div class="departure-following-row"><span>${esc(t.destination||p.to)}행<small>${esc(t.number||trainTypes[t.type]||t.type||'')}</small></span><span><b>${timeLabel(t.departureAt,now)}</b><small data-departure-countdown="${t.departureAt}"></small></span></div>`).join('')}</div>`:''}
-    <div class="departure-board-actions"><button type="button" data-ride-next="0">${timeLabel(first.departureAt,now)} 이 열차 탑승</button></div>
+    <div class="departure-board-actions"><button type="button" data-ride-next="0">${timeLabel(first.departureAt,now)} ${future?'참고 열차 선택':'이 열차 탑승'}</button></div>
     <div class="departure-calendar">${calendarNames[first.calendar]||'운행일별'} 시간표 · 초 단위 자동 갱신${first.serviceDate!==date?' · '+first.serviceDate.slice(5).replace('-','/')+' 운행분':''}</div>`;
   }
   body.querySelectorAll('[data-departure-countdown]').forEach(el=>{el.textContent=future?'여행일 참고':DepartureCore.formatCountdown(Number(el.dataset.departureCountdown)-now);});
