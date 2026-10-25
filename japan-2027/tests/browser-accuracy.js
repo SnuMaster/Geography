@@ -1,12 +1,13 @@
 'use strict';
 (async()=>{
  const $=s=>document.querySelector(s),frame=$('#app'),results=$('#results');let total=0,failed=0;
+ window.stateQA={storage:new Map(),clock:null,delayFile:null};
  const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const until=async(fn)=>{for(let n=0;n<100;n++){if(fn())return;await sleep(100);}throw new Error('화면 갱신 제한시간 초과');};
  const check=(v,m)=>{if(!v)throw new Error(m);};
  const result=(name,pass,detail='')=>{total++;if(!pass)failed++;const li=document.createElement('li');li.className=pass?'pass':'fail';li.textContent=(pass?'PASS · ':'FAIL · ')+name;const small=document.createElement('small');small.textContent=detail;li.append(small);results.append(li);$('#status').textContent=`${total-failed}/${total} 통과 · 실패 ${failed}`;};
  const files=await Promise.all(['tokyo-routes.json','west-routes.json'].map(f=>fetch('../'+f).then(r=>r.json()))),routeDays={...files[0].days,...files[1].days};
- const load=async(day=1)=>{await new Promise(resolve=>{frame.onload=resolve;frame.src='../?day='+day+'&qa='+Date.now();});await until(()=>frame.contentDocument?.querySelector('#rideToggle')&&frame.contentDocument.querySelector('#stopList')?.children.length);const w=frame.contentWindow;const memory=new Map();Object.defineProperty(w,'localStorage',{configurable:true,value:{getItem:k=>memory.get(k)||null,setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k)}});return w;};
+ const load=async(day=1)=>{window.stateQA.storage.clear();await new Promise(resolve=>{frame.onload=resolve;frame.src='state-fixture.html?day='+day+'&qa='+Date.now();});await until(()=>frame.contentDocument?.querySelector('#ridePanel'));return frame.contentWindow;};
  const click=(w,s)=>{const el=w.document.querySelector(s);check(el,'버튼 없음 '+s);el.click();};
  const change=(w,s,value)=>{const el=w.document.querySelector(s);check(el,'입력 없음 '+s);el.value=value;el.dispatchEvent(new w.Event('change',{bubbles:true}));};
  const record=async(name,fn)=>{try{result(name,true,await fn());}catch(e){result(name,false,e.message);}};
