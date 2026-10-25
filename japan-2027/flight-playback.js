@@ -78,7 +78,7 @@
  function restart(){if(!active)return;active.generation=++generation;active.elapsed=0;active.complete=false;active.paused=false;active.lastTime=null;active.lastPan=-Infinity;active.partIndex=undefined;panel.querySelector('[data-flight-note]').textContent=active.note;if(frame)cancelAnimationFrame(frame);draw();updatePanel();schedule();}
  function stop(options={}){
   const cancel=active?.onCancel;++generation;if(frame)cancelAnimationFrame(frame);frame=0;active=null;
-  if(marker){marker.remove();marker=null;}if(panel)panel.hidden=true;
+  if(marker){marker.remove();marker=null;}if(panel)panel.hidden=true;document.body.classList.remove('flight-preview-open');
   config?.map.getContainer().closest('.map-panel')?.classList.remove('flight-replay-active');
   if(options.notify!==false)cancel?.();
  }
@@ -90,7 +90,7 @@
   active={leg,path,generation:++generation,elapsed:0,duration:Math.max(18000,Math.min(36000,path.totalM/18000*1000)),paused:false,complete:false,lastTime:null,lastPan:-Infinity,note,onComplete:options.onComplete,onCancel:options.onCancel};
   panel.querySelector('[data-flight-title]').textContent=leg.travel?.operator||leg.summary||flightParts(leg)[0].line;
   panel.querySelector('[data-flight-reference]').textContent=(reference?'참고 운항 '+reference+' · ':'')+geometryLabel(leg);
-  panel.querySelector('[data-flight-note]').textContent=note;panel.hidden=false;
+  panel.querySelector('[data-flight-note]').textContent=note;panel.hidden=false;document.body.classList.add('flight-preview-open');
   config.map.getContainer().closest('.map-panel')?.classList.add('flight-replay-active');
   const bounds=L.latLngBounds(path.coords);config.map.fitBounds(bounds,{paddingTopLeft:[30,100],paddingBottomRight:[30,Math.min(panel.offsetHeight+35,240)],maxZoom:9,animate:false});
   config.map.setZoom(Math.min(9,Math.max(6,config.map.getZoom()+1)),{animate:false});
@@ -101,10 +101,10 @@
   if(config)return;config=options;panel=document.createElement('section');panel.className='flight-replay-panel';panel.hidden=true;panel.setAttribute('aria-label','참고 항로 재생');
   panel.innerHTML='<div class="flight-replay-heading"><span>FLIGHT ROUTE PREVIEW</span><strong data-flight-state role="status" aria-live="polite"></strong></div><h3 data-flight-title></h3><div class="flight-replay-reference" data-flight-reference></div><div class="flight-replay-progress"><progress data-flight-progress max="100" value="0" aria-label="참고 항로 재생 진행률"></progress><b data-flight-percent>0%</b></div><div class="flight-replay-controls"><button type="button" data-flight-pause>일시정지</button><button type="button" data-flight-restart>처음부터</button><button type="button" data-flight-stop>종료</button></div><div class="flight-replay-clock" data-flight-clock></div><p data-flight-note></p>';
   config.map.getContainer().closest('.map-panel').appendChild(panel);
-  panel.querySelector('[data-flight-pause]').addEventListener('click',()=>active?.paused?resume():pause());
-  panel.querySelector('[data-flight-restart]').addEventListener('click',restart);panel.querySelector('[data-flight-stop]').addEventListener('click',()=>stop());
-  document.addEventListener('click',event=>{const control=event.target.closest('[data-flight-replay]');if(!control)return;const leg=references.get(control.dataset.flightReplay);if(!leg)return;config.onManualStart?.();play(leg);});
-  config.map.on('dragstart popupopen',pause);config.map.on('zoomend',()=>{if(active)draw();});
+  panel.querySelector('[data-flight-pause]').addEventListener('click',()=>{config.onManualControl?.();active?.paused?resume():pause();});
+  panel.querySelector('[data-flight-restart]').addEventListener('click',()=>{config.onManualControl?.();restart();});panel.querySelector('[data-flight-stop]').addEventListener('click',()=>{config.onManualControl?.();stop();});
+  document.addEventListener('click',event=>{const control=event.target.closest('[data-flight-replay]');if(!control)return;const leg=references.get(control.dataset.flightReplay);if(!leg)return;config.onManualStart?.();config.revealMap?.();play(leg);});
+  config.map.on('dragstart',pause);config.map.on('popupopen',event=>{if(event.popup.options.interactionSource!=='auto')pause();});config.map.on('zoomend',()=>{if(active)draw();});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('pagehide',()=>stop());
  }
  root.FlightPlayback={init,play,pause,resume,restart,stop,isActive:()=>!!active,canPlay,button,geometryLabel,provenanceHtml,core};
