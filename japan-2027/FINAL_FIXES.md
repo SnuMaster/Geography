@@ -53,7 +53,7 @@ CI는 push/PR 때 자동 실행한다. 기존 branch-based Pages의 발행 원�
 | 이동 카드 복귀 | 도착 장소 index로 처리 | 이동/장소 구분과 구간 날짜·대체안 메타데이터로 정확한 이동 카드/장소 카드에 복귀 |
 | 종료 이력 | pagehide에서 history를 다시 씀 | 종료 시 sessionStorage에 화면만 저장, 이전 렌더 예약 무효화. URL 변경은 실제 탐색 시 처리 |
 | 검색 | 장소 이름만 인덱싱 | 노선명/ID·기호에 해당하는 ID 문자열·열차명/출도착역/설명과 구간 ID 추가. 정확한 날짜·대체안·이동 카드·열차 상세 연결 |
-| 모바일 | 3차 배치/초점 기능 회귀 위험 | 기존 measured mini 여백·bottom sheet·44px·설정 대체 경로·상단 modal만 Esc·Alt+Shift 날짜 이동 유지. 크기 변경 시 같은 상세를 sheet/popup으로 이동 |
+| 모바일 | 3차 배치/초점 기능 회귀 위험 | 기존 measured mini 여백·bottom sheet·44px·설정 대체 경로·상단 modal만 Esc·Alt+Shift 날짜 이동 유지. 크기 변경 시 같은 상세를 sheet/popup으로 이동. 공개 직접 조작에서 찾은 내 위치/확대 버튼 겹침을 분리하고 elementFromPoint hit-test와 실제 확대/축소 검사를 추가 |
 
 ## 4. P2 — 일정 내용과 예약
 
