@@ -309,5 +309,6 @@
     }
     return matches.find(m=>m.dayKey===preferred)||matches[0]||null;
   }
-  return Object.freeze({itineraryMatch, trainsForDate, candidates, progress, isValidTrain, serviceDateForNow});
+  function timeStatus(train,now){return now<train.departureAt?'출발 전':now>=train.destinationAt&&Number.isFinite(train.destinationAt)?'예정 시각 지남 · 실제 위치 확인 필요':'출발 예정 시각 지남 · 실제 위치 확인 필요';}
+  return Object.freeze({timeStatus,itineraryMatch, trainsForDate, candidates, progress, isValidTrain, serviceDateForNow});
 });

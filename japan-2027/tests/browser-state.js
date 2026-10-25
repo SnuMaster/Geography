@@ -1,0 +1,53 @@
+'use strict';
+(async()=>{
+ const $=s=>document.querySelector(s),frame=$('#app');let total=0,failed=0;
+ const qa=window.stateQA={storage:new Map(),clock:null,delayFile:null,delayMs:1800};
+ const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+ const until=async(fn)=>{for(let n=0;n<150;n++){if(fn())return;await sleep(100);}throw Error('화면 갱신 제한시간 초과');};
+ const check=(v,m)=>{if(!v)throw Error(m);};
+ const load=async(query='?day=14')=>{const old=frame.contentDocument;frame.src='state-fixture.html'+query;await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));return frame.contentWindow;};
+ const reload=async w=>{const old=w.document;w.location.reload();await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));return frame.contentWindow;};
+ const click=(w,s)=>{const node=w.document.querySelector(s);check(node,'버튼 없음 '+s);node.click();};
+ const change=(w,s,value,type='change')=>{const node=w.document.querySelector(s);check(node,'입력 없음 '+s);node.value=value;node.dispatchEvent(new w.Event(type,{bubbles:true}));};
+ const report=async(name,fn)=>{try{const detail=await fn();const li=document.createElement('li');li.textContent='PASS · '+name;const small=document.createElement('small');small.textContent=detail||'통과';li.append(small);$('#results').append(li);}catch(e){failed++;const li=document.createElement('li');li.className='fail';li.textContent='FAIL · '+name+' · '+e.message;$('#results').append(li);}total++;$('#status').textContent=`${total-failed}/${total} 통과 · 실패 ${failed}`;};
+ const uji=w=>w.document.querySelector('[data-variant="no-yamazaki"][aria-pressed="true"]');
+ const day=w=>new URL(w.location.href).searchParams.get('day');
+ $('#mobile').onclick=()=>{frame.width=390;frame.scrollIntoView();};$('#desktop').onclick=()=>{frame.width=1180;frame.scrollIntoView();};
+ $('#run').onclick=async()=>{
+  $('#run').disabled=true;$('#results').textContent='';total=failed=0;delete $('#status').dataset.complete;
+  try{for(const width of [1180,390]){
+   frame.width=width;const label=width===390?'모바일 390px':'데스크톱 1180px';qa.storage.clear();qa.clock=null;qa.delayFile=null;
+   await report(label+' · 우지 → 다른 날짜 → 복귀 / 검색 유지',async()=>{
+    const w=await load();click(w,'[data-variant="no-yamazaki"]');check(new URL(w.location.href).searchParams.get('variant')==='uji','URL 미반영');click(w,'[data-day="15"]');click(w,'[data-day="14"]');check(uji(w),'날짜 왕복 후 대체안 소실');change(w,'#daySearch','우지','input');change(w,'#daySearch','','input');check(uji(w),'검색 후 대체안 소실');check(JSON.parse(qa.storage.get('routebook-variants-v1'))['14']==='no-yamazaki','날짜별 저장 누락');const fresh=await load('?day=14');check(uji(fresh),'URL에 대체안 없는 재진입에서 저장 선택 소실');return '날짜 왕복·검색·URL에 대체안 없는 재진입에도 저장 선택 유지';
+   });
+   await report(label+' · 우지 → 전체 보기 → 일일 보기 + 선택 합계',async()=>{
+    const w=frame.contentWindow;click(w,'#overviewView');const base=w.document.querySelector('[data-summary="baseline"]').textContent,selected=w.document.querySelector('[data-summary="selected"]').textContent;check(base.includes('기본안 기준')&&selected.includes('현재 선택 기준'),'합계 구분 누락');check(base.replace('기본안 기준','')!==selected.replace('현재 선택 기준',''),'대체안 금액 미반영');check(w.document.querySelector('[data-open-day="14"]').textContent.includes('우지'),'선택 일정 요약 누락');click(w,'#dailyView');check(uji(w),'전체 보기 복귀 후 소실');return base+' / '+selected;
+   });
+   await report(label+' · 우지 검색 → 날짜·대체안·장소·지도 상세',async()=>{
+    const w=frame.contentWindow;click(w,'[data-variant="main"]');change(w,'#daySearch','우지','input');check(!w.document.querySelector('[data-result-day="14"][data-result-variant="main"]'),'우지 검색에 기본안 오연결');const r=w.document.querySelector('[data-result-day="14"][data-result-variant="no-yamazaki"][data-place-id="d14-no-yamazaki-1"]');check(r,'장소 결과 없음');r.click();check(uji(w),'기본안이 열림');check(w.document.querySelector('.stop-card.active .stop-name')?.textContent==='우지·뵤도인','카드 선택 누락');check(w.document.querySelector('.leaflet-popup-content')?.textContent.includes('우지·뵤도인'),'지도 핀 상세 누락');check(new URL(w.location.href).searchParams.get('place')==='d14-no-yamazaki-1','장소 URL 누락');await until(()=>width===390?w.scrollY>0:w.document.querySelector('#itineraryScroll').scrollTop>0);const scroll=width===390?w.scrollY:w.document.querySelector('#itineraryScroll').scrollTop;click(w,'#nextDay');w.history.back();await until(()=>day(w)==='14'&&w.document.querySelector('.stop-card.active .stop-name')?.textContent==='우지·뵤도인');await until(()=>Math.abs((width===390?w.scrollY:w.document.querySelector('#itineraryScroll').scrollTop)-scroll)<2);return '1/21 우지·뵤도인 카드·핀·상세·스크롤 연결 · 뒤로가기 선택/스크롤 복원';
+   });
+   await report(label+' · 대체안 URL 직접 열기 / 새로고침 / 날짜 검색 5종',async()=>{
+    let w=await load('?day=14&variant=uji');check(uji(w),'직접 URL 복원 실패');w=await reload(w);check(uji(w),'새로고침 복원 실패');for(const q of ['1/9','01/09','1-9','1월 9일','1월9일']){change(w,'#daySearch',q,'input');check(w.document.querySelector('[data-result-day="2"]'),'날짜 검색 실패 '+q);}change(w,'#daySearch','','input');return '?day=14&variant=uji 복원 · 다섯 날짜 표기 인식';
+   });
+   await report(label+' · DAY 21 → 22 → 뒤로/앞으로',async()=>{
+    const w=await load('?day=21&variant=main');click(w,'#nextDay');check(day(w)==='22','22일 이동 실패');w.history.back();await until(()=>day(w)==='21');check(w.document.querySelector('#dayHeader').textContent.includes('DAY 21'),'뒤로 화면 불일치');w.history.forward();await until(()=>day(w)==='22');check(w.document.querySelector('#dayHeader').textContent.includes('DAY 22'),'앞으로 화면 불일치');return '여행 페이지 안에서 이전/다음 화면 복원';
+   });
+   await report(label+' · 대체안/전체 보기 뒤로·앞으로 + 처음으로 DAY 01',async()=>{
+    const w=await load('?day=14&variant=main');click(w,'[data-variant="no-yamazaki"]');click(w,'#overviewView');w.history.back();await until(()=>!new URL(w.location.href).searchParams.has('view'));check(uji(w),'전체 보기 뒤로 대체안 소실');w.history.back();await until(()=>new URL(w.location.href).searchParams.get('variant')==='main');check(w.document.querySelector('[data-variant="main"][aria-pressed="true"]'),'대체안 뒤로 실패');w.history.forward();await until(()=>uji(w));click(w,'.brand');check(day(w)==='1','처음으로가 DAY 01 아님');return '보기/대체안 history 복원 · 처음으로=1일차';
+   });
+   let saved;
+   await report(label+' · 추적 중 새로고침 직후 패널·수동 시간표 열기',async()=>{
+    qa.storage.clear();qa.clock=Date.parse('2027-01-08T06:16:50+09:00');qa.delayFile=null;let w=await load('?day=1&variant=main');click(w,'#rideToggle');await until(()=>w.document.querySelector('#rideProfile'));change(w,'#rideProfile','jr-ueno-tokyo');change(w,'#rideDate','2027-01-08');await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board="0"]');await until(()=>w.document.querySelector('#rideDelay'));w.document.querySelector('#rideDelay').value='5';w.document.querySelector('#rideDelayForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));saved=qa.storage.get('routebook-boarded-train-v1');check(JSON.parse(saved).delaySeconds===300,'저장된 지연 미확인');qa.delayFile='timetables/jr-ueno-tokyo.json';w=await reload(w);check(!w.document.querySelector('#rideRestoreStatus').hidden,'복원 중 표시 누락');click(w,'#rideToggle');check(w.document.querySelector('#rideBody').textContent.includes('기존 탑승 정보 복원 중'),'패널 복원 상태 누락');click(w,'[data-ride-browse]');await until(()=>w.document.querySelector('#rideProfile'));change(w,'#rideProfile','metro-ueno-iriya');await until(()=>w.document.querySelector('[data-ride-board]'));await until(()=>w.document.querySelector('[data-ride-back]:not([hidden])'));check(qa.storage.get('routebook-boarded-train-v1')===saved,'수동 조회가 기존 저장 변경');click(w,'[data-ride-back]');check(w.document.querySelector('#rideDelay').value==='5','지연 보정 복원 소실');check(w.document.querySelector('.ride-service-id').textContent.includes('2027-01-08'),'운행일 복원 소실');return '지연 응답 중 패널/다른 시간표 조회 후 원래 열차·운행일·+5분 복원';
+   });
+   await report(label+' · 복원 대기 중 새 열차 선택이 최우선',async()=>{
+    check(saved,'저장 fixture 없음');qa.storage.set('routebook-boarded-train-v1',saved);qa.delayFile='timetables/jr-ueno-tokyo.json';const w=await load('?day=1&variant=main');click(w,'#rideToggle');click(w,'[data-ride-browse]');await until(()=>w.document.querySelector('#rideProfile'));change(w,'#rideProfile','metro-ueno-iriya');await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board="0"]');await until(()=>w.document.querySelector('#rideDelay'));await sleep(2200);check(JSON.parse(qa.storage.get('routebook-boarded-train-v1')).key==='metro-ueno-iriya','늦은 복원이 새 열차 덮어씀');return '실제 새 탑승 선택 이후 이전 복원 결과 무시';
+   });
+   await report(label+' · 복원 대기 중 추적 종료 유지',async()=>{
+    qa.storage.set('routebook-boarded-train-v1',saved);const w=await load('?day=1&variant=main');click(w,'#rideToggle');click(w,'[data-ride-finish]');await sleep(2200);check(!qa.storage.has('routebook-boarded-train-v1'),'추적 종료 저장 잔류');check(w.document.querySelector('.ride-mini').hidden,'종료 후 다시 추적됨');return '종료 후 늦은 복원으로 부활하지 않음';
+   });
+   await report(label+' · 전체 시간표 30초 갱신 / 검색·선택·스크롤 유지',async()=>{
+    qa.storage.clear();qa.delayFile=null;qa.clock=Date.parse('2027-01-08T06:16:50+09:00');const w=await load('?day=1&variant=main'),d=w.document;click(w,'#rideToggle');await until(()=>d.querySelector('#rideProfile'));change(w,'#rideProfile','jr-ueno-tokyo');await until(()=>d.querySelector('[data-ride-board]'));click(w,'[data-ride-board="0"]');await until(()=>d.querySelector('[data-ride-change]'));click(w,'[data-ride-change]');await until(()=>d.querySelector('[data-ride-option]'));click(w,'[data-ride-all]');change(w,'#rideSearch','06:','input');const row=d.querySelector('[data-ride-option="0"]'),input=d.querySelector('#rideSearch'),body=d.querySelector('#rideBody');check(row.textContent.includes('출발 전'),'출발 전 상태 재현 실패');body.scrollTop=120;const scroll=body.scrollTop,active=d.querySelector('.is-selected');qa.clock+=31000;await until(()=>row.querySelector('[data-ride-train-state]').textContent.includes('출발 예정 시각 지남'));check(row===d.querySelector('[data-ride-option="0"]'),'목록 DOM 교체');check(input.value==='06:','검색어 소실');check(active===d.querySelector('.is-selected'),'선택 열차 표시 소실');check(Math.abs(body.scrollTop-scroll)<2,'스크롤 이동');qa.clock+=3600000;await until(()=>row.querySelector('[data-ride-train-state]').textContent.startsWith('예정 시각 지남'));check(row.textContent.includes('실제 위치 확인 필요'),'자동 도착 단정');return '같은 목록 DOM·검색·선택·스크롤 보존 · 예정 경과 표시';
+   });
+  }}catch(e){failed++;total++;const li=document.createElement('li');li.className='fail';li.textContent=e.message;$('#results').append(li);}finally{$('#run').disabled=false;$('#status').dataset.complete='true';$('#status').textContent=`${total-failed}/${total} 통과 · 실패 ${failed}`;}
+ };
+})();

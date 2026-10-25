@@ -68,3 +68,9 @@
 .timetable-warning{display:block;padding:10px 12px;margin:8px 0;background:#fff1dc;border:1px solid #d5a358;border-radius:8px;color:#75460b;font-size:12px;line-height:1.6;overflow-wrap:anywhere;}
 
 .departure-validity{font-size:11px;line-height:1.5;color:#675740;margin:8px 0;}
+
+/* Selected alternatives remain visible in search and trip comparisons. */
+.search-result .day-caption{white-space:normal;line-height:1.4}.search-result .day-city{white-space:normal;line-height:1.6}
+.trip-cost-comparison{display:grid;grid-template-columns:1fr;gap:10px}.trip-cost-comparison .trip-cost{margin:0}.trip-cost-comparison strong{font-size:20px}.summary-scope{font-size:12px;line-height:1.7;color:#63746c}
+.ride-restore-status{margin:0;padding:12px 20px;background:#fff1dc;color:#75460b;font-size:13px;line-height:1.5}.ride-train-option.is-selected{outline:2px solid #387764;outline-offset:-2px}.ride-train-time [data-ride-train-state]{max-width:110px;white-space:normal;line-height:1.5}
+.ride-train-time [data-ride-train-state]{min-height:4.5em}

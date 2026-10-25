@@ -258,3 +258,10 @@ test('invalid dates, malformed source events and unsupported calendars produce n
   assert.equal(train.stops[1].eventAt, null);
   assert.equal(Ride.progress(train, at(day + 'T10:05:00')).nextEventAt, null);
 });
+
+test('train list time state crosses departure and terminal without claiming actual arrival',()=>{
+ const train=normalized();
+ assert.equal(Ride.timeStatus(train,at(day+'T09:59:59')),'출발 전');
+ assert.equal(Ride.timeStatus(train,at(day+'T10:00:00')),'출발 예정 시각 지남 · 실제 위치 확인 필요');
+ assert.equal(Ride.timeStatus(train,at(day+'T10:20:00')),'예정 시각 지남 · 실제 위치 확인 필요');
+});

@@ -11,7 +11,8 @@
   const dateNow = () => RideCore.serviceDateForNow(Date.now());
   const labelFor = kind => kind === 'arrival' ? '도착' : kind === 'departure' ? '출발' : '정차';
   const trainName = train => [train.number, train.line || RailDepartures.typeLabel(train.type)].filter(Boolean).join(' · ') || '시간표 열차';
-  let config, panel, body, mini, active = null, mode = 'picker', timer = null, request = 0, lastFocus = null;
+  let config, panel, body, mini, active = null, mode = 'picker', timer = null, pickerRequest = 0, lastFocus = null;
+  let selectionEpoch=0,restoreState='idle',restoreTask=null,lastListTick=0;
   let selectedKey = '', selectedDate = '', schedules = null, trains = [], allDay = false, filter = '', savedMessage = '';
 
   function options(key) {
@@ -30,6 +31,13 @@
         departureAt:train.departureAt, delaySeconds, confirmedStopIndex, confirmedAt, confirmedEventKind, startedAt}));
     } catch (_) { /* Tracking continues when browser storage is unavailable. */ }
   }
+  function restoreNotice(){
+    const pending=restoreState==='loading',node=$('#rideRestoreStatus');
+    if(node){node.hidden=!pending;node.textContent=pending?'기존 탑승 정보 복원 중…':'';}
+    if(pending&&!active)$('#rideToggleLabel').textContent='탑승 정보 복원 중…';
+    else if(!active)$('#rideToggleLabel').textContent='탑승 열차';
+    const back=body?.querySelector('[data-ride-back]');if(back)back.hidden=!active;
+  }
   function currentKeys() {
     return [...new Set((config?.context().legs || []).flatMap(leg => leg ? RailDepartures.keysFor(leg) : []))];
   }
@@ -47,7 +55,7 @@
     resume();
   }
   function hidePanel() {
-    if (mode === 'loading') request++;
+    if (mode === 'loading') pickerRequest++;
     panel.hidden = true;
     $('#rideToggle').setAttribute('aria-expanded', 'false');
     document.body.classList.remove('ride-panel-open');
@@ -60,7 +68,7 @@
     body.scrollTop = 0;
     const p = profiles[selectedKey];
     body.innerHTML = `<div class="ride-intro"><span class="ride-eyebrow">CHOOSE YOUR TRAIN</span><h2 id="ridePanelTitle">내가 탄 열차를 골라요</h2><p>출발 시각·행선지·열차번호를 현장 안내와 맞춰 선택하세요. 이미 출발한 열차도 고를 수 있어요.</p></div>
-      ${active ? '<button type="button" class="ride-back" data-ride-back>← 추적 중인 열차로 돌아가기</button>' : ''}
+      <button type="button" class="ride-back" data-ride-back ${active?'':'hidden'}>← 추적 중인 열차로 돌아가기</button>
       <label class="ride-field">승차 구간<select id="rideProfile" aria-label="탑승할 철도 구간">${selectOptions(selectedKey)}</select></label>
       <div class="ride-picker-tools"><label class="ride-field">운행일<input id="rideDate" type="date" value="${h(selectedDate)}" aria-label="열차 운행일"></label><button type="button" class="ride-today" data-ride-today>지금 시간대</button></div>
       <label class="ride-field ride-search-label">열차 찾기<input id="rideSearch" type="search" value="${h(filter)}" placeholder="출발 시각 · 열차번호 · 행선지" aria-label="출발 시각 열차번호 행선지 검색" autocomplete="off"></label>
@@ -76,6 +84,7 @@
     if (!list) return;
     const validity=RailDepartures.validityFor(selectedKey,selectedDate);
     if(!validity.usable){list.setAttribute('aria-busy','false');$('#rideListCount').textContent='여행일 시간표 갱신 필요';list.innerHTML=`<div class="ride-empty timetable-warning">여행일 시간표 갱신 필요 · ${h(selectedDate)}<br>자료 확인 ${h(p.sourceDate)} · ${p.validUntil?'유효 종료 '+h(p.validUntil):'적용 범위 밖'}<br>확인되지 않은 열차 시각은 표시하지 않아요.</div>`;return;}
+    lastListTick=now;
     const text = filter.trim().toLocaleLowerCase().replace(/\s/g, '');
     let visible = trains.filter(train => {
       const near = allDay || selectedDate !== dateNow() || (train.departureAt >= now - 3 * 3600000 && train.departureAt <= now + 90 * 60000)
@@ -104,9 +113,9 @@
     list.innerHTML = visible.map(train => {
       const index = trains.indexOf(train), terminal = train.destinationAt;
       const kind = labelFor(train.destinationEventKind);
-      const state = train.departureAt > now ? '출발 전' : terminal && terminal <= now ? '하차역 시각 지남' : '이미 출발';
+      const state = RideCore.timeStatus(train,now);
       const partial = train.stopTimeBasis === 'partial' || !terminal;
-      return `<article class="ride-train-option"><div class="ride-train-time"><strong>${time(train.departureAt)}</strong><small>${h(state)}</small></div><div class="ride-train-description"><strong>${h(trainName(train))}</strong><span>${h(train.destination || p.to)}행</span><small>${h(p.to)} ${kind} ${eventTime(terminal)}${partial ? ' · 일부 시각 미제공' : train.stopTimeBasis === 'estimated' ? ' · 소요시간 추정' : ''}</small></div><button type="button" class="ride-board-button" data-ride-board="${index}" aria-label="${h(time(train.departureAt)+' '+trainName(train)+' '+(train.destination||p.to)+'행 탑승 시작')}">탑승<br>시작</button></article>`;
+      return `<article class="ride-train-option${active?.key===selectedKey&&active.train.uid===train.uid?' is-selected':''}" data-ride-option="${index}"><div class="ride-train-time"><strong>${time(train.departureAt)}</strong><small data-ride-train-state>${h(state)}</small></div><div class="ride-train-description"><strong>${h(trainName(train))}</strong><span>${h(train.destination || p.to)}행</span><small>${h(p.to)} ${kind} ${eventTime(terminal)}${partial ? ' · 일부 시각 미제공' : train.stopTimeBasis === 'estimated' ? ' · 소요시간 추정' : ''}</small></div><button type="button" class="ride-board-button" data-ride-board="${index}" aria-label="${h(time(train.departureAt)+' '+trainName(train)+' '+(train.destination||p.to)+'행 탑승 시작')}">탑승<br>시작</button></article>`;
     }).join('');
   }
   async function loadPicker(key, {resetSearch=false}={}) {
@@ -114,11 +123,11 @@
     selectedKey = key;
     if (!selectedDate) selectedDate = dateNow();
     if (resetSearch) filter = '';
-    const token = ++request;
+    const token = ++pickerRequest;
     schedules = null; trains = [];
-    pickerShell();
+    pickerShell();restoreNotice();
     const data = await RailDepartures.getSchedule(key);
-    if (token !== request || mode !== 'picker') return;
+    if (token !== pickerRequest || mode !== 'picker') return;
     if (!data) {
       $('#rideTrainList').setAttribute('aria-busy','false');
       $('#rideTrainList').innerHTML = '<div class="ride-empty">시간표를 불러오지 못했어요.<button type="button" data-ride-retry>다시 불러오기</button></div>';
@@ -132,6 +141,7 @@
   async function open(key, serviceDate) {
     if (!config) return;
     showPanel();
+    if(!key&&restoreState==='loading'&&!active){mode='restoring';body.innerHTML='<div class="ride-empty"><h2 id="ridePanelTitle">기존 탑승 정보 복원 중…</h2><p>저장된 열차와 시간 보정을 불러오고 있어요.</p><button type="button" data-ride-browse>전체 시간표 먼저 보기</button><button type="button" data-ride-finish>저장된 추적 종료</button></div>';restoreNotice();return;}
     if (!key && active) { renderTracking(); return; }
     selectedDate = serviceDate || dateNow(); allDay = false; filter = '';
     await loadPicker(key || currentKeys()[0] || Object.keys(profiles)[0]);
@@ -139,8 +149,9 @@
   }
   function start(key, train, restored) {
     if (!RideCore.isValidTrain(train) || !RailDepartures.validityFor(key,train.serviceDate).usable) { setStatus('선택한 열차의 시각 자료를 확인할 수 없어요.'); return; }
+    selectionEpoch++;restoreState='idle';restoreNotice();
     active = {key, train, serviceDate:train.serviceDate, delaySeconds:0, confirmedStopIndex:null, confirmedAt:null, confirmedEventKind:null, startedAt:Date.now(), ...restored};
-    request++;
+    pickerRequest++;
     persist();
     showPanel();
     renderTracking();
@@ -149,13 +160,13 @@
   async function board(key, id, serviceDate, departureAt) {
     if (!config || !profiles[key]) return;
     showPanel();
-    selectedKey = key; selectedDate = serviceDate || dateNow();
-    const token = ++request;
+    selectedKey = key; selectedDate = serviceDate || dateNow();const boardingDate=selectedDate;
+    const token = ++pickerRequest;
     mode = 'loading';
     body.innerHTML = '<div class="ride-empty" role="status">선택한 열차를 불러오는 중…</div>';
     const data = await RailDepartures.getSchedule(key);
-    if (token !== request) return;
-    const records = data ? RideCore.trainsForDate(data, selectedDate, options(key)) : [];
+    if (token !== pickerRequest) return;
+    const records = data ? RideCore.trainsForDate(data, boardingDate, options(key)) : [];
     const train = records.find(t => t.id === id && (!Number.isFinite(departureAt) || t.departureAt === departureAt));
     if (train) start(key, train);
     else { await loadPicker(key); setStatus('선택한 열차를 다시 확인해 주세요. 목록에서 출발 시각을 고를 수 있어요.'); }
@@ -163,7 +174,7 @@
   function renderTracking() {
     if (!active) return;
     mode = 'tracking';
-    request++;
+    pickerRequest++;
     body.scrollTop = 0;
     const p = profiles[active.key], train = active.train;
     const basis = train.stopTimeBasis === 'estimated' ? '소요시간으로 추정' : train.stopTimeBasis === 'partial' ? '일부 시간표 제공' : '시간표로 계산';
@@ -194,13 +205,17 @@
     return {text:`GPS 근처 역: ${nearest.stop.name} · 약 ${Math.round(nearest.distance)}m · 오차 ±${Math.round(fix.accuracy)}m`, ...nearest};
   }
   function paint() {
+    if(mode==='picker'&&!panel.hidden&&Date.now()-lastListTick>=30000){
+      lastListTick=Date.now();
+      body.querySelectorAll('[data-ride-option]').forEach(row=>{const train=trains[Number(row.dataset.rideOption)],status=row.querySelector('[data-ride-train-state]');if(train&&status)status.textContent=RideCore.timeStatus(train,lastListTick);});
+    }
     if (!active) { mini.hidden=true; return; }
     const now=Date.now(), p=profiles[active.key], result=RideCore.progress(active.train, now, active);
     const destinationKind=labelFor(result.destinationEventKind);
     const waiting=result.phase==='waiting', ended=result.phase==='arrived';
     const remaining=waiting ? active.train.departureAt+(result.adjustmentSeconds||0)*1000-now : result.remainingMs;
-    const remainingText=Number.isFinite(remaining) ? DepartureCore.formatCountdown(remaining) : '시각 확인 필요';
-    const position=result.confirmationPending?`${result.confirmation.stop.name}역 확인 완료 · 이후 위치 확인 필요`:result.currentStop?.name || (waiting ? `${p.from} 출발 전` : ended ? `${p.to} 예정 시각 지남` : result.positionKnown && result.previousStop && result.nextStop ? `${result.previousStop.name} → ${result.nextStop.name}` : result.confirmation ? `마지막 확인 · ${result.confirmation.stop.name}` : '중간 정차 시각 미제공');
+    const remainingText=ended?'예정 시각 지남':Number.isFinite(remaining) ? DepartureCore.formatCountdown(remaining) : '시각 확인 필요';
+    const position=result.confirmationPending?`${result.confirmation.stop.name}역 확인 완료 · 이후 위치 확인 필요`:result.currentStop?.name || (waiting ? `${p.from} 출발 전` : ended ? `${p.to} 예정 시각 지남 · 실제 위치 확인 필요` : result.positionKnown && result.previousStop && result.nextStop ? `${result.previousStop.name} → ${result.nextStop.name}` : result.confirmation ? `마지막 확인 · ${result.confirmation.stop.name}` : '중간 정차 시각 미제공');
     const message=result.confirmationPending?`${result.confirmation.stop.name}역 확인 완료 · 이후 위치 확인 필요`:ended?'하차역 예정 시각이 지났어요. 현장 위치를 확인하거나 지연 시간을 맞춰 주세요.':result.confirmation&&!result.confirmation.applied?`${result.confirmation.stop.name}역을 직접 확인했어요. 이 역의 시각이 없어 남은 시간을 자동 보정할 수 없어요.`:result.nextStopIndex===active.train.stops.length-1&&!waiting&&result.positionKnown?`다음은 하차역 ${p.to}입니다. 현장 안내를 확인해 주세요.`:active.confirmedAt?`직접 확인한 역과 시간 보정을 반영하고 있어요.`:active.train.stopTimeBasis==='partial'?'제공된 시각 구간만 계산하고 있어요. 현재 역을 직접 확인할 수 있어요.':'';
     mini.hidden=false;
     mini.innerHTML=`<span class="ride-mini-icon" aria-hidden="true">${typeof icon==='function'?icon('rail'):'●'}</span><span><strong>${h(p.to)} ${waiting?'탑승 예정':'방향'}</strong><small>${h(position)}</small></span><b>${h(remainingText)}</b><span aria-hidden="true">↗</span>`;
@@ -237,10 +252,10 @@
   }
   function resume() {
     clearInterval(timer); timer=null;
-    if (!document.hidden && (active || !panel.hidden)) { paint(); timer=setInterval(paint,1000); }
+    if (!document.hidden && (active || !panel.hidden || restoreState==='loading')) { paint(); timer=setInterval(paint,1000); }
   }
   function finish() {
-    active=null; persist(); mini.hidden=true;
+    selectionEpoch++;pickerRequest++;restoreState='idle';restoreNotice();active=null; persist(); mini.hidden=true;
     $('#rideToggle').classList.remove('has-ride'); $('#rideToggleLabel').textContent='탑승 열차';
     savedMessage='탑승 추적을 종료했어요.';
     hidePanel(); resume();
@@ -252,29 +267,34 @@
   }
   async function restore() {
     let saved;
-    try { saved=JSON.parse(localStorage.getItem(STORE)||'null'); } catch(_){return;}
-    if (!saved) return;
-    const valid=saved.version===1 && profiles[saved.key] && typeof saved.trainId==='string' && /^\d{4}-\d{2}-\d{2}$/.test(saved.serviceDate)
-      && Number.isFinite(saved.departureAt) && Number.isFinite(saved.startedAt) && Number.isFinite(saved.delaySeconds)
-      && Math.abs(saved.delaySeconds)<=14400 && (saved.confirmedAt===null || Number.isFinite(saved.confirmedAt))
-      && (saved.confirmedStopIndex===null || Number.isInteger(saved.confirmedStopIndex))
-      && (saved.confirmedEventKind==null || saved.confirmedEventKind==='departure');
-    if(!valid){try{localStorage.removeItem(STORE);}catch(_){}return;}
-    const token=request;
-    const data=await RailDepartures.getSchedule(saved.key);
-    if(token!==request || active)return;
-    if(!data){savedMessage='저장된 열차 시간표 연결을 기다리고 있어요. 탑승 구간을 다시 선택할 수 있어요.';return;}
-    const train=RideCore.trainsForDate(data,saved.serviceDate,options(saved.key)).find(t=>t.id===saved.trainId&&t.departureAt===saved.departureAt);
-    if(!train||!RideCore.isValidTrain(train)||saved.confirmedStopIndex!==null&&!train.stops[saved.confirmedStopIndex]){try{localStorage.removeItem(STORE);}catch(_){}return;}
-    const end=train.destinationAt||train.departureAt+12*3600000;
-    if(Date.now()>end+24*3600000){try{localStorage.removeItem(STORE);}catch(_){}return;}
-    active={key:saved.key,train,delaySeconds:saved.delaySeconds,confirmedStopIndex:saved.confirmedStopIndex,confirmedAt:saved.confirmedAt,confirmedEventKind:saved.confirmedEventKind||null,startedAt:saved.startedAt};
-    paint();resume();
+    try {saved=JSON.parse(localStorage.getItem(STORE)||'null');}catch(_){return;}
+    if(!saved)return;
+    const valid=saved.version===1&&profiles[saved.key]&&typeof saved.trainId==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(saved.serviceDate)
+      &&Number.isFinite(saved.departureAt)&&Number.isFinite(saved.startedAt)&&Number.isFinite(saved.delaySeconds)&&Math.abs(saved.delaySeconds)<=14400
+      &&(saved.confirmedAt===null||Number.isFinite(saved.confirmedAt))&&(saved.confirmedStopIndex===null||Number.isInteger(saved.confirmedStopIndex))
+      &&(saved.confirmedEventKind==null||saved.confirmedEventKind==='departure');
+    if(!valid){savedMessage='저장된 탑승 정보를 확인할 수 없어요. 새 열차를 선택하거나 추적을 종료하세요.';return;}
+    const epoch=selectionEpoch;restoreState='loading';restoreNotice();resume();
+    try{
+      const data=await RailDepartures.getSchedule(saved.key);
+      if(epoch!==selectionEpoch)return;
+      if(!data){savedMessage='기존 탑승 정보 복원 실패 · 시간표 연결을 다시 확인해 주세요.';restoreState='failed';return;}
+      const train=RideCore.trainsForDate(data,saved.serviceDate,options(saved.key)).find(t=>t.id===saved.trainId&&t.departureAt===saved.departureAt);
+      if(!train||!RideCore.isValidTrain(train)||saved.confirmedStopIndex!==null&&!train.stops[saved.confirmedStopIndex]){savedMessage='저장된 열차에 적용할 시간표가 없어요. 여행일 시간표 갱신 필요 여부를 확인하세요.';restoreState='failed';return;}
+      active={key:saved.key,train,serviceDate:train.serviceDate,delaySeconds:saved.delaySeconds,confirmedStopIndex:saved.confirmedStopIndex,confirmedAt:saved.confirmedAt,confirmedEventKind:saved.confirmedEventKind||null,startedAt:saved.startedAt};
+      restoreState='ready';
+      if(mode==='restoring'&&!panel.hidden)renderTracking();else paint();
+    }catch(_){if(epoch===selectionEpoch){restoreState='failed';savedMessage='기존 탑승 정보를 복원하지 못했어요. 다시 시도할 수 있어요.';}}
+    finally{
+      if(epoch===selectionEpoch){restoreNotice();if(restoreState==='failed'){if(mode==='restoring')body.innerHTML='<div class="ride-empty"><h2>복원 확인 필요</h2><p>'+h(savedMessage)+'</p><button type="button" data-ride-restore-retry>다시 복원</button><button type="button" data-ride-browse>전체 시간표 보기</button><button type="button" data-ride-finish>저장된 추적 종료</button></div>';else setStatus(savedMessage);}resume();}
+    }
   }
   function bind() {
     panel.addEventListener('click',event=>{
       const button=event.target.closest('button');if(!button)return;
       if(button.matches('[data-ride-close]'))hidePanel();
+      else if(button.matches('[data-ride-browse]')){selectedDate=dateNow();loadPicker(currentKeys()[0]||Object.keys(profiles)[0]);}
+      else if(button.matches('[data-ride-restore-retry]')){mode='restoring';restoreTask=restore();}
       else if(button.matches('[data-ride-board]'))start(selectedKey,trains[Number(button.dataset.rideBoard)]);
       else if(button.matches('[data-ride-all]')){allDay=!allDay;renderList();}
       else if(button.matches('[data-ride-today]')){selectedDate=dateNow();allDay=false;filter='';loadPicker(selectedKey);}
@@ -313,11 +333,11 @@
     config=value;
     panel=document.createElement('aside');panel.id='ridePanel';panel.className='ride-panel';panel.hidden=true;
     panel.setAttribute('aria-label','탑승 열차 선택과 추적');
-    panel.innerHTML='<div class="ride-panel-top"><span><i></i>탑승 열차</span><button type="button" data-ride-close aria-label="탑승 패널 접기">×</button></div><div id="rideBody" class="ride-body"></div>';
+    panel.innerHTML='<div class="ride-panel-top"><span><i></i>탑승 열차</span><button type="button" data-ride-close aria-label="탑승 패널 접기">×</button></div><p id="rideRestoreStatus" class="ride-restore-status" role="status" hidden></p><div id="rideBody" class="ride-body"></div>';
     document.body.appendChild(panel);body=$('#rideBody');
     mini=document.createElement('button');mini.type='button';mini.className='ride-mini';mini.hidden=true;mini.addEventListener('click',()=>open());document.body.appendChild(mini);
     $('#rideToggle').addEventListener('click',()=>panel.hidden?open():hidePanel());
-    bind();restore();
+    bind();restoreTask=restore();
   }
   window.RideTracker={init,open,board,finish};
 })();
