@@ -1,7 +1,7 @@
 'use strict';
 // Only public itinerary/timetable files are cached. GPS observations never enter disk storage.
 (function(){
- const VERSION='20261025-final-4',CACHE=(window.frameElement?'routebook-qa-public-':'routebook-public-')+VERSION,META='routebook-updated-v1',meta={},pending=new Map();
+ const VERSION='20261025-final-4a',CACHE=(window.frameElement?'routebook-qa-public-':'routebook-public-')+VERSION,META='routebook-updated-v1',meta={},pending=new Map();
  let stale=new Set(),lastUpdate=0,storageAvailable=true,dbPromise=null;try{Object.assign(meta,JSON.parse(localStorage.getItem(META)||'{}'));}catch(_){}
  function key(url){return new URL(url,document.baseURI).href;}
  function status(){const el=document.querySelector('#offlineStatus');if(!el)return;const offline=!navigator.onLine||stale.size>0,values=Object.values(meta).filter(Number.isFinite);lastUpdate=values.length?Math.min(...values):0;el.dataset.offline=String(offline);el.textContent=(offline?'저장 자료 표시 · 오프라인/통신 불안정':storageAvailable?'현장 자료 · 이 브라우저에 저장':'온라인 자료 · 브라우저 저장 사용 불가')+(lastUpdate?' · 자료 갱신 '+new Date(lastUpdate).toLocaleString('ko-KR',{timeZone:'Asia/Tokyo'}):' · 아직 저장되지 않은 자료는 통신 필요')+' · 시간표는 예정 시각·실시간 지연 미반영';}

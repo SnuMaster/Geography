@@ -43,3 +43,6 @@
 .offline-status{font-size:11px;line-height:1.5;background:#f5f6ef;color:#526052;padding:5px 12px;border-bottom:1px solid #dbe2db}.offline-status[data-offline=true]{background:#fff0d4;color:#764a1b}.cost-confidence{display:block;font-size:11px;color:#697669;margin:5px 0}
 @media(max-width:390px){.pass-editor input[type=datetime-local],.reservation-info input[type=datetime-local]{width:100%}.pass-editor,.reservation-info,.direction-options{padding:10px}.location-card{max-height:calc(var(--visual-height,100dvh) - 110px);overflow:auto}}
 @media(min-width:1025px){.offline-status{height:28px;padding:4px 12px;overflow:auto;box-sizing:border-box}.app-layout{height:calc(100dvh - 106px)}.day-detail-header{max-height:45%;overflow:auto;flex-shrink:0}}
+/* The custom location/fit controls occupy the first three rows. Keep Leaflet zoom below them. */
+.leaflet-top.leaflet-right{top:172px;right:2px}
+@media(max-width:740px){.leaflet-top.leaflet-right{top:165px}}
