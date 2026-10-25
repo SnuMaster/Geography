@@ -6,7 +6,7 @@
  function tripDay(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const d=Object.fromEntries(parts.map(p=>[p.type,p.value]));const n=Number(d.day)-7;return d.year==='2027'&&d.month==='01'&&n>=1&&n<=22?n:null;}
  function show(){document.querySelector('.map-panel').classList.add('location-active');$('#locationCard').hidden=false;}
  function buttonState(){const active=watch!==null||phase==='starting';$('#locationBtn').setAttribute('aria-pressed',String(active));$('#locationBtnLabel').textContent=active?'위치 켜짐':'내 위치';$('#locationFollow').textContent=following?'지도 따라가는 중':'내 위치로 돌아가기';$('#locationFollow').setAttribute('aria-pressed',String(following));$('#locationFollow').disabled=!fix;}
- function pauseFollow(){if(!fix)return;following=false;buttonState();}
+ function pauseFollow(){following=false;if(options)buttonState();}
  function refresh(){if(!options)return;const c=options.context(),newKey=c.day.n+'|'+c.variant.id;if(key!==newKey){key=newKey;chosen=null;segments=RouteMatch.build(c.legs);$('#locationLeg').innerHTML='<option value="auto">자동 · 가장 가까운 이동 구간</option>'+c.legs.map((l,i)=>l&&l.distanceM>20?`<option value="${i}">${h(l.from)} → ${h(l.to)}</option>`:'').join('');offSince=null;offCount=0;}
   $('#locationDay').textContent=`${c.day.date} · ${c.variant.label||c.day.cityLabel} 기준`;
   if(fix)render();
@@ -37,7 +37,7 @@
   else{$('#locationStatus').textContent=e.code===3?'위치 응답을 기다리는 중':'현재 위치를 잡지 못했어요';$('#locationExplain').textContent='화면을 열어 두고 GPS·통신 상태를 확인해 주세요. 위치가 잡히면 자동으로 갱신해요.';}
   $('#locationCard').dataset.state='uncertain';buttonState();
  }
- function start(){if(!window.isSecureContext||!navigator.geolocation){show();phase='unsupported';$('#locationStatus').textContent='이 브라우저에서 위치를 사용할 수 없어요';$('#locationExplain').textContent='HTTPS 주소를 Safari 또는 Chrome으로 열어 주세요.';return;}
+ function start(){if(!options)return;window.dispatchEvent(new CustomEvent('routebook:location-start'));if(!window.isSecureContext||!navigator.geolocation){show();phase='unsupported';$('#locationStatus').textContent='이 브라우저에서 위치를 사용할 수 없어요';$('#locationExplain').textContent='HTTPS 주소를 Safari 또는 Chrome으로 열어 주세요.';return;}
   const today=tripDay(),c=options.context();if(today!==null&&today!==c.day.n)options.selectDay(today);else if(c.view==='overview')options.selectDay(c.day.n);
   options.prepareMap?.();following=true;firstFix=true;phase='starting';offSince=null;offCount=0;show();refresh();$('#locationStatus').textContent='현재 위치 확인 중…';$('#locationExplain').textContent='브라우저에서 위치 사용을 허용해 주세요.';buttonState();
   try{watch=navigator.geolocation.watchPosition(accept,error,{enableHighAccuracy:true,maximumAge:5000,timeout:20000});timer=setInterval(()=>{if(fix&&watch!==null)render();},5000);buttonState();}catch(e){error({code:1});}

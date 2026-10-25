@@ -42,7 +42,7 @@ const fareText=f=>{if(!f)return '요금 확인 필요';if(f.min==null)return f.l
 function dailyCost(n=state.day,id=null,pass=state.passEnabled){const ls=state.routeData?.days?.[`${n}-${id||getVariant().id}`]||[];let ic=0,paper=0,krw=0,unknown=0;const extras=[];for(const l of ls){if(!l)continue;const f=l.fare;if(['selectedQuote','publishedTariff'].includes(f.status)){extras.push(l);continue;}if(f.currency==='KRW'&&f.min!=null){krw+=f.min;continue;}if(f.status==='variable'||f.min==null){unknown++;continue;}ic+=pass&&n<=11&&Number.isFinite(f.passExtraMin)?f.passExtraMin:f.min;paper+=f.paperTicketYen??f.min;}return {ic,paper,krw,unknown,extras};}
 function costSummary(n=state.day,id=null,pass=state.passEnabled){const c=dailyCost(n,id,pass);if(n>=21)return c.krw?`KTX ${c.krw.toLocaleString()}원`:'항구 택시 · 미터 운임 별도';return `${pass&&n<=11?'패스 외':'기본 IC'} ${c.ic.toLocaleString()}엔${c.unknown?' + 변동·미확인':''}`;}
 function fareDetails(f){if(!f)return '';return `<div class="fare-proof"><b>${f.status==='exact'?'구간 운임 확인':f.status==='selectedQuote'?'이전 선택 견적':f.status==='publishedTariff'?'현재 공시 요금':'변동·확인 필요'}</b>${f.icYen!=null&&f.currency==='JPY'&&f.status==='exact'?`<p>IC ${f.icYen.toLocaleString()}엔 · 종이표 ${(f.paperTicketYen??f.icYen).toLocaleString()}엔</p>`:''}<p>${esc(f.basis)}</p>${(f.breakdown||[]).map(g=>`<div>${esc(g.fromJa||g.from||g.from_)} → ${esc(g.toJa||g.to)} <strong>${(g.icYen??0).toLocaleString()}엔</strong></div>`).join('')}</div>`;}
-function travelHtml(leg){const t=leg.travel;return `${airlineLogo(leg.parts[0],'airline-popup-logo')}<div class="popup-time">${icon(leg.parts[0].mode)} ${esc(t.operator)}</div><div class="popup-title">${esc(leg.from)} → ${esc(leg.to)}</div><div class="travel-clock"><span><small>출발</small><b>${esc(t.depart)}</b></span><span>→</span><span><small>도착</small><b>${esc(t.arrive)}</b></span></div><div class="travel-fare">${esc(leg.durationLabel)} · ${esc(fareText(leg.fare))}</div>${fareDetails(leg.fare)}<p class="geometry-note">${esc(leg.parts[0].geometrySource)}${t.geometryNotice?'<br>'+esc(t.geometryNotice):''}</p><p class="geometry-note">${esc(t.notice)}</p><div class="popup-links"><a href="${esc(t.source)}" target="_blank" rel="noopener">공식 안내 ↗</a></div>`;}
+function travelHtml(leg){const t=leg.travel;return `${airlineLogo(leg.parts[0],'airline-popup-logo')}<div class="popup-time">${icon(leg.parts[0].mode)} ${esc(t.operator)}</div><div class="popup-title">${esc(leg.from)} → ${esc(leg.to)}</div><div class="travel-clock"><span><small>출발</small><b>${esc(t.depart)}</b></span><span>→</span><span><small>도착</small><b>${esc(t.arrive)}</b></span></div><div class="travel-fare">${esc(leg.durationLabel)} · ${esc(fareText(leg.fare))}</div>${fareDetails(leg.fare)}${window.FlightPlayback?.button(leg)||''}${window.FlightPlayback?.provenanceHtml(leg)||''}<p class="geometry-note">${esc(leg.parts[0].geometrySource)}${t.geometryNotice?'<br>'+esc(t.geometryNotice):''}</p><p class="geometry-note">${esc(t.notice)}</p><div class="popup-links"><a href="${esc(t.source)}" target="_blank" rel="noopener">공식 안내 ↗</a></div>`;}
 
 function costText(s){const d=s.details;if(!d)return '';return d.costLabel||(d.costMin===0&&d.costMax===0?'무료':d.costMin===d.costMax?`${d.costMin.toLocaleString()}엔`:`${d.costMin.toLocaleString()}~${d.costMax.toLocaleString()}엔`);}
 function stayText(s){const matches=[...s.time.matchAll(/(\d{1,2}):(\d{2})/g)];if(s.kind!=='hotel'&&matches.length===2){const mins=(Number(matches[1][1])-Number(matches[0][1]))*60+Number(matches[1][2])-Number(matches[0][2]);if(mins>=0&&mins<720)return mins>=60?`${Math.floor(mins/60)}시간${mins%60?' '+mins%60+'분':''}`:`${mins}분`;}return s.details.stayLabel||s.details.typicalStayMin+'분';}
@@ -65,7 +65,43 @@ function applyWestData(base,west){
  Object.assign(base.food,west.food);base.nightRows=[...base.nightRows.filter(r=>Number(r[0].split('/')[1])<19||Number(r[0].split('/')[1])>27),...west.nightRows];
  base.westUpdatedAt=west.updatedAt;base.version=west.version;return base;
 }
-function selectLeg(i){window.RouteLocation?.pauseFollow();hideRailHover();const leg=getLeg(i);if(!leg)return;stopPlay();const coords=leg.parts.flatMap(p=>p.coords);map.fitBounds(L.latLngBounds(coords),{padding:[50,80],maxZoom:16,animate:false});const middle=coords[Math.floor(coords.length/2)];L.popup({maxWidth:340,maxHeight:390,className:'route-info-popup'}).setLatLng(middle).setContent(legHtml(leg)).openOn(map);if(window.innerWidth<=740&&RailDepartures.supported(state.day,leg,null))$('#map').scrollIntoView({behavior:'smooth',block:'center'});}
+async function loadFlightRouteReferences(){
+ let timer;
+ try{
+  const controller=new AbortController();timer=setTimeout(()=>controller.abort(),6000);
+  const response=await fetch('flight-route-overrides.json?v=20261025-flightpath-2',{signal:controller.signal});
+  return response.ok?await response.json():null;
+ }catch{return null;}finally{clearTimeout(timer);}
+}
+function applyFlightRouteReferences(routes,payload){
+ const distance=window.FlightPlayback?.core?.distance;
+ if(!routes?.days||!Array.isArray(payload?.flights)||typeof distance!=='function')return routes;
+ const point=p=>Array.isArray(p)&&p.length>=2&&Number.isFinite(p[0])&&Number.isFinite(p[1])&&Math.abs(p[0])<=85&&Math.abs(p[1])<=180;
+ const references=payload.flights.filter(r=>r&&typeof r.id==='string'&&typeof r.flightNumber==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(r.referenceDate||'')&&Array.isArray(r.airportReferenceCoordinates)&&r.airportReferenceCoordinates.length===2&&r.airportReferenceCoordinates.every(point)&&Array.isArray(r.coords)&&r.coords.length>=2&&r.coords.every(point)&&Number.isFinite(r.distanceM)&&r.distanceM>0&&typeof r.geometrySource==='string'&&typeof r.geometryNotice==='string'&&['screen-reference','recorded-reference'].includes(r.flightTrack?.status)&&r.flightTrack.flightNumber===r.flightNumber&&r.flightTrack.referenceDate===r.referenceDate&&typeof r.flightTrack.sourceUrl==='string'&&/^https:\/\//.test(r.flightTrack.sourceUrl)&&distance(r.coords[0],r.airportReferenceCoordinates[0])<=10000&&distance(r.coords.at(-1),r.airportReferenceCoordinates[1])<=10000);
+ for(const legs of Object.values(routes.days)){
+  if(!Array.isArray(legs))continue;
+  for(const leg of legs){
+   if(!Array.isArray(leg?.parts))continue;
+   const notices=[];let changed=false;
+   for(const part of leg.parts){
+    if(part?.mode!=='flight'||!Array.isArray(part.coords)||!point(part.coords[0])||!point(part.coords.at(-1)))continue;
+    // Match public airport geometry only; schedule, fare, and flight selection stay in the itinerary.
+    const matches=references.filter(r=>distance(part.coords[0],r.airportReferenceCoordinates[0])<=10000&&distance(part.coords.at(-1),r.airportReferenceCoordinates[1])<=10000);
+    if(matches.length!==1)continue;
+    const reference=matches[0];
+    part.coords=reference.coords.map(p=>[p[0],p[1]]);part.distanceM=reference.distanceM;
+    part.source=reference.flightTrack.sourceUrl;part.geometrySource=reference.geometrySource;part.flightTrack={...reference.flightTrack};
+    notices.push(reference.geometryNotice);changed=true;
+   }
+   if(changed){
+    if(leg.parts.every(p=>Number.isFinite(p?.distanceM))){leg.distanceM=Math.round(leg.parts.reduce((total,p)=>total+p.distanceM,0));leg.distanceLabel=`참고 항로 약 ${Math.round(leg.distanceM/1000).toLocaleString()} km`;}
+    if(leg.travel&&typeof leg.travel==='object')leg.travel.geometryNotice=[...new Set(notices)].join(' ');
+   }
+  }
+ }
+ return routes;
+}
+function selectLeg(i){window.RouteLocation?.pauseFollow();hideRailHover();const leg=getLeg(i);if(!leg)return;stopPlay();const coords=leg.parts.flatMap(p=>p.coords);map.fitBounds(L.latLngBounds(coords),{padding:[50,80],maxZoom:16,animate:false});const middle=coords[Math.floor(coords.length/2)];L.popup({maxWidth:340,maxHeight:390,className:'route-info-popup'}).setLatLng(middle).setContent(legHtml(leg)).openOn(map);if(window.innerWidth<=740&&(RailDepartures.supported(state.day,leg,null)||window.FlightPlayback?.canPlay(leg)))$('#map').scrollIntoView({behavior:'smooth',block:'center'});}
 
 const modesIn=stops=>[...new Set(stops.slice(1).map(s=>s.modeFromPrevious))];
 const kindLabel=k=>({hotel:'숙소',sight:'관광',food:'식사',cafe:'카페',station:'역·환승',airport:'공항',port:'항구'}[k]||'방문');
@@ -136,6 +172,7 @@ function arrowFor(points,color){
 }
 function updateArrowAngles(){if(!map)return;arrows.forEach(x=>{const a=map.latLngToLayerPoint(x.a),b=map.latLngToLayerPoint(x.b),el=x.marker.getElement();if(el){const svg=el.querySelector('svg');svg.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI}deg)`;svg.style.opacity=map.distance(x.a,x.b)<20?'0':'1';}});}
 function renderMap(fit=true){
+ if(window.FlightPlayback?.isActive())stopPlay();
  window.RouteLocation?.refresh();
  hideRailHover();railSymbolKeys.clear();map.closePopup();
  setTiles(state.view==='overview'||state.day>=21||window.RouteLocation?.isActive()?'world':'gsi');
@@ -174,13 +211,15 @@ function renderMap(fit=true){
   indices.forEach(idx=>markers[idx]=marker);stopGroups.push({indices,marker});
  });
  $('.map-legend').classList.toggle('line-colors-active',hasDetailedRoutes());$('.map-legend>span:nth-child(2)').innerHTML=hasDetailedRoutes()?'<i class="legend-line rail"></i>철도: 노선색·기호':'<i class="legend-line rail"></i>전철·버스';
- $('.route-caution').textContent=hasDetailedRoutes()?'선·기호에 마우스를 올리거나 눌러 시간·교통비 확인. 항공·배는 개략 항로입니다.':'이 지역은 기존 방문 순서 표시입니다. 실제 경로는 구간별 길찾기를 확인하세요.';
+ const flightLegs=(state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]).filter(l=>l?.parts.some(p=>p.mode==='flight'));
+ $('.route-caution').textContent=hasDetailedRoutes()?'선·기호를 누르면 이동 상세가 열려요.'+(flightLegs.length?' 항공: '+[...new Set(flightLegs.map(l=>window.FlightPlayback?.geometryLabel(l)||'개략 항로'))].join(' · ')+'. 재생 화면에서 따라갈 수 있어요.':''):'이 지역은 기존 방문 순서 표시입니다. 실제 경로는 구간별 길찾기를 확인하세요.';
  if(fit)fitRoute([1,12,16,18].includes(getDay().n)&&hasDetailedRoutes());requestAnimationFrame(updateArrowAngles);
 }
 function markerIcon(indices){const stops=getStops(),first=stops[indices[0]],active=indices.includes(state.selected),night=state.night&&indices.some(i=>isNight(stops[i]));return L.divIcon({className:'route-marker',html:`<div class="pin-number ${first.kind} ${active?'active':''} ${night?'night':''}"><span>${indices.length>1?indices.map(i=>i+1).join('·'):indices[0]+1}</span></div>`,iconSize:[30,35],iconAnchor:[15,33]});}
 function fitRoute(focus=false){
  map.stop();
  const stops=state.view==='overview'?overviewStops():getStops();let coords=stops.map(s=>[s.lat,s.lng]);
+ if(state.view==='overview')coords.push(...overviewLegs().flatMap(l=>l.parts.flatMap(p=>p.coords)));
  if(!focus&&state.view==='daily'&&hasDetailedRoutes())coords.push(...(state.routeData.days[`${state.day}-${getVariant().id}`]||[]).filter(Boolean).flatMap(l=>l.parts.flatMap(p=>p.coords)));
  if(focus&&state.view==='daily'){
   let local=stops.filter(s=>['sight','food','cafe'].includes(s.kind));
@@ -190,7 +229,7 @@ function fitRoute(focus=false){
  if(coords.length)map.fitBounds(L.latLngBounds(coords),{paddingTopLeft:[window.innerWidth<=740?25:42,window.innerWidth<=740?155:175],paddingBottomRight:[window.innerWidth<=740?25:42,window.innerWidth<=740?110:133],maxZoom:15,animate:false});updateArrowAngles();
 }
 function selectStop(index,fly=true,scroll=true){
- if(state.view!=='daily')return;window.RouteLocation?.pauseFollow();const stops=getStops();if(index<0||index>=stops.length)return;state.selected=index;
+ if(state.view!=='daily')return;if(window.FlightPlayback?.isActive())stopPlay();window.RouteLocation?.pauseFollow();const stops=getStops();if(index<0||index>=stops.length)return;state.selected=index;
  $$('.stop-card').forEach(el=>{const active=Number(el.dataset.stop)===index;el.classList.toggle('active',active);el.setAttribute('aria-pressed',active);});
  stopGroups.forEach(g=>{g.marker.setIcon(markerIcon(g.indices));g.marker.setZIndexOffset(g.indices.includes(index)?1000:100);});
  legLines.forEach(({line,index:i,color})=>line.setStyle({color,weight:i===index?6:4.5,opacity:state.night?(i===index?.95:.4):(i===index?1:.75)}));
@@ -198,7 +237,21 @@ function selectStop(index,fly=true,scroll=true){
  if(scroll){const el=$(`#stop-${index}`),scroller=$('#itineraryScroll');if(window.innerWidth>740&&el){scroller.scrollTo({top:Math.max(0,el.offsetTop-scroller.offsetTop-35),behavior:'smooth'});}else if(window.innerWidth<=740&&el){el.scrollIntoView({behavior:'smooth',block:'center'});}}
  $('#playBtn').innerHTML=icon(state.playing?'pause':'play')+`<span>${state.playing?'재생 중':`${index+1} / ${stops.length} · 동선 보기`}</span>`;
 }
-function stopPlay(){if(state.playing)clearInterval(state.playing);state.playing=null;$('#playBtn').innerHTML=icon('play')+'<span>동선 따라가기</span>';}
+function stopPlay(){const run=state.playing;state.playing=null;if(run)clearTimeout(run.timer||run);window.FlightPlayback?.stop({notify:false});$('#playBtn').innerHTML=icon('play')+'<span>동선 따라가기</span>';}
+function startPlay(){
+ const run={timer:null};state.playing=run;if(state.selected===getStops().length-1)state.selected=-1;
+ const tick=()=>{
+  if(state.playing!==run)return;const n=state.selected+1;
+  if(n>=getStops().length){stopPlay();announce('오늘의 동선을 모두 둘러봤어요.');return;}
+  const leg=getLeg(n);
+  if(leg&&window.FlightPlayback?.canPlay(leg)){
+   selectStop(n,false,window.innerWidth>740);
+   const started=window.FlightPlayback.play(leg,{onComplete:()=>{if(state.playing===run)run.timer=setTimeout(tick,800);},onCancel:()=>{if(state.playing===run)stopPlay();}});
+   if(started)return;
+  }
+  selectStop(n,true,window.innerWidth>740);run.timer=setTimeout(tick,3300);
+ };tick();
+}
 function setDay(n,options={}){
  window.RouteLocation?.pauseFollow();
  stopPlay();state.day=Math.max(1,Math.min(22,n));state.variant='main';state.view='daily';state.selected=-1;state.night=false;state.passEnabled=false;$('#itineraryScroll').scrollTop=0;
@@ -216,9 +269,12 @@ function overviewStops(){return [
  {name:'부산',lat:35.1155,lng:129.0422,modeFromPrevious:'ferry',days:'1/28–29 · 1박',n:21},
  {name:'동대구',lat:35.8797,lng:128.6283,modeFromPrevious:'rail',days:'1/29 부산 → 동대구 기차',n:22}
  ];}
+function overviewLegs(){return Object.values(state.routeData.days).flat().filter(l=>l?.travel||l?.parts.some(p=>p.lineId==='KORAIL.GyeongbuHSR'));}
 function renderOverviewMap(){
- const stops=overviewStops();const legs=Object.values(state.routeData.days).flat().filter(l=>l?.travel||l?.parts.some(p=>p.lineId==='KORAIL.GyeongbuHSR'));
- for(const leg of legs){const part=leg.parts[0],color=MODE[part.mode].color;L.polyline(part.coords,{color:'#fff',weight:8,interactive:false}).addTo(routeLayer);const line=L.polyline(part.coords,{color,weight:4,dashArray:part.mode==='rail'?null:'9 7'}).addTo(routeLayer);const hit=L.polyline(part.coords,{weight:22,opacity:0}).addTo(routeLayer);hit.on('mouseover',e=>showRailHover(e,leg,part));hit.on('mousemove',positionRailHover);hit.on('mouseout',hideRailHover);hit.on('click',hideRailHover);hit.bindPopup(()=>leg.travel?travelHtml(leg):legHtml(leg),{maxWidth:340,maxHeight:440,className:'route-info-popup'});addRailMapSymbol(part,leg);arrowFor(part.coords,color);}
+ const stops=overviewStops(),legs=overviewLegs();
+ const flightLabels=[...new Set(legs.filter(l=>l.parts.some(p=>p.mode==='flight')).map(l=>window.FlightPlayback?.geometryLabel(l)||'개략 항로'))];
+ $('.route-caution').textContent='항공: '+flightLabels.join(' · ')+'. 선·항공사 기호를 눌러 참고 날짜를 보고 항로를 따라가세요.';
+ for(const leg of legs)for(const part of leg.parts){if(!part.coords?.length)continue;const color=(MODE[part.mode]||MODE.rail).color;L.polyline(part.coords,{color:'#fff',weight:8,interactive:false}).addTo(routeLayer);const line=L.polyline(part.coords,{color,weight:4,dashArray:part.mode==='rail'?null:'9 7'}).addTo(routeLayer);const hit=L.polyline(part.coords,{weight:22,opacity:0}).addTo(routeLayer);hit.on('mouseover',e=>showRailHover(e,leg,part));hit.on('mousemove',positionRailHover);hit.on('mouseout',hideRailHover);hit.on('click',hideRailHover);hit.bindPopup(()=>leg.travel?travelHtml(leg):legHtml(leg),{maxWidth:340,maxHeight:440,className:'route-info-popup'});addRailMapSymbol(part,leg);arrowFor(part.coords,color);}
  stops.slice(0,-1).forEach((s,i)=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker',html:`<div class="pin-number"><span>${i+1}</span></div>`,iconSize:[30,35],iconAnchor:[15,33]})}).addTo(routeLayer);mk.bindTooltip(esc(s.name),{permanent:true,direction:'right',offset:[17,-14],className:'stop-tooltip'});mk.bindPopup(`<div class="popup-title">${esc(s.name)}</div><div class="popup-desc">${esc(s.days)}</div><div class="popup-links"><a href="?day=${s.n}">그날 일정 ↗</a></div>`);});fitRoute();
 }
 
@@ -238,10 +294,10 @@ function bindEvents(){
  $('#cityFilters').addEventListener('click',e=>{const b=e.target.closest('[data-city]');if(!b)return;state.filter=b.dataset.city;renderDays();});$('#daySearch').addEventListener('input',e=>{state.search=e.target.value.trim();renderDays();});
  $('#dailyView').addEventListener('click',()=>setDay(state.day));$('#overviewView').addEventListener('click',showOverview);
  $('#prevDay').addEventListener('click',()=>setDay(state.day-1,{scrollNav:true}));$('#nextDay').addEventListener('click',()=>setDay(state.day+1,{scrollNav:true}));
- $('#fitBtn').addEventListener('click',()=>{window.RouteLocation?.pauseFollow();map.closePopup();fitRoute();});$('#focusBtn').addEventListener('click',()=>{window.RouteLocation?.pauseFollow();map.closePopup();fitRoute(true);});
+ $('#fitBtn').addEventListener('click',()=>{stopPlay();window.RouteLocation?.pauseFollow();map.closePopup();fitRoute();});$('#focusBtn').addEventListener('click',()=>{stopPlay();window.RouteLocation?.pauseFollow();map.closePopup();fitRoute(true);});
  $('#nightBtn').addEventListener('click',()=>{state.night=!state.night;$('#nightBtn').setAttribute('aria-pressed',state.night);renderStops();renderMap(false);if(state.night){const ns=getStops().filter(isNight);if(ns.length)map.fitBounds(L.latLngBounds(ns.map(s=>[s.lat,s.lng])),{paddingTopLeft:[30,window.innerWidth<=740?155:175],paddingBottomRight:[30,window.innerWidth<=740?110:135],maxZoom:15});else announce('이 날은 이동·낮 산책 위주 일정이에요.');}else fitRoute();});
  $('#previousStop').addEventListener('click',()=>{stopPlay();selectStop(Math.max(0,state.selected-1));});$('#nextStop').addEventListener('click',()=>{stopPlay();selectStop(Math.min(getStops().length-1,state.selected+1));});
- $('#playBtn').addEventListener('click',()=>{if(state.view==='overview'){setDay(1);return;}if(state.playing){stopPlay();return;}const tick=()=>{const n=state.selected+1;if(n>=getStops().length){stopPlay();announce('오늘의 동선을 모두 둘러봤어요.');return;}selectStop(n,true,window.innerWidth>740);};state.playing=setInterval(tick,3300);if(state.selected===getStops().length-1)state.selected=-1;tick();});
+ $('#playBtn').addEventListener('click',()=>{if(state.view==='overview'){setDay(1);return;}if(state.playing){stopPlay();return;}startPlay();});
  $('#shareBtn').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(location.href);announce('현재 날짜의 지도 링크를 복사했어요.');}catch{announce('주소창의 링크로 현재 날짜를 공유할 수 있어요.');}});
  $('#aboutBtn').addEventListener('click',()=>$('#aboutDialog').showModal());$('#closeAbout').addEventListener('click',()=>$('#aboutDialog').close());$('#aboutDialog').addEventListener('click',e=>{if(e.target===$('#aboutDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
  $('#retryTiles').addEventListener('click',()=>{const provider=tileProvider;tileProvider='';setTiles(provider);$('#tileError').classList.add('hidden');});
@@ -264,7 +320,7 @@ function focusRideProfile(key,station){
 }
 
 async function main(){
- try{const [response,tokyo,routes,west,westRoutes]=await Promise.all([fetch('data.json?v=20261025-day1-departures-1'),fetch('tokyo-data.json?v=20261025-day1-departures-1'),fetch('tokyo-routes.json?v=20261025-day1-departures-1'),fetch('west-data.json?v=20261025-day1-departures-1'),fetch('west-routes.json?v=20261025-day1-departures-1')]);if(!response.ok||!tokyo.ok||!routes.ok||!west.ok||!westRoutes.ok)throw Error('일정·경로 데이터를 불러오지 못했어요.');state.data=applyWestData(applyTokyoData(await response.json(),await tokyo.json()),await west.json());const tokyoRoutes=await routes.json(),otherRoutes=await westRoutes.json();state.routeData={...tokyoRoutes,days:{...tokyoRoutes.days,...otherRoutes.days}};if(!window.L)throw Error('지도 구성 요소를 불러오지 못했어요.');initMap();bindEvents();window.RouteLocation?.init({map,context:()=>({day:getDay(),variant:getVariant(),view:state.view,legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),selectDay:setDay,prepareMap:()=>setTiles('world')});const q=new URLSearchParams(location.search);let n=Number(q.get('day'));if(!Number.isInteger(n)||n<1||n>22)n=2;setDay(n);if(getDay().variants.some(v=>v.id===q.get('variant')))setVariant(q.get('variant'));if(q.get('view')==='overview')showOverview();$('#mapLoading').classList.add('done');setTimeout(()=>$('#mapLoading').remove(),400);window.RideTracker?.init({map,context:()=>({day:getDay(),variant:getVariant(),legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),focusProfile:focusRideProfile});window.__routebook={state,map,getStops,setDay,setVariant,selectStop,selectLeg,showOverview,stopPlay,getLeg};}
+ try{const [response,tokyo,routes,west,westRoutes,flightReferences]=await Promise.all([fetch('data.json?v=20261025-flightpath-2'),fetch('tokyo-data.json?v=20261025-flightpath-2'),fetch('tokyo-routes.json?v=20261025-flightpath-2'),fetch('west-data.json?v=20261025-flightpath-2'),fetch('west-routes.json?v=20261025-flightpath-2'),loadFlightRouteReferences()]);if(!response.ok||!tokyo.ok||!routes.ok||!west.ok||!westRoutes.ok)throw Error('일정·경로 데이터를 불러오지 못했어요.');state.data=applyWestData(applyTokyoData(await response.json(),await tokyo.json()),await west.json());const tokyoRoutes=await routes.json(),otherRoutes=await westRoutes.json();state.routeData=applyFlightRouteReferences({...tokyoRoutes,days:{...tokyoRoutes.days,...otherRoutes.days}},flightReferences);if(!window.L)throw Error('지도 구성 요소를 불러오지 못했어요.');initMap();bindEvents();window.FlightPlayback?.init({map,pauseLocation:()=>window.RouteLocation?.pauseFollow(),prepareMap:()=>setTiles('world'),onManualStart:stopPlay});window.addEventListener('routebook:location-start',stopPlay);window.RouteLocation?.init({map,context:()=>({day:getDay(),variant:getVariant(),view:state.view,legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),selectDay:setDay,prepareMap:()=>setTiles('world')});const q=new URLSearchParams(location.search);let n=Number(q.get('day'));if(!Number.isInteger(n)||n<1||n>22)n=2;setDay(n);if(getDay().variants.some(v=>v.id===q.get('variant')))setVariant(q.get('variant'));if(q.get('view')==='overview')showOverview();$('#mapLoading').classList.add('done');setTimeout(()=>$('#mapLoading').remove(),400);window.RideTracker?.init({map,context:()=>({day:getDay(),variant:getVariant(),legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),focusProfile:focusRideProfile});window.__routebook={state,map,getStops,setDay,setVariant,selectStop,selectLeg,showOverview,stopPlay,getLeg};}
  catch(e){$('#mapLoading').innerHTML=`${icon('info')}<strong>${esc(e.message)}</strong><button class="outline-button" onclick="location.reload()">다시 불러오기</button>`;console.error(e);}
 }
 main();
