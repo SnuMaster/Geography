@@ -42,6 +42,18 @@
     return day === 0 || day === 6 || holidays.has(date) || yearEnd ? 'SaturdayHoliday' : 'Weekday';
   }
 
+  function scheduleCalendar(schedules, date, options) {
+    if (Array.isArray(schedules.Daily)) return 'Daily';
+    const combined = calendarFor(date, options);
+    if (combined !== 'SaturdayHoliday') return combined;
+    const day = new Date(dateStart(date) + JST).getUTCDay();
+    const holidays = options.holidays instanceof Set ? options.holidays : new Set(options.holidays || []);
+    const monthDay = date.slice(5);
+    const yearEnd = options.yearEndHoliday !== false && (monthDay >= '12-30' || monthDay <= '01-03');
+    const separate = day === 6 && !holidays.has(date) && !yearEnd ? 'Saturday' : 'SundayHoliday';
+    return Array.isArray(schedules[separate]) ? separate : combined;
+  }
+
   function serviceMinutes(value, boundary) {
     const minutes = parseTime(value);
     if (minutes === null) return null;
@@ -85,7 +97,10 @@
     for (let offset = -1; offset <= lookAhead; offset++) {
       const start = today + offset * DAY;
       const serviceDate = japanDate(start);
-      const calendar = calendarFor(serviceDate, options);
+      if (options.calendarFrom && serviceDate < options.calendarFrom) continue;
+      if (options.calendarThrough && serviceDate > options.calendarThrough) continue;
+      const serviceWeekday = new Date(start + JST).getUTCDay();
+      const calendar = scheduleCalendar(schedules, serviceDate, options);
       const records = schedules[calendar];
       if (!Array.isArray(records)) continue;
       const overrides = new Map();
@@ -101,6 +116,12 @@
         // the service date, so 00:xx retains the preceding day's exception.
         const override = overrides.get(baseline.id);
         const record = override ? { ...baseline, ...override } : baseline;
+        if (record.cancelled === true) continue;
+        if (record.validFrom && serviceDate < record.validFrom) continue;
+        if (record.validThrough && serviceDate > record.validThrough) continue;
+        if (Array.isArray(record.daysOfWeek) && !record.daysOfWeek.includes(serviceWeekday)) continue;
+        if (Array.isArray(record.excludedDates) && record.excludedDates.includes(serviceDate)) continue;
+        if (Array.isArray(record.operatingDates) && !record.operatingDates.includes(serviceDate)) continue;
         const departure = serviceMinutes(record.departure, boundary);
         if (departure === null) continue;
         const departureAt = start + departure * MINUTE;
