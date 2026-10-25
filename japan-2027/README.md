@@ -68,3 +68,11 @@
 - 뉴카멜리아: FRA2026.9.1 조사 PDF 해상 참고선69좌표. 실제 AIS/GPS항적·2027 확정항로 아님. 입출항 구간은 원자료 공백으로 연결하지 않음. 선박에선 참고선과 GPS 흔적을 함께 확인.
 - 출처/검증: `assets/routes/return-route-sources.json`. 한국·GPS 배경은 OpenTopoMap(©OSM/SRTM, CC-BY-SA), 일본 기본은 GSI.
 - 좌표 비교·오차·갱신 중단·참고선 판정 제외 자동검사, UI용 가상GPS 테스트는 배포 파일에서 제외. 실제 현지 휴대폰 센서 테스트는 미실행.
+
+## 2026-10-25 1일차 출발역 열차 정보
+
+- 1일차 히비야선 `우에노→이리야`와 `이리야→우에노`를 누르면 해당 출발역·역 번호·승차 방향을 먼저 표시합니다. 동일 구간인 귀환편에도 적용됩니다. 도보·항공 및 다른 날짜는 대상이 아닙니다.
+- Google Maps 공식 URL로 출발·도착역 이름과 도쿄 다이토구를 지정한 대중교통 검색을 엽니다. 공식 출발역 안내와 도쿄메트로 공식 최신 시간표도 별도 연결합니다. 시간표에는 해당 역 번호와 방향을 지정합니다. Google이 제시하는 실제 노선·시각은 Google 화면에서 확인해야 합니다.
+- **Google의 실시간 도착 정보를 사이트 내부로 수신하는 기능은 구현되지 않았습니다.** 인증·과금 설정이 된 Google Routes API 연결이 제공되지 않았기 때문입니다. 스크래핑, iframe 우회, 가짜 도착시각, 고정 배차간격 기반 예측을 사용하지 않습니다. 현재 출발 검색과 여행일(2027.1.8) 검색을 구분하도록 안내합니다.
+- 조사 과정에서 받은 공식 시간표 원본은 최신성·직접 연동을 보장할 수 없어 게시하거나 예측에 사용하지 않습니다.
+- URL 규격: <https://developers.google.com/maps/documentation/urls/get-started> / API 인증: <https://developers.google.com/maps/documentation/routes/get-api-key> / 공식 출발역: <https://www.tokyometro.jp/station/ueno/timetable/index.html>, <https://www.tokyometro.jp/station/iriya/timetable/index.html>.
