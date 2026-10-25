@@ -6,5 +6,5 @@
  const NativeDate=Date;window.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:[qa.clock??NativeDate.now()]));}static now(){return qa.clock??NativeDate.now();}};
  const nativeFetch=window.fetch.bind(window);
  window.fetch=async(url,options)=>{if(qa.delayFile&&String(url).startsWith(qa.delayFile))await new Promise(resolve=>setTimeout(resolve,qa.delayMs||1800));return nativeFetch(url,options);};
- const response=await nativeFetch('../index.html'),html=await response.text();document.open();document.write(html.replace('<head>','<head><base href="../">'));document.close();
+ const response=await nativeFetch('../index.html'),html=await response.text();document.open();document.write(html.replace('<head>','<head><base href="../">'+(Number.isFinite(qa.safeBottom)?'<style>:root{--safe-bottom:'+qa.safeBottom+'px!important}</style>':'')));document.close();
 })();

@@ -104,9 +104,9 @@ function addRailMapSymbol(part,leg){
  const info=railInfo(part)||(['flight','ferry'].includes(part.mode)?{code:part.mode==='flight'?'항공':'선박',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
  const point=railMidpoint(part.coords),key=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(',');if(railSymbolKeys.has(key))return;railSymbolKeys.add(key);
  const airline=airlineFor(part);
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':''),html:airline?airlineLogo(part):railBadge(part),iconSize:airline?(airline==='jal'?[44,40]:[96,40]):[34,34],iconAnchor:airline?(airline==='jal'?[22,20]:[48,20]):[17,17]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 상세',alt:info.code+' '+part.line+' 이동 상세'}).addTo(routeLayer);
+ const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':''),html:airline?airlineLogo(part):railBadge(part),iconSize:airline?(airline==='jal'?[44,44]:[96,44]):[44,44],iconAnchor:airline?(airline==='jal'?[22,22]:[48,22]):[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 상세',alt:info.code+' '+part.line+' 이동 상세'}).addTo(routeLayer);
  const wireFocus=()=>{const el=marker.getElement();if(!el)return;el.setAttribute('aria-label',info.code+' '+part.line+' 이동 상세');el.addEventListener('focus',()=>showRailHover({latlng:point},leg,part));el.addEventListener('blur',hideRailHover);};
  if(marker.getElement())wireFocus();else marker.once('add',wireFocus);
- marker.bindPopup(()=>legHtml(leg,part),{maxWidth:340,maxHeight:390,className:'route-info-popup'});
+ marker.bindPopup(()=>legHtml(leg,part),DetailView.options('route-info-popup',{routeLegIndex:state.view==='daily'?(state.routeData.days[`${state.day}-${getVariant().id}`]||[]).indexOf(leg)+1:null}));
  marker.on('mouseover',e=>showRailHover(e,leg,part));marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);marker.on('click',()=>{hideRailHover();if(state.view==='daily'){const legs=state.routeData.days[`${state.day}-${getVariant().id}`]||[],index=legs.indexOf(leg);if(index>=0)window.RouteLocation?.selectLeg(index);}});
 }

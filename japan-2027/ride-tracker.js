@@ -47,11 +47,13 @@
     return `${current.length ? `<optgroup label="${config.context().day.n}일차 철도 구간">${current.map(option).join('')}</optgroup>` : ''}<optgroup label="여행 전체 철도 구간">${remaining.map(option).join('')}</optgroup>`;
   }
   function showPanel() {
-    lastFocus = document.activeElement;
+    RouteUI.userExplore();
+    if(panel.hidden)lastFocus = document.activeElement;
     panel.hidden = false;
     $('#rideToggle').setAttribute('aria-expanded', 'true');
     document.body.classList.add('ride-panel-open');
     config.map.closePopup();
+    RouteUI.open(panel,{opener:lastFocus,modal:false,close:hidePanel,fallback:()=>$('#rideToggle')});
     resume();
   }
   function hidePanel() {
@@ -59,8 +61,7 @@
     panel.hidden = true;
     $('#rideToggle').setAttribute('aria-expanded', 'false');
     document.body.classList.remove('ride-panel-open');
-    if (lastFocus?.isConnected && !lastFocus.closest('.leaflet-popup')) lastFocus.focus({preventScroll:true});
-    else $('#rideToggle').focus({preventScroll:true});
+    RouteUI.release(panel);syncMiniSpace();
     resume();
   }
   function pickerShell() {
@@ -189,7 +190,7 @@
       <div class="ride-data-note"><b>시간표에 따른 위치예요.</b> 지연·운휴는 자동으로 반영되지 않아요. 출발 시각만 제공된 역은 구간 이동으로 표시해요.${train.stopTimeNote?`<p>${h(train.stopTimeNote)}</p>`:''}</div>
       <div class="ride-footer"><span id="rideClock"></span><button type="button" class="ride-finish" data-ride-finish>하차 완료 · 추적 종료</button></div>
       <p class="ride-footnote">열차 선택과 시간 보정은 이 브라우저에 저장돼요. 새로고침해도 이어집니다. GPS 좌표는 저장하지 않아요.</p>`;
-    paint(); resume();
+    RouteUI.ensureFocus(panel);paint(); resume();
   }
   function nearestGps(stops, now) {
     const fix = window.RouteLocation?.getFix?.();
@@ -204,12 +205,18 @@
     if (!nearest || nearest.distance > 250+fix.accuracy) return {text:`GPS 수신 중 · 역 주변 아님 · 오차 ±${Math.round(fix.accuracy)}m`};
     return {text:`GPS 근처 역: ${nearest.stop.name} · 약 ${Math.round(nearest.distance)}m · 오차 ±${Math.round(fix.accuracy)}m`, ...nearest};
   }
+  let miniHeight=0;
+  function syncMiniSpace(){
+    const shown=!!active&&!mini.hidden;document.body.classList.toggle('has-ride-mini',shown);
+    if(shown){const height=mini.getBoundingClientRect().height;if(height>0)miniHeight=height;document.documentElement.style.setProperty('--ride-mini-clearance',RouteUICore.miniClearance(miniHeight||76)+'px');}
+    else document.documentElement.style.setProperty('--ride-mini-clearance','0px');
+  }
   function paint() {
     if(mode==='picker'&&!panel.hidden&&Date.now()-lastListTick>=30000){
       lastListTick=Date.now();
       body.querySelectorAll('[data-ride-option]').forEach(row=>{const train=trains[Number(row.dataset.rideOption)],status=row.querySelector('[data-ride-train-state]');if(train&&status)status.textContent=RideCore.timeStatus(train,lastListTick);});
     }
-    if (!active) { mini.hidden=true; return; }
+    if (!active) { mini.hidden=true;syncMiniSpace(); return; }
     const now=Date.now(), p=profiles[active.key], result=RideCore.progress(active.train, now, active);
     const destinationKind=labelFor(result.destinationEventKind);
     const waiting=result.phase==='waiting', ended=result.phase==='arrived';
@@ -221,7 +228,7 @@
     mini.innerHTML=`<span class="ride-mini-icon" aria-hidden="true">${typeof icon==='function'?icon('rail'):'●'}</span><span><strong>${h(p.to)} ${waiting?'탑승 예정':'방향'}</strong><small>${h(position)}</small></span><b>${h(remainingText)}</b><span aria-hidden="true">↗</span>`;
     mini.setAttribute('aria-label', `탑승 열차 열기 ${p.to} 방향 ${position} ${remainingText}`);
     $('#rideToggleLabel').textContent='탑승 추적 중';
-    $('#rideToggle').classList.add('has-ride');
+    $('#rideToggle').classList.add('has-ride');syncMiniSpace();
     if (mode!=='tracking' || panel.hidden) return;
     $('#rideRemainingLabel').textContent=waiting?'출발까지':`하차역까지 · ${destinationKind} 예정 시각 기준`;
     $('#rideRemaining').textContent=remainingText;
@@ -323,7 +330,7 @@
       if(!Number.isFinite(minutes)||minutes < -120||minutes > 240)return;
       active.delaySeconds=Math.round(minutes*60);persist();paint();
     });
-    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!panel.hidden){event.preventDefault();hidePanel();}});
+
     document.addEventListener('visibilitychange',resume);
     window.addEventListener('pagehide',()=>{clearInterval(timer);timer=null;});
     window.addEventListener('pageshow',resume);
@@ -332,10 +339,10 @@
   function init(value) {
     config=value;
     panel=document.createElement('aside');panel.id='ridePanel';panel.className='ride-panel';panel.hidden=true;
-    panel.setAttribute('aria-label','탑승 열차 선택과 추적');
+    panel.setAttribute('aria-label','탑승 열차 선택과 추적');panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','false');
     panel.innerHTML='<div class="ride-panel-top"><span><i></i>탑승 열차</span><button type="button" data-ride-close aria-label="탑승 패널 접기">×</button></div><p id="rideRestoreStatus" class="ride-restore-status" role="status" hidden></p><div id="rideBody" class="ride-body"></div>';
     document.body.appendChild(panel);body=$('#rideBody');
-    mini=document.createElement('button');mini.type='button';mini.className='ride-mini';mini.hidden=true;mini.addEventListener('click',()=>open());document.body.appendChild(mini);
+    mini=document.createElement('button');mini.type='button';mini.className='ride-mini';mini.hidden=true;mini.addEventListener('click',()=>open());document.body.appendChild(mini);new ResizeObserver(syncMiniSpace).observe(mini);
     $('#rideToggle').addEventListener('click',()=>panel.hidden?open():hidePanel());
     bind();restoreTask=restore();
   }
