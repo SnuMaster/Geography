@@ -88,7 +88,10 @@
     const validFrom=[options.validFrom,options.calendarFrom].filter(Boolean).sort().at(-1)||null;
     const validUntil=[options.validUntil,options.calendarThrough].filter(Boolean).sort()[0]||null;
     const usable=dateStart(date)!==null&&(!validFrom||date>=validFrom)&&(!validUntil||date<=validUntil);
-    return {usable,validFrom,validUntil,sourceDate:options.sourceDate||null,label:usable?'':'여행일 시간표 갱신 필요'};
+    const travelVerified=usable&&!!options.validUntil&&(!options.validFrom||date>=options.validFrom)&&date<=options.validUntil;
+    const confidence=!usable?'expired':travelVerified?'travel-verified':options.sourceDate?'current-reference':'unknown';
+    const label=confidence==='current-reference'&&options.sourceClass==='historical-public'?'과거 공개 시간표 참고 · 여행일 미검증':{expired:'적용기간 만료 · 여행일 시간표 갱신 필요','travel-verified':'여행일 운행 확인 완료','current-reference':'공식 현재 시간표 참고 · 여행 전 재확인',unknown:'시각 미확인'}[confidence];
+    return {usable,validFrom,validUntil,sourceDate:options.sourceDate||null,travelVerified,confidence,label};
   }
   function timeLabel(epoch,now){
     const date=japanDate(epoch),today=japanDate(now);

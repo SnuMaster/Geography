@@ -32,3 +32,14 @@
 }
 
 @media(min-width:1025px){.map-panel.detail-open .map-playbar{visibility:visible;pointer-events:auto;bottom:12px}.map-panel.detail-open #routePlaybackStatus{display:none}}
+/* Field readiness: preserve readable controls without widening the mobile page. */
+.pass-editor,.reservation-info,.direction-options{min-width:0;border:1px solid #d5ded7;border-radius:12px;padding:12px;margin:12px 0;background:#f7faf7;font-size:12px;line-height:1.65}
+.pass-editor label,.reservation-info label,.map-provider-label{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:8px 0}
+.pass-editor input[type=datetime-local],.pass-editor select,.reservation-info input,.reservation-info select,#mapProvider{box-sizing:border-box;min-width:0;max-width:100%;min-height:44px;border:1px solid #c3cfc7;border-radius:6px;padding:6px;background:white;color:#193e3a}
+.pass-editor a,.reservation-info a{display:block;margin:8px 0}.pass-editor small{display:block}.reservation-info h3{font-size:14px}.reservation-info button,.direction-options button,.location-mode button{min-height:44px;padding:8px 12px;border:1px solid #bdcec3;border-radius:7px;background:white;color:#193e3a}
+.direction-options button{display:block;width:100%;text-align:left;margin-top:6px}.direction-options [aria-pressed=true]{background:#e2eee4;font-weight:700}
+.route-direction-count{position:absolute;right:-1px;top:0;background:#193e3a;color:white;border-radius:8px;padding:0 3px;font-size:12px}.line-color-unknown{display:none}.rail-symbol[title*=미확인]{border-color:#657078}
+.timetable-confidence{font-size:11px;line-height:1.5;color:#645432;padding:7px 10px;background:#fff8e4;border-radius:7px}.location-mode{display:flex;align-items:center;gap:6px;flex-wrap:wrap}.location-mode span{font-size:11px}.schedule-buffer{padding:10px 14px;margin:10px 0;background:#f0f3f0;border-radius:8px;color:#5b6b61;font-size:12px}.search-highlight{outline:3px solid #d19b41;outline-offset:2px}
+.offline-status{font-size:11px;line-height:1.5;background:#f5f6ef;color:#526052;padding:5px 12px;border-bottom:1px solid #dbe2db}.offline-status[data-offline=true]{background:#fff0d4;color:#764a1b}.cost-confidence{display:block;font-size:11px;color:#697669;margin:5px 0}
+@media(max-width:390px){.pass-editor input[type=datetime-local],.reservation-info input[type=datetime-local]{width:100%}.pass-editor,.reservation-info,.direction-options{padding:10px}.location-card{max-height:calc(var(--visual-height,100dvh) - 110px);overflow:auto}}
+@media(min-width:1025px){.offline-status{height:28px;padding:4px 12px;overflow:auto;box-sizing:border-box}.app-layout{height:calc(100dvh - 106px)}.day-detail-header{max-height:45%;overflow:auto;flex-shrink:0}}

@@ -77,10 +77,10 @@
  function resume(){if(!active)return;if(active.complete){restart();return;}if(!active.paused)return;active.paused=false;active.lastTime=null;active.lastPan=-Infinity;config.pauseLocation?.();updatePanel();schedule();}
  function restart(){if(!active)return;active.generation=++generation;active.elapsed=0;active.complete=false;active.paused=false;active.lastTime=null;active.lastPan=-Infinity;active.partIndex=undefined;panel.querySelector('[data-flight-note]').textContent=active.note;if(frame)cancelAnimationFrame(frame);draw();updatePanel();schedule();}
  function stop(options={}){
-  const cancel=active?.onCancel;++generation;if(frame)cancelAnimationFrame(frame);frame=0;active=null;
+  const hadActive=!!active,cancel=active?.onCancel;++generation;if(frame)cancelAnimationFrame(frame);frame=0;active=null;
   if(marker){marker.remove();marker=null;}if(panel)panel.hidden=true;document.body.classList.remove('flight-preview-open');
   config?.map.getContainer().closest('.map-panel')?.classList.remove('flight-replay-active');
-  if(options.notify!==false)cancel?.();
+  if(hadActive)config?.restoreMap?.();if(options.notify!==false)cancel?.();
  }
  function play(leg,options={}){
   if(!config)return false;const path=buildPath(flightParts(leg));if(!path.segments.length)return false;
@@ -105,7 +105,7 @@
   panel.querySelector('[data-flight-restart]').addEventListener('click',()=>{config.onManualControl?.();restart();});panel.querySelector('[data-flight-stop]').addEventListener('click',()=>{config.onManualControl?.();stop();});
   document.addEventListener('click',event=>{const control=event.target.closest('[data-flight-replay]');if(!control)return;const leg=references.get(control.dataset.flightReplay);if(!leg)return;config.onManualStart?.();config.revealMap?.();play(leg);});
   config.map.on('dragstart',pause);config.map.on('popupopen',event=>{if(event.popup.options.interactionSource!=='auto')pause();});config.map.on('zoomend',()=>{if(active)draw();});
-  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('pagehide',()=>stop());
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});window.addEventListener('pagehide',pause);
  }
  root.FlightPlayback={init,play,pause,resume,restart,stop,isActive:()=>!!active,canPlay,button,geometryLabel,provenanceHtml,core};
 })(typeof window!=='undefined'?window:globalThis);

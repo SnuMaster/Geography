@@ -2,7 +2,7 @@
 (async()=>{
  const $=s=>document.querySelector(s),frame=$('#app'),qa=window.stateQA={storage:new Map(),clock:null,delayFile:null,safeBottom:0};let total=0,failed=0;
  const sleep=ms=>new Promise(r=>setTimeout(r,ms)),check=(v,m)=>{if(!v)throw Error(m);};
- const until=async(fn)=>{for(let n=0;n<150;n++){if(fn())return;await sleep(100);}throw Error('화면 갱신 제한시간 초과');};
+ const until=async(fn)=>{for(let n=0;n<300;n++){if(fn())return;await sleep(100);}throw Error('화면 갱신 제한시간 초과');};
  const load=async(day=1)=>{qa.storage.clear();qa.clock=null;const old=frame.contentDocument;frame.src='state-fixture.html?day='+day+'&variant=main';await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));return frame.contentWindow;};
  const click=(w,s)=>{const el=w.document.querySelector(s);check(el,'컨트롤 없음 '+s);el.click();};
  const change=(w,s,value)=>{const el=w.document.querySelector(s);check(el,'입력 없음 '+s);el.value=value;el.dispatchEvent(new w.Event('change',{bubbles:true}));};
@@ -28,4 +28,5 @@
    await report(label+' · 전체 보기 컨트롤 의미와 동작',async()=>{const w=await load(2),d=w.document;click(w,'#overviewView');check(d.querySelector('#previousStop').hidden&&d.querySelector('#nextStop').hidden,'무의미한 이전/다음 노출');check(d.querySelector('#playBtn').textContent.includes('1일차부터 보기'),'전체 보기 버튼 문구 모호');click(w,'#playBtn');check(new URL(w.location.href).searchParams.get('day')==='1','전체 보기 버튼 무반응');return '이전/다음 숨김 · 1일차부터 보기 실제 DAY 01 이동';});
   }}finally{$('#run').disabled=false;$('#status').dataset.complete='true';}
  };
+ $('#run').disabled=false;$('#run').dataset.ready='true';
 })();

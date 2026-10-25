@@ -50,4 +50,5 @@
    });
   }}catch(e){failed++;total++;const li=document.createElement('li');li.className='fail';li.textContent=e.message;$('#results').append(li);}finally{$('#run').disabled=false;$('#status').dataset.complete='true';$('#status').textContent=`${total-failed}/${total} 통과 · 실패 ${failed}`;}
  };
+ $('#run').disabled=false;$('#run').dataset.ready='true';
 })();

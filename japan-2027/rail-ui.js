@@ -9,6 +9,7 @@ function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return ''
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
+ 'TokyoMonorail.HanedaAirport':{code:'MO',color:'#657078',shape:'rounded',colorUnknown:true},
  'KORAIL.GyeongbuHSR':{code:'KTX',color:'#0054a6',shape:'square'},
  'TokyoMetro.Ginza':{code:'G',color:'#ff9500',shape:'circle'},
  'TokyoMetro.Marunouchi':{code:'M',color:'#f62e36',shape:'circle'},
@@ -41,11 +42,11 @@ const RAIL_LINES={
 };
 Object.assign(RAIL_LINES,{"West.M": {"code": "M", "color": "#e5171f", "shape": "circle"}, "West.T": {"code": "T", "color": "#522886", "shape": "circle"}, "West.K": {"code": "K", "color": "#814721", "shape": "circle"}, "West.O": {"code": "O", "color": "#e80000", "shape": "square"}, "West.A": {"code": "A", "color": "#0072bc", "shape": "square"}, "West.D": {"code": "D", "color": "#a56750", "shape": "square"}, "West.E": {"code": "E", "color": "#878ddc", "shape": "square"}, "West.KH": {"code": "KH", "color": "#1d7b3b", "shape": "rounded"}, "West.HS": {"code": "HS", "color": "#1f64aa", "shape": "rounded"}, "West.KN-Namba": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Osaka": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Nara": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.HK-Arashi": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Kyoto": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Takara": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.FK": {"code": "K", "color": "#ee7d00", "shape": "circle"}, "West.FN": {"code": "N", "color": "#008b5a", "shape": "circle"}});
 const railSectionCache=new WeakMap();
-let railHoverCard=null,railSymbolKeys=new Set();
+let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||null;}
 function railBadge(part,extra=''){
  const info=railInfo(part);if(!info)return icon((MODE[part.mode]||MODE.rail).icon);
- return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}</span>`;
+ return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
 function splitRailService(part){
@@ -76,7 +77,7 @@ function railDayKey(){
 }
 function initRailHover(){
  railHoverCard=document.createElement('div');railHoverCard.id='railHoverCard';railHoverCard.className='rail-hover-card';railHoverCard.setAttribute('role','tooltip');railHoverCard.hidden=true;map.getContainer().appendChild(railHoverCard);
- map.on('movestart zoomstart click',hideRailHover);
+ map.on('movestart zoomstart click',hideRailHover);document.addEventListener('click',event=>{const b=event.target.closest('[data-route-direction]');if(!b)return;const group=railSymbolGroups.get(b.dataset.routeGroup),entry=group?.entries[Number(b.dataset.routeDirection)];if(!entry)return;map.closePopup();L.popup(symbolOptions(entry.leg)).setLatLng(group.point).setContent(directionHtml(group,entry)).openOn(map);});
 }
 function hideRailHover(){if(railHoverCard)railHoverCard.hidden=true;}
 function railHoverHtml(leg,part){if(leg.travel)return `${airlineLogo(part,'airline-hover-logo')}<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(leg.travel.depart)} <span>→</span> ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>${esc(part.mode==='flight'?(window.FlightPlayback?.geometryLabel(leg)||'개략 항로'):'해상 참고선')} · 클릭하면 상세</span></div>`;
@@ -100,13 +101,15 @@ function railMidpoint(coords,fraction=.5){
  for(let i=1;i<coords.length;i++){const a=coords[i-1],b=coords[i],d=L.latLng(a).distanceTo(L.latLng(b));if(travelled+d>=target){const t=d?(target-travelled)/d:0;return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];}travelled+=d;}
  return coords[Math.floor(coords.length/2)];
 }
+function symbolOptions(leg){return DetailView.options('route-info-popup',{routeLegIndex:leg.legIndex,routeDay:leg.dayNumber,routeVariant:leg.variant});}
+function directionHtml(group,entry){return (group.entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${group.entries.map((e,i)=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${i}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+legHtml(entry.leg,entry.part);}
 function addRailMapSymbol(part,leg){
  const info=railInfo(part)||(['flight','ferry'].includes(part.mode)?{code:part.mode==='flight'?'항공':'선박',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
- const point=railMidpoint(part.coords),key=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(',');if(railSymbolKeys.has(key))return;railSymbolKeys.add(key);
- const airline=airlineFor(part);
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':''),html:airline?airlineLogo(part):railBadge(part),iconSize:airline?(airline==='jal'?[44,44]:[96,44]):[44,44],iconAnchor:airline?(airline==='jal'?[22,22]:[48,22]):[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 상세',alt:info.code+' '+part.line+' 이동 상세'}).addTo(routeLayer);
- const wireFocus=()=>{const el=marker.getElement();if(!el)return;el.setAttribute('aria-label',info.code+' '+part.line+' 이동 상세');el.addEventListener('focus',()=>showRailHover({latlng:point},leg,part));el.addEventListener('blur',hideRailHover);};
- if(marker.getElement())wireFocus();else marker.once('add',wireFocus);
- marker.bindPopup(()=>legHtml(leg,part),DetailView.options('route-info-popup',{routeLegIndex:state.view==='daily'?(state.routeData.days[`${state.day}-${getVariant().id}`]||[]).indexOf(leg)+1:null}));
- marker.on('mouseover',e=>showRailHover(e,leg,part));marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);marker.on('click',()=>{hideRailHover();if(state.view==='daily'){const legs=state.routeData.days[`${state.day}-${getVariant().id}`]||[],index=legs.indexOf(leg);if(index>=0)window.RouteLocation?.selectLeg(index);}});
+ const point=railMidpoint(part.coords),groupKey=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(','),entryKey=leg.legId+'|'+part.lineId+'|'+part.from+'|'+part.to;
+ if(railSymbolKeys.has(entryKey))return;railSymbolKeys.add(entryKey);
+ const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
+ const airline=airlineFor(part),group={key:groupKey,point,entries:[{part,leg}]};railSymbolGroups.set(groupKey,group);
+ const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':''),html:airline?airlineLogo(part):railBadge(part),iconSize:airline?(airline==='jal'?[44,44]:[96,44]):[44,44],iconAnchor:airline?(airline==='jal'?[22,22]:[48,22]):[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;
+ marker.on('click',()=>{hideRailHover();const entry=group.entries[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
+ marker.on('mouseover',e=>showRailHover(e,leg,part));marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
 }

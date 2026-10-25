@@ -1,9 +1,9 @@
 'use strict';
 // Scheduled station events for every itinerary. Live disruption data is separate.
 const RailDepartures = (() => {
- const VERSION='20261025-accuracy-1';
+ const VERSION=TravelStore.VERSION;
  const manifest=globalThis.RailDepartureProfiles||{profiles:{},holidays:[]},profiles=manifest.profiles;
- const entries=Object.entries(profiles),loaded=new Map(),pending=new Map(),failed=new Set(),attached=new WeakSet();
+ const entries=Object.entries(profiles),loaded=new BoundedCache.LRU(6,16*1024*1024),pending=new Map(),failed=new Set(),attached=new WeakSet();
  let active=null,interval=null;
  const railPart=p=>p&&['rail','metro'].includes(p.mode);
  const samePart=(a,b)=>a&&b&&(a.lineId??null)===(b.lineId??null)&&a.from===b.from&&a.to===b.to&&(!a.line||a.line===b.line);
@@ -46,7 +46,7 @@ const RailDepartures = (() => {
  }
  function travelDate(day){return DepartureCore.japanDate(Date.parse('2027-01-08T00:00:00+09:00')+(Number(day)-1)*86400000);}
  function validityFor(key,date){return DepartureCore.validity(calendarOptions(key),date);}
- function warning(key,date){const p=profiles[key],v=validityFor(key,date);return !v.usable?`<p class="timetable-warning" role="status">여행일 시간표 갱신 필요 · ${esc(date)}<br>${p.validUntil?`기존 자료 유효 종료 ${esc(p.validUntil)} · `:''}공식 개정 자료 확인 전 열차 시각·탑승 선택을 표시하지 않아요.</p>`:'';}
+ function warning(key,date){const p=profiles[key],v=validityFor(key,date);return !v.usable?`<p class="timetable-warning" role="status">여행일 시간표 갱신 필요 · ${esc(date)}<br>${p.validUntil?`기존 자료 유효 종료 ${esc(p.validUntil)} · `:''}공식 개정 자료 확인 전 열차 시각·탑승 선택을 표시하지 않아요.</p>`:`<p class="timetable-confidence">${esc(v.label)} · ${esc(date)}<br>예정 시각 · 실시간 지연 미반영</p>`;}
  function notice(day,leg){return keysFor(leg).map(key=>warning(key,travelDate(day))).join('');}
  function shell(key,serviceDate){
   const p=profiles[key],u=links(p),info=typeof RAIL_LINES==='object'?RAIL_LINES[p.lineId]:null;
@@ -63,12 +63,12 @@ const RailDepartures = (() => {
    <div class="departure-secondary">${u.timetable?`<a href="${esc(u.timetable)}" target="_blank" rel="noopener noreferrer">공식 시간표 ↗</a>`:''}${u.status?`<a href="${esc(u.status)}" target="_blank" rel="noopener noreferrer">운행 정보 ↗</a>`:''}<a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>
    <details class="departure-source"><summary>시간표 출처·기준</summary><div>${sourceHtml(p)}</div></details>`;
  }
- function sectionHtml(key,serviceDate){const p=profiles[key];return `<section class="station-departures" data-service-date="${esc(serviceDate)}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,serviceDate)}</section>`;}
+ function sectionHtml(key,serviceDate,referenceAt){const p=profiles[key];return `<section class="station-departures" data-reference-at="${Number.isFinite(referenceAt)?referenceAt:''}" data-service-date="${esc(serviceDate)}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,serviceDate)}</section>`;}
  function html(day,leg,part){
   if(!supported(day,leg,part))return '';
   const keys=keysFor(leg,part);
   const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+p.from+' → '+p.to)}</option>`;}).join('')}</select><small>선택한 역의 현재 시각 기준 · 환승 연결편 검색은 길찾기에서 확인</small></label>`:'';
-  return `<div class="departure-panel">${select}${sectionHtml(keys[0],travelDate(day))}</div>`;
+  return `<div class="departure-panel">${select}${sectionHtml(keys[0],travelDate(leg.dayNumber||day),leg.departureAt)}</div>`;
  }
  async function loadData(key,force=false){
   const file=profiles[key]?.file;if(!file)return null;
@@ -78,12 +78,10 @@ const RailDepartures = (() => {
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),15000);
   const promise=(async()=>{
    try{
-    const response=await fetch(`${file}?v=${VERSION}`,{signal:controller.signal,cache:'no-cache'});
-    if(!response.ok)throw new Error('timetable unavailable');
-    const data=await response.json();
+    const data=await TravelStore.readJson(`${file}?v=${VERSION}`,{timeout:15000});
     if(data.schemaVersion!==2||!data.profiles||typeof data.profiles!=='object')throw new Error('invalid timetable');
     if(!data.profiles[key]||!['Weekday','SaturdayHoliday','Saturday','SundayHoliday','Daily'].some(k=>Array.isArray(data.profiles[key][k])))throw new Error('missing timetable');
-    loaded.set(file,data);return data;
+    loaded.set(file,data,JSON.stringify(data).length*2);TravelStore.trimTimetables().catch(()=>{});return data;
    }catch(_){failed.add(file);return null;}
    finally{clearTimeout(timeout);pending.delete(file);}
   })();
@@ -101,20 +99,26 @@ const RailDepartures = (() => {
  function renderTrains(section,now){
   const key=section.dataset.departureProfile,p=profiles[key];if(!p)return;
   section._rideTrains=[];
+  const serviceNow=globalThis.RideCore?.serviceDateForNow(now)||DepartureCore.japanDate(now);if(!section.dataset.queryMode)section.dataset.queryMode=[DepartureCore.japanDate(now),serviceNow].includes(section.dataset.serviceDate)?'current':'fixed';if(section.dataset.queryMode==='current')section.dataset.serviceDate=serviceNow;
   const body=section.querySelector('[data-departure-body]'),clock=section.querySelector('[data-departure-clock]'),local=new Date(now+9*3600000);
   clock.textContent=`지금 기준 · ${p.country==='KR'?'한국':'일본'} ${local.toISOString().slice(5,10).replace('-','/')} ${local.toISOString().slice(11,19)}`;
+  const confidence=section.querySelector('.timetable-confidence');if(confidence)confidence.textContent=validityFor(key,section.dataset.serviceDate).label+' · '+section.dataset.serviceDate+' · 예정 시각·실시간 지연 미반영';
   if(!validityFor(key,section.dataset.serviceDate).usable){body.setAttribute('aria-busy','false');stateMessage(body,'travel-invalid','여행일 시간표 갱신 필요 · 해당 여행일 열차는 선택할 수 없어요.');return;}
   const data=loaded.get(p.file),schedules=data?.profiles?.[key];
   if(!schedules){body.setAttribute('aria-busy',String(!failed.has(p.file)));if(failed.has(p.file))stateMessage(body,'error','시간표를 불러오지 못했어요.',true);return;}
   body.setAttribute('aria-busy','false');
-  const date=DepartureCore.japanDate(now),calendarFrom=p.calendarFrom||manifest.calendarFrom,calendarThrough=p.calendarThrough||manifest.calendarThrough;
+  const selectedDate=section.dataset.serviceDate,currentServiceDate=globalThis.RideCore?.serviceDateForNow(now)||DepartureCore.japanDate(now),future=section.dataset.queryMode!=='current';
+  const reference=Number(section.dataset.referenceAt),queryNow=future?(reference>0?reference-60000:Date.parse(selectedDate+'T07:00:00+09:00')):now;
+  section.querySelector('.departure-heading strong').textContent=future?'여행일 기준 참고 시간표':'현재 다음 열차';
+  clock.textContent=future?`${selectedDate} 일정 출발 ${DepartureCore.formatTime(queryNow+60000)} 기준 · 예정 시각 · 실시간 지연 미반영`:`현재 ${p.country==='KR'?'한국':'일본'} ${local.toISOString().slice(5,10).replace('-','/')} ${local.toISOString().slice(11,19)} · 예정 시각 · 실시간 지연 미반영`;
+  const date=DepartureCore.japanDate(queryNow),calendarFrom=p.calendarFrom||manifest.calendarFrom,calendarThrough=p.calendarThrough||manifest.calendarThrough;
   if(calendarFrom&&date<calendarFrom){stateMessage(body,'out-of-range','해당 날짜에 적용할 시간표 자료가 없어요. 공식 시간표를 확인해 주세요.');return;}
   const options={limit:3,...calendarOptions(key)};
-  const trains=DepartureCore.nextTrains(schedules,now,options);
+  const trains=DepartureCore.nextTrains(schedules,queryNow,options);
   if(!trains.length){stateMessage(body,'empty',p.unavailableReason||(calendarThrough&&date>calendarThrough?'해당 날짜에 적용할 시간표 자료가 없어요. 공식 시간표를 확인해 주세요.':'현재 적용할 다음 열차 시각을 확인할 수 없어요. 공식 시간표를 확인해 주세요.'));return;}
   section._rideTrains=trains;
   const first=trains[0],upcomingArrival=first.arrivalAt!==null&&first.arrivalAt>now,eventAt=upcomingArrival?first.arrivalAt:first.departureAt,eventLabel=upcomingArrival?`${p.from}역 도착 예정`:`${p.from}역 출발 예정`;
-  const signature=DepartureCore.renderSignature(trains,now,upcomingArrival);
+  const signature=DepartureCore.renderSignature(trains,now,upcomingArrival)+'|'+future;
   if(body.dataset.signature!==signature){
    body.dataset.signature=signature;
    body.innerHTML=`<div class="departure-next" aria-label="다음 열차 시간표"><div class="departure-next-time"><small>${esc(eventLabel)}</small><strong>${timeLabel(eventAt,now)}</strong></div><div class="departure-next-count"><small>${upcomingArrival?'도착':'출발'}까지</small><b data-departure-countdown="${eventAt}" role="timer" aria-live="off"></b></div></div>
@@ -125,7 +129,7 @@ const RailDepartures = (() => {
     <div class="departure-board-actions"><button type="button" data-ride-next="0">${timeLabel(first.departureAt,now)} 이 열차 탑승</button></div>
     <div class="departure-calendar">${calendarNames[first.calendar]||'운행일별'} 시간표 · 초 단위 자동 갱신${first.serviceDate!==date?' · '+first.serviceDate.slice(5).replace('-','/')+' 운행분':''}</div>`;
   }
-  body.querySelectorAll('[data-departure-countdown]').forEach(el=>{el.textContent=DepartureCore.formatCountdown(Number(el.dataset.departureCountdown)-now);});
+  body.querySelectorAll('[data-departure-countdown]').forEach(el=>{el.textContent=future?'여행일 참고':DepartureCore.formatCountdown(Number(el.dataset.departureCountdown)-now);});
  }
  function paint(){if(!active?.element.isConnected||document.hidden)return;const now=Date.now();active.element.querySelectorAll('[data-departure-profile]').forEach(section=>renderTrains(section,now));}
  function resumeTimer(){clearInterval(interval);interval=null;if(active&&!document.hidden){paint();interval=setInterval(paint,1000);}}
@@ -159,7 +163,7 @@ const RailDepartures = (() => {
   element.querySelectorAll('[data-departure-profile]').forEach(section=>refresh(section.dataset.departureProfile));
  }
  function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else unmount();});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
- function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,...p.calendarOptions};}
+ function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
- return {notice,validityFor,travelDate,supported,html,attach,keysFor,keyFor,calendarOptions,getSchedule,typeLabel:type=>trainTypes[type]||type||'보통'};
+ return {notice,validityFor,travelDate,supported,html,attach,keysFor,keyFor,calendarOptions,getSchedule,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
 })();
