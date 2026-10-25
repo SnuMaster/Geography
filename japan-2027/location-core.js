@@ -22,7 +22,8 @@
     if(Number.isFinite(options.maxAdvanceM)&&alongM-previous.alongM>options.maxAdvanceM)continue;
    }
    const alignment=heading===null?0:1-Math.cos(rad(bearing(s.a,s.b)-heading));
-   const score=p.distanceM+alignment*90+(previous&&s.legIndex<previous.legIndex?70:0);
+   const planned=s.leg.departureAt,late=Number.isFinite(options.now)&&Number.isFinite(planned)?Math.min(30,Math.abs(options.now-planned)/3600000*6):0;
+   const score=p.distanceM+alignment*90+(previous&&s.legIndex<previous.legIndex?70:0)+late;
    candidates.push({...p,alongM,score,legIndex:s.legIndex,leg:s.leg,part:s.part,quality:s.quality,remainingM:Math.max(0,s.totalM-alongM),progress:s.totalM?alongM/s.totalM:0});
   }
   if(!candidates.length)return {match:null,ambiguous:false,candidates:[]};
@@ -39,6 +40,16 @@
   }
   return {match:ranked[0],ambiguous:false,candidates:ranked,reason:heading!==null?'direction':'distance'};
  }
+ function validateFix(next,previous,now=Date.now()){
+  if(!next||![next.lat,next.lng,next.accuracy,next.timestamp].every(Number.isFinite)||Math.abs(next.lat)>90||Math.abs(next.lng)>180||next.accuracy<0)return {accepted:false,reason:'invalid'};
+  if(next.timestamp>now+5000)return {accepted:false,reason:'future'};
+  if(previous&&next.timestamp<=previous.timestamp)return {accepted:false,reason:'old'};
+  if(previous){const dt=(next.timestamp-previous.timestamp)/1000,dm=distance([previous.lat,previous.lng],[next.lat,next.lng]),slack=next.accuracy+previous.accuracy+100;
+   const maxSpeed=Number.isFinite(next.speed)?Math.min(350,Math.max(90,next.speed*2+30)):120;
+   if(dt>0&&dt<120&&dm>slack+maxSpeed*dt)return {accepted:false,reason:'jump'};
+  }
+  return {accepted:true,reason:next.accuracy>120?'uncertain':'accepted'};
+ }
  function assess(match,fix,now=Date.now()){
   if(!fix||!Number.isFinite(fix.timestamp)||now-fix.timestamp>30000)return {kind:'stale',label:'위치 갱신 대기'};
   if(!Number.isFinite(fix.accuracy)||fix.accuracy>120)return {kind:'uncertain',label:'정확도 낮음 · 경로 판정 보류'};
@@ -47,5 +58,5 @@
   const threshold={walk:70,transfer:90,metro:180,rail:180,bus:250,taxi:250}[match.part.mode]||120;
   return match.distanceM>threshold+fix.accuracy?{kind:'off',label:'선택한 경로에서 떨어져 있어요'}:{kind:'on',label:'선택한 경로 근처에 있어요'};
  }
- return {distance,project,build,nearest,resolve,bearing,assess,quality};
+ return {distance,project,build,nearest,resolve,bearing,assess,quality,validateFix};
 });

@@ -1,0 +1,1317 @@
+{
+  "baselineCommit": "7c9f511fab378d4101782b72e0395774ebb04a7b",
+  "counts": {
+    "days": 22,
+    "variants": 25,
+    "stops": 263,
+    "legs": 238,
+    "railParts": 144
+  },
+  "admission": {
+    "min": 36400,
+    "max": 51950
+  },
+  "errors": [],
+  "warnings": [
+    {
+      "type": "route-gap",
+      "id": "d12-main-leg-2:0",
+      "detail": 6762
+    },
+    {
+      "type": "route-gap",
+      "id": "d12-main-leg-3:0",
+      "detail": 12017
+    },
+    {
+      "type": "route-gap",
+      "id": "d18-main-leg-4:0",
+      "detail": 2645
+    },
+    {
+      "type": "endpoint-offset",
+      "id": "d21-main-leg-5",
+      "detail": "출발 23024m / 도착 17314m"
+    },
+    {
+      "type": "route-gap",
+      "id": "d22-main-leg-6:0",
+      "detail": 10683
+    }
+  ],
+  "schematic": [
+    {
+      "id": "d1-main-leg-2:0",
+      "day": 1,
+      "variant": "main",
+      "from": "대구국제공항",
+      "to": "나리타공항 제2터미널",
+      "mode": "flight",
+      "source": "공항·항구 간 개략 항로. 실제 운항 궤적·항해 경로가 아님."
+    },
+    {
+      "id": "d1-main-leg-3:0",
+      "day": 1,
+      "variant": "main",
+      "from": "나리타공항 제2터미널",
+      "to": "공항제2빌딩역",
+      "mode": "transfer",
+      "source": "실내 통로 대표 연결 · 출입구 안내 우선"
+    },
+    {
+      "id": "d1-main-leg-8:2",
+      "day": 1,
+      "variant": "main",
+      "from": "우에노",
+      "to": "우에노",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d1-main-leg-11:2",
+      "day": 1,
+      "variant": "main",
+      "from": "우에노",
+      "to": "우에노",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d3-main-leg-1:4",
+      "day": 3,
+      "variant": "main",
+      "from": "오차노미즈",
+      "to": "오차노미즈",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d3-main-leg-2:0",
+      "day": 3,
+      "variant": "main",
+      "from": "JR 무사시코가네이역",
+      "to": "에도 도쿄 건축박물관",
+      "mode": "bus",
+      "source": "OSM 도로 · 지정 경유지 반영 버스 경로 추정"
+    },
+    {
+      "id": "d3-main-leg-4:0",
+      "day": 3,
+      "variant": "main",
+      "from": "무사시노 사보 에도 도쿄 건축박물관점",
+      "to": "JR 무사시코가네이역",
+      "mode": "bus",
+      "source": "OSM 도로 · 지정 경유지 반영 버스 경로 추정"
+    },
+    {
+      "id": "d3-main-leg-9:2",
+      "day": 3,
+      "variant": "main",
+      "from": "신주쿠",
+      "to": "신주쿠",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d4-main-leg-1:2",
+      "day": 4,
+      "variant": "main",
+      "from": "이케부쿠로",
+      "to": "이케부쿠로",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d4-main-leg-8:2",
+      "day": 4,
+      "variant": "main",
+      "from": "이케부쿠로",
+      "to": "이케부쿠로",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d5-main-leg-8:2",
+      "day": 5,
+      "variant": "main",
+      "from": "우에노",
+      "to": "우에노",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d6-main-leg-6:2",
+      "day": 6,
+      "variant": "main",
+      "from": "요요기",
+      "to": "요요기",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d7-main-leg-1:2",
+      "day": 7,
+      "variant": "main",
+      "from": "우에노",
+      "to": "우에노",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d7-main-leg-1:4",
+      "day": 7,
+      "variant": "main",
+      "from": "도쿄",
+      "to": "도쿄",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d7-main-leg-1:6",
+      "day": 7,
+      "variant": "main",
+      "from": "오후나",
+      "to": "오후나",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d7-main-leg-8:2",
+      "day": 7,
+      "variant": "main",
+      "from": "오후나",
+      "to": "오후나",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d7-main-leg-8:4",
+      "day": 7,
+      "variant": "main",
+      "from": "도쿄",
+      "to": "도쿄",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d8-main-leg-3:0",
+      "day": 8,
+      "variant": "main",
+      "from": "가와구치코역",
+      "to": "오이시공원",
+      "mode": "bus",
+      "source": "OSM 도로 · 지정 경유지 반영 버스 경로 추정"
+    },
+    {
+      "id": "d8-main-leg-5:0",
+      "day": 8,
+      "variant": "main",
+      "from": "하나카페 키쿄",
+      "to": "가와구치코역",
+      "mode": "bus",
+      "source": "OSM 도로 · 지정 경유지 반영 버스 경로 추정"
+    },
+    {
+      "id": "d8-brewery-leg-1:4",
+      "day": 8,
+      "variant": "brewery",
+      "from": "오차노미즈",
+      "to": "오차노미즈",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d8-brewery-leg-1:6",
+      "day": 8,
+      "variant": "brewery",
+      "from": "다치카와",
+      "to": "다치카와",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d8-brewery-leg-5:2",
+      "day": 8,
+      "variant": "brewery",
+      "from": "다치카와",
+      "to": "다치카와",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d8-brewery-leg-5:4",
+      "day": 8,
+      "variant": "brewery",
+      "from": "오차노미즈",
+      "to": "오차노미즈",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d10-main-leg-3:2",
+      "day": 10,
+      "variant": "main",
+      "from": "에비스",
+      "to": "에비스",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d11-main-leg-2:2",
+      "day": 11,
+      "variant": "main",
+      "from": "아사쿠사바시",
+      "to": "아사쿠사바시",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d11-main-leg-5:2",
+      "day": 11,
+      "variant": "main",
+      "from": "모리시타",
+      "to": "모리시타",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d11-no-concert-leg-2:2",
+      "day": 11,
+      "variant": "no-concert",
+      "from": "아사쿠사바시",
+      "to": "아사쿠사바시",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d11-no-concert-leg-5:2",
+      "day": 11,
+      "variant": "no-concert",
+      "from": "다이몬",
+      "to": "다이몬",
+      "mode": "transfer",
+      "source": "역내 통로 대표 연결(개략)"
+    },
+    {
+      "id": "d12-main-leg-1:0",
+      "day": 12,
+      "variant": "main",
+      "from": "STAY&GO 이리야키타",
+      "to": "우에노역",
+      "mode": "metro",
+      "source": "개략선 · 호텔·역·공항 대표점 연결. 실제 선로·출입구 미검증."
+    },
+    {
+      "id": "d12-main-leg-2:0",
+      "day": 12,
+      "variant": "main",
+      "from": "우에노역",
+      "to": "하마마쓰초역",
+      "mode": "rail",
+      "source": "개략선 · 호텔·역·공항 대표점 연결. 실제 선로·출입구 미검증."
+    },
+    {
+      "id": "d12-main-leg-3:0",
+      "day": 12,
+      "variant": "main",
+      "from": "하마마쓰초역",
+      "to": "하네다공항 제1터미널",
+      "mode": "rail",
+      "source": "개략선 · 호텔·역·공항 대표점 연결. 실제 선로·출입구 미검증."
+    },
+    {
+      "id": "d12-main-leg-6:0",
+      "day": 12,
+      "variant": "main",
+      "from": "하네다 T1 탑승구",
+      "to": "이타미공항",
+      "mode": "flight",
+      "source": "공항·항구 간 개략 항로. 실제 운항 궤적·항해 경로가 아님."
+    },
+    {
+      "id": "d12-main-leg-8:0",
+      "day": 12,
+      "variant": "main",
+      "from": "아베노바시·덴노지",
+      "to": "호텔 주오 오아시스",
+      "mode": "metro",
+      "source": "개략선 · 호텔·역·공항 대표점 연결. 실제 선로·출입구 미검증."
+    },
+    {
+      "id": "d13-main-leg-1:2",
+      "day": 13,
+      "variant": "main",
+      "from": "淀屋橋",
+      "to": "淀屋橋",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d13-main-leg-11:2",
+      "day": 13,
+      "variant": "main",
+      "from": "淀屋橋",
+      "to": "淀屋橋",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d14-main-leg-3:2",
+      "day": 14,
+      "variant": "main",
+      "from": "京都",
+      "to": "京都",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d14-main-leg-6:2",
+      "day": 14,
+      "variant": "main",
+      "from": "桂",
+      "to": "桂",
+      "mode": "transfer",
+      "source": "계속 승차하는 동일 역의 선형 경계 대표 연결"
+    },
+    {
+      "id": "d14-no-yamazaki-leg-1:4",
+      "day": 14,
+      "variant": "no-yamazaki",
+      "from": "京都",
+      "to": "京都",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d14-no-yamazaki-leg-3:2",
+      "day": 14,
+      "variant": "no-yamazaki",
+      "from": "京都",
+      "to": "京都",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d14-no-yamazaki-leg-6:2",
+      "day": 14,
+      "variant": "no-yamazaki",
+      "from": "桂",
+      "to": "桂",
+      "mode": "transfer",
+      "source": "계속 승차하는 동일 역의 선형 경계 대표 연결"
+    },
+    {
+      "id": "d15-main-leg-1:2",
+      "day": 15,
+      "variant": "main",
+      "from": "梅田",
+      "to": "大阪梅田",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d16-main-leg-1:2",
+      "day": 16,
+      "variant": "main",
+      "from": "難波",
+      "to": "大阪難波",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d16-main-leg-1:4",
+      "day": 16,
+      "variant": "main",
+      "from": "大阪上本町",
+      "to": "大阪上本町",
+      "mode": "transfer",
+      "source": "계속 승차하는 동일 역의 선형 경계 대표 연결"
+    },
+    {
+      "id": "d16-main-leg-1:6",
+      "day": 16,
+      "variant": "main",
+      "from": "布施",
+      "to": "布施",
+      "mode": "transfer",
+      "source": "계속 승차하는 동일 역의 선형 경계 대표 연결"
+    },
+    {
+      "id": "d16-main-leg-11:2",
+      "day": 16,
+      "variant": "main",
+      "from": "布施",
+      "to": "布施",
+      "mode": "transfer",
+      "source": "계속 승차하는 동일 역의 선형 경계 대표 연결"
+    },
+    {
+      "id": "d16-main-leg-11:4",
+      "day": 16,
+      "variant": "main",
+      "from": "大阪上本町",
+      "to": "大阪上本町",
+      "mode": "transfer",
+      "source": "계속 승차하는 동일 역의 선형 경계 대표 연결"
+    },
+    {
+      "id": "d16-main-leg-11:6",
+      "day": 16,
+      "variant": "main",
+      "from": "大阪難波",
+      "to": "難波",
+      "mode": "transfer",
+      "source": "역내 연결 개략. 실제 출구·통로는 현장 안내 확인"
+    },
+    {
+      "id": "d18-main-leg-1:0",
+      "day": 18,
+      "variant": "main",
+      "from": "호텔 주오 오아시스",
+      "to": "덴노지역·아베노바시 공항버스",
+      "mode": "metro",
+      "source": "개략선 · 호텔·역·공항 대표점 연결. 실제 선로·출입구 미검증."
+    },
+    {
+      "id": "d18-main-leg-3:0",
+      "day": 18,
+      "variant": "main",
+      "from": "이타미공항 남터미널 ANA",
+      "to": "후쿠오카공항 국내선",
+      "mode": "flight",
+      "source": "공항·항구 간 개략 항로. 실제 운항 궤적·항해 경로가 아님."
+    },
+    {
+      "id": "d18-main-leg-4:0",
+      "day": 18,
+      "variant": "main",
+      "from": "후쿠오카공항 국내선",
+      "to": "하카타역",
+      "mode": "metro",
+      "source": "개략선 · 호텔·역·공항 대표점 연결. 실제 선로·출입구 미검증."
+    }
+  ],
+  "timetableProfiles": {
+    "current-reference": [
+      {
+        "key": "skyliner-naritaairportterminal2and3-keiseiueno",
+        "line": "게이세이 스카이라이너 · 지정석",
+        "from": "나리타공항 제2 ·제3 터미널",
+        "to": "게이세이 우에노",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "metro-ueno-iriya",
+        "line": "히비야선",
+        "from": "우에노",
+        "to": "이리야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "metro-iriya-ueno",
+        "line": "히비야선",
+        "from": "이리야",
+        "to": "우에노",
+        "sourceDate": "2026-09-18",
+        "validUntil": null
+      },
+      {
+        "key": "jr-ueno-tokyo",
+        "line": "JR 우에노도쿄선",
+        "from": "우에노",
+        "to": "도쿄",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-tokyo-ueno",
+        "line": "JR 우에노도쿄선",
+        "from": "도쿄",
+        "to": "우에노",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-iriya-akihabara",
+        "line": "히비야선",
+        "from": "이리야",
+        "to": "아키하바라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuosobulocal-akihabara-ochanomizu",
+        "line": "주오·소부 각역정차",
+        "from": "아키하바라",
+        "to": "오차노미즈",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuorapid-ochanomizu-musashikoganei",
+        "line": "주오 선 쾌속",
+        "from": "오차노미즈",
+        "to": "무사시코가네이",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuorapid-musashikoganei-kichijoji",
+        "line": "주오 선 쾌속",
+        "from": "무사시코가네이",
+        "to": "기치조지",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "keio-inokashira-kichijoji-shimokitazawa",
+        "line": "이노카시라선",
+        "from": "기치조지",
+        "to": "시모키타자와",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "odakyu-odawara-shimokitazawa-shinjuku",
+        "line": "오다와라 선",
+        "from": "시모키타자와",
+        "to": "신주쿠",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-shinjuku-uguisudani",
+        "line": "야마노테 선",
+        "from": "신주쿠",
+        "to": "우구이스다니",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-uguisudani-ikebukuro",
+        "line": "야마노테 선",
+        "from": "우구이스다니",
+        "to": "이케부쿠로",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tobu-tojo-ikebukuro-kawagoe",
+        "line": "도조선",
+        "from": "이케부쿠로",
+        "to": "가와고에",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tobu-tojo-kawagoe-ikebukuro",
+        "line": "도조선",
+        "from": "가와고에",
+        "to": "이케부쿠로",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-ikebukuro-okachimachi",
+        "line": "야마노테 선",
+        "from": "이케부쿠로",
+        "to": "오카치마치",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-iriya-tsukiji",
+        "line": "히비야선",
+        "from": "이리야",
+        "to": "쓰키지",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-chiyoda-kasumigaseki-nijubashimae",
+        "line": "치요다선",
+        "from": "가스미가세키",
+        "to": "니주바시마에<마루노우치선>",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-chiyoda-nijubashimae-omotesando",
+        "line": "치요다선",
+        "from": "니주바시마에<마루노우치선>",
+        "to": "오모테산도",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-ginza-omotesando-ueno",
+        "line": "긴자선",
+        "from": "오모테산도",
+        "to": "우에노",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuosobulocal-akihabara-yoyogi",
+        "line": "주오·소부 각역정차",
+        "from": "아키하바라",
+        "to": "요요기",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "toei-shinjuku-shinjuku-shinjukusanchome",
+        "line": "신주쿠 선",
+        "from": "신주쿠",
+        "to": "신주쿠 3초메",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "toei-shinjuku-shinjukusanchome-shinjuku",
+        "line": "신주쿠 선",
+        "from": "신주쿠 3초메",
+        "to": "신주쿠",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "toei-oedo-tochomae-yoyogi",
+        "line": "오에도 선",
+        "from": "도초마에",
+        "to": "요요기",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-yoyogi-shibuya",
+        "line": "야마노테 선",
+        "from": "요요기",
+        "to": "시부야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-shibuya-uguisudani",
+        "line": "야마노테 선",
+        "from": "시부야",
+        "to": "우구이스다니",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-tokaido-tokyo-ofuna",
+        "line": "도카이도 선",
+        "from": "도쿄",
+        "to": "오후나",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yokosuka-ofuna-kamakura",
+        "line": "요코스카 선",
+        "from": "오후나",
+        "to": "가마쿠라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "enoden-enoden-kamakura-hase",
+        "line": "에노시마 전철선",
+        "from": "가마쿠라",
+        "to": "하세",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "enoden-enoden-yuigahama-shichirigahama",
+        "line": "에노시마 전철선",
+        "from": "유이가하마",
+        "to": "시치리가하마",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "enoden-enoden-shichirigahama-kamakura",
+        "line": "에노시마 전철선",
+        "from": "시치리가하마",
+        "to": "가마쿠라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yokosuka-kamakura-ofuna",
+        "line": "요코스카 선",
+        "from": "가마쿠라",
+        "to": "오후나",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-tokaido-ofuna-tokyo",
+        "line": "도카이도 선",
+        "from": "오후나",
+        "to": "도쿄",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-tokyo-okachimachi",
+        "line": "야마노테 선",
+        "from": "도쿄",
+        "to": "오카치마치",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-uguisudani-shinjuku",
+        "line": "야마노테 선",
+        "from": "우구이스다니",
+        "to": "신주쿠",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fujiexcursion-shinjuku-kawaguchiko",
+        "line": "특급 후지회유 · 직통",
+        "from": "신주쿠",
+        "to": "가와구치코",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fujiexcursion-kawaguchiko-shinjuku",
+        "line": "특급 후지회유 · 직통",
+        "from": "가와구치코",
+        "to": "신주쿠",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuorapid-ochanomizu-tachikawa",
+        "line": "주오 선 쾌속",
+        "from": "오차노미즈",
+        "to": "다치카와",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-ome-tachikawa-haijima",
+        "line": "오메 선",
+        "from": "다치카와",
+        "to": "하이지마",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-ome-haijima-tachikawa",
+        "line": "오메 선",
+        "from": "하이지마",
+        "to": "다치카와",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuorapid-tachikawa-ochanomizu",
+        "line": "주오 선 쾌속",
+        "from": "다치카와",
+        "to": "오차노미즈",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuosobulocal-ochanomizu-akihabara",
+        "line": "주오·소부 각역정차",
+        "from": "오차노미즈",
+        "to": "아키하바라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-akihabara-iriya",
+        "line": "히비야선",
+        "from": "아키하바라",
+        "to": "이리야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-iriya-nakaokachimachi",
+        "line": "히비야선",
+        "from": "이리야",
+        "to": "나카오카치마치",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-nippori-uguisudani",
+        "line": "야마노테 선",
+        "from": "닛포리",
+        "to": "우구이스다니",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-tsukiji-iriya",
+        "line": "히비야선",
+        "from": "쓰키지",
+        "to": "이리야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-uguisudani-meguro",
+        "line": "야마노테 선",
+        "from": "우구이스다니",
+        "to": "메구로",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-yamanote-meguro-ebisu",
+        "line": "야마노테 선",
+        "from": "메구로",
+        "to": "에비스",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-ebisu-roppongi",
+        "line": "히비야선",
+        "from": "에비스",
+        "to": "롯폰기",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-kamiyacho-iriya",
+        "line": "히비야선",
+        "from": "가미야초",
+        "to": "이리야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuosobulocal-ochanomizu-asakusabashi",
+        "line": "주오·소부 각역정차",
+        "from": "오차노미즈",
+        "to": "아사쿠사바시",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "toei-oedo-kuramae-morishita",
+        "line": "오에도 선",
+        "from": "구라마에",
+        "to": "모리시타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "toei-shinjuku-morishita-motoyawata",
+        "line": "신주쿠 선",
+        "from": "모리시타",
+        "to": "모토야와타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "jr-east-chuosobulocal-motoyawata-akihabara",
+        "line": "주오·소부 각역정차",
+        "from": "모토야와타",
+        "to": "아키하바라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "toei-oedo-daimon-roppongi",
+        "line": "오에도 선",
+        "from": "다이몬",
+        "to": "롯폰기",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "tokyometro-hibiya-roppongi-iriya",
+        "line": "히비야선",
+        "from": "롯폰기",
+        "to": "이리야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "day12-metro-iriya-ueno",
+        "line": "히비야선",
+        "from": "이리야",
+        "to": "우에노",
+        "sourceDate": "2026-09-18",
+        "validUntil": null
+      },
+      {
+        "key": "day12-jr-east-yamanote-ueno-hamamatsucho",
+        "line": "JR 야마노테·게이힌도호쿠선",
+        "from": "우에노",
+        "to": "하마마쓰초",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "day12-tokyomonorail-hanedaairport-hamamatsucho-hanedaairportterminal1",
+        "line": "도쿄 모노레일",
+        "from": "모노레일 하마마츠쵸",
+        "to": "하네다 공항 제1 터미널",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-tennoji-dobutsuenmae-alias",
+        "line": "미도스지선",
+        "from": "덴노지",
+        "to": "도부쓰엔마에",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-dobutsuenmae-namba",
+        "line": "미도스지선",
+        "from": "도부쓰엔마에",
+        "to": "난바",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-namba-dobutsuenmae",
+        "line": "미도스지선",
+        "from": "난바",
+        "to": "도부쓰엔마에",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-dobutsuenmae-yodoyabashi",
+        "line": "미도스지선",
+        "from": "도부쓰엔마에",
+        "to": "요도야바시",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-yodoyabashi-dobutsuenmae",
+        "line": "미도스지선",
+        "from": "요도야바시",
+        "to": "도부쓰엔마에",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-dobutsuenmae-umeda",
+        "line": "미도스지선",
+        "from": "도부쓰엔마에",
+        "to": "우메다",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-umeda-namba",
+        "line": "미도스지선",
+        "from": "우메다",
+        "to": "난바",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-umeda-dobutsuenmae",
+        "line": "미도스지선",
+        "from": "우메다",
+        "to": "도부쓰엔마에",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-tanimachi4-tenjimbashi6",
+        "line": "다니마치선",
+        "from": "다니마치 4초메",
+        "to": "덴진바시스지 6초메",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-dobutsuenmae-tennoji",
+        "line": "미도스지선",
+        "from": "도부쓰엔마에",
+        "to": "덴노지",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-tennoji-yodoyabashi",
+        "line": "미도스지선",
+        "from": "덴노지",
+        "to": "요도야바시",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-metro-dobutsuenmae-tennoji-alias",
+        "line": "미도스지선",
+        "from": "도부쓰엔마에",
+        "to": "덴노지",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-osaka-yamazaki",
+        "line": "JR 교토선",
+        "from": "오사카",
+        "to": "야마자키",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-yamazaki-kyoto",
+        "line": "JR 교토선",
+        "from": "야마자키",
+        "to": "교토",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-osaka-kyoto",
+        "line": "JR 교토선",
+        "from": "오사카",
+        "to": "교토",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-kyoto-sagaarashiyama",
+        "line": "JR 사가노선",
+        "from": "교토",
+        "to": "사가아라시야마",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-kyoto-uji",
+        "line": "JR 나라선",
+        "from": "교토",
+        "to": "우지",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-uji-kyoto",
+        "line": "JR 나라선",
+        "from": "우지",
+        "to": "교토",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-sannomiya-osaka",
+        "line": "JR 고베선",
+        "from": "산노미야",
+        "to": "오사카",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-jr-shinimamiya-morinomiya",
+        "line": "JR 오사카순환선",
+        "from": "신이마미야",
+        "to": "모리노미야",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-hankyu-arashiyama-katsura",
+        "line": "한큐 아라시야마선",
+        "from": "아라시야마",
+        "to": "가쓰라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-hankyu-katsura-osakaumeda",
+        "line": "한큐 교토선",
+        "from": "가쓰라",
+        "to": "오사카우메다",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-kintetsu-namba-nara",
+        "line": "긴테쓰 난바·나라선",
+        "from": "오사카난바",
+        "to": "긴테쓰나라",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-kintetsu-nara-namba",
+        "line": "긴테쓰 난바·나라선",
+        "from": "긴테쓰나라",
+        "to": "오사카난바",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-keihan-yodoyabashi-fushimiinari",
+        "line": "게이한 본선",
+        "from": "요도야바시",
+        "to": "후시미이나리",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-keihan-fushimiinari-chushojima",
+        "line": "게이한 본선",
+        "from": "후시미이나리",
+        "to": "주쇼지마",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-keihan-fushimimomoyama-kiyomizugojo",
+        "line": "게이한 본선",
+        "from": "후시미모모야마",
+        "to": "기요미즈고조",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-keihan-gionshijo-yodoyabashi",
+        "line": "게이한 본선",
+        "from": "기온시조",
+        "to": "요도야바시",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-hanshin-umeda-sumiyoshi",
+        "line": "한신 본선",
+        "from": "오사카우메다",
+        "to": "스미요시",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "kansai-hanshin-sumiyoshi-motomachi",
+        "line": "한신 본선",
+        "from": "스미요시",
+        "to": "모토마치",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-airport",
+        "line": "후쿠오카 공항선",
+        "from": "후쿠오카공항",
+        "to": "하카타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-nakasu-akasaka",
+        "line": "후쿠오카 공항선",
+        "from": "나카스카와바타",
+        "to": "아카사카",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-nakasu-hakata",
+        "line": "후쿠오카 공항선",
+        "from": "나카스카와바타",
+        "to": "하카타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-hakata-ohori",
+        "line": "후쿠오카 공항선",
+        "from": "하카타",
+        "to": "오호리코엔",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-akasaka-hakata",
+        "line": "후쿠오카 공항선",
+        "from": "아카사카",
+        "to": "하카타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-nishijin-hakata",
+        "line": "후쿠오카 공항선",
+        "from": "니시진",
+        "to": "하카타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-hakata-nakasu",
+        "line": "후쿠오카 공항선",
+        "from": "하카타",
+        "to": "나카스카와바타",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "fukuoka-hakata-gion",
+        "line": "후쿠오카 공항선",
+        "from": "하카타",
+        "to": "기온",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      },
+      {
+        "key": "korail-busan-dongdaegu",
+        "line": "KTX 경부고속선",
+        "from": "부산",
+        "to": "동대구",
+        "sourceDate": "2026-10-25",
+        "validUntil": null
+      }
+    ],
+    "expired": [
+      {
+        "key": "toei-asakusa-asakusa-oshiage",
+        "line": "아사쿠사 선",
+        "from": "아사쿠사",
+        "to": "오시아게",
+        "sourceDate": "2026-10-25",
+        "validUntil": "2026-11-20"
+      },
+      {
+        "key": "toei-asakusa-oshiage-asakusa",
+        "line": "아사쿠사 선",
+        "from": "오시아게",
+        "to": "아사쿠사",
+        "sourceDate": "2026-10-25",
+        "validUntil": "2026-11-20"
+      },
+      {
+        "key": "toei-asakusa-asakusabashi-kuramae",
+        "line": "아사쿠사 선",
+        "from": "아사쿠사바시",
+        "to": "구라마에",
+        "sourceDate": "2026-10-25",
+        "validUntil": "2026-11-20"
+      },
+      {
+        "key": "toei-asakusa-kuramae-daimon",
+        "line": "아사쿠사 선",
+        "from": "구라마에",
+        "to": "다이몬",
+        "sourceDate": "2026-10-25",
+        "validUntil": "2026-11-20"
+      }
+    ]
+  },
+  "usedRailParts": 144
+}

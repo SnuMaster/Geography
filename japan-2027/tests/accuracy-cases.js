@@ -8,7 +8,8 @@
  const fare={currency:'JPY',min:180,passEligible:true,passExtraMin:0};
  test('1 · 항공·선박·KTX 원래 통화와 금액 / 전체 여정 패스 전환',()=>{
   let count=0;for(const [key,legs] of Object.entries(routeDays))for(const leg of legs){if(!leg)continue;const n=Number(key.split('-')[0]),q=Fare.quote(leg.fare,leg,{day:n,passEnabled:true});
-   const nonTokyo=n>11||leg.fare.currency!=='JPY'||leg.parts.some(p=>['flight','ferry'].includes(p.mode))||!leg.parts.some(p=>/^(TokyoMetro\.|Toei\.)/.test(p.lineId||''));
+   // Jan19 (DAY12) still contains Tokyo subway before flying; eligibility is a line property, not a day-number cutoff.
+   const nonTokyo=leg.fare.currency!=='JPY'||leg.parts.some(p=>['flight','ferry'].includes(p.mode))||!leg.parts.some(p=>/^(TokyoMetro\.|Toei\.)/.test(p.lineId||''));
    if(nonTokyo){check(q.amount===leg.fare.min,key+' '+leg.from+' 금액 변형');check(q.currency===leg.fare.currency,'통화 변형');count++;}
   }return count+'개 비대상 구간 보존';
  });

@@ -1,0 +1,37 @@
+name: Japan travel QA
+on:
+  push:
+    branches: [main, codex/japan-final-qa]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: japan-2027/tests/package-lock.json
+      - name: Pure regressions and all-itinerary integrity
+        run: |
+          node --test tests/*.test.cjs
+          node scripts/japan-qa.cjs
+          for file in japan-2027/*.js japan-2027/tests/*.js; do node --check "$file"; done
+      - name: Install browser test dependencies
+        run: |
+          npm ci --prefix japan-2027/tests
+          cd japan-2027/tests
+          npx playwright install --with-deps chromium
+      - name: Accuracy, state, mobile and integrated browser suites
+        run: node japan-2027/tests/ci-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: japan-qa-screens
+          path: qa-*.png
+          if-no-files-found: ignore

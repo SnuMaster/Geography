@@ -53,4 +53,5 @@
    }
   }catch(e){result('검증 실행',false,e.message);}finally{$('#run').disabled=false;$('#status').dataset.complete='true';}
  };
+ $('#run').disabled=false;$('#run').dataset.ready='true';
 })();
