@@ -74,7 +74,7 @@ const DayOneDepartures = (() => {
   const trains=DepartureCore.nextTrains(data.profiles[key],now,{limit:3,holidays:data.holidays,yearEndHoliday:true}).filter(train=>train.serviceDate>=data.calendarFrom&&train.serviceDate<=data.calendarThrough);
   if(!trains.length){body.innerHTML='<p class="departure-error" role="status">다음 열차 시각을 확인할 수 없어요. 공식 시간표를 확인해 주세요.</p>';return;}
   const first=trains[0],upcomingArrival=first.arrivalAt!==null&&first.arrivalAt>now,eventAt=upcomingArrival?first.arrivalAt:first.departureAt,eventLabel=upcomingArrival?`${p.from}역 도착 예정`:`${p.from}역 출발 예정`;
-  const signature=trains.map(t=>t.id+'|'+t.departureAt).join(',')+'|'+upcomingArrival;
+  const signature=DepartureCore.japanDate(now)+'|'+trains.map(t=>t.id+'|'+t.departureAt).join(',')+'|'+upcomingArrival;
   if(body.dataset.signature!==signature){
    body.dataset.signature=signature;
    body.innerHTML=`<div class="departure-next" aria-label="다음 열차 시간표"><div class="departure-next-time"><small>${eventLabel}</small><strong>${timeLabel(eventAt,now)}</strong></div><div class="departure-next-count"><small>${upcomingArrival?'도착':'출발'}까지</small><b data-departure-countdown="${eventAt}" role="timer" aria-live="off"></b></div></div>
