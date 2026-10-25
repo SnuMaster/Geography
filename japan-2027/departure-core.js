@@ -84,6 +84,21 @@
     return date;
   }
 
+  function validity(options={}, date) {
+    const validFrom=[options.validFrom,options.calendarFrom].filter(Boolean).sort().at(-1)||null;
+    const validUntil=[options.validUntil,options.calendarThrough].filter(Boolean).sort()[0]||null;
+    const usable=dateStart(date)!==null&&(!validFrom||date>=validFrom)&&(!validUntil||date<=validUntil);
+    return {usable,validFrom,validUntil,sourceDate:options.sourceDate||null,label:usable?'':'여행일 시간표 갱신 필요'};
+  }
+  function timeLabel(epoch,now){
+    const date=japanDate(epoch),today=japanDate(now);
+    if(!date)return '—';
+    return (date===today?'':date===japanDate(now+DAY)?'내일 ':date.slice(5).replace('-','/')+' ')+formatTime(epoch);
+  }
+  function renderSignature(trains, now, phase='') {
+    return japanDate(now)+'|'+trains.map(t=>t.id+'|'+t.departureAt).join(',')+'|'+phase;
+  }
+
   function nextTrains(schedules, now, options = {}) {
     if (!schedules || !Number.isFinite(now)) return [];
     const boundary = Number.isInteger(options.serviceDayHour) && options.serviceDayHour >= 0 && options.serviceDayHour <= 6 ? options.serviceDayHour : 3;
@@ -97,8 +112,7 @@
     for (let offset = -1; offset <= lookAhead; offset++) {
       const start = today + offset * DAY;
       const serviceDate = japanDate(start);
-      if (options.calendarFrom && serviceDate < options.calendarFrom) continue;
-      if (options.calendarThrough && serviceDate > options.calendarThrough) continue;
+      if (!validity(options,serviceDate).usable) continue;
       const serviceWeekday = new Date(start + JST).getUTCDay();
       const calendar = scheduleCalendar(schedules, serviceDate, options);
       const records = schedules[calendar];
@@ -118,7 +132,7 @@
         const record = override ? { ...baseline, ...override } : baseline;
         if (record.cancelled === true) continue;
         if (record.validFrom && serviceDate < record.validFrom) continue;
-        if (record.validThrough && serviceDate > record.validThrough) continue;
+        if ((record.validThrough && serviceDate > record.validThrough)||(record.validUntil && serviceDate > record.validUntil)) continue;
         if (Array.isArray(record.daysOfWeek) && !record.daysOfWeek.includes(serviceWeekday)) continue;
         if (Array.isArray(record.excludedDates) && record.excludedDates.includes(serviceDate)) continue;
         if (Array.isArray(record.operatingDates) && !record.operatingDates.includes(serviceDate)) continue;
@@ -161,5 +175,5 @@
     return results.sort((a, b) => a.departureAt - b.departureAt || String(a.id || '').localeCompare(String(b.id || ''))).slice(0, limit);
   }
 
-  return Object.freeze({ parseTime, japanDate, calendarFor, formatTime, formatCountdown, nextTrains });
+  return Object.freeze({validity,timeLabel,renderSignature, parseTime, japanDate, calendarFor, formatTime, formatCountdown, nextTrains });
 });

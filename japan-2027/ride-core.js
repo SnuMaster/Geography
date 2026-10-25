@@ -106,7 +106,7 @@
   function trainsForDate(schedules, serviceDate, options = {}) {
     if (!schedules || typeof schedules !== 'object' || !DepartureCore) return [];
     const start = dateStart(serviceDate);
-    if (start === null || (options.calendarFrom && serviceDate < options.calendarFrom) || (options.calendarThrough && serviceDate > options.calendarThrough)) return [];
+    if (start === null || !DepartureCore.validity(options, serviceDate).usable) return [];
     const calendar = calendarFor(schedules, serviceDate, options), records = schedules[calendar];
     if (!Array.isArray(records)) return [];
     const boundary = boundaryFor(options), weekday = new Date(start + JST).getUTCDay(), overrides = new Map(), seen = new Set();
@@ -124,7 +124,7 @@
       if (override && !Array.isArray(override.stops) && Array.isArray(baseline.stops) && ['departure', 'destinationArrival', 'destinationDeparture'].some(key => Object.hasOwn(override, key) && override[key] !== baseline[key])) {
         record = {...record, stops: baseline.stops.map(stop => ({...stop, arrival: null, departure: null, time: null})), stopTimeBasis: 'partial', stopTimeNote: '날짜별 예외 시각이 적용된 열차예요. 확인되지 않은 중간역 시각은 표시하지 않아요.'};
       }
-      if (record.cancelled === true || (record.validFrom && serviceDate < record.validFrom) || (record.validThrough && serviceDate > record.validThrough)) continue;
+      if (record.cancelled === true || (record.validFrom && serviceDate < record.validFrom) || (record.validThrough && serviceDate > record.validThrough) || (record.validUntil && serviceDate > record.validUntil)) continue;
       if (Array.isArray(record.daysOfWeek) && !record.daysOfWeek.includes(weekday)) continue;
       if (Array.isArray(record.excludedDates) && record.excludedDates.includes(serviceDate)) continue;
       if (Array.isArray(record.operatingDates) && !record.operatingDates.includes(serviceDate)) continue;
@@ -198,19 +198,34 @@
       confirmation = {index: confirmedIndex, stop, at: adjustment.confirmedAt, ageMs: now - adjustment.confirmedAt, applied: anchor.at !== null, sourceEventKind: anchor.kind};
     }
     const shifted = value => finite(value) ? value + shift : null;
-    const stops = train.stops.map(stop => {
-      const item = {...stop, arrivalAt: shifted(stop.arrivalAt), departureAt: shifted(stop.departureAt), timeAt: shifted(stop.timeAt)};
+    const stops = train.stops.map((stop, index) => {
+      // An observed event is immutable. Delay changes only the future forecast.
+      const originalEvent = eventFor(stop);
+      const field = kind => {
+        const value=stop[kind];
+        if (!finite(value)) return null;
+        if (!confirmation) return shifted(value);
+        if (index < confirmation.index) return value;
+        if (index === confirmation.index) {
+          const anchor=confirmation.sourceEventKind==='departure'?stop.departureAt:originalEvent.at;
+          if (value === anchor) return confirmation.at;
+          if (value < anchor) return value;
+        }
+        return Math.max(confirmation.at, shifted(value));
+      };
+      const item = {...stop, arrivalAt: field('arrivalAt'), departureAt: field('departureAt'), timeAt: field('timeAt')};
       const event = eventFor(item);
       return {...item, eventAt: event.at, eventKind: event.kind};
     });
-    const departureAt = train.departureAt + shift;
-    const originalEnd = endEventFor(train, train.stops), destinationAt = shifted(originalEnd.at), destinationEventKind = originalEnd.kind;
+    const departureAt = stops[0].departureAt;
+    const originalEnd = endEventFor(train, train.stops), destinationAt = confirmation?.index===stops.length-1 ? confirmation.at : confirmation&&originalEnd.at!==null ? Math.max(confirmation.at,shifted(originalEnd.at)) : shifted(originalEnd.at), destinationEventKind = originalEnd.kind;
     const baseBasis = train.stopTimeBasis || 'partial';
     const result = {...empty, stops, departureAt, destinationAt, destinationEventKind, baseBasis, basis: confirmation || delaySeconds !== 0 ? 'manual' : baseBasis, adjustmentSeconds: shift / 1000, confirmation, elapsedMs: Math.max(0, now - departureAt)};
     if (destinationAt !== null) {
       result.remainingMs = Math.max(0, destinationAt - now);
       if (destinationAt > departureAt) result.progressFraction = clamp((now - departureAt) / (destinationAt - departureAt), 0, 1);
     }
+    if(confirmation&&result.progressFraction!==null)result.progressFraction=Math.max(result.progressFraction,confirmation.index/(stops.length-1));
     if (confirmation && !confirmation.applied) {
       // The passenger supplied a location with no corresponding source time.
       // Retain that index as the last observed position, but do not advance it
@@ -232,7 +247,7 @@
       }
       return result;
     }
-    if (now < departureAt) {
+    if (now < departureAt && (!confirmation || confirmation.index === 0)) {
       result.phase = 'waiting';
       result.nextStop = stops[0]; result.nextStopIndex = 0;
       result.nextEventAt = departureAt; result.nextEventKind = 'departure';
@@ -254,17 +269,20 @@
       return result;
     }
     result.phase = 'riding';
-    let previousIndex = 0, currentIndex = null;
+    let previousIndex = confirmation?.index ?? 0, currentIndex = null;
     for (let i = 0; i < stops.length; i++) {
       const stop = stops[i];
-      if (stop.eventAt !== null && stop.eventAt <= now) previousIndex = i;
-      if (stop.arrivalAt !== null && stop.departureAt !== null && stop.arrivalAt <= now && now < stop.departureAt) currentIndex = i;
+      if (stop.eventAt !== null && stop.eventAt <= now && i >= previousIndex) previousIndex = i;
+      if (i >= (confirmation?.index ?? 0) && stop.arrivalAt !== null && stop.departureAt !== null && stop.arrivalAt <= now && now < stop.departureAt) currentIndex = i;
     }
     // A user confirmation locates the train at that instant, without creating dwell.
-    if (confirmation && confirmation.ageMs < 1000 && delaySeconds === 0) {
+    if (confirmation && confirmation.ageMs < 1000) {
       currentIndex = confirmation.index; previousIndex = confirmation.index;
     }
     result.previousStop = stops[previousIndex] || null;
+    const confirmationPending=!!confirmation && previousIndex===confirmation.index && confirmation.ageMs>=1000 && (delaySeconds!==0 || stops[previousIndex].eventAt===null);
+    if(confirmationPending)currentIndex=null;
+    result.confirmationPending=confirmationPending;
     if (currentIndex !== null) {result.currentStopIndex = currentIndex; result.currentStop = stops[currentIndex]; result.positionKnown = true;}
     const nextIndex = (currentIndex ?? previousIndex) + 1;
     if (nextIndex < stops.length) {
@@ -276,8 +294,20 @@
       result.remainingStops = 0;
       if (destinationAt === null) result.phase = 'unknown';
     }
+    if(result.confirmationPending)result.positionKnown=false;
     return result;
   }
 
-  return Object.freeze({trainsForDate, candidates, progress, isValidTrain, serviceDateForNow});
+  function itineraryMatch(days, profileKey, serviceDate, keysFor, preferred='') {
+    if(dateStart(serviceDate)===null)return null;
+    const matches=[];
+    for(const [dayKey,legs] of Object.entries(days||{})){
+      const n=Number(dayKey.split('-')[0]);
+      const date=localDate(dateStart('2027-01-08')+(n-1)*DAY);
+      if(date!==serviceDate)continue;
+      for(let index=0;index<legs.length;index++)if(legs[index]&&keysFor(legs[index]).includes(profileKey))matches.push({dayKey,leg:legs[index],index});
+    }
+    return matches.find(m=>m.dayKey===preferred)||matches[0]||null;
+  }
+  return Object.freeze({itineraryMatch, trainsForDate, candidates, progress, isValidTrain, serviceDateForNow});
 });
