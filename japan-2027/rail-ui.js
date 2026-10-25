@@ -9,6 +9,7 @@ function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return ''
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
+ 'KORAIL.GyeongbuHSR':{code:'KTX',color:'#0054a6',shape:'square'},
  'TokyoMetro.Ginza':{code:'G',color:'#ff9500',shape:'circle'},
  'TokyoMetro.Marunouchi':{code:'M',color:'#f62e36',shape:'circle'},
  'TokyoMetro.Hibiya':{code:'H',color:'#b5b5ac',shape:'circle'},
