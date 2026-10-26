@@ -19,7 +19,7 @@
   '아사쿠사':'浅草','하마마쓰초':'浜松町',
   '에비스':'恵比寿','가구라자카':'神楽坂',
   '가미야초':'神谷町','긴테쓰나라':'近鉄奈良',
-  '신이마미야':'新今宮','산노미야':'三ノ宮'
+  '신이마미야':'新今宮','산노미야':'三ノ宮','공항제2빌딩':'空港第２ビル','가타세에노시마':'片瀬江ノ島','후지사와':'藤沢','하세':'長谷','구라마에':'蔵前','미타':'三田','아카사카':'赤坂','니시진':'西新'
  };
  function normalized(s){
   return String(s||'').replace(/^(?:JR\s+|도쿄메트로\s+|도에이\s+|도부\s+|에노덴\s+|게이세이\s+)/,'')
@@ -43,7 +43,7 @@
  }
  function stopName(stop){
   if(!stop||stop.kind!=='station')return stop?.name||'';
-  const country=stop.area==='대구'||stop.area==='부산'||stop.lng<129.6?'KR':'JP';
+  const country=['대구','부산'].includes(stop.area)||(stop.lat>35&&stop.lng<129.7&&stop.lng>128.2)?'KR':'JP';
   return station(stop.name,null,country);
  }
  function distance(a,b){
@@ -63,7 +63,28 @@
    durationMinutes:null,geometrySource:'두 장소 대표점의 직선 연결 · 실제 도로 경로/주행거리 아님',
    geometryAccuracy:'schematic'};
  }
+ function displayParts(leg){
+  if(!leg?.parts?.some(p=>p.mode==='ferry'))return leg?.parts||[];
+  const parts=leg.parts.filter(p=>p.mode==='ferry');
+  if(!parts.length)return leg.parts;
+  const coords=[];for(const p of parts)for(const pt of p.coords||[])if(!coords.length||Math.abs(coords.at(-1)[0]-pt[0])>1e-8||Math.abs(coords.at(-1)[1]-pt[1])>1e-8)coords.push(pt);
+  return [{...parts.find(p=>p.geometryAccuracy!=='schematic')||parts[0],coords,suppressSymbol:false,
+   distanceM:parts.reduce((n,p)=>n+(p.distanceM||0),0),
+   geometryAccuracy:'reference',
+   line:'뉴 카멜리아호 · 하카타항 → 부산항 · 참고 항로',
+   geometrySource:'FRA 조사 지도 해상 86개 좌표 + 양쪽 항만 연결 개략선. 하나의 연속된 표시선이며 실제 항적·항만 진입 항로가 아닙니다.'}];
+ }
  function patch(data,routes){
+  // Every planned taxi transfer is requested via Uber, including Japanese city taxis.
+  for(const day of data?.days||[])for(const variant of day.variants||[])for(const stop of variant.stops||[]){
+   if(stop.modeFromPrevious==='taxi'&&stop.transportFromPrevious&&!/Uber/i.test(stop.transportFromPrevious))
+    stop.transportFromPrevious=stop.transportFromPrevious.replace(/택시/g,'Uber Taxi');
+  }
+  for(const legs of Object.values(routes?.days||{}))for(const leg of legs||[]){
+   if(!leg)continue;
+   for(const part of leg.parts||[])if(part.mode==='taxi'&&part.line&&!/Uber/i.test(part.line))part.line=part.line.replace(/택시/g,'Uber Taxi');
+   if(leg.parts?.some(p=>p.mode==='taxi')&&leg.summary&&!/Uber/i.test(leg.summary))leg.summary=leg.summary.replace(/택시/g,'Uber Taxi');
+  }
   const firstDay=data?.days?.find(d=>d.n===1),first=firstDay?.variants?.find(v=>v.id==='main')?.stops?.[0];
   const airport=firstDay?.variants?.find(v=>v.id==='main')?.stops?.[1],firstLeg=routes?.days?.['1-main']?.[0];
   if(first&&airport&&firstLeg&&firstLeg.parts?.[0]?.mode==='taxi'){
@@ -84,10 +105,9 @@
   if(v&&lastLegs?.length){
    const stationStop=v.stops.find(s=>s.uid==='d22-main-6');
    if(stationStop){
-    stationStop.name='서대구역';
+    // Keep the raw operator profile names stable: matching a published timetable
+    // requires "서대구역 KTX", while stopName() displays only "서대구역".
     stationStop.transportFromPrevious='부산 → 서대구 KTX-산천330 직통 · 현재표 참고';
-    const ktx=lastLegs.find(l=>l.toUid===stationStop.uid);
-    if(ktx){ktx.to=stationStop.name;for(const p of ktx.parts||[])if(p.toUid===stationStop.uid||/서대구/.test(p.to||''))p.to=stationStop.name;}
    }
    if(!v.stops.some(s=>s.uid==='d22-main-home')&&v.stops.at(-1)?.uid==='d22-main-6'){
     const from=v.stops.at(-1),home={...HOME,uid:'d22-main-home',id:'d22-main-home',kind:'home',area:'대구',
@@ -106,5 +126,5 @@
   }
   return {data,routes};
  }
- return {HOME,station,stopName,japanese,patch,distance};
+ return {HOME,station,stopName,japanese,patch,distance,displayParts};
 });
