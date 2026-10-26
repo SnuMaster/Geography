@@ -1,0 +1,43 @@
+/* Quiet basemap, a single opt-in itinerary, and an independent GPS overlay. */
+#map{background:#f7f7f1}.map-panel{background:#f7f7f1}
+body[data-map-style=simple] .leaflet-tile-pane{opacity:.64}
+.itinerary-panel[hidden]{display:none!important}
+.route-workspace{grid-template-columns:minmax(0,1fr)}
+.itinerary-panel-bar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 18px;border-bottom:1px solid var(--border);flex:none;background:var(--paper)}
+.itinerary-panel-bar strong{font-size:13px}.itinerary-panel-bar button{min-height:44px;min-width:44px;padding:8px 11px;border:1px solid var(--border);border-radius:7px;color:var(--green);font:12px RouteSans,sans-serif;background:#fff}
+#itineraryToggle{background:var(--green);color:white;border-color:var(--green);white-space:nowrap;min-height:44px}
+body.itinerary-open .route-workspace{grid-template-columns:minmax(0,1fr) 390px}
+body.itinerary-open .itinerary-panel{display:flex;min-height:0;flex-direction:column}
+.gps-location-marker{background:transparent;border:0;pointer-events:none;--gps-color:#1873d1}
+.gps-location-dot{position:absolute;left:34px;top:34px;width:16px;height:16px;background:var(--gps-color);border:3px solid white;border-radius:50%;box-shadow:0 1px 6px #164a7e66;z-index:2}
+.gps-heading-cone{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -28deg,#2687e450 0deg,#2687e424 56deg,transparent 56deg);transform-origin:42px 42px}
+.gps-heading-cone:after{content:'';position:absolute;left:37px;top:13px;border-left:5px solid transparent;border-right:5px solid transparent;border-bottom:10px solid #1473ce;filter:drop-shadow(0 1px 1px white)}
+.location-bearing-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px;color:#155b9c;font-size:12px}
+#locationCompass{min-height:36px;white-space:nowrap;padding:5px 9px;border:1px solid #c3d5e9;border-radius:6px;background:#f0f7ff;color:#155b9c;font:11px RouteSans,sans-serif}
+.location-details{margin-top:7px;font-size:11px}.location-details>summary{cursor:pointer;min-height:34px;padding:8px 0;color:#567267}.location-details[open]{padding-bottom:5px}
+.location-details .location-mode{margin-top:7px}.location-card{bottom:120px;max-height:calc(100% - 150px);overflow:auto}.location-heading>small{overflow-wrap:anywhere}
+@media(min-width:1025px) and (max-width:1190px){body.itinerary-open .route-workspace{grid-template-columns:minmax(0,1fr) 350px}}
+@media(max-width:1024px){
+ .route-workspace{display:block;height:auto;min-height:0;flex:none}
+ .map-panel{height:clamp(430px,70dvh,720px)}
+ .itinerary-panel{position:fixed;inset:auto 0 0;z-index:820;width:100%;height:min(80dvh,calc(var(--visual-height,100dvh) - 16px));max-height:calc(var(--visual-height,100dvh) - 16px);background:var(--paper);border-radius:18px 18px 0 0;border-top:1px solid var(--border);box-shadow:0 -12px 38px #173b352b;overflow:hidden}
+ .itinerary-scroll{flex:1;min-height:0;overflow:auto;overscroll-behavior:contain}
+ .day-detail-header{flex:none;max-height:36%;overflow:auto}
+ .day-detail-header:has(.day-tools[open]){max-height:45%;overflow:auto}
+ .itinerary-panel-bar{padding:8px 16px}.day-pagination{padding-bottom:max(10px,var(--safe-bottom));min-height:60px}
+ body.itinerary-open{overflow:hidden}
+ .location-card{left:12px;bottom:110px;width:310px;max-width:calc(100% - 24px);max-height:240px;padding:10px 12px}
+ .location-card:has(.location-details[open]){max-height:calc(100% - 125px)}
+ #locationCompass{min-height:44px}
+}
+@media(max-width:740px){
+ .workspace-toolbar{min-height:112px}.toolbar-right{gap:5px;flex-wrap:wrap}#rideToggle{flex:1}#itineraryToggle{font-size:11px;padding:8px 10px}#nightBtn{display:none}
+ .map-title-card{max-width:min(280px,calc(100% - 80px))}
+ #locationBtn{width:auto;padding:0 10px;gap:5px}#locationBtnLabel{display:inline}
+ .map-title-card{max-width:min(280px,calc(100% - 120px))}
+ .location-bearing-row{font-size:11px}.location-status{margin:5px 0}.location-follow{min-height:44px}.location-card .location-heading{margin-bottom:4px}
+}
+
+.map-panel.location-active .map-playbar,.map-panel.location-active .map-bottom{visibility:hidden;pointer-events:none}
+.location-card{bottom:12px}
+@media(max-width:1024px){.location-card{bottom:12px;max-height:240px}.location-card:has(.location-details[open]){max-height:calc(100% - 110px)}}
