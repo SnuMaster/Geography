@@ -5,6 +5,12 @@ const AIRLINE_BRANDS={
  ana:{name:'ANA 전일본공수',src:'assets/airlines/ana.svg'}
 };
 function airlineFor(part){if(part?.mode!=='flight')return null;const line=part.line||'';return /TW251|트리니티|Trinity/i.test(line)?'trinity':/\bJAL\b/.test(line)?'jal':/\bANA\b/.test(line)?'ana':null;}
+function operatorLogo(part,extra=''){
+ const isUber=part?.mode==='taxi',isKtx=part?.lineId==='KORAIL.GyeongbuHSR'||/KTX/.test(part?.line||'');
+ if(!isUber&&!isKtx)return '';
+ const type=isUber?'uber':'ktx',name=isUber?'Uber':'KTX';
+ return '<img class="operator-logo operator-'+type+' '+extra+'" src="assets/operators/'+type+'.svg" alt="'+name+' 로고" width="72" height="27" decoding="async">';
+}
 function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return '';const b=AIRLINE_BRANDS[key];return `<img class="airline-logo airline-${key} ${extra}" src="${b.src}" alt="${b.name} 로고" width="96" height="30" decoding="async">`;}
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
@@ -45,8 +51,8 @@ const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||null;}
 function railBadge(part,extra=''){
- const info=railInfo(part);if(!info)return icon((MODE[part.mode]||MODE.rail).icon);
- return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
+ const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
+ if(info.code==='KTX')return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
 function splitRailService(part){
@@ -105,12 +111,12 @@ function symbolOptions(leg){return DetailView.options('route-info-popup',{routeL
 function directionHtml(group,entry){return (group.entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${group.entries.map((e,i)=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${i}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
 function addRailMapSymbol(part,leg){
  if(part.suppressSymbol)return;
- const info=railInfo(part)||(['flight','ferry'].includes(part.mode)?{code:part.mode==='flight'?'항공':'선박',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
+ const info=railInfo(part)||(['flight','ferry','taxi'].includes(part.mode)?{code:part.mode==='flight'?'항공':part.mode==='ferry'?'선박':'Uber',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
  const point=railMidpoint(part.coords),groupKey=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(','),entryKey=leg.legId+'|'+part.lineId+'|'+part.from+'|'+part.to;
  if(railSymbolKeys.has(entryKey))return;railSymbolKeys.add(entryKey);
  const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
- const airline=airlineFor(part),group={key:groupKey,point,entries:[{part,leg}]};railSymbolGroups.set(groupKey,group);
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':''),html:airline?airlineLogo(part):railBadge(part),iconSize:airline?(airline==='jal'?[44,44]:[96,44]):[44,44],iconAnchor:airline?(airline==='jal'?[22,22]:[48,22]):[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
+ const airline=airlineFor(part),operator=operatorLogo(part),group={key:groupKey,point,entries:[{part,leg}]};railSymbolGroups.set(groupKey,group);
+ const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol'+(airline?' airline-map-symbol':'')+(operator?' operator-map-symbol':''),html:airline?airlineLogo(part):operator||railBadge(part),iconSize:airline?(airline==='jal'?[44,44]:[96,44]):operator?[90,44]:[44,44],iconAnchor:airline?(airline==='jal'?[22,22]:[48,22]):operator?[45,22]:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
  marker.on('click',()=>{hideRailHover();const entry=group.entries[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
  marker.on('mouseover',e=>showRailHover(e,leg,part));marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
 }
