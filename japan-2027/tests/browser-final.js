@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/38';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/41';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -118,6 +118,34 @@
   check(d.querySelector('#ridePanel').textContent.includes('서대구'),'탑승 추적 종점 오류');click(w,'[data-ride-close]');
   b.showOverview();check(d.querySelector('#routeDetails').textContent.includes('부산→서대구'),'전체 여정 구간 누락');check(d.querySelector('#routeDetails').textContent.includes('16,300'),'전체 여정 운임 오류');
   return '12:44 출발·13:47:30 정차 원값 · 서대구 종점 · 일반실16,300원 · 미발권 참고 계획';
+ });
+ await report(39,'전체 지도 확대·지역별 날짜·상세 장소·일정 이동',async()=>{
+  for(const width of [390,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(1),b=w.__routebook,d=w.document;b.showOverview();b.map.setView([35.714,139.797],13,{animate:false});
+   await until(()=>d.querySelector('[data-overview-day="2"]'));click(w,'[data-overview-day="2"]');
+   check(b.state.view==='overview'&&d.querySelectorAll('.overview-place-marker').length>3,'전체 지도 상세 누락 '+width);
+   const layer=Object.values(b.map._layers).find(l=>l.options?.title==='01/09 센소지');check(layer,'센소지 상세 마커 없음');layer.fire('click');
+   check(d.querySelector('.popup-title').textContent.includes('센소지'),'장소 상세 미표시');click(w,'[data-detail-itinerary]');
+   check(b.state.view==='daily'&&b.state.day===2,'다른 날짜로 이동');check(b.getStops()[b.state.selected].name==='센소지','장소 선택 유실');
+  }
+  return '390/1280px · 전체 보기 유지한 지역 확대 · 날짜 선택 · 장소 상세에서 정확한 일정 이동';
+ });
+ await report(40,'배 양쪽 항만 연결·중복 기호·날짜 목록 정리',async()=>{
+  const w=await load(21),b=w.__routebook,d=w.document,l=b.getLeg(5),stops=b.getStops();
+  check(l.parts.length===3&&l.parts[1].coords.length===86,'원본 해상 참고선 잘림');check(l.parts[0].geometryAccuracy==='schematic'&&l.parts[2].suppressSymbol,'항만 개략선 구분 누락');
+  check(l.parts[0].coords[0][0]===stops[4].lat&&l.parts.at(-1).coords.at(-1)[0]===stops[5].lat,'항만 연결 누락');
+  check(Object.values(b.map._layers).filter(x=>x.options?.title?.startsWith('선박')).length===1,'배 기호 중복');
+  const item=d.querySelector('[data-day="2"]');check(item.textContent.includes('도쿄')&&item.textContent.includes('아사쿠사'),'도시·명소 누락');check(!item.textContent.includes('DAY'),'날짜 안내 중복');
+  check(!d.querySelector('.departure-leg-hint'),'이동 안내 반복');check(!d.querySelector('.route-arrow-icon'),'모든 경로에 화살표 반복');
+  return '하카타·부산항 연결 · 원본86좌표 · 배 기호1개 · 도시/명소만 표시';
+ });
+ await report(41,'오프라인 준비 화면·크기·내장 지도 선택',async()=>{
+  const w=await load(19),d=w.document;click(w,'#offlinePackBtn');await until(()=>d.querySelector('#offlinePackSize').textContent.includes('MB'));
+  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');check(d.querySelector('#offlinePackSize').textContent.includes('148'),'전체 저장 목록 누락');
+  click(w,'#offlinePackClose');click(w,'#settingsBtn');change(w,'#mapProvider','offline');click(w,'#closeSettings');
+  await until(()=>d.querySelector('#map').classList.contains('offline-map-active'));await until(()=>d.querySelector('.leaflet-offlineBase-pane path'));
+  check(d.querySelectorAll('.stop-card').length===w.__routebook.getStops().length,'간략 지도 전환 때 일정 유실');
+  return '전체148개 자료 저장 안내 · 간략 지도와 장소·동선 유지 (실제 전체 저장·단절 재시작은 별도CI 검증)';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
