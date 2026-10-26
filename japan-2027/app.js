@@ -284,7 +284,7 @@ function startPlay(){
  };run.tick();renderPlayback();
 }
 function selectedPlaceId(){const i=state.selected;return i>=0?JourneyState.placeId(getDay(),getVariant(),getStops()[i],i):null;}
-function screenSnapshot(){return {routebook:2,day:state.day,variant:state.variant,view:state.view,placeId:state.view==='daily'?selectedPlaceId():null,search:state.search,filter:state.filter,night:state.night,passEnabled:state.passEnabled,scroll:{itinerary:$('#itineraryScroll').scrollTop,days:$('#dayList').scrollTop,x:window.scrollX,y:window.scrollY}};}
+function screenSnapshot(){return {routebook:2,day:state.day,variant:state.variant,view:state.view,placeId:state.view==='daily'?selectedPlaceId():null,search:state.search,filter:state.filter,night:state.night,passEnabled:state.passEnabled,itineraryOpen:!!window.ItineraryDrawer?.isOpen(),scroll:{itinerary:$('#itineraryScroll').scrollTop,days:$('#dayList').scrollTop,x:window.scrollX,y:window.scrollY}};}
 function updateUrl(mode='replace'){
  const snapshot=screenSnapshot(),url=JourneyState.url(location.href,snapshot,state.data.days);
  if(mode==='push'&&url!==location.href)history.pushState(snapshot,'',url);else history.replaceState(snapshot,'',url);
@@ -294,6 +294,7 @@ function navigateScreen(target,options={}){
  const generation=++screenGeneration,previous=screenSnapshot();
  if(options.history!=='none')history.replaceState(previous,'',JourneyState.url(location.href,previous,state.data.days));
  const d=state.data.days.find(d=>d.n===Number(target.day))||getDay();
+ if(options.snapshot&&Object.hasOwn(options.snapshot,'itineraryOpen')){if(options.snapshot.itineraryOpen)window.ItineraryDrawer?.open({focus:false});else window.ItineraryDrawer?.close({restore:false});}
  const variant=Object.hasOwn(target,'variant')?JourneyState.variant(d,target.variant):JourneyState.chosen(d,state.selectedVariantByDay);
  state.selectedVariantByDay[d.n]=variant;JourneyState.save(state.selectedVariantByDay,journeyStorage);
  window.RouteLocation?.pauseFollow();stopPlay();map.stop();
@@ -302,7 +303,7 @@ function navigateScreen(target,options={}){
  if(options.snapshot){state.search=options.snapshot.search||'';state.filter=options.snapshot.filter||'all';$('#daySearch').value=state.search;}
  $('#itineraryScroll').scrollTop=0;
  if(state.view==='overview')renderOverview();else{renderDays();renderHeader();renderStops();renderMap();}renderPlayback();
- if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];map.setView([stop.lat,stop.lng],15,{animate:false});markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
+ if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];map.setView([stop.lat,stop.lng],15,{animate:false});if(!options.snapshot?.itineraryOpen)markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
  if(options.history!=='none')updateUrl(options.history||'push');
  const snapshot=options.snapshot;
  requestAnimationFrame(()=>{

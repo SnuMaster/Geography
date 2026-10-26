@@ -15,7 +15,7 @@
  },true);
  const resizeViewport=()=>document.documentElement.style.setProperty('--visual-height',(window.visualViewport?.height||window.innerHeight)+'px');
  window.visualViewport?.addEventListener('resize',resizeViewport);window.addEventListener('resize',resizeViewport);resizeViewport();
- window.RouteUI={open,release,ensureFocus,showDialog,userExplore,hasLayer:()=>!!top(),isTop:el=>top()?.el===el,mobile};
+ window.RouteUI={open,release,ensureFocus,showDialog,userExplore,hasLayer:()=>stack.some(entry=>entry.el.id!=='itineraryPanel'),isTop:el=>top()?.el===el,mobile};
  document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('dialog').forEach(el=>{el.addEventListener('close',()=>{if(!el.open)release(el);});el.addEventListener('cancel',event=>{event.preventDefault();if(top()?.el===el)top().close?.();});});});
 
  let map,active=null,sheet,body,footer,closing=false,playbackState={active:false,running:false};
