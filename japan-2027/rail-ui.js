@@ -102,8 +102,9 @@ function railMidpoint(coords,fraction=.5){
  return coords[Math.floor(coords.length/2)];
 }
 function symbolOptions(leg){return DetailView.options('route-info-popup',{routeLegIndex:leg.legIndex,routeDay:leg.dayNumber,routeVariant:leg.variant});}
-function directionHtml(group,entry){return (group.entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${group.entries.map((e,i)=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${i}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+legHtml(entry.leg,entry.part);}
+function directionHtml(group,entry){return (group.entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${group.entries.map((e,i)=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${i}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
 function addRailMapSymbol(part,leg){
+ if(part.suppressSymbol)return;
  const info=railInfo(part)||(['flight','ferry'].includes(part.mode)?{code:part.mode==='flight'?'항공':'선박',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
  const point=railMidpoint(part.coords),groupKey=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(','),entryKey=leg.legId+'|'+part.lineId+'|'+part.from+'|'+part.to;
  if(railSymbolKeys.has(entryKey))return;railSymbolKeys.add(entryKey);
