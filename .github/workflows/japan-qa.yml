@@ -8,7 +8,7 @@ permissions:
   contents: read
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -22,11 +22,9 @@ jobs:
           node --test tests/*.test.cjs
           node scripts/japan-qa.cjs
           for file in japan-2027/*.js japan-2027/tests/*.js; do node --check "$file"; done
-      - name: Install browser test dependencies
+      - name: Install browser test runner
         run: |
           npm ci --prefix japan-2027/tests
-          cd japan-2027/tests
-          npx playwright install --with-deps chromium
       - name: Accuracy, state, mobile and integrated browser suites
         run: node japan-2027/tests/ci-browser.cjs
       - uses: actions/upload-artifact@v4

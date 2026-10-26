@@ -1,12 +1,12 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
 function fixture(){
- const files=new Map(),listeners=new Map(),events=[];
+ const files=new Map(),listeners=new Map(),events=[],storage=new Map();
  const label={dataset:{},textContent:''},button={dataset:{},hidden:true,addEventListener(type,fn){this[type]=fn;}},bar={dataset:{},textContent:'',querySelector(selector){return this.initialized?(selector==='[data-store-label]'?label:button):null;},append(){this.initialized=true;}};
  let fetcher=async()=>new Response('{"revision":"new"}');
  const cache={match:async id=>files.get(id)?.clone(),put:async(id,response)=>files.set(id,response.clone()),keys:async()=>[...files.keys()].map(url=>new Request(url)),delete:async id=>files.delete(id.url||id)};
  const window={frameElement:false,addEventListener(type,fn){listeners.set(type,fn);},dispatchEvent(event){events.push(event);listeners.get(event.type)?.(event);}};
- const ctx={window,document:{baseURI:'https://example.test/japan-2027/',querySelector:()=>bar,createElement:tag=>tag==='span'?label:button,addEventListener(){}},navigator:{onLine:true},localStorage:{getItem:()=>null,setItem(){}},caches:{open:async()=>cache},fetch:(...args)=>fetcher(...args),URL,Response,Request,AbortController,Event,CustomEvent,Date,JSON,Map,Set,setTimeout,clearTimeout};
+ const ctx={window,document:{baseURI:'https://example.test/japan-2027/',querySelector:()=>bar,createElement:tag=>tag==='span'?label:button,addEventListener(){}},navigator:{onLine:true},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},caches:{open:async()=>cache},fetch:(...args)=>fetcher(...args),URL,Response,Request,AbortController,Event,CustomEvent,Date,JSON,Map,Set,setTimeout,clearTimeout};
  vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/offline.js'),'utf8'),ctx);
  return {store:window.TravelStore,bar,label,button,events,files,setFetch(fn){fetcher=fn;}};
 }
@@ -39,4 +39,10 @@ test('first startup from per-file fallbacks keeps the actual older verification 
  f.setFetch(async()=>{throw Error('offline');});await f.store.readJson(a);
  assert.equal(f.store.checkedAt([a,b]),earlier);assert.equal(f.store.checkedAt([a,'unknown.json']),null);
  const snapshot=await f.store.saveSnapshot({days:[]},{days:{}},'signature',earlier);assert.equal(snapshot.updatedAt,earlier);
+});
+test('complete offline timetable downloads remain pinned beyond the ordinary recent-file limit',async()=>{
+ const f=fixture(),paths=Array.from({length:20},(_,i)=>'timetables/route-'+i+'.json');
+ for(const p of paths)f.files.set('https://example.test/japan-2027/'+p+'?v=test',new Response('{}'));
+ f.store.pinFiles(paths);await f.store.trimTimetables();assert.equal(f.files.size,20);
+ f.store.pinFiles([]);await f.store.trimTimetables();assert.equal(f.files.size,12);
 });

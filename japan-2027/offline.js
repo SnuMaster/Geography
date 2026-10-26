@@ -37,8 +37,11 @@
  }
 
  async function snapshot(){if(window.frameElement)return null;try{const c=await cache(),r=await c?.match(key('saved-trip-snapshot.json'));if(r){return r.json();}}catch(_){}return null;}
- async function trimTimetables(){const c=await cache();if(!c)return;const files=(await c.keys()).filter(r=>new URL(r.url).pathname.includes('/timetables/'));files.sort((a,b)=>(meta[b.url]||0)-(meta[a.url]||0));let activeFile=null;try{const record=JSON.parse(localStorage.getItem('routebook-boarded-train-v1')||'null');activeFile=globalThis.RailDepartureProfiles?.profiles[record?.key]?.file;}catch(_){}for(const r of files.slice(12)){if(activeFile&&new URL(r.url).pathname.endsWith('/'+activeFile))continue;await c.delete(r);delete meta[r.url];}}
- async function register(){if(!('serviceWorker'in navigator)||window.frameElement)return;try{const registration=await navigator.serviceWorker.register('sw.js?v='+VERSION,{scope:'./'});await registration.update();}catch(_){}status();}
+ function pinned(){try{return new Set(JSON.parse(localStorage.getItem('routebook-offline-pins-v1')||'[]'));}catch(_){return new Set();}}
+ function pinFiles(files){localStorage.setItem('routebook-offline-pins-v1',JSON.stringify(files.map(f=>key(f).split('?')[0])));}
+ async function readCachedJson(url){const c=await cache(),r=await c?.match(key(url));if(!r)throw Error('저장된 자료가 없습니다.');return r.json();}
+ async function trimTimetables(){const c=await cache();if(!c)return;const protectedFiles=pinned(),files=(await c.keys()).filter(r=>new URL(r.url).pathname.includes('/timetables/'));files.sort((a,b)=>(meta[b.url]||0)-(meta[a.url]||0));let activeFile=null;try{const record=JSON.parse(localStorage.getItem('routebook-boarded-train-v1')||'null');activeFile=globalThis.RailDepartureProfiles?.profiles[record?.key]?.file;}catch(_){}for(const r of files.slice(12)){if(protectedFiles.has(r.url.split('?')[0])||activeFile&&new URL(r.url).pathname.endsWith('/'+activeFile))continue;await c.delete(r);delete meta[r.url];}}
+ async function register(){if(!('serviceWorker'in navigator)||window.frameElement)return;try{const registration=await navigator.serviceWorker.register('sw.js?v='+(window.OfflinePack?.REVISION||VERSION),{scope:'./'});await registration.update();}catch(_){}status();}
  window.addEventListener('online',()=>{status();window.dispatchEvent(new Event('routebook:online'));});window.addEventListener('offline',status);document.addEventListener('DOMContentLoaded',register);
- window.TravelStore={markStale:()=>{stale.add('snapshot');status();},readJson,saveSnapshot,snapshot,checkedAt,useSnapshot,offerSnapshot,trimTimetables,status,VERSION};
+ window.TravelStore={markStale:()=>{stale.add('snapshot');status();},readJson,readCachedJson,cache,pinFiles,saveSnapshot,snapshot,checkedAt,useSnapshot,offerSnapshot,trimTimetables,status,VERSION};
 })();
