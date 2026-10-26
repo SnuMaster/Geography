@@ -308,13 +308,13 @@ function setDay(n,options={}){if(Number(n)===state.day&&state.view==='daily'&&!o
 function setVariant(id,options={}){if(id===state.variant&&state.view==='daily')return;navigateScreen({day:state.day,variant:id,view:'daily'},options);}
 function showOverview(){if(state.view==='overview')return;navigateScreen({day:state.day,variant:state.variant,view:'overview'});}
 function overviewStops(){return [
- {name:'동대구',lat:35.8797,lng:128.6283,modeFromPrevious:'walk',days:'1/8 출발 · 1/29 귀가',n:1},
+ {name:'동대구',lat:35.8797,lng:128.6283,modeFromPrevious:'walk',days:'1/8 출발',n:1},
  {name:'대구공항',lat:35.8941,lng:128.6589,modeFromPrevious:'taxi',days:'동대구 → 대구공항',n:1},
  {name:'도쿄',lat:35.7007,lng:139.774,modeFromPrevious:'flight',days:'1/8–19 · 11박',n:2},
  {name:'오사카',lat:34.6674,lng:135.501,modeFromPrevious:'flight',days:'1/19–25 · 6박 · 교토·나라·고베',n:12},
  {name:'후쿠오카',lat:33.5917,lng:130.4207,modeFromPrevious:'flight',days:'1/25–28 · 3박',n:18},
  {name:'부산',lat:35.1155,lng:129.0422,modeFromPrevious:'ferry',days:'1/28–29 · 1박',n:21},
- {name:'동대구',lat:35.8797,lng:128.6283,modeFromPrevious:'rail',days:'1/29 부산 → 동대구 기차',n:22}
+ {name:'서대구',lat:35.8813666,lng:128.5417368,modeFromPrevious:'rail',days:'1/29 부산12:44 → 서대구13:47:30 정차 · 330편 현재표 참고',n:22}
  ];}
 function overviewLegs(){return state.data.days.flatMap(d=>state.routeData.days[`${d.n}-${JourneyState.chosen(d,state.selectedVariantByDay)}`]||[]).filter(l=>l?.travel||l?.parts.some(p=>p.lineId==='KORAIL.GyeongbuHSR'));}
 function renderOverviewMap(){
@@ -322,7 +322,7 @@ function renderOverviewMap(){
  const flightLabels=[...new Set(legs.filter(l=>l.parts.some(p=>p.mode==='flight')).map(l=>window.FlightPlayback?.geometryLabel(l)||'개략 항로'))];
  $('.route-caution').textContent='항공: '+flightLabels.join(' · ')+'. 선·항공사 기호를 눌러 참고 날짜를 보고 항로를 따라가세요.';
  for(const leg of legs)for(const part of leg.parts){if(!part.coords?.length)continue;const color=(MODE[part.mode]||MODE.rail).color;L.polyline(part.coords,{color:'#fff',weight:8,interactive:false}).addTo(routeLayer);const line=L.polyline(part.coords,{color,weight:4,dashArray:part.mode==='rail'?null:'9 7'}).addTo(routeLayer);const hit=L.polyline(part.coords,{weight:22,opacity:0}).addTo(routeLayer);hit.on('mouseover',e=>showRailHover(e,leg,part));hit.on('mousemove',positionRailHover);hit.on('mouseout',hideRailHover);hit.on('click',hideRailHover);hit.bindPopup(()=>leg.travel?travelHtml(leg):legHtml(leg),symbolOptions(leg));addRailMapSymbol(part,leg);arrowFor(part.coords,color);}
- stops.slice(0,-1).forEach((s,i)=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker',html:`<div class="pin-number"><span>${i+1}</span></div>`,iconSize:[44,44],iconAnchor:[22,38]})}).addTo(routeLayer);mk.bindTooltip(esc(s.name),{permanent:true,direction:'right',offset:[17,-14],className:'stop-tooltip'});mk.bindPopup(`<div class="popup-title">${esc(s.name)}</div><div class="popup-desc">${esc(s.days)}</div><div class="popup-links"><a href="?day=${s.n}">그날 일정 ↗</a></div>`);});fitRoute();
+ stops.forEach((s,i)=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker',html:`<div class="pin-number"><span>${i+1}</span></div>`,iconSize:[44,44],iconAnchor:[22,38]})}).addTo(routeLayer);mk.bindTooltip(esc(s.name),{permanent:true,direction:'right',offset:[17,-14],className:'stop-tooltip'});mk.bindPopup(`<div class="popup-title">${esc(s.name)}</div><div class="popup-desc">${esc(s.days)}</div><div class="popup-links"><a href="?day=${s.n}">그날 일정 ↗</a></div>`);});fitRoute();
 }
 
 function renderOverview(){
@@ -334,7 +334,7 @@ function renderOverview(){
  $('#dayHeader').innerHTML=`<div class="detail-date-row"><span class="detail-date">JAN 08 — JAN 29, 2027</span><span class="detail-badge">21박 22일</span></div><h2>전체 여정 한눈에</h2><p>날짜를 눌러 상세 일정으로. 항로에 마우스를 대면 선택편·시간·요금이 나와요.</p>`;
  $('#dayNote').innerHTML=`<div class="trip-cost-comparison">${summary('기본안 기준',baseline)}${summary('현재 선택 기준',selected)}</div><p class="summary-scope">교통은 시내·근교 및 한국 KTX 포함. 항공·선박·숙소·식음료 별도. 관광·입장료는 입장료·체험만 합산합니다. 식사·카페·음료·시음·쇼핑은 별도이며 중복 합산하지 않습니다.</p><div class="day-note fixed-event"><strong>1/23 나라 고정</strong>18:15 불꽃놀이 → 18:30 와카쿠사산 점화</div>`;
  $('#stopList').innerHTML=state.data.days.map(d=>{const id=JourneyState.chosen(d,state.selectedVariantByDay),v=d.variants.find(v=>v.id===id);return `<button class="journey-day ${d.event?'has-event':''}" data-open-day="${d.n}"><span class="journey-date">${d.date}<small>${d.weekday} · D${d.n}</small></span><span><strong>${esc(v.id===d.variants[0].id?d.shortTitle:v.title||v.label)}</strong><small>${d.event?'18:15 불꽃 · 18:30 점화':esc(v.label||d.cityLabel)}<br>${esc(costSummary(d.n,id,false))}</small></span>${icon('chevronRight')}</button>`;}).join('');
- $('#routeDetails').innerHTML=`<div class="airline-overview-strip" aria-label="선택한 항공사">${['trinity','jal','ana'].map(key=>airlineLogo({mode:'flight',line:key==='trinity'?'TW251':key.toUpperCase()})).join('')}</div><h3>항공·선박 별도 비용</h3><p>1/8 TW251 이전 견적311,300원(TripFlex 포함)<br>1/19 JAL 이전 견적12,090엔<br>1/25 ANA NH1189 이전 견적9,120엔<br>1/28 뉴 카멜리아호 현재 공시2등19,900엔(세금·연료·터미널 포함)</p><p>항공 견적은 현재 판매가가 아닙니다. 선박 연료·2027 운항, 택시 미터 별도. 부산→동대구 KTX 고속선 일반실15,600원(2026.9 공식표), 열차 미선택. 도쿄72시간권 적용 시 실제 이용 구간을 차감하고 구입비2,000엔을 더합니다.</p><a href="fare-evidence.json" target="_blank" class="evidence-link">구간별 운임·출처 전체 ↗</a>`;
+ $('#routeDetails').innerHTML=`<div class="airline-overview-strip" aria-label="선택한 항공사">${['trinity','jal','ana'].map(key=>airlineLogo({mode:'flight',line:key==='trinity'?'TW251':key.toUpperCase()})).join('')}</div><h3>항공·선박 별도 비용</h3><p>1/8 TW251 이전 견적311,300원(TripFlex 포함)<br>1/19 JAL 이전 견적12,090엔<br>1/25 ANA NH1189 이전 견적9,120엔<br>1/28 뉴 카멜리아호 현재 공시2등19,900엔(세금·연료·터미널 포함)</p><p>항공 견적은 현재 판매가가 아닙니다. 선박 연료·2027 운항, 택시 미터 별도. 부산→서대구 KTX 고속선 일반실16,300원(2026.9 공식표). 12:44 출발·13:47:30 정차330편 현재표 참고, 여행일 운행·좌석 재확인. 도쿄72시간권 적용 시 실제 이용 구간을 차감하고 구입비2,000엔을 더합니다.</p><a href="fare-evidence.json" target="_blank" class="evidence-link">구간별 운임·출처 전체 ↗</a>`;
  $$('[data-open-day]').forEach(b=>b.addEventListener('click',()=>setDay(Number(b.dataset.openDay),{scrollNav:true})));renderMap();
 }
 

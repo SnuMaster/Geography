@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/36';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/38';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -99,6 +99,25 @@
   b.setDay(1);check(b.getStops()[2].end==='14:20','나리타 내부 종료 시각');check(b.getLeg(3).departureAt===Date.parse('2027-01-08T14:20:00+09:00'),'나리타 다음 이동 시각');
   check(w.document.querySelector('#routeDetails').textContent.includes('13:20~14:20'),'나리타 전체 시간표 시각');
   return '예약 기록 유지 · 공연 종료 미확정 보존 · 나리타 카드·계산·전체 시간표 일치';
+ });
+ await report(37,'공항 이동선 상세 좌표·거리·팝업 연결',async()=>{
+  frame.style.width='1280px';frame.style.height='900px';const w=await load(12),b=w.__routebook;
+  for(const [day,i,min,max]of [[12,2,6500,8500],[12,3,16500,18000],[18,4,3000,3600]]){
+   b.setDay(day);const leg=b.getLeg(i);check(leg.parts[0].coords.length>40,'직선 경로 잔류');check(leg.distanceM>min&&leg.distanceM<max,'선로 거리 오류');
+   b.selectLeg(i);check(w.document.querySelector('.station-departures'),'시간표 연결 유실');check(w.document.querySelector('.geometry-note').textContent.includes('N02'),'철도 선형 출처 미표시');close(w);
+  }
+  return 'JR·모노레일·후쿠오카 공항선 원본 좌표와 기존 시간표 연결 유지';
+ });
+ await report(38,'서대구 귀환 카드·330편 탑승·전체 여정 운임',async()=>{
+  const w=await load(22,{date:'2026-10-26T10:00:00+09:00'}),b=w.__routebook,d=w.document,key='korail-busan-seodaegu';
+  check(b.getStops().at(-1).name==='서대구역 KTX','동대구 종점 잔류');check(d.querySelector('#dayHeader').textContent.includes('16,300'),'서대구 운임 미반영');
+  check(d.querySelector('[data-stop="5"]').textContent.includes('12:44'),'부산 출발 시각 미반영');
+  b.selectLeg(6);await until(()=>d.querySelector('[data-ride-next]'));check(d.querySelector('.station-departures')._rideTrains[0].number==='330','다음 열차330 미표시');close(w);
+  await w.RideTracker.open(key,'2027-01-29');await until(()=>d.querySelector('#rideSearch'));input(w,'#rideSearch','330');
+  check(d.querySelector('.ride-train-option').textContent.includes('12:44'),'330편 검색 실패');click(w,'[data-ride-board]');await until(()=>d.querySelector('#ridePosition'));
+  check(d.querySelector('#ridePanel').textContent.includes('서대구'),'탑승 추적 종점 오류');click(w,'[data-ride-close]');
+  b.showOverview();check(d.querySelector('#routeDetails').textContent.includes('부산→서대구'),'전체 여정 구간 누락');check(d.querySelector('#routeDetails').textContent.includes('16,300'),'전체 여정 운임 오류');
+  return '12:44 출발·13:47:30 정차 원값 · 서대구 종점 · 일반실16,300원 · 미발권 참고 계획';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
