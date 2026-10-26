@@ -53,7 +53,7 @@ const RailDepartures = (() => {
   const reverse=p.reverseKey&&profiles[p.reverseKey]?p.reverseKey:null,code=p.country==='KR'?'KTX':p.fromCode||info?.code||'철도';
   const toDetail=[...new Set([p.toJa,p.toCode].filter(value=>value&&value!==p.to))].join(' · ');
   return `${warning(key,serviceDate)}<div class="departure-heading"><strong>다음 열차</strong><span class="departure-source-badge">시간표 기준 · 지연 미반영</span></div>
-   <div class="departure-stations"><span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span><strong>${esc(p.from)}${p.fromJa&&p.fromJa!==p.from?`<small>${esc(p.fromJa)}</small>`:''}</strong><span class="departure-arrow">→</span><strong>${esc(p.to)}${toDetail?`<small>${esc(toDetail)}</small>`:''}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
+   <div class="departure-stations"><span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span><strong>${esc(window.TripPersonal.station(p.from,p.fromJa,p.country))}</strong><span class="departure-arrow">→</span><strong>${esc(window.TripPersonal.station(p.to,p.toJa,p.country))}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
    <div class="departure-direction">${esc(p.line)}${p.direction?` · <b>${esc(p.direction)}</b>`:''}${p.directionJa&&p.directionJa!==p.direction?`<span>${esc(p.directionJa)}</span>`:''}</div>
    ${p.throughParts?'<p class="departure-through">직통 구간 · 색이 바뀌어도 출발역에서 탄 열차로 계속 이동</p>':''}
    <p class="departure-validity">자료 확인 ${esc(p.sourceDate||'미확인')} · ${p.validUntil?'자료 유효 종료 '+esc(p.validUntil):'유효 종료일 미공개 · 여행일 운행 미확정'}</p><div class="departure-clock" data-departure-clock>현재 ${p.country==='KR'?'한국':'일본'} 시각으로 계산 중…</div>
@@ -67,7 +67,7 @@ const RailDepartures = (() => {
  function html(day,leg,part){
   if(!supported(day,leg,part))return '';
   const keys=keysFor(leg,part);
-  const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+p.from+' → '+p.to)}</option>`;}).join('')}</select><small>여행일 참고는 앞 열차·도보·환승 반영 · 현재 시간표는 출발역 기준</small></label>`:'';
+  const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+window.TripPersonal.station(p.from,p.fromJa,p.country)+' → '+window.TripPersonal.station(p.to,p.toJa,p.country))}</option>`;}).join('')}</select><small>여행일 참고는 앞 열차·도보·환승 반영 · 현재 시간표는 출발역 기준</small></label>`:'';
   return `<div class="departure-panel">${select}${sectionHtml(keys[0],travelDate(leg.dayNumber||day),leg.departureTimeKnown===false?null:leg.departureAt,ConnectionCore.stepsFor(leg,keyFor))}</div>`;
  }
  async function loadData(key,force=false){
