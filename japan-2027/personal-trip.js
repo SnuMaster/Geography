@@ -105,10 +105,9 @@
   if(v&&lastLegs?.length){
    const stationStop=v.stops.find(s=>s.uid==='d22-main-6');
    if(stationStop){
-    stationStop.name='서대구역';
+    // Keep the raw operator profile names stable: matching a published timetable
+    // requires "서대구역 KTX", while stopName() displays only "서대구역".
     stationStop.transportFromPrevious='부산 → 서대구 KTX-산천330 직통 · 현재표 참고';
-    const ktx=lastLegs.find(l=>l.toUid===stationStop.uid);
-    if(ktx){ktx.to=stationStop.name;for(const p of ktx.parts||[])if(p.toUid===stationStop.uid||/서대구/.test(p.to||''))p.to=stationStop.name;}
    }
    if(!v.stops.some(s=>s.uid==='d22-main-home')&&v.stops.at(-1)?.uid==='d22-main-6'){
     const from=v.stops.at(-1),home={...HOME,uid:'d22-main-home',id:'d22-main-home',kind:'home',area:'대구',
