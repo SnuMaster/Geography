@@ -46,3 +46,10 @@
 /* The custom location/fit controls occupy the first three rows. Keep Leaflet zoom below them. */
 .leaflet-top.leaflet-right{top:172px;right:2px}
 @media(max-width:740px){.leaflet-top.leaflet-right{top:165px}}
+
+/* The update notice stays visible without covering the workspace. */
+.offline-status [data-store-apply]{flex:none;margin-left:8px;min-height:44px;padding:6px 12px;border:1px solid currentColor;border-radius:6px;background:#fff;color:#193e3a;font:inherit;font-weight:700}
+.offline-status [data-store-apply][hidden]{display:none}
+.offline-status:has([data-store-apply]:not([hidden])){display:flex;align-items:center;gap:8px}
+.offline-status [data-store-label]{min-width:0;overflow-wrap:anywhere}
+@media(min-width:1025px){.offline-status:has([data-store-apply]:not([hidden])){height:60px}.offline-status:has([data-store-apply]:not([hidden]))+.app-layout{height:calc(100dvh - 138px)}}

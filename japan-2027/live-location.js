@@ -1,7 +1,7 @@
 (function(){
  'use strict';
  let options,layer,marker,circle,trail,trailSegments=[],lastTrailFix=null,watch=null,timer=null,fix=null,following=true,firstFix=true,key='',segments=[],chosen=null,phase='off',offSince=null,offCount=0;
- let observedDay=null,dateNotice=false,dateReason='selection',rejectedNotice='';
+ let observedLegs=null,observedDay=null,dateNotice=false,dateReason='selection',rejectedNotice='';
  let resolution=null,lastMatch=null,previousFix=null,selectedHint=null,passedLegs=new Set();
  const $=s=>document.querySelector(s),h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const metres=n=>n>=1000?(n/1000).toFixed(n>=10000?0:1)+'km':Math.round(n)+'m';
@@ -9,7 +9,7 @@
  function show(){document.querySelector('.map-panel').classList.add('location-active');$('#locationCard').hidden=false;}
  function buttonState(){const active=watch!==null||phase==='starting';$('#locationBtn').setAttribute('aria-pressed',String(active));$('#locationBtnLabel').textContent=active?'위치 켜짐':'내 위치';$('#locationFollow').textContent=following?'지도 따라가는 중':'내 위치로 돌아가기';$('#locationFollow').setAttribute('aria-pressed',String(following));$('#locationFollow').disabled=!fix;}
  function pauseFollow(){following=false;if(options)buttonState();}
- function refresh(){if(!options)return;const c=options.context(),newKey=c.day.n+'|'+c.variant.id;if(key!==newKey){dateReason='selection';dateNotice=tripDay()!==null&&tripDay()!==c.day.n;key=newKey;chosen=null;selectedHint=null;lastMatch=null;previousFix=null;resolution=null;passedLegs=new Set();segments=RouteMatch.build(c.legs);$('#locationLeg').innerHTML='<option value="auto">자동 · 방향·진행 순서로 비교</option>'+c.legs.map((l,i)=>l&&l.distanceM>20?`<option value="${i}">${h(l.from)} → ${h(l.to)}</option>`:'').join('');offSince=null;offCount=0;}
+ function refresh(){if(!options)return;const c=options.context(),newKey=c.day.n+'|'+c.variant.id;if(key!==newKey||observedLegs!==c.legs){observedLegs=c.legs;dateReason='selection';dateNotice=tripDay()!==null&&tripDay()!==c.day.n;key=newKey;chosen=null;selectedHint=null;lastMatch=null;previousFix=null;resolution=null;passedLegs=new Set();segments=RouteMatch.build(c.legs);$('#locationLeg').innerHTML='<option value="auto">자동 · 방향·진행 순서로 비교</option>'+c.legs.map((l,i)=>l&&l.distanceM>20?`<option value="${i}">${h(l.from)} → ${h(l.to)}</option>`:'').join('');offSince=null;offCount=0;}
   $('#locationDay').textContent=`${c.day.date} · ${c.variant.label||c.day.cityLabel} 기준`;
   if(fix){resolveFix();render();}
  }
