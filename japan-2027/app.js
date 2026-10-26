@@ -418,7 +418,7 @@ async function main(){
  else{
   const results=await Promise.allSettled(tripFiles.map(f=>TravelStore.readJson(f+'?v='+TravelStore.VERSION)));
   const [base,tokyo,routes,west,westRoutes]=results.map(r=>r.status==='fulfilled'?r.value:null);
-  if(base&&tokyo&&routes&&west&&westRoutes){const trip=mergeTripFiles([base,tokyo,routes,west,westRoutes]);tripSignature=await sourceSignature(trip);state.data=trip.data;state.routeData=trip.routes;TravelStore.useSnapshot(await TravelStore.saveSnapshot(state.data,state.routeData,tripSignature));}
+  if(base&&tokyo&&routes&&west&&westRoutes){const trip=mergeTripFiles([base,tokyo,routes,west,westRoutes]);tripSignature=await sourceSignature(trip);state.data=trip.data;state.routeData=trip.routes;TravelStore.useSnapshot(await TravelStore.saveSnapshot(state.data,state.routeData,tripSignature,TravelStore.checkedAt(tripFiles.map(f=>f+'?v='+TravelStore.VERSION))));}
   else{if(!base)throw Error('저장된 일정이 없어요. 처음에는 통신 연결이 필요합니다.');state.data=TripData.merge(base,tokyo,west);state.routeData={days:{...(routes?.days||{}),...(westRoutes?.days||{})}};state.incompleteData=true;state.data.days=state.data.days.filter(d=>(d.n<=11?!!tokyo:!!west));if(!state.data.days.length)throw Error('확인된 지역 일정이 없어요. 통신 연결 후 다시 열어 주세요.');state.day=state.data.days[0].n;announce('일부 지역 자료 연결 실패 · 확인된 날짜만 표시합니다. 연결 후 새로고침해 주세요.');}
   if(results.some(r=>r.status==='rejected'))TravelStore.markStale();
  }
