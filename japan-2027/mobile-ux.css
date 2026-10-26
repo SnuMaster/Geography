@@ -81,3 +81,8 @@
 .service-brand{display:inline-flex;align-items:center;justify-content:center;padding:5px 10px;margin:0 6px 0 0;min-width:48px;font-weight:800;font-size:13px;letter-spacing:-.02em;line-height:1.4;border-radius:7px;vertical-align:middle}.uber-brand{color:white;background:#111}.ktx-brand{color:white;background:#0054a6}.overview-stop-row strong,.stop-name{overflow-wrap:anywhere}
 
 .operator-logo{display:inline-block;width:72px;height:27px;max-width:72px;max-height:27px;object-fit:contain;vertical-align:middle;flex:none;background:#fff;border-radius:4px;padding:2px 4px;box-sizing:border-box}.operator-ktx{width:80px;max-width:80px}.operator-map-symbol{display:flex;align-items:center;justify-content:center;background:#fff!important;border:1px solid #cbd8d5!important;border-radius:7px!important;box-shadow:0 2px 7px #193e3a33}.operator-map-symbol img.operator-logo{height:29px;max-height:29px;width:74px;max-width:74px}.stop-name{line-height:1.6}.station-departures .departure-stations strong{overflow-wrap:anywhere}
+
+/* Uber black brand variant, readable on map and in transport cards. */
+.operator-logo.operator-uber{background:#000;color:#fff;border:0;border-radius:6px;padding:0;width:96px;max-width:96px;height:36px;max-height:36px}
+.operator-map-symbol.uber-map-symbol{background:#000!important;border-color:#000!important;border-radius:6px!important}
+.operator-map-symbol.uber-map-symbol img.operator-uber{background:#000;width:86px;max-width:86px;height:35px;max-height:35px;padding:0}
