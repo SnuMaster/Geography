@@ -3,7 +3,7 @@
  const $=s=>document.querySelector(s),frame=$('#app'),qa=window.stateQA={storage:new Map(),clock:null,delayFile:null,safeBottom:0};let total=0,failed=0;
  const sleep=ms=>new Promise(r=>setTimeout(r,ms)),check=(v,m)=>{if(!v)throw Error(m);};
  const until=async(fn)=>{for(let n=0;n<300;n++){if(fn())return;await sleep(100);}throw Error('화면 갱신 제한시간 초과');};
- const load=async(day=1)=>{qa.storage.clear();qa.clock=null;const old=frame.contentDocument;frame.src='state-fixture.html?day='+day+'&variant=main';await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));return frame.contentWindow;};
+ const load=async(day=1)=>{qa.storage.clear();qa.clock=null;const old=frame.contentDocument;frame.src='state-fixture.html?day='+day+'&variant=main';await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));const w=frame.contentWindow;w.ItineraryDrawer.open({focus:false});return w;};
  const click=(w,s)=>{const el=w.document.querySelector(s);check(el,'컨트롤 없음 '+s);el.click();};
  const change=(w,s,value)=>{const el=w.document.querySelector(s);check(el,'입력 없음 '+s);el.value=value;el.dispatchEvent(new w.Event('change',{bubbles:true}));};
  const visible=el=>!!el&&el.getClientRects().length&&getComputedStyle(el).visibility!=='hidden'&&getComputedStyle(el).display!=='none';
