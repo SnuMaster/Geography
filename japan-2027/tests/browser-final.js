@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/32';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/34';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -42,6 +42,36 @@
  await report(30,'320px 모든263개 장소 마지막 버튼',async()=>{frame.style.width='320px';frame.style.height='568px';const w=await load(),b=w.__routebook;let count=0;for(const d of b.state.data.days){b.setDay(d.n,{history:'none'});for(const v of d.variants){b.setVariant(v.id,{history:'none'});for(let i=0;i<v.stops.length;i++){b.selectStop(i,true,false,{history:false});const body=w.document.querySelector('.detail-sheet-body');check(w.document.querySelector('#detailSheet').open,'sheet 미표시');body.scrollTop=body.scrollHeight;const links=[...body.querySelectorAll('a')].filter(a=>a.textContent.includes('장소 길찾기')),last=links.at(-1);check(last,'마지막 길찾기 없음');const r=last.getBoundingClientRect();check(r.top>=0&&r.bottom<=568,'마지막 링크 잘림 '+d.n+'/'+i);const hit=w.document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);check(hit&&(last===hit||last.contains(hit)),'마지막 링크 가림');close(w);count++;}}}return count+'개 전체 상세 마지막 링크 hit-test';});
  await report(31,'통신 차단 후 저장 일정·시간표 사용',async()=>{frame.style.width='390px';frame.style.height='844px';const w=await load(19);const url='west-data.json?v='+w.TravelStore.VERSION;await w.TravelStore.readJson(url);await w.__routebook.rail.getSchedule(key);qa.networkBlocked=true;const data=await w.TravelStore.readJson(url);check(data.days.some(d=>d.n===19),'저장 일정 없음');check(w.document.querySelector('#offlineStatus').dataset.offline==='true','오프라인 안내 없음');check(await w.__routebook.rail.getSchedule(key),'최근 시간표 유실');check(w.__routebook.state.day===19,'화면 일정 유실');qa.networkBlocked=false;return '실제 fetch 실패 입력 → CacheAPI 저장 JSON·시각 안내, 당일 화면 유지';});
  await report(32,'4개 화면 전체25안 데이터·연결',async()=>{const w=await load(),b=w.__routebook;let count=0;for(const [width,height] of [[320,568],[390,844],[768,1024],[1280,900]]){frame.style.width=width+'px';frame.style.height=height+'px';w.dispatchEvent(new w.Event('resize'));for(const d of b.state.data.days){b.setDay(d.n,{history:'none'});for(const v of d.variants){b.setVariant(v.id,{history:'none'});check(w.document.querySelectorAll('.stop-card').length===v.stops.length,'카드 누락');check(w.document.documentElement.scrollWidth<=w.document.documentElement.clientWidth+1,'가로 넘침 '+width+'/'+d.n);check(!/undefined|NaN/.test(w.document.querySelector('#stopList').textContent),'잘못된 값 노출');count++;}}}check(qa.errors.length===0,'JS 오류 '+qa.errors.join(';'));return count+'개 일정안 렌더 · 저장 개수263/238/144 보존 · console 오류 없음';});
+ await report(33,'1/8 숙소 출발 뒤 실제 연결 가능한 JR 열차',async()=>{
+  frame.style.width='1280px';frame.style.height='900px';const w=await load(1,{date:'2026-10-26T10:00:00+09:00'}),d=w.document;
+  w.__routebook.selectLeg(8);change(w,'[data-departure-select]','jr-ueno-tokyo');
+  await until(()=>d.querySelector('[data-ride-next]'));
+  const section=d.querySelector('.station-departures'),first=section._rideTrains[0],parts=w.ConnectionCore.stepsFor(w.__routebook.getLeg(8),w.RailDepartures.keyFor);
+  check(w.DepartureCore.formatTime(first.departureAt)==='17:33','도보·앞 열차·환승을 반영하지 않은 JR 열차');
+  check(d.querySelector('.departure-clock').textContent.includes('승차 여유 1분 반영'),'연결 기준 안내 누락');
+  check(parts.length===5,'도보·환승 단계 누락');close(w);return '17:10 숙소 출발 → 앞 열차·도보·환승 반영 → 우에노17:33 출발';
+ });
+ await report(34,'새 자료 적용 전 표시 시각 유지·일부 실패 시 혼합 차단·선택 상태 보존',async()=>{
+  const w=await load(14),b=w.__routebook,d=w.document;b.setVariant('no-yamazaki');await pick(w);
+  click(w,'[data-ride-close]');const ride=qa.storage.get('routebook-boarded-train-v1'),previous=d.querySelector('#offlineStatus').textContent,original=w.fetch.bind(w);
+  let blocked=true;
+  w.fetch=async(url,options)=>{
+   if(blocked&&String(url).startsWith('tokyo-data.json'))throw Error('partial refresh fixture');
+   const response=await original(url,options);
+   if(String(url).startsWith('west-data.json')){const data=await response.json();data.days.find(day=>day.n===14).variants.find(v=>v.id==='no-yamazaki').title='새 자료 우지 일정';return new w.Response(JSON.stringify(data),{headers:{'Content-Type':'application/json'}});}
+   return response;
+  };
+  qa.clock+=60000;w.dispatchEvent(new w.Event('routebook:online'));
+  await until(()=>d.querySelector('#offlineStatus').dataset.offline==='true');
+  check(d.querySelector('[data-store-apply]').hidden,'일부 실패 자료 적용 노출');check(!d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'실패한 묶음이 화면에 반영됨');
+  blocked=false;w.dispatchEvent(new w.Event('routebook:online'));await until(()=>!d.querySelector('[data-store-apply]').hidden);
+  check(d.querySelector('#offlineStatus').textContent.includes('현재 화면은 이전 자료'),'새 자료와 표시 자료 혼동');
+  check(!d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'사용자 적용 전에 일정 덮어쓰기');
+  click(w,'[data-store-apply]');check(b.state.day===14&&b.state.variant==='no-yamazaki','날짜·대체안 유실');
+  check(d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'새 일정 적용 실패');check(qa.storage.get('routebook-boarded-train-v1')===ride,'탑승 기록 유실');
+  check(d.querySelector('[data-store-apply]').hidden,'적용 버튼 잔류');check(!d.querySelector('#offlineStatus').textContent.includes('이전 자료'),'표시 자료 시각 미갱신');
+  return '실패한 파일은 합치지 않음 · 적용 버튼으로 새 자료 반영 · 날짜·우지안·탑승 기록 보존';
+ });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
  await load(1);

@@ -25,7 +25,7 @@
   for(const d of data.days)for(const v of d.variants){
    v.stops.forEach((s,i)=>{const t=interval(s);s.start=t.start;s.end=t.end;s.uid=s.uid||s.id||`d${d.n}-${v.id}-${i}`;s.mapQuery=`${s.lat},${s.lng}`;});
    const legs=routes.days?.[`${d.n}-${v.id}`]||[];
-   legs.forEach((l,i)=>{if(!l)return;l.dayNumber=d.n;l.variant=v.id;l.legIndex=i+1;l.legId=`d${d.n}-${v.id}-leg-${i+1}`;l.serviceDate=date(d.n);l.departureBasis='일정 예정 시각';const arrival=interval(v.stops[i+1]||{});l.arrivalAt=arrival.start?Date.parse(`${l.serviceDate}T${arrival.start}:00+09:00`):null;const t=interval(v.stops[i]||{});l.departureAt=Date.parse(`${l.serviceDate}T${t.end||t.start||'00:00'}:00+09:00`);for(const p of l.parts||[])p.geometry=geometry(p);});
+   legs.forEach((l,i)=>{if(!l)return;l.dayNumber=d.n;l.variant=v.id;l.legIndex=i+1;l.legId=`d${d.n}-${v.id}-leg-${i+1}`;l.serviceDate=date(d.n);l.departureBasis='일정 예정 시각';const arrival=interval(v.stops[i+1]||{});l.arrivalAt=arrival.start?Date.parse(`${l.serviceDate}T${arrival.start}:00+09:00`):null;const t=interval(v.stops[i]||{});l.departureTimeKnown=!!(t.end||t.start);l.departureAt=Date.parse(`${l.serviceDate}T${t.end||t.start||'00:00'}:00+09:00`);for(const p of l.parts||[])p.geometry=geometry(p);});
   }
   return {data,routes};
  }

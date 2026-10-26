@@ -63,12 +63,12 @@ const RailDepartures = (() => {
    <div class="departure-secondary">${u.timetable?`<a href="${esc(u.timetable)}" target="_blank" rel="noopener noreferrer">공식 시간표 ↗</a>`:''}${u.status?`<a href="${esc(u.status)}" target="_blank" rel="noopener noreferrer">운행 정보 ↗</a>`:''}<a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>
    <details class="departure-source"><summary>시간표 출처·기준</summary><div>${sourceHtml(p)}</div></details>`;
  }
- function sectionHtml(key,serviceDate,referenceAt){const p=profiles[key];return `<section class="station-departures" data-reference-at="${Number.isFinite(referenceAt)?referenceAt:''}" data-service-date="${esc(serviceDate)}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,serviceDate)}</section>`;}
+ function sectionHtml(key,serviceDate,referenceAt,steps){const p=profiles[key];return `<section class="station-departures" data-connection-steps="${esc(JSON.stringify(steps||[]))}" data-reference-at="${Number.isFinite(referenceAt)?referenceAt:''}" data-service-date="${esc(serviceDate)}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,serviceDate)}</section>`;}
  function html(day,leg,part){
   if(!supported(day,leg,part))return '';
   const keys=keysFor(leg,part);
-  const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+p.from+' → '+p.to)}</option>`;}).join('')}</select><small>선택한 날짜·승차 구간 기준 · 도보·환승 연결편은 길찾기에서 확인</small></label>`:'';
-  return `<div class="departure-panel">${select}${sectionHtml(keys[0],travelDate(leg.dayNumber||day),leg.departureAt)}</div>`;
+  const select=keys.length>1?`<label class="departure-select-label">열차를 확인할 승차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+p.from+' → '+p.to)}</option>`;}).join('')}</select><small>여행일 참고는 앞 열차·도보·환승 반영 · 현재 시간표는 출발역 기준</small></label>`:'';
+  return `<div class="departure-panel">${select}${sectionHtml(keys[0],travelDate(leg.dayNumber||day),leg.departureTimeKnown===false?null:leg.departureAt,ConnectionCore.stepsFor(leg,keyFor))}</div>`;
  }
  async function loadData(key,force=false){
   const file=profiles[key]?.file;if(!file)return null;
@@ -108,9 +108,23 @@ const RailDepartures = (() => {
   if(!schedules){body.setAttribute('aria-busy',String(!failed.has(p.file)));if(failed.has(p.file))stateMessage(body,'error','시간표를 불러오지 못했어요.',true);return;}
   body.setAttribute('aria-busy','false');
   const selectedDate=section.dataset.serviceDate,currentServiceDate=globalThis.RideCore?.serviceDateForNow(now)||DepartureCore.japanDate(now),future=section.dataset.queryMode!=='current';
-  const reference=Number(section.dataset.referenceAt),queryNow=future?(reference>0?reference-60000:Date.parse(selectedDate+'T07:00:00+09:00')):now;
+  const reference=Number(section.dataset.referenceAt),steps=JSON.parse(section.dataset.connectionSteps||'[]');
+  const connection=future?ConnectionCore.readyAt(steps,key,reference>0?reference:null,(prior,at)=>{
+   if(!validityFor(prior,DepartureCore.japanDate(at)).usable)return {status:'invalid-connection'};
+   const schedule=loaded.get(profiles[prior].file)?.profiles?.[prior];
+   if(!schedule)return {status:failed.has(profiles[prior].file)?'connection-error':'connection-loading'};
+   const train=DepartureCore.nextTrains(schedule,at,{...calendarOptions(prior),limit:1})[0];
+   return train?{status:'ready',train}:{status:'connection-empty'};
+  }):null;
+  if(future&&connection.status!=='ready'){
+   clock.textContent=selectedDate+' · 일정 연결 시각을 확인해야 해요';
+   section.querySelector('.departure-heading strong').textContent='일정 연결 확인 필요';
+   const messages={'unknown-start':'일정 출발 시각이 없어 연결 열차를 추천하지 않아요.','unknown-access':'승차역까지의 접근·환승 시간이 미확인이라 연결 열차를 추천하지 않아요.','unknown-arrival':'앞 열차의 하차역 도착 시각이 없어 연결 열차를 추천하지 않아요.','outside-route':'반대 방향은 현재 이동 계획에 포함되지 않아요. 역 기준 전체 시간표에서 확인하세요.','invalid-connection':'앞 구간의 여행일 시간표 갱신이 필요해요.','connection-loading':'앞 구간의 연결 시간표를 불러오는 중…','connection-error':'앞 구간 시간표를 불러오지 못했어요.','connection-empty':'앞 구간에서 연결할 열차 시각을 확인할 수 없어요.'};
+   stateMessage(body,connection.status,messages[connection.status]||'연결 시간표를 확인해 주세요.',connection.status==='connection-error');return;
+  }
+  const queryNow=future?connection.queryAt:now;
   section.querySelector('.departure-heading strong').textContent=future?'여행일 기준 참고 시간표':'현재 다음 열차';
-  clock.textContent=future?`${selectedDate} 일정 출발 ${DepartureCore.formatTime(queryNow+60000)} 기준 · 참고 시각 · 승차역까지 도보·환승 연결 미계산 · 실시간 지연 미반영`:`현재 ${p.country==='KR'?'한국':'일본'} ${local.toISOString().slice(5,10).replace('-','/')} ${local.toISOString().slice(11,19)} · 예정 시각 · 실시간 지연 미반영`;
+  clock.textContent=future?`${selectedDate} 이동 시작 ${DepartureCore.formatTime(reference)} · ${p.from} 승차 준비 ${DepartureCore.timeLabel(connection.readyAt,reference)} 이후 · 도보·환승 + 승차 여유 1분 반영${connection.estimated?' · 앞 열차 도착은 소요시간 추정':''} · 지연 미반영`:`현재 ${p.country==='KR'?'한국':'일본'} ${local.toISOString().slice(5,10).replace('-','/')} ${local.toISOString().slice(11,19)} · 출발역 현재 시간표 · 이동·환승 연결은 별도 확인 · 지연 미반영`;
   const date=DepartureCore.japanDate(queryNow),calendarFrom=p.calendarFrom||manifest.calendarFrom,calendarThrough=p.calendarThrough||manifest.calendarThrough;
   if(calendarFrom&&date<calendarFrom){stateMessage(body,'out-of-range','해당 날짜에 적용할 시간표 자료가 없어요. 공식 시간표를 확인해 주세요.');return;}
   const options={limit:3,...calendarOptions(key)};
@@ -138,7 +152,7 @@ const RailDepartures = (() => {
   unmount();const element=popup.getElement();if(!element?.querySelector('[data-departure-profile]'))return;
   // Retain live DOM when Leaflet remeasures the popup after async data loads.
   if(!popup.getContent()?.nodeType){const content=element.querySelector('.leaflet-popup-content'),node=document.createElement('div');while(content.firstChild)node.appendChild(content.firstChild);popup.setContent(node);}
-  const refresh=async(key,force=false)=>{await loadData(key,force);if(active?.popup===popup){paint();popup.update();}};
+  const refresh=async(key,force=false)=>{const section=element.querySelector('[data-departure-profile]'),steps=JSON.parse(section?.dataset.connectionSteps||'[]'),keys=ConnectionCore.dependencies(steps,key);await Promise.all([...new Set([key,...keys])].map(k=>loadData(k,force)));if(active?.popup===popup){paint();popup.update();}};
   const selectProfile=(section,key)=>{
    if(!profiles[key]||!section)return;
    const content=shell(key,section.dataset.serviceDate);
