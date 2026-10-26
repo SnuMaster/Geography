@@ -121,7 +121,7 @@
  });
  await report(39,'전체 지도 확대·지역별 날짜·상세 장소·일정 이동',async()=>{
   for(const width of [390,1280]){
-   frame.style.width=width+'px';frame.style.height='900px';const w=await load(1),b=w.__routebook,d=w.document;b.showOverview();b.map.setView([35.714,139.797],13,{animate:false});
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(1),b=w.__routebook,d=w.document;b.showOverview();check(d.querySelectorAll('.city-marker').length===5,'도시 마커 중복');check(d.querySelector('.city-marker').getBoundingClientRect().width>=44,'도시 터치 영역 부족');b.map.setView([35.714,139.797],13,{animate:false});
    await until(()=>d.querySelector('[data-overview-day="2"]'));click(w,'[data-overview-day="2"]');
    check(b.state.view==='overview'&&d.querySelectorAll('.overview-place-marker').length>3,'전체 지도 상세 누락 '+width);
    const layer=Object.values(b.map._layers).find(l=>l.options?.title==='01/09 센소지');check(layer,'센소지 상세 마커 없음');layer.fire('click');

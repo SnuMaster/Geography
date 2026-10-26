@@ -323,13 +323,14 @@ function overviewStops(){return [
  {name:'서대구',lat:35.8813666,lng:128.5417368,modeFromPrevious:'rail',days:'1/29 부산12:44 → 서대구13:47:30 정차 · 330편 현재표 참고',n:22}
  ];}
 function overviewLegs(){return state.data.days.flatMap(d=>state.routeData.days[`${d.n}-${JourneyState.chosen(d,state.selectedVariantByDay)}`]||[]).filter(l=>l?.travel||l?.parts.some(p=>p.lineId==='KORAIL.GyeongbuHSR'));}
+function overviewCities(){return [{name:'대구',lat:35.8794,lng:128.6284,n:1},...overviewStops().filter(s=>['도쿄','오사카','후쿠오카','부산'].includes(s.name))];}
 function withDayContext(day,variant,render){const before={day:state.day,variant:state.variant};state.day=Number(day);state.variant=variant;try{return render();}finally{Object.assign(state,before);}}
 function overviewLegHtml(leg,part){return withDayContext(leg.dayNumber,leg.variant,()=>legHtml(leg,part));}
 function renderOverviewMap(fit=true){
  if(overviewRendering||state.view!=='overview')return;overviewRendering=true;
  try{
   hideRailHover();routeLayer.clearLayers();railSymbolKeys.clear();railSymbolGroups.clear();arrows=[];
-  const detailed=!fit&&map.getZoom()>=10,stops=overviewStops(),legs=overviewLegs();
+  const detailed=!fit&&map.getZoom()>=10,stops=overviewCities(),legs=overviewLegs();
   const draw=(leg,part,local=false)=>{if(part.coords?.length<2)return;const color=railInfo(part)?.color||(MODE[part.mode]||MODE.rail).color,schematic=part.mode==='ferry'&&part.geometryAccuracy==='schematic';
    L.polyline(part.coords,{color:'#fff',weight:local?7:5,opacity:.9,interactive:false}).addTo(routeLayer);
    L.polyline(part.coords,{color,weight:schematic?2:local?4:3,opacity:local||!detailed?.9:.45,dashArray:schematic?'2 6':['flight','ferry'].includes(part.mode)?'9 7':part.mode==='transfer'?'3 5':null,interactive:false}).addTo(routeLayer);
@@ -339,7 +340,7 @@ function renderOverviewMap(fit=true){
   for(const leg of legs)for(const part of railParts(leg))draw(leg,part);
   if(!detailed){
    $('#mapTitle').innerHTML='<div class="map-kicker">전체 여정</div><p class="overview-map-instruction">지도를 확대하면 해당 지역의 상세 일정이 나와요.</p>';
-   stops.forEach(s=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker city-marker',html:'<span class="city-map-dot"></span>',iconSize:[24,24],iconAnchor:[12,12]}),title:s.name}).addTo(routeLayer);mk.bindTooltip(esc(s.name),{permanent:true,direction:'right',offset:[10,0],className:'stop-tooltip'});mk.on('click',()=>{overviewFocus=s.n;const day=state.data.days.find(d=>d.n===s.n),v=MapPlan.variant(day,state.selectedVariantByDay),local=v.stops.filter(p=>['sight','cafe','food'].includes(p.kind));map.fitBounds(L.latLngBounds((local.length?local:v.stops).map(p=>[p.lat,p.lng])),{padding:[65,65],maxZoom:14,animate:false});renderOverviewMap(false);});});
+   stops.forEach(s=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker city-marker',html:'<span class="city-map-dot"></span>',iconSize:[44,44],iconAnchor:[22,22]}),title:s.name,alt:s.name+' 지역 일정 확대'}).addTo(routeLayer);mk.bindTooltip(esc(s.name),{permanent:true,direction:'right',offset:[17,0],className:'stop-tooltip'});mk.on('click',()=>{overviewFocus=s.n;map.setView([s.lat,s.lng],12,{animate:false});renderOverviewMap(false);});});
    $('.route-caution').textContent='도시 간 이동 · 항공·배는 참고 경로';
   }else{
    const b=map.getBounds(),context=MapPlan.context(state.data.days,state.selectedVariantByDay,{south:b.getSouth(),north:b.getNorth(),west:b.getWest(),east:b.getEast()},map.getCenter(),overviewFocus),focus=context.focus;
