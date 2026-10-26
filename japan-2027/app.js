@@ -235,7 +235,7 @@ function renderMap(fit=true){
 function markerIcon(indices){const stops=getStops(),first=stops[indices[0]],active=indices.includes(state.selected),night=state.night&&indices.some(i=>isNight(stops[i]));return L.divIcon({className:'route-marker',html:`<div class="pin-number ${first.kind} ${active?'active':''} ${night?'night':''}"><span>${indices[0]+1}</span>${indices.length>1?'<small class="repeat-place" title="같은 장소 재방문">↻</small>':''}</div>`,iconSize:[44,44],iconAnchor:[22,38]});}
 function fitRoute(focus=false){
  map.stop();
- if(focus&&state.view==='overview'){const day=state.data.days.find(d=>d.n===(overviewFocus||state.day)),variant=MapPlan.variant(day,state.selectedVariantByDay),local=variant.stops.filter(s=>['sight','cafe','food'].includes(s.kind));if(local.length){map.fitBounds(L.latLngBounds(local.map(s=>[s.lat,s.lng])),{padding:[55,70],maxZoom:14,animate:false});return;}}
+ if(focus&&state.view==='overview'){const day=state.data.days.find(d=>d.n===(overviewContext?.day.n||overviewFocus||state.day)),variant=MapPlan.variant(day,state.selectedVariantByDay),local=variant.stops.filter(s=>['sight','cafe','food'].includes(s.kind));if(local.length){map.fitBounds(L.latLngBounds(local.map(s=>[s.lat,s.lng])),{padding:[55,70],maxZoom:14,animate:false});return;}}
  const stops=state.view==='overview'?overviewStops():getStops();let coords=stops.map(s=>[s.lat,s.lng]);
  if(state.view==='overview')coords.push(...overviewLegs().flatMap(l=>l.parts.flatMap(p=>p.coords)));
  if(!focus&&state.view==='daily'&&hasDetailedRoutes())coords.push(...(state.routeData.days[`${state.day}-${getVariant().id}`]||[]).filter(Boolean).flatMap(l=>l.parts.flatMap(p=>p.coords)));
