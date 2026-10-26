@@ -33,5 +33,7 @@ body.itinerary-open .itinerary-panel{display:flex;min-height:0;flex-direction:co
 @media(max-width:740px){
  .workspace-toolbar{min-height:112px}.toolbar-right{gap:5px;flex-wrap:wrap}#rideToggle{flex:1}#itineraryToggle{font-size:11px;padding:8px 10px}#nightBtn{display:none}
  .map-title-card{max-width:min(280px,calc(100% - 80px))}
+ #locationBtn{width:auto;padding:0 10px;gap:5px}#locationBtnLabel{display:inline}
+ .map-title-card{max-width:min(280px,calc(100% - 120px))}
  .location-bearing-row{font-size:11px}.location-status{margin:5px 0}.location-follow{min-height:44px}.location-card .location-heading{margin-bottom:4px}
 }
