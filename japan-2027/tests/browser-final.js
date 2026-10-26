@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/34';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/36';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -71,6 +71,34 @@
   check(d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'새 일정 적용 실패');check(qa.storage.get('routebook-boarded-train-v1')===ride,'탑승 기록 유실');
   check(d.querySelector('[data-store-apply]').hidden,'적용 버튼 잔류');check(!d.querySelector('#offlineStatus').textContent.includes('이전 자료'),'표시 자료 시각 미갱신');
   return '실패한 파일은 합치지 않음 · 적용 버튼으로 새 자료 반영 · 날짜·우지안·탑승 기록 보존';
+ });
+ await report(35,'모바일·데스크톱 예약 시각 즉시 반영·팝업 유지·충돌 경고·초기화',async()=>{
+  for(const width of [320,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(14),b=w.__routebook,d=w.document;
+   b.selectStop(1);const timeSelector='.leaflet-popup-content [data-reservation-time=yamazaki]';
+   d.querySelector(timeSelector).focus();change(w,timeSelector,'2027-01-21T14:00');
+   check(d.querySelector('.leaflet-popup-content .popup-time').textContent.includes('14:00'),'팝업 시각 미반영 '+width);
+   check(d.querySelector('[data-stop="1"] .stop-time').textContent.includes('14:00~15:40'),'카드 시각 미반영 '+width);
+   check(d.querySelector('.reservation-alert').textContent.includes('산쇼테이'),'연결 충돌 경고 없음 '+width);
+   check(d.querySelector(timeSelector).value==='2027-01-21T14:00','팝업 입력 유실 '+width);
+   check(d.activeElement===d.querySelector(timeSelector),'예약 입력 초점 유실 '+width);
+   if(width<=1024)check(d.querySelector('#detailSheet').open,'변경 뒤 상세창 닫힘');
+   check(b.getLeg(2).departureAt===Date.parse('2027-01-21T15:40:00+09:00'),'다음 이동 시각 미반영');
+   const details=d.querySelector('#routeDetails');check(details.textContent.includes('14:00~15:40'),'시간표 전체 미반영');
+   change(w,timeSelector,'2027-01-22T14:00');check(d.querySelector(timeSelector).getAttribute('aria-invalid')==='true','다른 날짜 검증 누락');
+   check(d.querySelector('[data-stop="1"] .stop-time').textContent.includes('10:00~11:40'),'잘못된 날짜가 적용됨');
+   change(w,timeSelector,'');check(!d.querySelector('.reservation-alert'),'초기화 뒤 충돌 잔류');check(d.querySelector(timeSelector).getAttribute('aria-invalid')==='false','오류 상태 잔류');close(w);
+  }
+  return '320/1280px · 카드/팝업/이동/전체 시간표 동기화 · 날짜 오류 보류 · 원래 계획 복원';
+ });
+ await report(36,'예약 기록 새로고침 복원·공연 종료 미확정·나리타 시각 통일',async()=>{
+  let w=await load(14),b=w.__routebook;b.selectStop(1);change(w,'.leaflet-popup-content [data-reservation-status=yamazaki]','예약완료');change(w,'.leaflet-popup-content [data-reservation-time=yamazaki]','2027-01-21T14:00');close(w);
+  w=await load(14,{reset:false});b=w.__routebook;check(b.getStops()[1].time==='14:00~15:40','새로고침 뒤 예약 시각 미복원');
+  b.setDay(11);b.selectStop(6);change(w,'.leaflet-popup-content [data-reservation-time=zutomayo]','2027-01-18T17:30');
+  check(b.getStops()[6].start==='17:30'&&b.getStops()[6].end===null,'공연 종료 임의 생성');check(b.getLeg(7).departureTimeKnown===false,'공연 귀환 시각 확정 표시');close(w);
+  b.setDay(1);check(b.getStops()[2].end==='14:20','나리타 내부 종료 시각');check(b.getLeg(3).departureAt===Date.parse('2027-01-08T14:20:00+09:00'),'나리타 다음 이동 시각');
+  check(w.document.querySelector('#routeDetails').textContent.includes('13:20~14:20'),'나리타 전체 시간표 시각');
+  return '예약 기록 유지 · 공연 종료 미확정 보존 · 나리타 카드·계산·전체 시간표 일치';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };

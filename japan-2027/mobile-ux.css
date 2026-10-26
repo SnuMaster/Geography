@@ -53,3 +53,7 @@
 .offline-status:has([data-store-apply]:not([hidden])){display:flex;align-items:center;gap:8px}
 .offline-status [data-store-label]{min-width:0;overflow-wrap:anywhere}
 @media(min-width:1025px){.offline-status:has([data-store-apply]:not([hidden])){height:60px}.offline-status:has([data-store-apply]:not([hidden]))+.app-layout{height:calc(100dvh - 138px)}}
+
+.reservation-alert,.reservation-conflict{background:#fff1dc;border:1px solid #e0b974;border-radius:7px;padding:10px 12px;color:#714315;font-size:12px;line-height:1.7;overflow-wrap:anywhere}
+.reservation-alert{margin:0 0 16px}.reservation-alert ul{margin:6px 0 0;padding-left:18px}.reservation-plan-note{font-size:11px;line-height:1.6}.reservation-time-pill{display:inline-block;margin:4px 0 4px 6px;padding:2px 5px;border-radius:4px;background:#e3eddc;color:#315e3c;font-size:10px}
+.reservation-info input[aria-invalid=true]{border:2px solid #af632a}.reservation-info small{display:block;font-size:11px;line-height:1.6}
