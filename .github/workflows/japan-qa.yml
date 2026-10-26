@@ -17,13 +17,13 @@ jobs:
           node-version: 22
           cache: npm
           cache-dependency-path: japan-2027/tests/package-lock.json
+      - name: Fetch road geometry probe for Korean Uber legs
+        run: node japan-2027/tests/route-fetch.cjs
       - name: Pure regressions and all-itinerary integrity
         run: |
           node --test tests/*.test.cjs
           node scripts/japan-qa.cjs
           for file in japan-2027/*.js japan-2027/tests/*.js; do node --check "$file"; done
-      - name: Fetch road geometry probe for Korean Uber legs
-        run: node japan-2027/tests/route-fetch.cjs
       - name: Install browser test runner
         run: |
           npm ci --prefix japan-2027/tests
