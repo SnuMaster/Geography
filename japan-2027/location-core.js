@@ -58,5 +58,23 @@
   const threshold={walk:70,transfer:90,metro:180,rail:180,bus:250,taxi:250}[match.part.mode]||120;
   return match.distanceM>threshold+fix.accuracy?{kind:'off',label:'선택한 경로에서 떨어져 있어요'}:{kind:'on',label:'선택한 경로 근처에 있어요'};
  }
- return {distance,project,build,nearest,resolve,bearing,assess,quality,validateFix};
+ function normalizeHeading(value){return Number.isFinite(value)?((value%360)+360)%360:null;}
+ function compassHeading(event,screenAngle=0){
+  if(Number.isFinite(event?.webkitCompassHeading)){
+   const accuracy=event.webkitCompassAccuracy;
+   if(Number.isFinite(accuracy)&&(accuracy<0||accuracy>45))return null;
+   return normalizeHeading(event.webkitCompassHeading+(Number.isFinite(screenAngle)?screenAngle:0));
+  }
+  // Relative alpha has an arbitrary origin; it must never be shown as north.
+  if(event?.absolute!==true||!Number.isFinite(event.alpha))return null;
+  return normalizeHeading(360-event.alpha+(Number.isFinite(screenAngle)?screenAngle:0));
+ }
+ function displayHeading(fix,compass,now=Date.now()){
+  if(!fix||!Number.isFinite(fix.timestamp)||now-fix.timestamp>30000||fix.timestamp>now+5000||fix.accuracy>120)return null;
+  if(compass&&Number.isFinite(compass.degrees)&&Number.isFinite(compass.timestamp)&&now-compass.timestamp>=0&&now-compass.timestamp<=10000)return {degrees:normalizeHeading(compass.degrees),source:'compass'};
+  if(Number.isFinite(fix.speed)&&fix.speed>=.5&&Number.isFinite(fix.heading)&&fix.heading>=0&&fix.heading<360)return {degrees:fix.heading,source:'gps'};
+  return null;
+ }
+ function directionName(degrees){const heading=normalizeHeading(degrees);return heading===null?'': ['북','북동','동','남동','남','남서','서','북서'][Math.round(heading/45)%8];}
+ return {distance,project,build,nearest,resolve,bearing,assess,quality,validateFix,normalizeHeading,compassHeading,displayHeading,directionName};
 });
