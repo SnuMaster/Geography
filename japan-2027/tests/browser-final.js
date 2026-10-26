@@ -110,7 +110,7 @@
  });
  await report(38,'서대구 귀환 카드·330편 탑승·전체 여정 운임',async()=>{
   const w=await load(22,{date:'2026-10-26T10:00:00+09:00'}),b=w.__routebook,d=w.document,key='korail-busan-seodaegu';
-  check(b.getStops().at(-1).name==='서대구역 KTX','동대구 종점 잔류');check(d.querySelector('#dayHeader').textContent.includes('16,300'),'서대구 운임 미반영');
+  check(b.getStops().at(-2).name==='서대구역'&&b.getStops().at(-1).name==='월성로 132','동대구 종점 잔류');check(d.querySelector('#dayHeader').textContent.includes('16,300'),'서대구 운임 미반영');
   check(d.querySelector('[data-stop="5"]').textContent.includes('12:44'),'부산 출발 시각 미반영');
   b.selectLeg(6);await until(()=>d.querySelector('[data-ride-next]'));check(d.querySelector('.station-departures')._rideTrains[0].number==='330','다음 열차330 미표시');close(w);
   await w.RideTracker.open(key,'2027-01-29');await until(()=>d.querySelector('#rideSearch'));input(w,'#rideSearch','330');
@@ -132,7 +132,7 @@
  });
  await report(40,'배 양쪽 항만 연결·중복 기호·날짜 목록 정리',async()=>{
   const w=await load(21),b=w.__routebook,d=w.document,l=b.getLeg(5),stops=b.getStops();
-  check(l.parts.length===3&&l.parts[1].coords.length===86,'원본 해상 참고선 잘림');check(l.parts[0].geometryAccuracy==='schematic'&&l.parts[2].suppressSymbol,'항만 개략선 구분 누락');
+  check(l.parts.length===3&&l.parts[1].coords.length===86&&w.TripPersonal.displayParts(l).length===1,'원본 해상 참고선/연속 시각화 오류');check(l.parts[0].geometryAccuracy==='schematic'&&l.parts[2].suppressSymbol,'항만 개략선 구분 누락');
   check(l.parts[0].coords[0][0]===stops[4].lat&&l.parts.at(-1).coords.at(-1)[0]===stops[5].lat,'항만 연결 누락');
   check(Object.values(b.map._layers).filter(x=>x.options?.title?.startsWith('선박')).length===1,'배 기호 중복');
   const item=d.querySelector('[data-day="2"]');check(item.textContent.includes('도쿄')&&item.textContent.includes('아사쿠사'),'도시·명소 누락');check(!item.textContent.includes('DAY'),'날짜 안내 중복');
@@ -141,7 +141,7 @@
  });
  await report(41,'오프라인 준비 화면·크기·내장 지도 선택',async()=>{
   const w=await load(19),d=w.document;click(w,'#offlinePackBtn');await until(()=>d.querySelector('#offlinePackSize').textContent.includes('MB'));
-  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');check(d.querySelector('#offlinePackSize').textContent.includes('148'),'전체 저장 목록 누락');
+  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');check(d.querySelector('#offlinePackSize').textContent.includes('151'),'전체 저장 목록 누락');
   click(w,'#offlinePackClose');click(w,'#settingsBtn');change(w,'#mapProvider','offline');click(w,'#closeSettings');
   await until(()=>d.querySelector('#map').classList.contains('offline-map-active'));await until(()=>d.querySelector('.leaflet-offlineBase-pane path'));
   check(d.querySelectorAll('.stop-card').length===w.__routebook.getStops().length,'간략 지도 전환 때 일정 유실');
