@@ -25,7 +25,7 @@
  function geometry(part){
   const src=part.geometrySource||'';
   if(part.mode==='flight'){const recorded=part.flightTrack?.status==='recorded-reference',screen=part.flightTrack?.status==='screen-reference';return {kind:recorded?'recorded-reference':screen?'map-reference':'schematic',label:recorded?'기록 기반 참고 항로 · 여행 당일 실제 항적 아님':screen?'지도 복원 참고 항로 · 원본 GPS 항적 아님':'개략 항로 · 실제 항적 아님'};}
-  if(part.mode==='ferry')return {kind:'recorded-reference',label:'기록 기반 해상 참고선 · 실제 항적 아님'};
+  if(part.mode==='ferry')return part.geometryAccuracy==='schematic'?{kind:'schematic',label:'항만 연결 개략선 · 실제 항적 아님'}:{kind:'recorded-reference',label:'조사 지도 해상 참고선 · 실제 항적 아님'};
   if(/개략|직선|대표 연결|추정|미확인/.test(src)||!src)return {kind:'schematic',label:'개략선 · 실제 경로 미확인'};
   if(/OSRM|도로|보행|N02|선형|Mini Tokyo|OpenStreetMap|고속선/i.test(src))return {kind:'map-reference',label:'지도 복원 참고 경로'};
   return {kind:'map-reference',label:'지도 복원 참고 경로 · 출입구 확인 필요'};
