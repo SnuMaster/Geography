@@ -30,6 +30,8 @@ icons();
 const MODE={walk:{label:'도보',color:'#49765d',icon:'walk'},metro:{label:'지하철',color:'#477b95',icon:'rail'},rail:{label:'철도',color:'#477b95',icon:'rail'},bus:{label:'버스',color:'#477b95',icon:'bus'},taxi:{label:'택시',color:'#477b95',icon:'taxi'},flight:{label:'비행기',color:'#c97a4c',icon:'flight'},ferry:{label:'배',color:'#a67a5a',icon:'ferry'}};
 const state={selectedVariantByDay:{},data:null,day:1,variant:'main',view:'daily',filter:'all',search:'',night:false,selected:-1,playing:null,routeData:null,passEnabled:false,pass:{enabled:false,kind:'physical',startAt:null,purchased:false}};
 let screenGeneration=0;
+const tripFiles=['data.json','tokyo-data.json','tokyo-routes.json','west-data.json','west-routes.json'];
+let tripSignature='',tripRefresh=null;
 const journeyStorage={getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value)};
 let tileProvider='',tilePreference='auto',flightPreviousProvider=null;const failedTileProviders=new Set();try{tilePreference=localStorage.getItem('routebook-map-provider')||'auto';}catch(_){}
 let map, tiles, routeLayer, markers=[],legLines=[],stopGroups=[],arrows=[];
@@ -336,7 +338,8 @@ function renderOverview(){
 }
 
 function bindEvents(){
- window.addEventListener('routebook:online',()=>{for(const f of ['data.json','tokyo-data.json','tokyo-routes.json','west-data.json','west-routes.json'])TravelStore.readJson(f+'?v='+TravelStore.VERSION).catch(()=>{});announce('연결 복구 · 저장 자료를 갱신 중입니다. 화면은 유지합니다.');});
+ window.addEventListener('routebook:online',()=>{refreshTrip();announce('연결 복구 · 새 일정 자료를 확인 중입니다.');});
+ window.addEventListener('routebook:apply-trip-update',event=>applyTripUpdate(event.detail));
  window.addEventListener('routebook:reservation-alt',event=>{DetailView.close();navigateScreen({...event.detail,view:'daily'});});
  document.addEventListener('visibilitychange',()=>{if(document.hidden){pausePlay();window.FlightPlayback?.pause();}});window.addEventListener('pagehide',()=>{pausePlay();window.FlightPlayback?.pause();});
  window.addEventListener('routebook:user-explore',()=>{pausePlay();window.FlightPlayback?.pause();});
@@ -378,18 +381,49 @@ function focusRideProfile(key,station,selection={}){
   if(window.innerWidth<=740)$('#map').scrollIntoView({behavior:'smooth',block:'center'});return true;
 }
 
+function mergeTripFiles([base,tokyo,routes,west,westRoutes]){
+ return {data:TripData.merge(base,tokyo,west),routes:{...routes,days:{...routes.days,...westRoutes.days}}};
+}
+async function sourceSignature(trip){const bytes=new TextEncoder().encode(JSON.stringify([trip.data,trip.routes])),digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');}
+function validateTrip(trip){
+ if(trip.data?.days?.length!==22)throw Error('incomplete itinerary');
+ TripData.prepare(trip.data,trip.routes);
+ for(const day of trip.data.days)for(const variant of day.variants){const legs=trip.routes.days[`${day.n}-${variant.id}`];if(!legs||legs.length!==variant.stops.length-1||legs.some(l=>!l?.parts?.length))throw Error('incomplete routes');}
+}
+function refreshTrip(){
+ if(tripRefresh)return tripRefresh;
+ tripRefresh=(async()=>{
+  try{
+   // Never combine fresh files with cache fallbacks into a supposedly fresh trip.
+   const files=await Promise.all(tripFiles.map(f=>TravelStore.readJson(f+'?v='+TravelStore.VERSION,{networkOnly:true})));
+   const trip=mergeTripFiles(files),signature=await sourceSignature(trip);validateTrip(trip);
+   const snapshot=await TravelStore.saveSnapshot(trip.data,trip.routes,signature);
+   if(signature===tripSignature)TravelStore.useSnapshot(snapshot);else TravelStore.offerSnapshot(snapshot);
+  }catch(_){TravelStore.markStale();}
+  finally{tripRefresh=null;}
+ })();return tripRefresh;
+}
+function applyTripUpdate(snapshot){
+ const screen=screenSnapshot();DetailView.close();stopPlay();
+ state.data=snapshot.data;state.routeData=snapshot.routes;tripSignature=snapshot.sourceSignature;
+ state.incompleteData=false;$('#overviewView').disabled=false;
+ state.selectedVariantByDay=JourneyState.preferences(state.data.days,state.selectedVariantByDay);
+ navigateScreen(screen,{history:'replace',snapshot:screen});TravelStore.useSnapshot(snapshot);
+ announce('새 일정 자료를 적용했어요. 선택한 날짜와 탑승 기록을 유지합니다.');
+}
 async function main(){
  try{
  const saved=await TravelStore.snapshot();
- if(saved){state.data=saved.data;state.routeData=saved.routes;}
- const files=['data.json','tokyo-data.json','tokyo-routes.json','west-data.json','west-routes.json'];
- const results=await Promise.allSettled(files.map(f=>TravelStore.readJson(f+'?v='+TravelStore.VERSION,{preferCache:!!saved})));
- const [base,tokyo,routes,west,westRoutes]=results.map(r=>r.status==='fulfilled'?r.value:null);
- if(base&&tokyo&&routes&&west&&westRoutes){state.data=TripData.merge(base,tokyo,west);state.routeData={...routes,days:{...routes.days,...westRoutes.days}};await TravelStore.saveSnapshot(state.data,state.routeData);}
- else if(!saved){if(!base)throw Error('저장된 일정이 없어요. 처음에는 통신 연결이 필요합니다.');state.data=TripData.merge(base,tokyo,west);state.routeData={days:{...(routes?.days||{}),...(westRoutes?.days||{})}};state.incompleteData=true;state.data.days=state.data.days.filter(d=>(d.n<=11?!!tokyo:!!west));if(!state.data.days.length)throw Error('확인된 지역 일정이 없어요. 통신 연결 후 다시 열어 주세요.');state.day=state.data.days[0].n;announce('일부 지역 자료 연결 실패 · 확인된 날짜만 표시합니다. 연결 후 새로고침해 주세요.');}
- if(results.some(r=>r.status==='rejected'))TravelStore.markStale();
+ if(saved){state.data=saved.data;state.routeData=saved.routes;tripSignature=saved.sourceSignature||await sourceSignature({data:state.data,routes:state.routeData});TravelStore.useSnapshot(saved);}
+ else{
+  const results=await Promise.allSettled(tripFiles.map(f=>TravelStore.readJson(f+'?v='+TravelStore.VERSION)));
+  const [base,tokyo,routes,west,westRoutes]=results.map(r=>r.status==='fulfilled'?r.value:null);
+  if(base&&tokyo&&routes&&west&&westRoutes){const trip=mergeTripFiles([base,tokyo,routes,west,westRoutes]);tripSignature=await sourceSignature(trip);state.data=trip.data;state.routeData=trip.routes;TravelStore.useSnapshot(await TravelStore.saveSnapshot(state.data,state.routeData,tripSignature,TravelStore.checkedAt(tripFiles.map(f=>f+'?v='+TravelStore.VERSION))));}
+  else{if(!base)throw Error('저장된 일정이 없어요. 처음에는 통신 연결이 필요합니다.');state.data=TripData.merge(base,tokyo,west);state.routeData={days:{...(routes?.days||{}),...(westRoutes?.days||{})}};state.incompleteData=true;state.data.days=state.data.days.filter(d=>(d.n<=11?!!tokyo:!!west));if(!state.data.days.length)throw Error('확인된 지역 일정이 없어요. 통신 연결 후 다시 열어 주세요.');state.day=state.data.days[0].n;announce('일부 지역 자료 연결 실패 · 확인된 날짜만 표시합니다. 연결 후 새로고침해 주세요.');}
+  if(results.some(r=>r.status==='rejected'))TravelStore.markStale();
+ }
  TripData.prepare(state.data,state.routeData);try{const pass=JSON.parse(localStorage.getItem('routebook-pass-v2')||'null');if(pass)state.pass={...state.pass,...pass};}catch(_){}state.passEnabled=!!state.pass.enabled;
- for(const [dayKey,legs] of Object.entries(state.routeData.days))for(const leg of legs)if(leg)leg.dayNumber=Number(dayKey.split('-')[0]);if(!window.L)throw Error('지도 구성 요소를 불러오지 못했어요.');initMap();bindEvents();window.FlightPlayback?.init({map,pauseLocation:()=>window.RouteLocation?.pauseFollow(),prepareMap:()=>{flightPreviousProvider=tileProvider;setTiles('world',{temporary:true});},restoreMap:()=>{if(flightPreviousProvider){const previous=flightPreviousProvider;flightPreviousProvider=null;setTiles(previous,{temporary:tilePreference==='auto'});}},revealMap:()=>$('#map').scrollIntoView({block:'center',behavior:'instant'}),onManualStart:stopPlay,onManualControl:()=>stopPlay({keepFlight:true})});window.addEventListener('routebook:location-start',stopPlay);window.RouteLocation?.init({map,context:()=>({day:getDay(),variant:getVariant(),view:state.view,legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),selectDay:setDay,prepareMap:()=>setTiles('world')});state.selectedVariantByDay=JourneyState.load(state.data.days,journeyStorage);const initial=JourneyState.read(location.href,state.data.days,state.selectedVariantByDay);let restoredScreen=history.state?.routebook===2?history.state:null;try{const savedScreen=JSON.parse(sessionStorage.getItem('routebook-screen-snapshot-v1')||'null');if(savedScreen?.url===location.href)restoredScreen=savedScreen.snapshot;}catch(_){}if(state.incompleteData){initial.view='daily';$('#overviewView').disabled=true;}navigateScreen(initial,{history:'replace',snapshot:restoredScreen});TravelStore.status();$('#mapLoading').classList.add('done');setTimeout(()=>$('#mapLoading').remove(),400);window.RideTracker?.init({map,context:()=>({day:getDay(),variant:getVariant(),legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),focusProfile:focusRideProfile});window.__routebook={state,map,getStops,setDay,setVariant,selectStop,selectLeg,showOverview,stopPlay,getLeg,dailyCost,rail:RailDepartures};loadFlightRouteReferences().then(references=>{if(references){applyFlightRouteReferences(state.routeData,references);TripData.prepare(state.data,state.routeData);if(!state.playing&&!DetailView.isOpen()&&!window.FlightPlayback?.isActive())renderMap(false);}});}
+ for(const [dayKey,legs] of Object.entries(state.routeData.days))for(const leg of legs)if(leg)leg.dayNumber=Number(dayKey.split('-')[0]);if(!window.L)throw Error('지도 구성 요소를 불러오지 못했어요.');initMap();bindEvents();window.FlightPlayback?.init({map,pauseLocation:()=>window.RouteLocation?.pauseFollow(),prepareMap:()=>{flightPreviousProvider=tileProvider;setTiles('world',{temporary:true});},restoreMap:()=>{if(flightPreviousProvider){const previous=flightPreviousProvider;flightPreviousProvider=null;setTiles(previous,{temporary:tilePreference==='auto'});}},revealMap:()=>$('#map').scrollIntoView({block:'center',behavior:'instant'}),onManualStart:stopPlay,onManualControl:()=>stopPlay({keepFlight:true})});window.addEventListener('routebook:location-start',stopPlay);window.RouteLocation?.init({map,context:()=>({day:getDay(),variant:getVariant(),view:state.view,legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),selectDay:setDay,prepareMap:()=>setTiles('world')});state.selectedVariantByDay=JourneyState.load(state.data.days,journeyStorage);const initial=JourneyState.read(location.href,state.data.days,state.selectedVariantByDay);let restoredScreen=history.state?.routebook===2?history.state:null;try{const savedScreen=JSON.parse(sessionStorage.getItem('routebook-screen-snapshot-v1')||'null');if(savedScreen?.url===location.href)restoredScreen=savedScreen.snapshot;}catch(_){}if(state.incompleteData){initial.view='daily';$('#overviewView').disabled=true;}navigateScreen(initial,{history:'replace',snapshot:restoredScreen});TravelStore.status();$('#mapLoading').classList.add('done');setTimeout(()=>$('#mapLoading').remove(),400);window.RideTracker?.init({map,context:()=>({day:getDay(),variant:getVariant(),legs:state.routeData.days[`${state.day}-${getVariant().id}`]||[]}),focusProfile:focusRideProfile});if(saved)refreshTrip();window.__routebook={state,map,getStops,setDay,setVariant,selectStop,selectLeg,showOverview,stopPlay,getLeg,dailyCost,rail:RailDepartures};loadFlightRouteReferences().then(references=>{if(references){applyFlightRouteReferences(state.routeData,references);TripData.prepare(state.data,state.routeData);if(!state.playing&&!DetailView.isOpen()&&!window.FlightPlayback?.isActive())renderMap(false);}});}
  catch(e){$('#mapLoading').innerHTML=`${icon('info')}<strong>${esc(e.message)}</strong><button class="outline-button" onclick="location.reload()">다시 불러오기</button>`;console.error(e);}
 }
 main();
