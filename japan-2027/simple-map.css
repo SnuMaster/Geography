@@ -37,3 +37,7 @@ body.itinerary-open .itinerary-panel{display:flex;min-height:0;flex-direction:co
  .map-title-card{max-width:min(280px,calc(100% - 120px))}
  .location-bearing-row{font-size:11px}.location-status{margin:5px 0}.location-follow{min-height:44px}.location-card .location-heading{margin-bottom:4px}
 }
+
+.map-panel.location-active .map-playbar,.map-panel.location-active .map-bottom{visibility:hidden;pointer-events:none}
+.location-card{bottom:12px}
+@media(max-width:1024px){.location-card{bottom:12px;max-height:240px}.location-card:has(.location-details[open]){max-height:calc(100% - 110px)}}
