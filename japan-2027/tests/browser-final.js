@@ -2,7 +2,7 @@
 (async()=>{
  const $=s=>document.querySelector(s),frame=$('#app'),qa=window.stateQA={storage:new Map(),clock:null,safeBottom:34,mockGPS:true,hidden:false,errors:[]};let total=0,failed=0,nonce=0;
  const sleep=ms=>new Promise(r=>setTimeout(r,ms)),check=(v,m)=>{if(!v)throw Error(m);},until=async fn=>{for(let n=0;n<300;n++){if(fn())return;await sleep(100);}throw Error('화면 갱신 제한시간 초과');};
- const load=async(day=1,{reset=true,date='2027-01-08T09:00:00+09:00'}={})=>{if(reset){qa.storage.clear();qa.clock=Date.parse(date);qa.delayFile=null;qa.networkBlocked=false;qa.hidden=false;qa.errors=[];}const old=frame.contentDocument;frame.src=`state-fixture.html?day=${day}&variant=main&qa=${++nonce}`;try{await until(()=>new URL(frame.contentWindow.location.href).searchParams.get('qa')===String(nonce)&&frame.contentDocument?.querySelector('#ridePanel'));}catch(error){throw Error(error.message+' · '+(frame.contentDocument?.querySelector('#mapLoading')?.textContent||('지도 로딩 상태 없음 / 패널 '+!!frame.contentDocument?.querySelector('#ridePanel')+' / URL '+frame.contentWindow.location.href)));}return frame.contentWindow;};
+ const load=async(day=1,{reset=true,date='2027-01-08T09:00:00+09:00'}={})=>{if(reset){qa.storage.clear();qa.clock=Date.parse(date);qa.delayFile=null;qa.networkBlocked=false;qa.hidden=false;qa.errors=[];}const old=frame.contentDocument;frame.src=`state-fixture.html?day=${day}&variant=main&qa=${++nonce}`;try{await until(()=>new URL(frame.contentWindow.location.href).searchParams.get('qa')===String(nonce)&&frame.contentDocument?.querySelector('#ridePanel'));}catch(error){throw Error(error.message+' · '+(frame.contentDocument?.querySelector('#mapLoading')?.textContent||('지도 로딩 상태 없음 / 패널 '+!!frame.contentDocument?.querySelector('#ridePanel')+' / URL '+frame.contentWindow.location.href)));}const w=frame.contentWindow;w.ItineraryDrawer.open({focus:false});return w;};
  const click=(w,s)=>{const n=w.document.querySelector(s);check(n,'컨트롤 없음 '+s);n.click();},change=(w,s,v)=>{const n=w.document.querySelector(s);check(n,'입력 없음 '+s);if(n.type==='checkbox')n.checked=!!v;else n.value=v;n.dispatchEvent(new w.Event('change',{bubbles:true}));},input=(w,s,v)=>{const n=w.document.querySelector(s);n.value=v;n.dispatchEvent(new w.Event('input',{bubbles:true}));};
  const close=w=>{const d=w.document;if(d.querySelector('#detailSheet').open)click(w,'[data-sheet-close]');else w.__routebook.map.closePopup();};
  const report=async(n,name,fn)=>{let detail,pass=true;try{detail=await fn()||'통과';}catch(e){detail=e.message;pass=false;failed++;}total++;const li=document.createElement('li');li.className=pass?'':'fail';li.dataset.scenario=n;li.textContent=`${pass?'PASS':'FAIL'} · ${n}. ${name}`;const small=document.createElement('small');small.textContent=detail;li.append(small);$('#results').append(li);$('#status').textContent=`${total-failed}/${total} 통과 · 실패 ${failed}`;};
@@ -141,11 +141,11 @@
  });
  await report(41,'오프라인 준비 화면·크기·내장 지도 선택',async()=>{
   const w=await load(19),d=w.document;click(w,'#offlinePackBtn');await until(()=>d.querySelector('#offlinePackSize').textContent.includes('MB'));
-  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');check(d.querySelector('#offlinePackSize').textContent.includes('152'),'전체 저장 목록 누락');
+  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');const manifest=await w.fetch('offline-manifest.json?v='+w.OfflinePack.REVISION).then(r=>r.json());check(d.querySelector('#offlinePackSize').textContent.includes(String(manifest.files.length)),'전체 저장 목록 누락');
   click(w,'#offlinePackClose');click(w,'#settingsBtn');change(w,'#mapProvider','offline');click(w,'#closeSettings');
   await until(()=>d.querySelector('#map').classList.contains('offline-map-active'));await until(()=>d.querySelector('.leaflet-offlineBase-pane path'));
   check(d.querySelectorAll('.stop-card').length===w.__routebook.getStops().length,'간략 지도 전환 때 일정 유실');
-  return '전체148개 자료 저장 안내 · 간략 지도와 장소·동선 유지 (실제 전체 저장·단절 재시작은 별도CI 검증)';
+  return '전체 자료 저장 안내 · 간략 지도와 장소·동선 유지 (실제 전체 저장·단절 재시작은 별도CI 검증)';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };

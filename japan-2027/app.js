@@ -159,7 +159,7 @@ function renderStops(){
 function initMap(){
  map=L.map('map',{zoomControl:false,scrollWheelZoom:true,zoomSnap:.25,center:[35.7,139.8],zoom:10,minZoom:3,maxZoom:19,preferCanvas:false});
  L.control.zoom({position:'topright'}).addTo(map);L.control.scale({imperial:false,position:'bottomright',maxWidth:90}).addTo(map);
- setTiles('gsi');routeLayer=L.layerGroup().addTo(map);map.on('zoomend',updateArrowAngles);initRailHover();RailDepartures.attach(map);DetailView.attach(map);window.addEventListener('resize',()=>map.invalidateSize());
+ setTiles('gsi');routeLayer=L.layerGroup().addTo(map);map.on('zoomend',updateArrowAngles);initRailHover();RailDepartures.attach(map);window.ItineraryDrawer?.attach(map);DetailView.attach(map);window.addEventListener('resize',()=>map.invalidateSize());
  map.on('moveend zoomend',()=>{if(state.view!=='overview'||overviewRendering||DetailView.isOpen()||window.FlightPlayback?.isActive())return;cancelAnimationFrame(overviewMoveFrame);overviewMoveFrame=requestAnimationFrame(()=>{if(state.view==='overview'&&!DetailView.isOpen())renderOverviewMap(false);});});
  window.addEventListener('offline',()=>setTiles('offline',{temporary:true}));window.addEventListener('online',()=>setTiles(state.view==='overview'||state.day===1||state.day>=21?'world':'gsi',{force:true}));
 }
@@ -169,7 +169,7 @@ function setTiles(provider,{temporary=false,force=false}={}){
  OfflineMap.hide();
  if(tileProvider===provider&&tiles&&!force)return;tileProvider=provider;
  if(tiles)map.removeLayer(tiles);
- const defs={gsi:{url:'https://cyberjapandata.gsi.go.jp/xyz/pale/{z}/{x}/{y}.png',options:{minNativeZoom:5,maxNativeZoom:18,attribution:'出典: <a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'}},world:{url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',options:{maxNativeZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}},topo:{url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',options:{maxNativeZoom:17,subdomains:'abc',attribution:'© OpenStreetMap · SRTM · OpenTopoMap (CC-BY-SA)'}}};
+ const defs={gsi:{url:`https://cyberjapandata.gsi.go.jp/xyz/${document.body.dataset.mapStyle==='detailed'?'std':'pale'}/{z}/{x}/{y}.png`,options:{minNativeZoom:5,maxNativeZoom:18,attribution:'出典: <a href="https://maps.gsi.go.jp/development/ichiran.html">国土地理院</a>'}},world:{url:'https://tile.openstreetmap.org/{z}/{x}/{y}.png',options:{maxNativeZoom:19,attribution:'© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'}},topo:{url:'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',options:{maxNativeZoom:17,subdomains:'abc',attribution:'© OpenStreetMap · SRTM · OpenTopoMap (CC-BY-SA)'}}};
  const def=defs[provider]||defs.world;let errors=0,switched=false;
  tiles=L.tileLayer(def.url,{maxZoom:19,...def.options}).addTo(map);
  tiles.on('tileload',()=>{if(!failedTileProviders.size)$('#tileError').classList.add('hidden');});
@@ -284,7 +284,7 @@ function startPlay(){
  };run.tick();renderPlayback();
 }
 function selectedPlaceId(){const i=state.selected;return i>=0?JourneyState.placeId(getDay(),getVariant(),getStops()[i],i):null;}
-function screenSnapshot(){return {routebook:2,day:state.day,variant:state.variant,view:state.view,placeId:state.view==='daily'?selectedPlaceId():null,search:state.search,filter:state.filter,night:state.night,passEnabled:state.passEnabled,scroll:{itinerary:$('#itineraryScroll').scrollTop,days:$('#dayList').scrollTop,x:window.scrollX,y:window.scrollY}};}
+function screenSnapshot(){return {routebook:2,day:state.day,variant:state.variant,view:state.view,placeId:state.view==='daily'?selectedPlaceId():null,search:state.search,filter:state.filter,night:state.night,passEnabled:state.passEnabled,itineraryOpen:!!window.ItineraryDrawer?.isOpen(),scroll:{itinerary:$('#itineraryScroll').scrollTop,days:$('#dayList').scrollTop,x:window.scrollX,y:window.scrollY}};}
 function updateUrl(mode='replace'){
  const snapshot=screenSnapshot(),url=JourneyState.url(location.href,snapshot,state.data.days);
  if(mode==='push'&&url!==location.href)history.pushState(snapshot,'',url);else history.replaceState(snapshot,'',url);
@@ -294,6 +294,7 @@ function navigateScreen(target,options={}){
  const generation=++screenGeneration,previous=screenSnapshot();
  if(options.history!=='none')history.replaceState(previous,'',JourneyState.url(location.href,previous,state.data.days));
  const d=state.data.days.find(d=>d.n===Number(target.day))||getDay();
+ if(options.snapshot&&Object.hasOwn(options.snapshot,'itineraryOpen')){if(options.snapshot.itineraryOpen)window.ItineraryDrawer?.open({focus:false});else window.ItineraryDrawer?.close({restore:false});}
  const variant=Object.hasOwn(target,'variant')?JourneyState.variant(d,target.variant):JourneyState.chosen(d,state.selectedVariantByDay);
  state.selectedVariantByDay[d.n]=variant;JourneyState.save(state.selectedVariantByDay,journeyStorage);
  window.RouteLocation?.pauseFollow();stopPlay();map.stop();
@@ -302,7 +303,7 @@ function navigateScreen(target,options={}){
  if(options.snapshot){state.search=options.snapshot.search||'';state.filter=options.snapshot.filter||'all';$('#daySearch').value=state.search;}
  $('#itineraryScroll').scrollTop=0;
  if(state.view==='overview')renderOverview();else{renderDays();renderHeader();renderStops();renderMap();}renderPlayback();
- if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];map.setView([stop.lat,stop.lng],15,{animate:false});markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
+ if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];map.setView([stop.lat,stop.lng],15,{animate:false});if(!options.snapshot?.itineraryOpen)markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
  if(options.history!=='none')updateUrl(options.history||'push');
  const snapshot=options.snapshot;
  requestAnimationFrame(()=>{
@@ -402,7 +403,7 @@ function bindEvents(){
  const mapContainer=map.getContainer(),exploreMap=event=>{if(!event.target.closest?.('[data-detail-play]'))RouteUI.userExplore();};mapContainer.addEventListener('pointerdown',exploreMap,{passive:true,capture:true});mapContainer.addEventListener('click',exploreMap,true);mapContainer.addEventListener('wheel',exploreMap,{passive:true,capture:true});mapContainer.addEventListener('keydown',exploreMap,true);map.on('dragstart',RouteUI.userExplore);
  window.addEventListener('routebook:detail-jump',event=>{const {itinerary,index,kind,day,variant}=event.detail;if(itinerary&&Number.isInteger(index)){if(day&&(state.day!==day||state.variant!==variant||state.view!=='daily'))navigateScreen({day,variant,view:'daily'});if(kind==='leg'){const el=$(`[data-leg="${index}"]`);el?.classList.add('search-highlight');if(innerWidth>1024&&el){const scroller=$('#itineraryScroll');scroller.scrollTop+=el.getBoundingClientRect().top-scroller.getBoundingClientRect().top-25;}else el?.scrollIntoView({block:'center',behavior:'instant'});}else selectStop(index,false,true,{source:'user'});}else $('#map').scrollIntoView({block:'center',behavior:'instant'});});
  document.addEventListener('click',event=>{const b=event.target.closest('[data-location-set]');if(!b)return;const day=Number(b.dataset.day),index=Number(b.dataset.locationSet);if(day!==state.day||state.view!=='daily'){navigateScreen({day,variant:b.dataset.variant,view:'daily'});}if(!window.RouteLocation?.isActive())window.RouteLocation?.start();window.RouteLocation?.selectLeg(index);announce('현재 이동 구간을 수동 선택했어요. 자동 모드로 되돌릴 수 있어요.');});
- $('#settingsBtn').addEventListener('click',()=>{RouteUI.showDialog($('#mapSettings'));$('#mapProvider').value=tilePreference;});$('#mapProvider').addEventListener('change',e=>{tilePreference=e.target.value;try{localStorage.setItem('routebook-map-provider',tilePreference);}catch(_){}failedTileProviders.clear();setTiles(tilePreference==='auto'?(state.day===1||state.day>=21?'world':'gsi'):tilePreference,{force:true});});$('#closeSettings').addEventListener('click',()=>{const dialog=$('#mapSettings');dialog.close();RouteUI.release(dialog);});$('#nightSetting').addEventListener('click',()=>$('#nightBtn').click());
+ $('#settingsBtn').addEventListener('click',()=>{RouteUI.showDialog($('#mapSettings'));$('#mapProvider').value=tilePreference;$('#mapAppearance').value=document.body.dataset.mapStyle;});$('#mapProvider').addEventListener('change',e=>{tilePreference=e.target.value;try{localStorage.setItem('routebook-map-provider',tilePreference);}catch(_){}failedTileProviders.clear();setTiles(tilePreference==='auto'?(state.day===1||state.day>=21?'world':'gsi'):tilePreference,{force:true});});$('#closeSettings').addEventListener('click',()=>{const dialog=$('#mapSettings');dialog.close();RouteUI.release(dialog);});$('#nightSetting').addEventListener('click',()=>$('#nightBtn').click());$('#mapAppearance').addEventListener('change',e=>{document.body.dataset.mapStyle=e.target.value;try{localStorage.setItem('routebook-map-style',e.target.value);}catch(_){}setTiles(tileProvider,{force:true});});
 
  history.scrollRestoration='manual';
  $('.brand').addEventListener('click',event=>{event.preventDefault();navigateScreen({day:1,variant:'main',view:'daily'});});
@@ -480,6 +481,7 @@ function applyTripUpdate(snapshot){
  announce('새 일정 자료를 적용했어요. 선택한 날짜와 탑승 기록을 유지합니다.');
 }
 async function main(){
+ try{if(localStorage.getItem('routebook-map-style')==='detailed')document.body.dataset.mapStyle='detailed';}catch(_){}
  OfflinePack.configure({finalize:finalizeOfflineTrip});
  try{
  const stored=await TravelStore.snapshot();const saved=stored?window.TripPersonal.patch(stored.data,stored.routes):null;
