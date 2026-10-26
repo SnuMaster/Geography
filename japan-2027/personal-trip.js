@@ -75,6 +75,16 @@
    geometrySource:'FRA 조사 지도 해상 86개 좌표 + 양쪽 항만 연결 개략선. 하나의 연속된 표시선이며 실제 항적·항만 진입 항로가 아닙니다.'}];
  }
  function patch(data,routes){
+  // Every planned taxi transfer is requested via Uber, including Japanese city taxis.
+  for(const day of data?.days||[])for(const variant of day.variants||[])for(const stop of variant.stops||[]){
+   if(stop.modeFromPrevious==='taxi'&&stop.transportFromPrevious&&!/Uber/i.test(stop.transportFromPrevious))
+    stop.transportFromPrevious=stop.transportFromPrevious.replace(/택시/g,'Uber Taxi');
+  }
+  for(const legs of Object.values(routes?.days||{}))for(const leg of legs||[]){
+   if(!leg)continue;
+   for(const part of leg.parts||[])if(part.mode==='taxi'&&part.line&&!/Uber/i.test(part.line))part.line=part.line.replace(/택시/g,'Uber Taxi');
+   if(leg.parts?.some(p=>p.mode==='taxi')&&leg.summary&&!/Uber/i.test(leg.summary))leg.summary=leg.summary.replace(/택시/g,'Uber Taxi');
+  }
   const firstDay=data?.days?.find(d=>d.n===1),first=firstDay?.variants?.find(v=>v.id==='main')?.stops?.[0];
   const airport=firstDay?.variants?.find(v=>v.id==='main')?.stops?.[1],firstLeg=routes?.days?.['1-main']?.[0];
   if(first&&airport&&firstLeg&&firstLeg.parts?.[0]?.mode==='taxi'){
