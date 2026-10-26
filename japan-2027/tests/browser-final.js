@@ -46,7 +46,7 @@
   frame.style.width='1280px';frame.style.height='900px';const w=await load(1,{date:'2026-10-26T10:00:00+09:00'}),d=w.document;
   w.__routebook.selectLeg(8);change(w,'[data-departure-select]','jr-ueno-tokyo');
   await until(()=>d.querySelector('[data-ride-next]'));
-  const section=d.querySelector('.station-departures'),first=section._rideTrains[0],parts=w.ConnectionCore.stepsFor(w.__routebook.getLeg(8),w.RailDepartures.keyFor);
+  const section=d.querySelector('.station-departures'),first=section._rideTrains[0],parts=w.ConnectionCore.stepsFor(w.__routebook.getLeg(8),w.__routebook.rail.keyFor);
   check(w.DepartureCore.formatTime(first.departureAt)==='17:33','도보·앞 열차·환승을 반영하지 않은 JR 열차');
   check(d.querySelector('.departure-clock').textContent.includes('승차 여유 1분 반영'),'연결 기준 안내 누락');
   check(parts.length===5,'도보·환승 단계 누락');close(w);return '17:10 숙소 출발 → 앞 열차·도보·환승 반영 → 우에노17:33 출발';
