@@ -56,5 +56,15 @@
   window.addEventListener('resize',refresh);window.visualViewport?.addEventListener('resize',refresh);
  }
  window.addEventListener('routebook:playback',event=>{playbackState=event.detail;document.querySelectorAll('[data-detail-play]').forEach(button=>{button.hidden=!event.detail.active;button.textContent=event.detail.running?'일시정지':'계속 재생';});});
- window.DetailView={attach,options,close:closeDetail,isOpen:()=>!!active};
+ function refreshContent(content){
+  if(!active)return;
+  const popup=active.popup,element=active.element,id=document.activeElement?.id,contentBox=element.querySelector('.leaflet-popup-content'),scroll=contentBox?.scrollTop||0,sheetScroll=body.scrollTop;
+  const opened=[...element.querySelectorAll('details')].map(n=>n.open),node=document.createElement('div');node.innerHTML=content;
+  if(!mobile())node.insertAdjacentHTML('beforeend',`<div class="detail-actions">${actions(popup)}</div>`);
+  popup.setContent(node);element.querySelectorAll('details').forEach((n,i)=>n.open=!!opened[i]);popup.update();
+  element.querySelector('.leaflet-popup-content').scrollTop=scroll;body.scrollTop=sheetScroll;
+  if(sheet.open)sheet.querySelector('[data-sheet-title]').textContent=element.querySelector('.popup-title')?.textContent||'장소 상세';
+  if(id)document.getElementById(id)?.focus({preventScroll:true});
+ }
+ window.DetailView={attach,options,close:closeDetail,isOpen:()=>!!active,context:()=>active?{...active.popup.options}:null,refreshContent};
 })();

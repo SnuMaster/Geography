@@ -10,8 +10,17 @@
   if(west){const by=new Map(west.days.map(d=>[d.n,d]));base.days=base.days.map(d=>by.get(d.n)||d);Object.assign(base.food,west.food);}
   return base;
  }
- function minutes(t){const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m?Number(m[1])*60+Number(m[2]):null;}
- function interval(s){const times=(s.time||'').match(/\d{1,2}:\d{2}/g)||[];return {start:s.start||times[0]||null,end:s.end||times[1]||times[0]||null};}
+ function minutes(t){const m=/^(\d{1,2}):(\d{2})$/.exec(t||'');return m&&Number(m[1])<24&&Number(m[2])<60?Number(m[1])*60+Number(m[2]):null;}
+ function clock(value){return minutes(value)!==null?String(value).padStart(5,'0'):null;}
+ function interval(s){
+  // The displayed source label wins over stale legacy fields when loading data.
+  const times=(s.time||'').match(/\d{1,2}:\d{2}/g)||[],unknownEnd=times.length===1&&/공연\s*종료|종료\s*시각\s*미확정/.test(s.time||'');
+  const start=times.length?clock(times[0]):clock(s.start),end=unknownEnd?null:times.length>1?clock(times[1]):times.length?start:clock(s.end)||start;
+  return {start,end,unknownEnd};
+ }
+ function formatTime(value){return Number.isInteger(value)&&value>=0&&value<1440?`${String(Math.floor(value/60)).padStart(2,'0')}:${String(value%60).padStart(2,'0')}`:null;}
+ function setTime(s,start,end){s.start=clock(start);s.end=clock(end);s.time=s.start+(s.end&&s.end!==s.start?'~'+s.end:s.end?'':'~종료 시각 미확정');return s;}
+
  function date(n){return `2027-01-${String(n+7).padStart(2,'0')}`;}
  function geometry(part){
   const src=part.geometrySource||'';
@@ -23,12 +32,13 @@
  }
  function prepare(data,routes){
   for(const d of data.days)for(const v of d.variants){
-   v.stops.forEach((s,i)=>{const t=interval(s);s.start=t.start;s.end=t.end;s.uid=s.uid||s.id||`d${d.n}-${v.id}-${i}`;s.mapQuery=`${s.lat},${s.lng}`;});
+   v.stops.forEach((s,i)=>{const t=interval(s);s.start=t.start;s.end=t.end;if(!s.time&&t.start)setTime(s,t.start,t.end);s.uid=s.uid||s.id||`d${d.n}-${v.id}-${i}`;s.mapQuery=`${s.lat},${s.lng}`;});
    const legs=routes.days?.[`${d.n}-${v.id}`]||[];
-   legs.forEach((l,i)=>{if(!l)return;l.dayNumber=d.n;l.variant=v.id;l.legIndex=i+1;l.legId=`d${d.n}-${v.id}-leg-${i+1}`;l.serviceDate=date(d.n);l.departureBasis='일정 예정 시각';const arrival=interval(v.stops[i+1]||{});l.arrivalAt=arrival.start?Date.parse(`${l.serviceDate}T${arrival.start}:00+09:00`):null;const t=interval(v.stops[i]||{});l.departureTimeKnown=!!(t.end||t.start);l.departureAt=Date.parse(`${l.serviceDate}T${t.end||t.start||'00:00'}:00+09:00`);for(const p of l.parts||[])p.geometry=geometry(p);});
+   legs.forEach((l,i)=>{if(!l)return;l.dayNumber=d.n;l.variant=v.id;l.legIndex=i+1;l.legId=`d${d.n}-${v.id}-leg-${i+1}`;l.serviceDate=date(d.n);l.departureBasis='일정 예정 시각';const arrival=interval(v.stops[i+1]||{});l.arrivalAt=arrival.start?Date.parse(`${l.serviceDate}T${arrival.start}:00+09:00`):null;const t=interval(v.stops[i]||{});const depart=t.unknownEnd?null:t.end||t.start;l.departureTimeKnown=!!depart;l.departureAt=depart?Date.parse(`${l.serviceDate}T${depart}:00+09:00`):null;for(const p of l.parts||[])p.geometry=geometry(p);});
+   v.schedule=v.stops.map(s=>[s.time,s.name,s.description]);
   }
   return {data,routes};
  }
  function counts(data,routes){return {days:data.days.length,variants:data.days.reduce((n,d)=>n+d.variants.length,0),stops:data.days.flatMap(d=>d.variants).reduce((n,v)=>n+v.stops.length,0),legs:Object.values(routes.days).reduce((n,ls)=>n+ls.length,0),railParts:Object.values(routes.days).flat().filter(Boolean).flatMap(l=>l.parts).filter(p=>['rail','metro'].includes(p.mode)).length};}
- return {merge,prepare,interval,minutes,date,geometry,counts};
+ return {merge,prepare,interval,minutes,formatTime,setTime,date,geometry,counts};
 });
