@@ -3,6 +3,7 @@
  * Raw rail schedules and the original reference routes stay untouched. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.TripPersonal=api;})(globalThis,function(){
  const HOME=Object.freeze({name:'비공개 출발·도착지',kind:'home',lat:null,lng:null,address:'',privateLocation:true});
+ const ROAD_ROUTES={};
  const EXTRA_JA={
   '공항제2빌딩':'空港第２ビル','게이세이우에노':'京成上野','신바시':'新橋',
   '모토마치주카가이':'元町・中華街','간나이':'関内','하세':'長谷',
@@ -58,10 +59,15 @@
    passEligible:false,passExtraMin:0,passExtraMax:0,sources:[],breakdown:[],confidence:'unknown'};
  }
  function taxiPart(from,to){
+  const key=from.name===HOME.name?'home-airport':to.name===HOME.name?'seodaegu-home':null;
+  const route=key&&ROAD_ROUTES[key];
+  const coords=route?[[from.lat,from.lng],...route.coords,[to.lat,to.lng]]:[[from.lat,from.lng],[to.lat,to.lng]];
   return {mode:'taxi',line:'Uber Taxi · 택시 호출',from:from.name,to:to.name,
-   coords:[[from.lat,from.lng],[to.lat,to.lng]],distanceM:distance(from,to),
-   durationMinutes:null,geometrySource:'두 장소 대표점의 직선 연결 · 실제 도로 경로/주행거리 아님',
-   geometryAccuracy:'schematic'};
+   coords,distanceM:route?Math.round(route.meters):distance(from,to),
+   durationMinutes:route?Math.round(route.seconds/60):null,
+   geometrySource:route?'OSRM 자동차 도로망 복원 경로 · 출발/도착 픽업 위치와 도로 좌표는 짧은 연결선 · 교통상황/실제 Uber 배차 경로와 다를 수 있음':'두 장소 대표점의 직선 연결 · 실제 도로 경로/주행거리 아님',
+   geometryAccuracy:route?'reference':'schematic',
+   source:route?.source||null};
  }
  function displayParts(leg){
   if(!leg?.parts?.some(p=>p.mode==='ferry'))return leg?.parts||[];
@@ -96,9 +102,9 @@
    const p=taxiPart(first,airport);firstLeg.from=first.name;firstLeg.to=airport.name;
    firstLeg.parts=[p];firstLeg.summary='Uber Taxi · 비공개 출발·도착지 → 대구국제공항';
    firstLeg.distanceM=p.distanceM;firstLeg.walkDistanceM=0;
-   firstLeg.distanceLabel='직선 참고 · 실제 주행거리 미확인';
-   firstLeg.durationMinutes=0;firstLeg.durationLabel='소요시간 미확정';
-   firstLeg.fare=fare();firstLeg.note='기존 동대구역 택시 경로는 자택 출발과 맞지 않아 사용하지 않습니다. Uber 앱에서 도로 경로·배차·운임을 확인하세요.';
+   firstLeg.distanceLabel='자동차 도로 기준 약 '+(p.distanceM/1000).toFixed(1)+'km · 실제 Uber 경로 다를 수 있음';
+   firstLeg.durationMinutes=p.durationMinutes;firstLeg.durationLabel='도로망 예상 약 '+p.durationMinutes+'분 · 교통 미반영';
+   firstLeg.fare=fare();firstLeg.note='자동차 도로망 경로를 지도에 표시합니다. 실제 Uber의 최종 배차/운임/혼잡/픽업 장소는 앱에서 확인하세요.';
   }
   const lastDay=data?.days?.find(d=>d.n===22),v=lastDay?.variants?.find(v=>v.id==='main');
   const lastLegs=routes?.days?.['22-main'];
@@ -115,13 +121,13 @@
      transportFromPrevious:'서대구역 → 비공개 출발·도착지 · Uber Taxi 호출',
      description:'서대구역에서 Uber 앱으로 택시를 호출하세요. 이동시간·요금은 실시간 확인.',
      source:'https://www.uber.com/global/ko/r/cities/daegu-daegu-kr/',
-     coordinateNote:'대표 좌표와 직선 참고 경로이며 실제 택시 이동 경로가 아닙니다.'};
+     coordinateNote:'대표 좌표와 자동차 도로망 복원 경로이며, 실제 Uber 배차 경로와 다를 수 있습니다.'};
     const part=taxiPart(from,home);
     v.stops.push(home);lastLegs.push({fromUid:from.uid,toUid:home.uid,from:from.name,to:home.name,
      parts:[part],fare:fare(),distanceM:part.distanceM,walkDistanceM:0,
-     distanceLabel:'직선 참고 · 실제 주행거리 미확인',durationMinutes:0,durationLabel:'소요시간 미확정',
+     distanceLabel:'자동차 도로 기준 약 '+(part.distanceM/1000).toFixed(1)+'km · 실제 Uber 경로 다를 수 있음',durationMinutes:part.durationMinutes,durationLabel:'도로망 예상 약 '+part.durationMinutes+'분 · 교통 미반영',
      summary:'Uber Taxi · 서대구역 → 비공개 출발·도착지',
-     note:'택시 배차와 도로 경로는 Uber 앱에서 확인. 선은 실제 도로/차량 궤적이 아닙니다.'});
+     note:'OSRM 자동차 도로망 경로입니다. 실제 Uber 배차 차량의 주행경로·도착시간·요금은 앱에서 확인하세요.'});
    }
   }
   return {data,routes};
