@@ -224,7 +224,7 @@ function renderMap(fit=true){
  const groups=new Map();stops.forEach((s,i)=>{const key=s.lat.toFixed(5)+','+s.lng.toFixed(5);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(i);});
  groups.forEach(indices=>{
   const i=indices[0],s=stops[i];const marker=L.marker([s.lat,s.lng],{icon:markerIcon(indices),keyboard:true,alt:indices.map(i=>`${i+1}. ${stops[i].name}`).join(' / '),title:s.name,zIndexOffset:s.kind==='station'?0:100}).addTo(routeLayer);
-  marker.bindTooltip(`${indices.map(i=>i+1).join('·')} · ${esc(s.name)}`,{direction:'top',offset:[0,-25],className:'stop-tooltip'});
+  marker.bindTooltip(`${indices.map(i=>i+1).join('·')} · ${esc(stopLabel(s))}`,{direction:'top',offset:[0,-25],className:'stop-tooltip'});
   marker.on('click',()=>{let idx=indices[0];if(indices.includes(state.selected))idx=indices[(indices.indexOf(state.selected)+1)%indices.length];selectStop(idx,false,false,{source:'user'});marker.bindPopup(popupHtml(stops[idx],idx),DetailView.options('place-info-popup',{routeStopIndex:idx})).openPopup();});
   indices.forEach(idx=>markers[idx]=marker);stopGroups.push({indices,marker});
  });
@@ -367,7 +367,7 @@ function renderOverviewMap(fit=true){
     // Every date's route is already plotted; focus only changes place pins.
     for(const group of MapPlan.groups(variant.stops)){
      const s=group.stop;if(!b.pad(.15).contains([s.lat,s.lng]))continue;const i=group.indices[0];
-     const marker=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker overview-place-marker',html:`<div class="pin-number ${s.kind}"><span>${i+1}</span>${group.indices.length>1?'<small class="repeat-place">↻</small>':''}</div>`,iconSize:[44,44],iconAnchor:[22,38]}),title:day.date+' '+s.name,alt:day.date+' '+s.name}).addTo(routeLayer);
+     const marker=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker overview-place-marker',html:`<div class="pin-number ${s.kind}"><span>${i+1}</span>${group.indices.length>1?'<small class="repeat-place">↻</small>':''}</div>`,iconSize:[44,44],iconAnchor:[22,38]}),title:day.date+' '+stopLabel(s),alt:day.date+' '+stopLabel(s)}).addTo(routeLayer);
      marker.bindTooltip(esc(s.name),{direction:'top',offset:[0,-25],className:'stop-tooltip'});
      marker.bindPopup(()=>withDayContext(day.n,variant.id,()=>popupHtml(s,i)),DetailView.options('place-info-popup',{routeStopIndex:i,routeDay:day.n,routeVariant:variant.id}));
     }
