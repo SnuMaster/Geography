@@ -141,7 +141,7 @@
  });
  await report(41,'오프라인 준비 화면·크기·내장 지도 선택',async()=>{
   const w=await load(19),d=w.document;click(w,'#offlinePackBtn');await until(()=>d.querySelector('#offlinePackSize').textContent.includes('MB'));
-  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');check(d.querySelector('#offlinePackSize').textContent.includes('151'),'전체 저장 목록 누락');
+  check(d.querySelector('#offlinePackDialog').open,'오프라인 준비창 없음');check(d.querySelector('#offlinePackSize').textContent.includes('152'),'전체 저장 목록 누락');
   click(w,'#offlinePackClose');click(w,'#settingsBtn');change(w,'#mapProvider','offline');click(w,'#closeSettings');
   await until(()=>d.querySelector('#map').classList.contains('offline-map-active'));await until(()=>d.querySelector('.leaflet-offlineBase-pane path'));
   check(d.querySelectorAll('.stop-card').length===w.__routebook.getStops().length,'간략 지도 전환 때 일정 유실');
