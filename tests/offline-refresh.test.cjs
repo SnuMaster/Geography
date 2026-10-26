@@ -32,3 +32,11 @@ test('complete snapshots retain their source signature for the next startup',asy
  const f=fixture(),saved=await f.store.saveSnapshot({days:[1]}, {days:{}},'source-revision');
  assert.equal(saved.sourceSignature,'source-revision');const restored=await f.store.snapshot();assert.equal(restored.sourceSignature,'source-revision');
 });
+
+test('first startup from per-file fallbacks keeps the actual older verification time',async()=>{
+ const f=fixture(),a='https://example.test/japan-2027/data.json?v=test',b='https://example.test/japan-2027/routes.json?v=test';
+ await f.store.readJson(a);const earlier=f.store.checkedAt([a]);await new Promise(resolve=>setTimeout(resolve,5));await f.store.readJson(b);
+ f.setFetch(async()=>{throw Error('offline');});await f.store.readJson(a);
+ assert.equal(f.store.checkedAt([a,b]),earlier);assert.equal(f.store.checkedAt([a,'unknown.json']),null);
+ const snapshot=await f.store.saveSnapshot({days:[]},{days:{}},'signature',earlier);assert.equal(snapshot.updatedAt,earlier);
+});
