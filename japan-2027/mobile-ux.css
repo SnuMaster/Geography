@@ -86,3 +86,36 @@
 .operator-logo.operator-uber{background:#000;color:#fff;border:0;border-radius:6px;padding:0;width:96px;max-width:96px;height:36px;max-height:36px}
 .operator-map-symbol.uber-map-symbol{background:#000!important;border-color:#000!important;border-radius:6px!important}
 .operator-map-symbol.uber-map-symbol img.operator-uber{background:#000;width:86px;max-width:86px;height:35px;max-height:35px;padding:0}
+
+/* A single compact rail card; route details stay available on demand. */
+.compact-station{padding:15px;color:#284b3e}
+.compact-line{display:flex;align-items:center;gap:9px;min-width:0;color:#284b3e;font-size:14px}
+.compact-line>strong{min-width:0;overflow-wrap:anywhere}
+.compact-line .departure-station-code{width:35px;height:35px;font-size:11px}
+.compact-line .departure-reverse{margin-left:auto;min-height:36px;min-width:36px;font-size:19px}
+.compact-station .departure-stations-aligned{grid-template-columns:minmax(0,max-content) max-content minmax(0,max-content);grid-template-rows:auto auto;column-gap:10px;row-gap:2px;margin:16px 0}
+.compact-station .departure-stations-aligned .departure-origin{grid-column:1}
+.compact-station .departure-stations-aligned .departure-destination{grid-column:3}
+.compact-station .departure-stations-aligned .departure-arrow{grid-column:2}
+.compact-station .departure-stations-aligned.has-long-names{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto}
+.compact-station .departure-stations-aligned.has-long-names .departure-station-name,.compact-station .departure-stations-aligned.has-long-names .departure-arrow{grid-column:1}
+.compact-station .departure-stations-aligned.has-long-names .departure-origin{grid-row:1}
+.compact-station .departure-stations-aligned.has-long-names .departure-arrow{grid-row:2}
+.compact-station .departure-stations-aligned.has-long-names .departure-destination{grid-row:3}
+.compact-metrics{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px;background:#e5ede1;border-radius:9px}
+.compact-metrics span{min-width:0}.compact-metrics small{display:block;color:#6a7d6c;font-size:11px;margin-bottom:5px}.compact-metrics b{display:block;color:#284b3e;font-size:18px;line-height:1.3;overflow-wrap:anywhere}
+.compact-station .departure-heading{margin:17px 0 8px}.compact-station .departure-heading>strong{font-size:14px}.compact-station .departure-clock{margin:0;color:#6a7d6c}
+.compact-station .compact-next{width:100%;min-height:68px;grid-template-columns:minmax(0,max-content) minmax(0,1fr);align-items:center;text-align:left;background:#e3eee1;color:#284b3e;border:1px solid #d0dec9;border-radius:9px;font-family:RouteSans,sans-serif;cursor:pointer}
+.compact-station .compact-next:hover{background:#dcebd9}.compact-station .compact-next:focus-visible,.compact-actions :focus-visible,.notice-button:focus-visible{outline:3px solid #477b95;outline-offset:2px}
+.compact-station .compact-next .departure-next-time strong{font-size:28px;color:#284b3e}.compact-train{font-size:11px;line-height:1.5;text-align:right;overflow-wrap:anywhere}.compact-station .compact-next small{grid-column:1/-1;color:#59735b;text-align:right}
+.compact-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}.compact-actions button,.leaflet-popup-content .compact-actions a{display:flex;align-items:center;justify-content:center;min-height:44px;padding:8px 6px;border:1px solid #c1d1bd;border-radius:7px;background:#fff;color:#315843;font:600 12px RouteSans,sans-serif;text-decoration:none;cursor:pointer}
+.compact-actions button:hover,.leaflet-popup-content .compact-actions a:hover{background:#e5eee1}
+.compact-route-details{color:#54705c;font-size:11px;line-height:1.65}.compact-route-details summary{cursor:pointer;min-height:44px;padding:10px 2px}.compact-route-details p{margin:6px 0}.compact-route-details .outline-button{margin:8px 0}.compact-route-details .popup-links button{min-height:44px;color:#526c46;font:inherit;text-decoration:underline;cursor:pointer}
+.detail-actions:empty{display:none!important}
+.notice-button{display:inline-flex;align-items:center;justify-content:center;gap:5px;min-height:44px;padding:7px 9px;border:1px solid #d4dfd0;border-radius:7px;background:#f5f8f1;color:#315843;font:600 12px RouteSans,sans-serif;white-space:nowrap;cursor:pointer}
+.notice-count:not(:empty){display:grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:#5e7e58;color:white;font-size:10px;padding:0 3px}
+#noticeDialog{width:460px;max-width:calc(100vw - 30px);max-height:calc(var(--visual-height,100dvh) - 32px);box-sizing:border-box;overflow:auto;border:1px solid #d7dfd1;border-radius:14px;color:#284b3e;overscroll-behavior:contain}
+#noticeDialog .dialog-header strong{font-size:17px}.notice-note,.notice-empty{font-size:12px;line-height:1.7;color:#63765f}.notice-note{padding:12px;background:#f2f5ed;border-radius:8px}#noticeDialog h3{font-size:14px;margin:20px 0 10px}.notice-item{border-top:1px solid #e0e8dd;padding:12px 0;font-size:12px;line-height:1.65}.notice-item p{margin:4px 0;color:#61735f}.notice-item a,.notice-inline{color:#426c4d;text-decoration:underline;font:inherit}.notice-inline{cursor:pointer}
+@media(max-width:1024px){#detailSheet:has(.compact-station){height:auto;max-height:min(86dvh,calc(var(--visual-height,100dvh) - 16px))}#detailSheet:has(.compact-station) .detail-sheet-body{flex:0 1 auto}#detailSheet:has(.compact-station) .leaflet-popup-content{margin-bottom:max(12px,var(--safe-bottom,0px))}}
+@media(max-width:740px){.notice-button{font-size:10px;padding:7px 6px}.compact-station{padding:13px}}
+@media(max-width:360px){.brand>span:last-child{display:none}}
