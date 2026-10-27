@@ -198,13 +198,14 @@
    check(cases.size>=16,'오사카 역 정보 누락');
    for(const [key,item] of cases){if(width!==390&&!['JR-A47','JR-O19'].includes(item.code))continue;
     if(b.state.day!==item.day)b.setDay(item.day);if(b.state.variant!==item.variant)b.setVariant(item.variant);b.selectLeg(item.index);
-    const select=d.querySelector('[data-departure-select]');if(select&&select.value!==key)change(w,'[data-departure-select]',key);
-    await until(()=>d.querySelector('.station-departures')?.dataset.departureProfile===key);
-    const badge=d.querySelector('.compact-line .departure-station-code'),box=badge.getBoundingClientRect(),range=d.createRange();range.selectNodeContents(badge);
+    const element=b.map._popup?.getElement();check(element?.isConnected,'이동 상세 없음 '+key);
+    const select=element.querySelector('[data-departure-select]');if(select&&select.value!==key){select.value=key;select.dispatchEvent(new w.Event('change',{bubbles:true}));}
+    const section=element.querySelector('.station-departures');check(section?.dataset.departureProfile===key,'오사카 구간 선택 오류 '+key+' / '+section?.dataset.departureProfile);
+    const badge=element.querySelector('.compact-line .departure-station-code'),box=badge.getBoundingClientRect(),range=d.createRange();range.selectNodeContents(badge);
     const rect=range.getBoundingClientRect();check(badge.textContent===item.code,'역 번호 불일치 '+key);check(Math.abs(box.width-35)<1&&Math.abs(box.height-35)<1,'상자 크기 변경 '+key);
     check(range.getClientRects().length===1,'번호 줄바꿈 '+key+' '+width);check(rect.left>=box.left+1&&rect.right<=box.right-1,'번호가 상자 밖으로 넘침 '+key+' '+width);
     check(Math.abs((rect.left+rect.right-box.left-box.right)/2)<2,'가로 가운데 정렬 오류 '+key+' '+width);check(Math.abs((rect.top+rect.bottom-box.top-box.bottom)/2)<2.5,'세로 가운데 정렬 오류 '+key+' '+width);
-    check(d.querySelector('.compact-line>strong').getBoundingClientRect().left>=box.right,'노선명 겹침 '+key);close(w);totalCases++;
+    check(element.querySelector('.compact-line>strong').getBoundingClientRect().left>=box.right,'노선명 겹침 '+key);close(w);totalCases++;
    }
   }
   return `오사카 ${totalCases}개 화면 · 기존 35px 크기 · 한 줄 가운데 정렬`;
