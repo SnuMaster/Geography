@@ -5,7 +5,7 @@
  const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
  const until=async(fn)=>{for(let n=0;n<150;n++){if(fn())return;await sleep(100);}throw Error('화면 갱신 제한시간 초과');};
  const check=(v,m)=>{if(!v)throw Error(m);};
- const load=async(query='?day=14')=>{const old=frame.contentDocument;frame.src='state-fixture.html'+query;await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));const w=frame.contentWindow;w.ItineraryDrawer.open({focus:false});return w;};
+ const load=async(query='?day=14')=>{const old=frame.contentDocument;frame.src='state-fixture.html'+query;await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));const w=frame.contentWindow;w.ItineraryDrawer.open({focus:false});w.document.querySelector('#routeAllToggle').click();return w;};
  const reload=async w=>{const old=w.document;w.location.reload();await until(()=>frame.contentDocument!==old&&frame.contentDocument?.querySelector('#ridePanel'));const next=frame.contentWindow;next.ItineraryDrawer.open({focus:false});return next;};
  const click=(w,s)=>{const node=w.document.querySelector(s);check(node,'버튼 없음 '+s);node.click();};
  const change=(w,s,value,type='change')=>{const node=w.document.querySelector(s);check(node,'입력 없음 '+s);node.value=value;node.dispatchEvent(new w.Event(type,{bubbles:true}));};
