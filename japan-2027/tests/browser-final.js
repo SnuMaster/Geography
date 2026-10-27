@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/44';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/45';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -209,6 +209,31 @@
    }
   }
   return `오사카 ${totalCases}개 화면 · 기존 35px 크기 · 한 줄 가운데 정렬`;
+ });
+ await report(45,'여행 전체 예약 체크·저장 복원·기존 예약 상태·대체안 연결',async()=>{
+  for(const width of [320,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';let w=await load(14,{date:'2026-10-28T10:00:00+09:00'}),d=w.document,b=w.__routebook;
+   click(w,'#bookingChecklistBtn');let dialog=d.querySelector('#bookingChecklistDialog');check(dialog.open,'예약 목록 열기 실패 '+width);
+   let summary=w.ReservationUI.checklistSummary();check(summary.total===24&&summary.done===0&&summary.alternatives===2,'기본 일정 예약 수 오류 '+JSON.stringify(summary));
+   for(const key of ['flight-tokyo','hotel-tokyo','fuji-seats','flight-osaka','hotel-osaka','flight-fukuoka','hotel-fukuoka','ferry-busan','hotel-busan','ktx-return','wasake','teien','skytree','kobe-port-tower','yamazaki','zutomayo','hiramatsu'])check(dialog.querySelectorAll(`[data-booking-item="${key}"]`).length===1,'예약 누락·중복 '+key);
+   check(dialog.querySelector('[data-booking-item="zutomayo"] .booking-next-date').textContent.includes('10/29'),'공연 신청 마감 누락');
+   check(dialog.querySelector('.booking-alternatives [data-booking-item="ishikawa-tour"]')&&dialog.querySelector('.booking-alternatives [data-booking-item="tsurutontan"]'),'대체 예약 분리 누락');
+   const rect=dialog.getBoundingClientRect();check(rect.left>=0&&rect.right<=width+1&&rect.top>=0&&rect.bottom<=900,'예약창 화면 넘침 '+width);
+   click(w,'[data-booking-complete="wasake"]');check(w.ReservationUI.checklistSummary().done===1,'완료 수 미반영');
+   click(w,'[data-booking-filter="pending"]');check(!dialog.querySelector('[data-booking-item="wasake"]'),'미완료 필터 오류');click(w,'[data-booking-filter="done"]');check(dialog.querySelector('[data-booking-item="wasake"]')&&!dialog.querySelector('[data-booking-item="flight-tokyo"]'),'완료 필터 오류');click(w,'[data-booking-filter="all"]');
+   dialog.querySelector('[data-booking-details="flight-tokyo"]').open=true;input(w,'#booking-memo-flight-tokyo','발권 확인 메모');click(w,'#closeBookingChecklist');
+   w=await load(14,{reset:false});d=w.document;b=w.__routebook;click(w,'#bookingChecklistBtn');dialog=d.querySelector('#bookingChecklistDialog');
+   check(dialog.querySelector('[data-booking-complete="wasake"]').checked&&dialog.querySelector('#booking-memo-flight-tokyo').value==='발권 확인 메모','예약 체크·메모 새로고침 복원 실패');
+   click(w,'[data-booking-complete="yamazaki"]');await sleep(0);check(w.ReservationUI.getRecords().yamazaki.status==='예약완료'&&w.ReservationUI.checklistSummary().done===2,'기존 예약 상태 연결 실패');
+   dialog.querySelector('[data-booking-details="yamazaki"]').open=true;change(w,'#booking-time-yamazaki','2027-01-21T14:00');await sleep(0);check(b.getStops()[1].start==='14:00','예약 목록 입력 시각 일정 미반영');
+   check(dialog.querySelector('[data-booking-item="yamazaki"] .booking-date').textContent.includes('14:00'),'확정 시각 목록 미반영');
+   click(w,'#closeBookingChecklist');b.selectStop(1);const popup=b.map._popup.getElement();check(popup.querySelector('[data-reservation-status="yamazaki"]').value==='예약완료','일정 카드 상태 미반영');
+   const status=popup.querySelector('[data-reservation-status="yamazaki"]');status.value='신청';status.dispatchEvent(new w.Event('change',{bubbles:true}));close(w);
+   b.setVariant('no-yamazaki');click(w,'#bookingChecklistBtn');dialog=d.querySelector('#bookingChecklistDialog');check(dialog.querySelector('.booking-alternatives [data-booking-item="yamazaki"]')&&!dialog.querySelector('[data-booking-complete="yamazaki"]').checked,'대체안 전환·상태 동기화 실패');
+   check(w.ReservationUI.checklistSummary().total===22,'우지 대체안에 야마자키·산쇼테이 중복 계산');
+   dialog.querySelector('[data-booking-details="ferry-busan"]').open=true;click(w,'[data-booking-jump="ferry-busan"]');check(!dialog.open&&b.state.day===21&&b.state.view==='daily'&&w.ItineraryDrawer.isOpen(),'예약에서 해당 일정 이동 실패');check(d.querySelector('[data-leg="5"]').classList.contains('search-highlight'),'승선 구간 선택 오류');
+  }
+  return '320/1280px · 26개 예약 후보 · 현재 일정24개 · 체크/메모 저장 · 야마자키 동기화 · 대체안·일정 연결';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
