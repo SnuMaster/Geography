@@ -28,6 +28,10 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   await gpsPage.evaluate(()=>{const e=new Event('deviceorientation');Object.defineProperties(e,{webkitCompassHeading:{value:90},webkitCompassAccuracy:{value:8}});window.dispatchEvent(e);});
   await gpsPage.waitForFunction(()=>document.querySelector('.gps-location-marker')?.dataset.heading==='90');await gpsPage.locator('#map').evaluate(n=>n.scrollIntoView({block:'center'}));
   await gpsPage.waitForFunction(()=>{const dot=document.querySelector('.gps-location-marker').getBoundingClientRect(),card=document.querySelector('#locationCard').getBoundingClientRect();return dot.bottom<card.top||dot.right<card.left||dot.left>card.right;});await gpsPage.screenshot({path:'qa-gps-heading-mobile.png',fullPage:false});await gpsContext.close();
+  for(const width of [390,1280]){
+   const focusPage=await browser.newPage({viewport:{width,height:width===390?844:900}});await focusPage.goto(base.replace('/tests/','/')+'?day=2');await focusPage.waitForSelector('#ridePanel',{state:'attached'});await focusPage.waitForSelector('#mapLoading',{state:'detached'});
+   for(let i=0;i<4;i++)await focusPage.locator('#routeLegNext').click();await focusPage.locator('#map').evaluate(n=>n.scrollIntoView({block:'center'}));await focusPage.screenshot({path:'qa-focused-route-'+width+'.png',fullPage:false});await focusPage.close();
+  }
   if(failures.length)throw Error(JSON.stringify(failures,null,2));
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e);server.close();process.exitCode=1;});
