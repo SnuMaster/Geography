@@ -37,7 +37,7 @@
   const limit=Math.max(100,moved*2+fix.accuracy*2+30),candidates=[];
   for(const s of plan.segments){const projected=GPS.project(p,s.a,s.b),alongM=s.beforeM+s.lengthM*projected.t;
    if(previous&&dt>=0&&dt<120&&(alongM<previous.alongM-40||alongM>previous.alongM+limit))continue;
-   candidates.push({...projected,alongM,part:s.part,remainingM:Math.max(0,plan.totalM-alongM),fix});
+   candidates.push({...projected,alongM,part:s.part,remainingM:Math.max(0,plan.totalM-alongM),bearing:GPS.bearing(s.a,s.b),fix});
   }
   if(!candidates.length)return {ambiguous:false,match:null};
   const closest=Math.min(...candidates.map(c=>c.distanceM)),near=candidates.filter(c=>c.distanceM<=closest+Math.min(10,fix.accuracy/2));
@@ -47,6 +47,21 @@
   else if(!previous&&near.some(c=>Math.abs(c.alongM-selected.alongM)>100))return {ambiguous:true,match:null};
   if(previous){const continuous=near.filter(c=>c.distanceM<=selected.distanceM+5).sort((a,b)=>Math.abs(a.alongM-previous.alongM)-Math.abs(b.alongM-previous.alongM));selected=continuous[0]||selected;}
   return {ambiguous:false,match:selected};
+ }
+ function motion(m,fix,previous){
+  const old=previous?.motion,age=old?fix.timestamp-old.timestamp:Infinity;
+  if(!m.part.walkPath||fix.accuracy>25||m.distanceM>Math.max(25,fix.accuracy))return null;
+  if(!old||age<0||age>30000)return {timestamp:fix.timestamp,peakM:m.alongM,anchor:fix,alongM:m.alongM,count:0,since:null,wrong:false};
+  if(age===0)return old;
+  const next={...old,timestamp:fix.timestamp,alongM:m.alongM},anchor=old.anchor,travel=GPS.distance([anchor.lat,anchor.lng],[fix.lat,fix.lng]),dt=(fix.timestamp-anchor.timestamp)/1000;
+  const course=Number.isFinite(fix.speed)&&fix.speed>=.7&&fix.speed<=4&&Number.isFinite(fix.heading)&&fix.heading>=0&&fix.heading<360?fix.heading:travel>=Math.max(12,fix.accuracy+anchor.accuracy)&&dt>=3&&dt<=30?GPS.bearing([anchor.lat,anchor.lng],[fix.lat,fix.lng]):null;
+  const opposition=course!==null&&Math.abs(angle(m.bearing,course))>=120,regression=old.peakM-m.alongM;
+  if(m.alongM>old.peakM){next.peakM=m.alongM;next.anchor=fix;}
+  if(opposition&&regression>=Math.max(18,fix.accuracy*2)){const step=GPS.distance([previous.fix.lat,previous.fix.lng],[fix.lat,fix.lng]);if(step>=Math.max(2,fix.accuracy/2)||travel>=Math.max(12,fix.accuracy+anchor.accuracy)){next.since=old.since??fix.timestamp;next.count=old.count+1;next.wrong=old.wrong||(next.count>=2&&fix.timestamp-next.since>=5000);}}
+  else if(course!==null&&!opposition&&m.alongM-old.alongM>=Math.max(5,fix.accuracy)){next.since=null;next.count=0;next.wrong=false;next.peakM=m.alongM;next.anchor=fix;}
+  else if(!old.wrong){next.since=null;next.count=0;}
+  if(travel>=Math.max(12,fix.accuracy+anchor.accuracy))next.anchor=fix;
+  return next;
  }
  function guide(plan,fix,previous=null,now=Date.now()){
   if(!plan?.segments.length)return {state:'unavailable',text:'저장된 이동 경로가 없어요'};
@@ -59,6 +74,8 @@
   if(!m)return {state:'checking',text:'진행 위치를 다시 확인 중'};
   const p=m.part,base={match:m,part:p,remainingM:m.remainingM,routeDistanceM:m.distanceM,partRemainingM:Math.max(0,p.endM-m.alongM)};
   if(p.walkPath&&m.distanceM>Math.max(35,fix.accuracy*1.5))return {...base,state:'off',text:'저장 경로에서 벗어났어요',returnBearing:GPS.bearing([fix.lat,fix.lng],m.coord)};
+  m.motion=motion(m,fix,previous);
+  if(m.motion?.wrong)return {...base,state:'wrongway',kind:'uturn',text:'반대 방향으로 이동 중인지 확인해 주세요'};
   if(p.walkPath&&m.remainingM<=Math.max(18,fix.accuracy)&&GPS.distance([fix.lat,fix.lng],plan.end)<=Math.max(15,Math.min(20,fix.accuracy)))return {...base,state:'near',kind:'arrive',text:'목적지 근처예요 · 도착을 확인해 주세요',nextDistanceM:m.remainingM};
   if(p.walkPath){const cue=plan.cues.find(c=>c.partIndex===p.index&&c.atM>=m.alongM-6);return {...base,state:'guiding',kind:cue?.kind||'straight',text:cue?.text||`${p.to||plan.to} 방향으로 계속 이동`,cue,nextDistanceM:Math.max(0,(cue?.atM??p.endM)-m.alongM)};}
   if(['rail','metro'].includes(p.mode))return {...base,state:'transit',kind:'rail',text:`${p.to||plan.to} 방향으로 이동`,nextDistanceM:base.partRemainingM};
