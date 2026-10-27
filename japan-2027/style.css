@@ -56,6 +56,23 @@
 .station-departures{margin:14px 0 17px;padding:15px;border:1px solid #cbdacf;background:#f2f6ee;border-radius:10px;font-family:RouteSans,sans-serif}
 .departure-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#52674f;font-size:11px;font-weight:600}.departure-heading small{font-size:9px;font-weight:400;color:#6b7d66}
 .departure-stations{display:flex;align-items:center;gap:9px;margin:14px 0 11px}.departure-station-code{border:2px solid #979c91;border-radius:50%;width:37px;height:37px;display:grid;place-items:center;font-size:11px;font-weight:700;background:white;flex:none}.departure-stations strong{font-size:17px;line-height:1.3;letter-spacing:-.5px}.departure-stations strong small{display:block;font-size:10px;letter-spacing:0;color:#71816c;font-weight:400;margin-top:2px}.departure-arrow{margin:0 3px;color:#87937c}
+/* Keep Korean names and their Japanese equivalents on matching rows. */
+.departure-stations.departure-stations-aligned{display:grid;grid-template-columns:max-content minmax(0,max-content) max-content minmax(0,max-content);grid-template-rows:auto auto;align-items:stretch;column-gap:7px;row-gap:2px}
+.departure-stations-aligned.has-reverse{grid-template-columns:max-content minmax(0,max-content) max-content minmax(0,max-content) max-content}
+.departure-stations-aligned .departure-station-code{grid-column:1;grid-row:1/3;align-self:center}
+.departure-stations-aligned .departure-station-name{display:grid;grid-template-rows:subgrid;grid-row:1/3;row-gap:2px;min-width:0;align-self:stretch}
+.departure-stations-aligned .departure-origin{grid-column:2}.departure-stations-aligned .departure-destination{grid-column:4}
+.departure-stations-aligned .departure-station-korean{min-width:0;word-break:keep-all;overflow-wrap:anywhere}
+.departure-stations-aligned .departure-station-japanese{display:block;margin:0;white-space:nowrap;word-break:keep-all;overflow-wrap:normal;font-size:11px;line-height:1.45;letter-spacing:0;font-weight:400;color:#71816c}
+.departure-stations-aligned .departure-arrow{grid-column:3;grid-row:1;align-self:center;margin:0}
+.departure-stations-aligned .departure-reverse{grid-column:5;grid-row:1/3;align-self:center;margin:0}
+.departure-stations-aligned.has-long-names{grid-template-columns:max-content minmax(0,1fr);grid-template-rows:auto auto auto}
+.departure-stations-aligned.has-long-names.has-reverse{grid-template-columns:max-content minmax(0,1fr) max-content}
+.departure-stations-aligned.has-long-names .departure-station-code{grid-column:1;grid-row:1;align-self:start}
+.departure-stations-aligned.has-long-names .departure-station-name{display:block;grid-column:2;min-width:0}
+.departure-stations-aligned.has-long-names .departure-origin{grid-row:1}.departure-stations-aligned.has-long-names .departure-destination{grid-row:3}
+.departure-stations-aligned.has-long-names .departure-arrow{grid-column:2;grid-row:2;justify-self:start;transform:rotate(90deg)}
+.departure-stations-aligned.has-long-names .departure-reverse{grid-column:3;grid-row:1/4;align-self:start}
 .departure-direction{font-size:11px;line-height:1.7}.departure-direction span{display:block;color:#75826f;font-size:10px}
 .leaflet-popup-content a.departure-google{background:#193e3a;color:white;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:13px;padding:13px 12px;border-radius:6px;font-size:12px;font-weight:600;min-height:44px}.departure-google .icon{width:15px;height:15px;flex:none}.departure-google:hover{background:#285b4e}.departure-secondary{display:flex;justify-content:space-between;gap:10px;margin-top:5px}.leaflet-popup-content .departure-secondary a{font-size:11px;padding:10px 0;color:#4b6752;min-height:40px;display:flex;align-items:center}.leaflet-popup-content p.departure-notice{font-size:10px;line-height:1.65;color:#788371;margin:3px 0 0}
 .departure-day-hint{display:flex;gap:8px;align-items:flex-start;padding:12px;background:#edf3e7;border:1px solid #dce5d4;border-radius:7px;font-size:11px;line-height:1.7;margin:14px 0 0;color:#53694d}.departure-day-hint .icon{flex:none;width:16px;margin-top:2px}.departure-day-hint small{display:block;color:#7b8973;font-size:10px}.departure-leg-hint{display:block;margin:-2px 0 12px 12px;font-size:10px;color:#57734e}
