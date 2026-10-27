@@ -18,7 +18,7 @@ test('charted ferry points remain unchanged with both separately marked port con
 test('street downloads use coarse public itinerary areas and include both variants',()=>{
  const d={n:11,variants:[{id:'main',stops:[{lat:35.71234,lng:139.78234}]},{id:'alt',stops:[{lat:35.81234,lng:139.88234}]}]};
  const points=OfflineRoads.centres(d,{days:{}});assert.equal(points.length,2);assert.notDeepEqual(points[0],[35.71234,139.78234]);
- for(const p of points)for(const n of p)assert.ok(Math.abs(n*50-Math.round(n*50))<1e-9);
+ for(const p of points)for(const n of p)assert.ok(Math.abs(n*100-Math.round(n*100))<1e-9);
  const q=OfflineRoads.query(points);assert.match(q,/highway/);assert.match(q,/railway/);assert.ok(!q.includes('35.71234'));
 });
 test('offline walking path uses only connected accessible OSM ways and respects pedestrian one-way',()=>{
