@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261027-route-focus',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261027-navigation',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}
@@ -52,7 +52,7 @@
     const index=await shell.match(new URL('index.html',document.baseURI).href);if(index)await shell.put(new URL('./',document.baseURI).href,index);
     if(!finalize)throw Error('일정 자료가 준비된 다음 다시 저장해 주세요.');await finalize();
     localStorage.setItem(RECORD,JSON.stringify({revision:REVISION,complete:true,savedAt:Date.now(),files:state.done,bytes:state.bytes}));
-    $('#offlinePackStatus').textContent='저장 완료 · 인터넷을 꺼도 전체 일정·장소·경로·시간표·간략 지도를 사용할 수 있어요.';
+    $('#offlinePackStatus').textContent='저장 완료 · 인터넷을 꺼도 전체 일정·장소·경로·길 안내·시간표·간략 지도를 사용할 수 있어요.';
     window.dispatchEvent(new Event('routebook:offline-ready'));return true;
    }catch(error){$('#offlinePackStatus').textContent=error.name==='AbortError'?'저장을 중단했어요. 다시 누르면 저장한 파일부터 확인합니다.':error.message;return false;}
    finally{running=null;$('#offlinePackStart').disabled=false;$('#offlinePackCancel').hidden=true;render({status:false});}
