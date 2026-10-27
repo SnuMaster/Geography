@@ -66,7 +66,7 @@ function applyRouteFocus(){
  $('#routeFocusTitle').textContent=c?stopLabel(stops[index-1])+' → '+stopLabel(stops[index]):'지역을 고르면 한 구간씩 볼 수 있어요';
  const leg=c?.legs[index-1];$('#routeFocusMode').textContent=leg?`${leg.summary||''} · ${leg.durationLabel||distanceText(leg.distanceM)}`:'';
  // A single arrow belongs to the active movement; intermediate path pieces keep their true line colors.
- highlightDirection(leg);
+ highlightDirection(leg);window.RouteNavigation?.refresh();
 }
 function bindRouteFocus(){
  const move=delta=>{RouteUI.userExplore();DetailView.close();setFocusedLeg((focusedIndex()||1)+delta,{fit:true});};
