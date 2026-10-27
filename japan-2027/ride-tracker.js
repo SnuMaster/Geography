@@ -75,7 +75,7 @@
       <div class="ride-picker-tools"><label class="ride-field">운행일<input id="rideDate" type="date" value="${h(selectedDate)}" aria-label="열차 운행일"></label><button type="button" class="ride-today" data-ride-today>지금 시간대</button></div>
       <label class="ride-field ride-search-label">열차 찾기<input id="rideSearch" type="search" value="${h(filter)}" placeholder="출발 시각 · 열차번호 · 행선지" aria-label="출발 시각 열차번호 행선지 검색" autocomplete="off"></label>
       <div class="ride-list-toolbar"><strong id="rideListCount">시간표를 불러오는 중…</strong><button type="button" id="rideAllDay" aria-pressed="${allDay}" data-ride-all>${allDay ? '지금 전후 보기' : '하루 전체 보기'}</button></div>
-      <p class="ride-service-note">${h(RailDepartures.validityFor(selectedKey,selectedDate).label)} · 예정 시각·실시간 지연 미반영.<br>운행일은 오전 3시 기준이에요. 심야 00~02시대는 전날 운행일에서 확인하세요.</p>
+      <p class="ride-service-note">시간표 기준 · 실시간 지연 미반영. 운행일은 오전 3시 기준이에요.</p>
       <div id="rideTrainList" class="ride-train-list" aria-busy="true"></div>
       <p id="rideStatus" class="ride-status" role="status" aria-live="polite">${h(savedMessage)}</p>
       <p class="ride-footnote">${h(p?.line || '')} · 시간표 기준 · 지연·운휴 자동 수신 없음</p>`;
@@ -85,7 +85,7 @@
     const list = $('#rideTrainList'), p = profiles[selectedKey], now = Date.now();
     if (!list) return;
     const validity=RailDepartures.validityFor(selectedKey,selectedDate);
-    if(!validity.usable){list.setAttribute('aria-busy','false');$('#rideListCount').textContent='여행일 시간표 갱신 필요';list.innerHTML=`<div class="ride-empty timetable-warning">여행일 시간표 갱신 필요 · ${h(selectedDate)}<br>자료 확인 ${h(p.sourceDate)} · ${p.validUntil?'유효 종료 '+h(p.validUntil):'적용 범위 밖'}<br>확인되지 않은 열차 시각은 표시하지 않아요.</div>`;return;}
+    if(!validity.usable){list.setAttribute('aria-busy','false');$('#rideListCount').textContent='열차 시각 없음';list.innerHTML='<div class="ride-empty">열차 시각 없음 · <button type="button" class="notice-inline" data-show-notices>공지사항</button></div>';return;}
     lastListTick=now;
     const text = filter.trim().toLocaleLowerCase().replace(/\s/g, '');
     let visible = trains.filter(train => {

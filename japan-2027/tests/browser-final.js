@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/42';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/43';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -17,9 +17,9 @@
  await report(5,'식사·음료 입장료 제외',async()=>{const w=await load(),b=w.__routebook,c=w.JourneyState.totals(b.state.data.days,b.state.routeData.days);check(c.admissionMin===36400&&c.admissionMax===51950,'입장료 분류 오류');b.showOverview();check(w.document.querySelector('[data-summary=baseline]').textContent.includes('36,400~51,950'),'전체 화면 합계 오류');});
  await report(6,'우지 선택 왕복 유지',async()=>{const w=await load(14),b=w.__routebook;b.setVariant('no-yamazaki');b.setDay(15);b.setDay(14);check(b.state.variant==='no-yamazaki','우지 유실');});
  await report(7,'우지 검색 정확한 대체안·장소',async()=>{const w=frame.contentWindow,d=w.document;input(w,'#daySearch','우지');click(w,'[data-place-id="d14-no-yamazaki-1"]');check(w.__routebook.state.variant==='no-yamazaki'&&w.__routebook.state.selected===1,'검색 대상 불일치');close(w);});
- await report(8,'모노레일 검색 실제 이동',async()=>{const w=frame.contentWindow;input(w,'#daySearch','모노레일');click(w,'[data-search-result]');check(w.__routebook.state.day===12,'노선 날짜 오류');check(w.document.querySelector('.popup-title').textContent.includes('하마마쓰초'),'이동 상세 오류');check(w.document.querySelector('.station-departures'),'시간표 연결 없음');close(w);});
+ await report(8,'모노레일 검색 실제 이동',async()=>{const w=frame.contentWindow;input(w,'#daySearch','모노레일');click(w,'[data-search-result]');check(w.__routebook.state.day===12,'노선 날짜 오류');const section=w.document.querySelector('.station-departures');check(section?.dataset.departureProfile==='day12-tokyomonorail-hanedaairport-hamamatsucho-hanedaairportterminal1','검색한 모노레일 구간과 시간표 연결 오류');close(w);});
  await report(9,'전체 지도 KTX 실제1/29',async()=>{const w=await load(1),b=w.__routebook;b.showOverview();const marker=[...b.map._layers?Object.values(b.map._layers):[]].find(l=>l.options?.title?.includes('KTX'));check(marker,'KTX기호 없음');marker.fire('click');const section=w.document.querySelector('.station-departures');check(section?.dataset.serviceDate==='2027-01-29','KTX 날짜 '+section?.dataset.serviceDate);close(w);});
- await report(10,'팝업 자정·날짜 문구 갱신',async()=>{const w=await load(1,{date:'2027-01-08T23:59:00+09:00'});w.__routebook.selectLeg(6);await until(()=>w.document.querySelector('[data-ride-next]'));qa.clock=Date.parse('2027-01-09T07:00:00+09:00');await sleep(1200);const d=w.document;check(d.querySelector('.departure-clock').textContent.includes('01/09'),'일본 날짜 미갱신');check(d.querySelector('.departure-heading strong').textContent==='현재 다음 열차','현재 팝업이 과거 참고로 회귀');close(w);});
+ await report(10,'팝업 자정·날짜 문구 갱신',async()=>{const w=await load(1,{date:'2027-01-08T23:59:00+09:00'});w.__routebook.selectLeg(6);await until(()=>w.document.querySelector('[data-ride-next]'));qa.clock=Date.parse('2027-01-09T07:00:00+09:00');await sleep(1200);const d=w.document;check(d.querySelector('.departure-clock').textContent.includes('01/09'),'일본 날짜 미갱신');check(d.querySelector('.departure-heading strong').textContent==='다음 열차','현재 팝업이 과거 참고로 회귀');close(w);});
  await report(11,'열차 목록1시간 후 새로운 열차 추가',async()=>{const w=await load(1);await w.RideTracker.open(hibiya,'2027-01-08');await until(()=>w.document.querySelector('[data-train-uid]'));input(w,'#rideSearch','보통');const d=w.document,before=new Set([...d.querySelectorAll('[data-train-uid]')].map(n=>n.dataset.trainUid));const scroller=d.querySelector('#rideBody');scroller.scrollTop=80;qa.clock+=3600000;await sleep(1200);const after=[...d.querySelectorAll('[data-train-uid]')].map(n=>n.dataset.trainUid);check(after.some(id=>!before.has(id)),'새 범위 열차 미추가');check(d.querySelector('#rideSearch').value==='보통','검색어 유실');check(Math.abs(scroller.scrollTop-80)<3,'목록 스크롤 유실');return '합성 시계09→10시 · 새 열차 '+after.filter(id=>!before.has(id)).length+'편 DOM 추가 · 검색·스크롤 유지';});
  await report(12,'03시 현재 목록만 운행일 변경',async()=>{const w=await load(1,{date:'2027-01-09T02:59:00+09:00'});await w.RideTracker.open(hibiya);await until(()=>w.document.querySelector('#rideDate'));check(w.document.querySelector('#rideDate').value==='2027-01-08','02시 운행일 오류');qa.clock=Date.parse('2027-01-09T03:00:00+09:00');await sleep(1200);check(w.document.querySelector('#rideDate').value==='2027-01-09','03시 미갱신');change(w,'#rideDate','2027-01-15');qa.clock=Date.parse('2027-01-10T03:00:00+09:00');await sleep(1200);check(w.document.querySelector('#rideDate').value==='2027-01-15','수동 미래일 강제 변경');});
  await report(13,'실제 역 확인 뒤 지연 보정',async()=>{const w=await load(1);await pick(w);const d=w.document;click(w,'[data-ride-confirm="1"]');const before=d.querySelector('#ridePosition').textContent;change(w,'#rideDelay','30');d.querySelector('#rideDelayForm').dispatchEvent(new w.Event('submit',{bubbles:true,cancelable:true}));check(d.querySelector('#ridePosition').textContent.includes(before.split('역')[0])||!d.querySelector('[data-ride-stop-row="0"]').classList.contains('is-current'),'확인 이전 역으로 회귀');return '확인한 역 바닥값 보존 · 실제 도착 자동 확정 없음';});
@@ -48,7 +48,7 @@
   await until(()=>d.querySelector('[data-ride-next]'));
   const section=d.querySelector('.station-departures'),first=section._rideTrains[0],parts=w.ConnectionCore.stepsFor(w.__routebook.getLeg(8),w.__routebook.rail.keyFor);
   check(w.DepartureCore.formatTime(first.departureAt)==='17:33','도보·앞 열차·환승을 반영하지 않은 JR 열차');
-  check(d.querySelector('.departure-clock').textContent.includes('승차 여유 1분 반영'),'연결 기준 안내 누락');
+  check(d.querySelector('.departure-clock').textContent.includes('01/08 참고'),'연결 기준 안내 누락');
   check(parts.length===5,'도보·환승 단계 누락');close(w);return '17:10 숙소 출발 → 앞 열차·도보·환승 반영 → 우에노17:33 출발';
  });
  await report(34,'새 자료 적용 전 표시 시각 유지·일부 실패 시 혼합 차단·선택 상태 보존',async()=>{
@@ -164,6 +164,26 @@
    row=d.querySelector('[data-departure-profile="korail-busan-seodaegu"] .departure-stations-aligned');check(row&&!row.querySelector('.departure-station-japanese')&&row.textContent.includes('부산역')&&row.textContent.includes('서대구역'),'한국 역명 표시 오류 '+width);close(w);
   }
   return '320/390/1280px · 한글·일본어 줄맞춤 · 긴 공항역 · 한국 역명';
+ });
+ await report(43,'간단한 철도 카드·별도 공지·기존 열차 선택',async()=>{
+  for(const width of [320,390,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(10,{date:'2026-10-27T10:00:00+09:00'}),d=w.document,b=w.__routebook;
+   b.selectLeg(1);await until(()=>d.querySelector('[data-ride-next]'));const card=d.querySelector('.compact-station'),leg=b.getLeg(1);
+   check(card&&d.querySelectorAll('.compact-station').length===1,'열차 카드 중복 '+width);
+   check(card.querySelector('.compact-metrics').textContent.includes((leg.distanceM/1000).toFixed(1)+' km'),'전체 거리 오류 '+width);
+   check(card.querySelector('.compact-metrics').textContent.includes('341엔'),'IC 요금 오류 '+width);
+   check(card.querySelector('.departure-clock').textContent.includes('01/17 참고'),'여행일 기준 누락 '+width);
+   check(card.querySelector('.departure-next-time strong').textContent==='09:03','연결 열차 시각 오류 '+width);
+   check(card.querySelectorAll('.compact-actions button,.compact-actions a').length===2,'주요 버튼 수 오류 '+width);
+   check(card.querySelector('[data-ride-open]')&&card.querySelector('.compact-actions a').href.includes('google.com/maps/dir'),'시간표·길찾기 누락 '+width);
+   check(!d.querySelector('.leaflet-popup-content .fare-proof')&&!d.querySelector('.leaflet-popup-content .popup-title'),'요금·경로 중복 '+width);
+   check(!d.querySelector('.leaflet-popup-content').textContent.includes('종이표'),'종이표 노출 '+width);
+   check(!d.querySelector('.compact-route-details').open,'이동 순서 펼쳐짐 '+width);
+   if(width<=1024){const sheet=d.querySelector('#detailSheet'),btn=card.querySelector('[data-ride-open]').getBoundingClientRect(),sr=sheet.getBoundingClientRect();check(sheet.open&&btn.bottom<=sr.bottom&&btn.top>=sr.top,'시간표 버튼 가림 '+width);}
+   click(w,'[data-ride-open]');await until(()=>d.querySelector('#rideProfile'));check(d.querySelector('#rideDate').value==='2027-01-17','전체 시간표 운행일 오류');click(w,'#ridePanel [data-ride-close]');
+   click(w,'#noticeBtn');check(d.querySelector('#noticeDialog').open&&d.querySelector('#noticeList').textContent.includes('아사쿠사'),'시간표 공지 누락 '+width);click(w,'#closeNotices');
+  }
+  return '320/390/1280px · 거리·IC·다음 열차 · 시간표/길찾기 · 공지 분리';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
