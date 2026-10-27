@@ -45,6 +45,7 @@ function applyRouteFocus(){
  }
  for(const group of railSymbolGroups.values()){
   const chosen=group.entries.some(e=>focusedMatch(e.leg,c,index));
+  const count=group.marker.getElement()?.querySelector('.route-direction-count');if(count)count.hidden=!routeAll;
   if(routeAll||chosen){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
  }
  const groups=state.view==='overview'?overviewPlaceGroups:stopGroups,stops=c?.variant.stops||[];
