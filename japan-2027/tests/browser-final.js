@@ -157,9 +157,11 @@
    check(Math.abs(ko[0].getBoundingClientRect().top-ko[1].getBoundingClientRect().top)<2,'한글 높이 불일치 '+width);
    check(Math.abs(ja[0].getBoundingClientRect().top-ja[1].getBoundingClientRect().top)<2,'일본어 높이 불일치 '+width);
    for(const item of [...ko,...ja]){const range=d.createRange();range.selectNodeContents(item);check(range.getClientRects().length===1,'역명 중간 줄바꿈 '+width);const r=item.getBoundingClientRect(),box=row.getBoundingClientRect();check(r.left>=box.left-1&&r.right<=box.right+1,'역명 가로 넘침 '+width);}
-   close(w);b.setDay(1);b.selectLeg(4);row=d.querySelector('.departure-stations-aligned');check(row?.classList.contains('has-long-names'),'긴 공항역 표시 누락 '+width);
+   close(w);b.setDay(1);b.selectLeg(4);await until(()=>d.querySelector('[data-departure-profile="skyliner-naritaairportterminal2and3-keiseiueno"]'));
+   row=d.querySelector('[data-departure-profile="skyliner-naritaairportterminal2and3-keiseiueno"] .departure-stations-aligned');check(row?.classList.contains('has-long-names'),'긴 공항역 표시 누락 '+width);
    for(const item of row.querySelectorAll('.departure-station-japanese')){const range=d.createRange();range.selectNodeContents(item);check(range.getClientRects().length===1,'긴 일본어 역명 잘림 '+width);const r=item.getBoundingClientRect(),box=row.getBoundingClientRect();check(r.right<=box.right+1,'긴 역명 가로 넘침 '+width);}
-   close(w);b.setDay(22);b.selectLeg(6);row=d.querySelector('.departure-stations-aligned');check(row&&!row.querySelector('.departure-station-japanese')&&row.textContent.includes('부산역')&&row.textContent.includes('서대구역'),'한국 역명 표시 오류 '+width);close(w);
+   close(w);b.setDay(22);b.selectLeg(6);await until(()=>d.querySelector('[data-departure-profile="korail-busan-seodaegu"]'));
+   row=d.querySelector('[data-departure-profile="korail-busan-seodaegu"] .departure-stations-aligned');check(row&&!row.querySelector('.departure-station-japanese')&&row.textContent.includes('부산역')&&row.textContent.includes('서대구역'),'한국 역명 표시 오류 '+width);close(w);
   }
   return '320/390/1280px · 한글·일본어 줄맞춤 · 긴 공항역 · 한국 역명';
  });
