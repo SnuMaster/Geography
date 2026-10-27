@@ -108,16 +108,17 @@ function railMidpoint(coords,fraction=.5){
  return coords[Math.floor(coords.length/2)];
 }
 function symbolOptions(leg){return DetailView.options('route-info-popup',{routeLegIndex:leg.legIndex,routeDay:leg.dayNumber,routeVariant:leg.variant});}
-function directionHtml(group,entry){return (group.entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${group.entries.map((e,i)=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${i}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
+function visibleDirectionEntries(group){if(typeof routeAll==='boolean'&&!routeAll){const c=focusedContext(),i=focusedIndex(c),entries=group.entries.filter(e=>focusedMatch(e.leg,c,i));if(entries.length)return entries;}return group.entries;}
+function directionHtml(group,entry){const entries=visibleDirectionEntries(group);return (entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${entries.map(e=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${group.entries.indexOf(e)}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
 function addRailMapSymbol(part,leg){
  if(part.suppressSymbol)return;
  const info=railInfo(part)||(['flight','ferry','taxi'].includes(part.mode)?{code:part.mode==='flight'?'항공':part.mode==='ferry'?'선박':'Uber',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
  const point=railMidpoint(part.coords),groupKey=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(','),entryKey=leg.legId+'|'+part.lineId+'|'+part.from+'|'+part.to;
  if(railSymbolKeys.has(entryKey))return;railSymbolKeys.add(entryKey);
  const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
- const airline=airlineFor(part),operator=operatorLogo(part),group={key:groupKey,point,entries:[{part,leg}]};railSymbolGroups.set(groupKey,group);
+ const group={key:groupKey,point,entries:[{part,leg}]};railSymbolGroups.set(groupKey,group);
  const compact=part.mode==='flight'?'항공':part.mode==='taxi'?'택시':part.mode==='ferry'?'배':info.code;
  const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol',html:railInfo(part)?railBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:[44,44],iconAnchor:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
- marker.on('click',()=>{hideRailHover();const entry=group.entries[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
- marker.on('mouseover',e=>showRailHover(e,leg,part));marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
+ marker.on('click',()=>{hideRailHover();const entry=visibleDirectionEntries(group)[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
+ marker.on('mouseover',e=>{const entry=visibleDirectionEntries(group)[0];showRailHover(e,entry.leg,entry.part);});marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
 }
