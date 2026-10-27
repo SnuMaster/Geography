@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261027-streetmaps-3',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261027-streetmaps-4',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}

@@ -44,9 +44,15 @@ test('offline street save only marks data stored after a valid response and can 
  const source=fs.readFileSync(require.resolve('../japan-2027/offline-roads.js'),'utf8');let call=0,requestBody='',cache=new Map();
  const ctx={RouteMatch:GPS,URL,URLSearchParams,Response,AbortController,setTimeout,clearTimeout,document:{baseURI:'https://example.test/japan-2027/'},navigator:{onLine:true},
  caches:{open:async()=>({match:async k=>cache.get(k)?.clone(),put:async(k,v)=>cache.set(k,v.clone())})},
- fetch:async(url,opts)=>{call++;requestBody=opts.body.toString();if(call===1)return new Response('{}',{status:503});return new Response(JSON.stringify({elements:[{type:'way',id:1,nodes:[1,2],geometry:[{lat:35.71,lon:139.77},{lat:35.711,lon:139.77}],tags:{highway:'footway'}}]}),{status:200});}};
+ fetch:async(url,opts)=>{call++;requestBody=opts.body.toString();if(call<=2)return new Response('{}',{status:503});return new Response(JSON.stringify({elements:[{type:'way',id:1,nodes:[1,2],geometry:[{lat:35.71,lon:139.77},{lat:35.711,lon:139.77}],tags:{highway:'footway'}}]}),{status:200});}};
  vm.createContext(ctx);vm.runInContext(source,ctx);const day={n:1,variants:[{id:'main',stops:[{lat:35.71234,lng:139.78234}]}]};
  await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/503/);assert.equal(await ctx.OfflineRoads.get(1),null);
  const result=await ctx.OfflineRoads.save(day,{days:{}});assert.equal(result.elements.length,1);assert.ok(!decodeURIComponent(requestBody).includes('35.71234'));
  ctx.navigator.onLine=false;assert.equal((await ctx.OfflineRoads.get(1)).elements.length,1);await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/인터넷/);
+});
+
+test('a temporary map server failure falls back to a second public data server',async()=>{
+ const source=fs.readFileSync(require.resolve('../japan-2027/offline-roads.js'),'utf8');const calls=[],storage=new Map();
+ const ctx={RouteMatch:GPS,URL,URLSearchParams,Response,AbortController,setTimeout,clearTimeout,document:{baseURI:'https://example.test/japan-2027/'},navigator:{onLine:true},caches:{open:async()=>({match:async k=>storage.get(k)?.clone(),put:async(k,v)=>storage.set(k,v.clone())})},fetch:async url=>{calls.push(url);if(calls.length===1)return new Response('',{status:502});return new Response(JSON.stringify({elements:[{type:'way',nodes:[1,2],geometry:[{lat:35,lon:139},{lat:35.001,lon:139}],tags:{highway:'footway'}}]}));}};
+ vm.createContext(ctx);vm.runInContext(source,ctx);const result=await ctx.OfflineRoads.save({n:2,variants:[{id:'main',stops:[{lat:35,lng:139}]}]},{days:{}});assert.equal(result.day,2);assert.equal(calls.length,2);assert.match(calls[0],/private\.coffee/);assert.match(calls[1],/overpass-api\.de/);
 });
