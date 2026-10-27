@@ -46,7 +46,7 @@ function applyRouteFocus(){
  for(const group of railSymbolGroups.values()){
   const chosen=group.entries.some(e=>focusedMatch(e.leg,c,index));
   if(routeAll||chosen){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
-  const element=group.marker.getElement();if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
+  const element=group.marker.getElement(),entry=visibleDirectionEntries(group)[0];if(element&&entry){element.setAttribute('aria-label',entry.part.line+' '+entry.part.from+' → '+entry.part.to+' 이동 상세');}if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
  }
  const groups=state.view==='overview'?overviewPlaceGroups:stopGroups,stops=c?.variant.stops||[];
  for(const group of groups){
@@ -58,7 +58,7 @@ function applyRouteFocus(){
    group.marker.unbindTooltip();group.marker.bindTooltip(esc(label),{permanent:!!endpoints.length,direction,offset:[direction==='left'?-14:14,-17],className:'stop-tooltip focus-place-label'});
   }
  }
- const panel=$('#routeFocusPanel');panel.dataset.day=c?.day.n||'';panel.dataset.leg=index??'';
+ const panel=$('#routeFocusPanel');panel.dataset.day=c?.day.n||'';panel.dataset.focusedLeg=index??'';
  $('#routeAllToggle').setAttribute('aria-pressed',String(routeAll));$('#routeAllToggle').textContent=routeAll?'전체 경로 끄기':'전체 경로';
  $('#routeLegPrevious').disabled=!c||index<=1;$('#routeLegNext').disabled=!c||index>=stops.length-1;
  $('#routeFocusDetail').disabled=!c;
