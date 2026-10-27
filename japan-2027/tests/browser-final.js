@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/43';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/44';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -184,6 +184,30 @@
    click(w,'#noticeBtn');check(d.querySelector('#noticeDialog').open&&d.querySelector('#noticeList').textContent.includes('아사쿠사'),'시간표 공지 누락 '+width);click(w,'#closeNotices');
   }
   return '320/390/1280px · 거리·IC·다음 열차 · 시간표/길찾기 · 공지 분리';
+ });
+ await report(44,'오사카 역 번호를 기존 크기에서 가운데 표시',async()=>{
+  let totalCases=0;
+  for(const width of [320,390,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(12),d=w.document,b=w.__routebook;await d.fonts.ready;
+   const stations=new Set(['오사카','신이마미야','덴노지','도부쓰엔마에','난바','요도야바시','우메다','다니마치 4초메','오사카난바','오사카우메다']);
+   const cases=new Map();for(const [dayKey,legs] of Object.entries(b.state.routeData.days)){
+    const [day,...variant]=dayKey.split('-');for(const [index,leg] of legs.entries())if(leg)for(const key of b.rail.keysFor(leg)){
+     const p=w.RailDepartureProfiles.profiles[key];if(p&&stations.has(p.from)&&!cases.has(key))cases.set(key,{day:Number(day),variant:variant.join('-'),index:index+1,code:p.fromCode});
+    }
+   }
+   check(cases.size>=16,'오사카 역 정보 누락');
+   for(const [key,item] of cases){if(width!==390&&!['JR-A47','JR-O19'].includes(item.code))continue;
+    if(b.state.day!==item.day)b.setDay(item.day);if(b.state.variant!==item.variant)b.setVariant(item.variant);b.selectLeg(item.index);
+    const select=d.querySelector('[data-departure-select]');if(select&&select.value!==key)change(w,'[data-departure-select]',key);
+    await until(()=>d.querySelector('.station-departures')?.dataset.departureProfile===key);
+    const badge=d.querySelector('.compact-line .departure-station-code'),box=badge.getBoundingClientRect(),range=d.createRange();range.selectNodeContents(badge);
+    const rect=range.getBoundingClientRect();check(badge.textContent===item.code,'역 번호 불일치 '+key);check(Math.abs(box.width-35)<1&&Math.abs(box.height-35)<1,'상자 크기 변경 '+key);
+    check(range.getClientRects().length===1,'번호 줄바꿈 '+key+' '+width);check(rect.left>=box.left+1&&rect.right<=box.right-1,'번호가 상자 밖으로 넘침 '+key+' '+width);
+    check(Math.abs((rect.left+rect.right-box.left-box.right)/2)<2,'가로 가운데 정렬 오류 '+key+' '+width);check(Math.abs((rect.top+rect.bottom-box.top-box.bottom)/2)<2.5,'세로 가운데 정렬 오류 '+key+' '+width);
+    check(d.querySelector('.compact-line>strong').getBoundingClientRect().left>=box.right,'노선명 겹침 '+key);close(w);totalCases++;
+   }
+  }
+  return `오사카 ${totalCases}개 화면 · 기존 35px 크기 · 한 줄 가운데 정렬`;
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
