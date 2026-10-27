@@ -23,12 +23,14 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   await preparedPage.waitForFunction(()=>document.querySelector('.gps-location-marker')?.dataset.heading==='180');
   await preparedPage.locator('#map').evaluate(n=>n.scrollIntoView({block:'center'}));await preparedPage.waitForSelector('#mapLoading',{state:'detached'});
   await preparedPage.waitForFunction(()=>{const dot=document.querySelector('.gps-location-marker').getBoundingClientRect(),card=document.querySelector('#navigationCard').getBoundingClientRect();return dot.bottom<card.top||dot.right<card.left||dot.left>card.right;});
+  await preparedPage.evaluate(()=>__routebook.map.setZoom(16,{animate:false}));await preparedPage.waitForFunction(()=>Number(document.querySelector('#map').dataset.offlineRoads)>20&&Number(document.querySelector('#map').dataset.offlineCrossings)>0);
   await preparedPage.screenshot({path:'qa-navigation-offline-mobile.png',fullPage:false});await preparedPage.locator('#navigationStop').click();
   console.log('offline-navigation','GPS progress, heading and explicit resume after a fully offline reload verified');await preparedPage.setViewportSize({width:1280,height:900});
   const profiles=['kansai-jr-osaka-yamazaki','day12-metro-iriya-ueno','korail-busan-seodaegu'];
   const allAvailable=await preparedPage.evaluate(async keys=>{for(const key of keys)if(!await RailDepartures.getSchedule(key))return false;return true;},profiles);
   if(!allAvailable)failures.push({suite:'prepared-offline-timetables',message:'a previously unopened timetable is missing'});
   await preparedPage.locator('[data-day="22"]').click();if(!(await preparedPage.locator('#stopList').textContent()).includes('서대구'))failures.push({suite:'prepared-offline-day22',message:'all-trip navigation failed offline'});
+  await preparedPage.waitForFunction(()=>Number(document.querySelector('#map').dataset.offlineRoads)>20);console.log('offline-streets','Tokyo and Busan roads/crossings rendered from stored street chunks without networking');
   const count=await preparedPage.evaluate(async()=>{const c=await TravelStore.cache();return(await c.keys()).filter(r=>r.url.includes('/timetables/')).length;});
   if(count<102)failures.push({suite:'prepared-offline-pinning',count});
   if(!await preparedPage.evaluate(()=>OfflinePack.verifyStored()))failures.push({suite:'prepared-offline-integrity',message:'ready package was incomplete after reload'});

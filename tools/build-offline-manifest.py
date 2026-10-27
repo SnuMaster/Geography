@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1] / 'japan-2027'
-revision = '20261027-navigation'
+revision = '20261027-streets-motion-wake'
 worker = (root / 'sw.js').read_text()
 shell = re.search(r'const FILES=(\[.*?\]);', worker).group(1)
 shell = json.loads(shell.replace("'", '"'))
@@ -15,6 +15,7 @@ profiles = json.loads(manifest_text.split('globalThis.RailDepartureProfiles=', 1
 data = ['data.json','tokyo-data.json','tokyo-routes.json','west-data.json','west-routes.json',
         'flight-route-overrides.json','assets/maps/offline-land.json','fare-evidence.json',
         'assets/routes/flight-route-sources.json','assets/routes/return-route-sources.json']
+data += [str(p.relative_to(root)) for p in sorted((root/'assets/maps/offline-streets').glob('*.json'))]
 data += [profile['file'] for profile in profiles.values()]
 files = []
 for kind, names in [('shell', shell), ('json', data)]:

@@ -45,3 +45,16 @@ test('all source itineraries build usable plans without changing stored geometry
  const fs=require('node:fs');for(const file of ['tokyo-routes','west-routes']){const data=JSON.parse(fs.readFileSync(require.resolve('../japan-2027/'+file+'.json'),'utf8')),before=JSON.stringify(data);for(const [key,legs] of Object.entries(data.days))for(const source of legs){const plan=Nav.build(source);assert.ok(Number.isFinite(plan.totalM),key);assert.ok(plan.cues.every(c=>c.atM>=0&&c.atM<=plan.totalM),key);}assert.equal(JSON.stringify(data),before);}
  assert.equal(Nav.guide(Nav.build(null),null,null,now).state,'unavailable');
 });
+test('wrong-way guidance requires sustained backward travel and clears after forward recovery',()=>{
+ const plan=Nav.build(leg([walk([[0,0],[400,0]])]));let previous=null;const send=(north,t,heading=180,speed=1)=>{const v=Nav.guide(plan,fix(north,0,{timestamp:now+t*1000,heading,speed}),previous,now+t*1000);if(v.match)previous=v.match;return v;};
+ assert.equal(send(200,0,0).state,'guiding');assert.equal(send(180,10).state,'guiding');assert.equal(send(160,20).state,'wrongway');assert.equal(send(170,30,0).state,'guiding');
+});
+test('stationary heading, a single backward jitter and repeated timers cannot trigger wrong-way guidance',()=>{
+ const plan=Nav.build(leg([walk([[0,0],[400,0]])]));let previous=null;for(const [north,t,heading,speed] of [[200,0,180,0],[201,5,180,0],[199,10,180,0],[175,20,180,1],[175,30,180,1],[175,30,180,1],[175,30,180,1]]){const v=Nav.guide(plan,fix(north,0,{timestamp:now+t*1000,heading,speed}),previous,now+t*1000);assert.notEqual(v.state,'wrongway');if(v.match)previous=v.match;}
+});
+test('walking course can be inferred from position changes without using phone compass orientation',()=>{
+ const plan=Nav.build(leg([walk([[0,0],[400,0]])]));let previous=null,view;for(const [north,t] of [[200,0],[175,10],[150,20]]){view=Nav.guide(plan,fix(north,0,{timestamp:now+t*1000,heading:null,speed:null}),previous,now+t*1000);previous=view.match;}assert.equal(view.state,'wrongway');
+});
+test('a long GPS interruption resets previous wrong-way evidence',()=>{
+ const plan=Nav.build(leg([walk([[0,0],[400,0]])]));let previous=null,view;for(const [north,t] of [[200,0],[175,10],[150,20],[140,60]]){view=Nav.guide(plan,fix(north,0,{timestamp:now+t*1000,heading:180,speed:1}),previous,now+t*1000);previous=view.match;}assert.equal(view.state,'guiding');
+});

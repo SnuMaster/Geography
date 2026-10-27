@@ -1,0 +1,11 @@
+Offline street database
+
+Map data: © OpenStreetMap contributors.
+This adapted database is made available under the Open Database License 1.0 (ODbL).
+License: https://opendatacommons.org/licenses/odbl/1-0/
+Source and attribution: https://www.openstreetmap.org/copyright
+
+The database contains public road/footway geometry, street names and crossing points.
+It contains no live GPS observations, user trajectories or private address records.
+Source extracts and preparation dates are listed in index.json.
+The data files in this directory are the complete distributed adapted database.
