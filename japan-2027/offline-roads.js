@@ -1,9 +1,9 @@
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./location-core'):root.RouteMatch);if(typeof module==='object'&&module.exports)module.exports=api;else root.OfflineRoads=api;})(typeof globalThis!=='undefined'?globalThis:this,function(GPS){
  'use strict';
- const CACHE='trip-street-data-v1',ENDPOINT='https://overpass-api.de/api/interpreter',RADIUS=1700;
+ const CACHE='trip-street-data-v1',ENDPOINT='https://overpass-api.de/api/interpreter',RADIUS=800;
  const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&Math.abs(p[0])<=90&&Math.abs(p[1])<=180;
  function centres(day,routeData){
-  const result=[];function add(p){if(!validPoint(p))return;const coarse=p.map(x=>Math.round(x*50)/50);if(!result.some(q=>q[0]===coarse[0]&&q[1]===coarse[1]))result.push(coarse);}
+  const result=[];function add(p){if(!validPoint(p))return;const coarse=p.map(x=>Math.round(x*100)/100);if(!result.some(q=>q[0]===coarse[0]&&q[1]===coarse[1]))result.push(coarse);}
   for(const variant of day?.variants||[]){
    for(const stop of variant.stops||[])if(Number.isFinite(stop.lat)&&Number.isFinite(stop.lng))add([stop.lat,stop.lng]);
    for(const leg of routeData?.days?.[`${day.n}-${variant.id}`]||[])for(const part of leg.parts||[]){
@@ -15,14 +15,14 @@
  }
  function query(points){
   if(!points.length||points.some(p=>!validPoint(p))||points.length>45)throw Error('저장할 지도 범위를 찾을 수 없어요.');
-  const clauses=points.map(p=>{const at=p.map(n=>n.toFixed(5)).join(',');return `way(around:${RADIUS},${at})[highway];way(around:${RADIUS},${at})[railway~"^(rail|subway|tram|light_rail)$"];way(around:${RADIUS},${at})[building][name];node(around:${RADIUS},${at})[amenity][name];`;}).join('');
+  const clauses=points.map(p=>{const at=p.map(n=>n.toFixed(5)).join(',');return `way(around:${RADIUS},${at})[highway];way(around:${RADIUS},${at})[railway~"^(rail|subway|tram|light_rail)$"];node(around:${RADIUS},${at})[amenity][name];`;}).join('');
   return `[out:json][timeout:90][maxsize:134217728];(${clauses});out body geom;`;
  }
  function id(day){return new URL('offline-streets/day-'+Number(day)+'.json',document.baseURI).href;}
  async function get(day){try{const cache=await caches.open(CACHE),r=await cache.match(id(day));if(!r)return null;const value=await r.json();return value?.version===1&&value.day===Number(day)&&Array.isArray(value.elements)&&value.elements.length?value:null;}catch(_){return null;}}
  async function save(day,routeData,{signal}={}){
   if(!navigator.onLine)throw Error('상세 지도를 저장하려면 인터넷이 필요해요.');
-  const points=centres(day,routeData),timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),30000),cancel=()=>timeout.abort();signal?.addEventListener('abort',cancel,{once:true});let response;try{response=await fetch(ENDPOINT,{method:'POST',body:new URLSearchParams({data:query(points)}),signal:timeout.signal,credentials:'omit'});}finally{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
+  const points=centres(day,routeData),timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),45000),cancel=()=>timeout.abort();signal?.addEventListener('abort',cancel,{once:true});let response;try{response=await fetch(ENDPOINT,{method:'POST',body:new URLSearchParams({data:query(points)}),signal:timeout.signal,credentials:'omit'});}finally{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
   if(!response.ok)throw Error('지도 자료 서버에 연결하지 못했어요 ('+response.status+'). 잠시 후 다시 시도해 주세요.');
   const value=await response.json();if(value.remark)throw Error('지도 자료가 일부만 도착했어요. 다시 시도해 주세요.');if(!Array.isArray(value.elements)||!value.elements.some(e=>e.type==='way'&&e.tags?.highway&&Array.isArray(e.geometry)))throw Error('도로 자료가 비어 있어 저장하지 않았어요.');
   const payload={version:1,day:day.n,savedAt:Date.now(),points,elements:value.elements.filter(e=>e.type==='way'&&Array.isArray(e.geometry)||e.type==='node'&&Number.isFinite(e.lat)&&Number.isFinite(e.lon))};

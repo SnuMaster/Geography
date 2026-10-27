@@ -132,7 +132,7 @@
  });
  await report(40,'배 양쪽 항만 연결·중복 기호·날짜 목록 정리',async()=>{
   const w=await load(21),b=w.__routebook,d=w.document,l=b.getLeg(5),stops=b.getStops();
-  check(l.parts.length===3&&l.parts[1].coords.length===86&&w.TripPersonal.displayParts(l).length===1,'원본 해상 참고선/연속 시각화 오류');check(l.parts[0].geometryAccuracy==='schematic'&&l.parts[2].suppressSymbol,'항만 개략선 구분 누락');
+  const shown=w.TripPersonal.displayParts(l);check(l.parts.length===3&&l.parts[1].coords.length===86&&shown.length===3&&JSON.stringify(shown[0].coords.at(-1))===JSON.stringify(shown[1].coords[0])&&JSON.stringify(shown[1].coords.at(-1))===JSON.stringify(shown[2].coords[0]),'원본 해상 참고선/연속 시각화 오류');check(l.parts[0].geometryAccuracy==='schematic'&&l.parts[2].suppressSymbol,'항만 개략선 구분 누락');
   check(l.parts[0].coords[0][0]===stops[4].lat&&l.parts.at(-1).coords.at(-1)[0]===stops[5].lat,'항만 연결 누락');
   check(Object.values(b.map._layers).filter(x=>x.options?.title?.startsWith('선박')).length===1,'배 기호 중복');
   const item=d.querySelector('[data-day="2"]');check(item.textContent.includes('도쿄')&&item.textContent.includes('아사쿠사'),'도시·명소 누락');check(!item.textContent.includes('DAY'),'날짜 안내 중복');

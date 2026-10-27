@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261027-streetmaps-1',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261027-streetmaps-2',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}
@@ -66,7 +66,7 @@
    if(controller.signal.aborted)break;
    $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} 처리 중`;
    const existing=await OfflineRoads.get(day.n);if(existing&&Date.now()-existing.savedAt<30*86400000){ok++;continue;}
-   try{await OfflineRoads.save(day,trip.routeData,{signal:controller.signal});ok++;}catch(e){if(controller.signal.aborted)break;fail.push(day.date||String(day.n));break;}
+   try{await OfflineRoads.save(day,trip.routeData,{signal:controller.signal});ok++;await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push((day.date||String(day.n))+' · '+(e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message));break;}
   }
   if(controller.signal.aborted)$('#offlineStreetStatus').textContent=`상세 지도 저장 중단 · ${ok}/${days.length}일 저장됨. 다시 누르면 이어서 저장해요.`;
   else if(fail.length)$('#offlineStreetStatus').textContent=`${ok}/${days.length}일 저장 · ${fail.join(', ')}부터 저장하지 못했어요. 인터넷·지도 서버를 확인한 뒤 다시 누르면 이어서 저장해요.`;
