@@ -45,17 +45,17 @@ function applyRouteFocus(){
  }
  for(const group of railSymbolGroups.values()){
   const chosen=group.entries.some(e=>focusedMatch(e.leg,c,index));
-  const count=group.marker.getElement()?.querySelector('.route-direction-count');if(count)count.hidden=!routeAll;
   if(routeAll||chosen){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
+  const element=group.marker.getElement();if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
  }
  const groups=state.view==='overview'?overviewPlaceGroups:stopGroups,stops=c?.variant.stops||[];
  for(const group of groups){
   const endpoints=group.indices.filter(i=>i===index-1||i===index),point=endpoints[0]??group.indices[0],stop=stops[point];if(!stop)continue;
   const el=group.marker.getElement();el?.classList.toggle('focus-muted',!routeAll&&!endpoints.length);el?.classList.toggle('focus-from',endpoints.includes(index-1));el?.classList.toggle('focus-to',endpoints.includes(index));
   const number=el?.querySelector('.pin-number>span');if(number)number.textContent=endpoints.length?endpoints.map(i=>i+1).join('→'):String(point+1);
-  const label=stopLabel(stop),current=group.marker.getTooltip();
-  if(!current||current.options.permanent!==!!endpoints.length||current.getContent()!==esc(label)){
-   group.marker.unbindTooltip();group.marker.bindTooltip(esc(label),{permanent:!!endpoints.length,direction:endpoints.includes(index-1)?'left':'right',offset:[endpoints.includes(index-1)?-14:14,-17],className:'stop-tooltip focus-place-label'});
+  const label=stopLabel(stop),current=group.marker.getTooltip(),direction=map.latLngToContainerPoint(group.marker.getLatLng()).x<map.getSize().x/2?'right':'left';
+  if(!current||current.options.permanent!==!!endpoints.length||current.getContent()!==esc(label)||current.options.direction!==direction){
+   group.marker.unbindTooltip();group.marker.bindTooltip(esc(label),{permanent:!!endpoints.length,direction,offset:[direction==='left'?-14:14,-17],className:'stop-tooltip focus-place-label'});
   }
  }
  const panel=$('#routeFocusPanel');panel.dataset.day=c?.day.n||'';panel.dataset.leg=index??'';
