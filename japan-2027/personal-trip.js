@@ -35,10 +35,32 @@
   }
   return null;
  }
+ const JA_TO_KO={
+  '三ノ宮':'산노미야','中書島':'주쇼지마','中洲川端':'나카스카와바타','京都':'교토',
+  '伏見桃山':'후시미모모야마','伏見稲荷':'후시미이나리','住吉':'스미요시','元町':'모토마치',
+  '動物園前':'도부쓰엔마에','十三':'주조','博多':'하카타','大濠公園':'오호리코엔',
+  '大阪':'오사카','大阪上本町':'오사카우에혼마치','大阪梅田':'오사카우메다','大阪難波':'오사카난바',
+  '天王寺':'덴노지','天神橋筋六丁目':'덴진바시스지로쿠초메','宇治':'우지','山崎':'야마자키',
+  '嵐山':'아라시야마','嵯峨嵐山':'사가아라시야마','布施':'후세','新今宮':'신이마미야',
+  '桂':'가쓰라','梅田':'우메다','森ノ宮':'모리노미야','淀屋橋':'요도야바시',
+  '清水五条':'기요미즈고조','祇園':'기온','祇園四条':'기온시조','西新':'니시진',
+  '谷町四丁目':'다니마치욘초메','赤坂':'아카사카','近鉄奈良':'긴테쓰나라','難波':'난바'
+ };
+ function koreanForJapanese(name){
+  const raw=String(name||'').trim(),plain=raw.replace(/駅$/,'');
+  if(JA_TO_KO[plain])return JA_TO_KO[plain];
+  for(const [ko,ja] of Object.entries(EXTRA_JA))if(ja===plain)return ko;
+  for(const p of Object.values(globalThis.RailDepartureProfiles?.profiles||{})){
+   if(p.country==='KR')continue;
+   for(const end of ['from','to'])if(p[end+'Ja']===plain&&p[end])return p[end];
+  }
+  return null;
+ }
  function station(name,japaneseOverride=null,country='JP'){
   const raw=String(name||'');
   if(country==='KR')return raw.replace(/\s*KTX$/,'').replace(/^(부산|서대구|동대구)$/,'$1역');
   if(/[（(][\u3040-\u30ff\u3400-\u9fff]/.test(raw))return raw;
+  if(!/[가-힣]/.test(raw)){const ko=koreanForJapanese(raw);if(ko)return ko+'('+raw+')';}
   const ja=japaneseOverride||japanese(raw);
   return ja?raw+'('+ja+')':raw;
  }
@@ -70,16 +92,12 @@
    source:route?.source||null};
  }
  function displayParts(leg){
-  if(!leg?.parts?.some(p=>p.mode==='ferry'))return leg?.parts||[];
-  const parts=leg.parts.filter(p=>p.mode==='ferry');
-  if(!parts.length)return leg.parts;
-  const coords=[];for(const p of parts)for(const pt of p.coords||[])if(!coords.length||Math.abs(coords.at(-1)[0]-pt[0])>1e-8||Math.abs(coords.at(-1)[1]-pt[1])>1e-8)coords.push(pt);
-  return [{...parts.find(p=>p.geometryAccuracy!=='schematic')||parts[0],coords,suppressSymbol:false,
-   distanceM:parts.reduce((n,p)=>n+(p.distanceM||0),0),
-   geometryAccuracy:'reference',
-   line:'뉴 카멜리아호 · 하카타항 → 부산항 · 참고 항로',
-   geometrySource:'FRA 조사 지도 해상 86개 좌표 + 양쪽 항만 연결 개략선. 하나의 연속된 표시선이며 실제 항적·항만 진입 항로가 아닙니다.'}];
+  // Keep the chart-derived sea line and the two separate port connectors intact.
+  // The original 86 sea coordinates remain unchanged and the schematic parts
+  // are styled separately rather than presented as surveyed harbor tracks.
+  return leg?.parts||[];
  }
+
  function patch(data,routes){
   // Every planned taxi transfer is requested via Uber, including Japanese city taxis.
   for(const day of data?.days||[])for(const variant of day.variants||[])for(const stop of variant.stops||[]){

@@ -46,7 +46,7 @@ function applyRouteFocus(){
  for(const group of railSymbolGroups.values()){
   const chosen=group.entries.some(e=>focusedMatch(e.leg,c,index));
   if(routeAll||chosen){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
-  const element=group.marker.getElement(),entry=visibleDirectionEntries(group)[0];if(element&&entry){element.setAttribute('aria-label',entry.part.line+' '+entry.part.from+' → '+entry.part.to+' 이동 상세');}if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
+  const element=group.marker.getElement(),entry=visibleDirectionEntries(group)[0];if(element&&entry){element.setAttribute('aria-label',entry.part.line+' '+stationLabel(entry.part.from)+' → '+stationLabel(entry.part.to)+' 이동 상세');}if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
  }
  const groups=state.view==='overview'?overviewPlaceGroups:stopGroups,stops=c?.variant.stops||[];
  for(const group of groups){
@@ -66,7 +66,7 @@ function applyRouteFocus(){
  $('#routeFocusTitle').textContent=c?stopLabel(stops[index-1])+' → '+stopLabel(stops[index]):'지역을 고르면 한 구간씩 볼 수 있어요';
  const leg=c?.legs[index-1];$('#routeFocusMode').textContent=leg?`${leg.summary||''} · ${leg.durationLabel||distanceText(leg.distanceM)}`:'';
  // A single arrow belongs to the active movement; intermediate path pieces keep their true line colors.
- highlightDirection(leg);window.RouteNavigation?.refresh();
+ highlightDirection(leg);window.RouteNavigation?.refresh();window.OfflineMap?.refresh();
 }
 function bindRouteFocus(){
  const move=delta=>{RouteUI.userExplore();DetailView.close();setFocusedLeg((focusedIndex()||1)+delta,{fit:true});};

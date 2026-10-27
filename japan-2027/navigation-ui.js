@@ -1,7 +1,7 @@
 'use strict';
 (function(){
  const KEY='routebook-navigation-v1',$=s=>document.querySelector(s),metres=n=>n>=1000?(n/1000).toFixed(1)+'km':Math.max(0,Math.round(n/5)*5)+'m';
- let ready=false,active=null,timer=null,previous=null,ownsGPS=false,packageReady=false,generation=0;
+ let ready=false,active=null,timer=null,previous=null,ownsGPS=false,packageReady=false,generation=0,rerouteLine=null;
  const symbols={left:'↰',right:'↱',uturn:'↶',straight:'↑',arrive:'⚑',rail:'⇄',transfer:'⇄',taxi:'↗',flight:'✈',ferry:'⚓',bus:'B'};
  function record(){try{const v=JSON.parse(localStorage.getItem(KEY)||'null');return v?.version===1&&Number.isInteger(v.day)&&typeof v.variant==='string'&&Number.isInteger(v.index)&&v.index>0?v:null;}catch(_){return null;}}
  function save(){if(!active)return;try{localStorage.setItem(KEY,JSON.stringify({version:1,day:active.day,variant:active.variant,index:active.index}));}catch(_){}}
@@ -14,12 +14,30 @@
   $('#routeNavigationStart').textContent=saved&&c&&saved.day===c.day.n&&saved.variant===c.variant.id&&saved.index===index?'길 안내 계속':'길 안내';
  }
  function renderDirection(){if(!active)return;const heading=RouteLocation.getHeading();setText('#navigationDirection',heading?`${heading.source==='compass'?'휴대폰':'이동'} 방향 · ${RouteMatch.directionName(heading.degrees)} ${Math.round(heading.degrees)%360}°`:$('#locationDirection').textContent||'방향 확인 중');}
+ async function tryReroute(fix){
+  if(!active||active.rerouting||!fix||fix.accuracy>30||active.plan.parts.some(p=>p.mode!=='walk'))return;
+  if(active.lastRerouteAttempt&&Date.now()-active.lastRerouteAttempt<30000)return;
+  const current=active,currentGeneration=generation;current.rerouting=true;current.lastRerouteAttempt=Date.now();
+  try{
+   const roads=await OfflineRoads.get(current.day);if(!roads||!active||currentGeneration!==generation)return;
+   const end=current.source.parts.at(-1)?.coords?.at(-1),path=OfflineRoads.findRoute(roads,[fix.lat,fix.lng],end);
+   if(!path?.coords?.length||!active||currentGeneration!==generation)return;
+   const part={mode:'walk',line:'저장된 도보 도로',from:current.source.from,to:current.source.to,coords:path.coords,geometryAccuracy:'mapped',geometrySource:'OfflineRoads · OpenStreetMap'};
+   const plan=TripNavigation.build({from:current.source.from,to:current.source.to,parts:[part]});if(!plan.segments.length)return;
+   current.plan=plan;current.rerouted=true;current.offFixes=0;previous=null;$('#navigationProgress').max=plan.totalM;steps();
+   if(rerouteLine)map.removeLayer(rerouteLine);rerouteLine=L.polyline(path.coords,{color:'#197962',weight:6,opacity:.95,dashArray:'8 5',interactive:false}).addTo(map);
+   announce('저장된 도로에서 도보 경로를 다시 찾았어요. 현장 보행로와 횡단보도를 확인하세요.');
+  }catch(_){/* Keep the original route and ask the traveler to return to it. */}
+  finally{current.rerouting=false;}
+ }
  function render(){
   if(!active)return;const fix=RouteLocation.getFix(),status=RouteLocation.getStatus(),value=TripNavigation.guide(active.plan,fix,previous);
   if(status.phase==='denied'||status.phase==='unsupported'){value.state='permission';value.text=status.phase==='denied'?'위치 권한을 허용해 주세요':'이 브라우저에서 위치를 사용할 수 없어요';}
   else if(status.rejectedNotice){value.state='uncertain';value.text='GPS 위치 도약 · 다음 관측을 기다려요';}
   else if(document.hidden){value.state='stale';value.text='화면을 다시 열면 위치를 확인해요';}
+  if(value.state==='off'&&fix?.timestamp!==active.lastOffTimestamp){active.lastOffTimestamp=fix.timestamp;active.offFixes=(active.offFixes||0)+1;if(active.offFixes>=3)tryReroute(fix);}else if(value.state!=='off')active.offFixes=0;
   if(value.match&&['guiding','near','transit','reference'].includes(value.state)&&value.match.distanceM<=80+fix.accuracy)previous=value.match;
+  if(value.part?.to&&value.text)value.text=value.text.replace(value.part.to,stationLabel(value.part.to));
   const card=$('#navigationCard');card.dataset.state=value.state;
   setText('#navigationInstruction',value.text);
   const actionable=['guiding','near','transit'].includes(value.state);
@@ -32,7 +50,7 @@
   $('#navigationCompass').hidden=Boolean(RouteLocation.getHeading())||status.orientationPermission==='unsupported';
   $('#navigationArrived').hidden=value.state!=='near';
   const accurate=fix&&Date.now()-fix.timestamp<=30000;setText('#navigationAccuracy',accurate?'GPS ±'+metres(fix.accuracy):'위치 갱신 대기');
-  const explanation=value.state==='off'?'안전한 보행로로 저장 경로에 돌아와 주세요. 새 경로를 자동으로 만들지는 않아요.':value.state==='transit'?`${value.part.line||'철도'} · 승하차는 현장 안내와 탑승 열차에서 확인하세요.`:value.state==='reference'?'개략선·역내 통로·차량 이동은 회전 안내를 하지 않아요. 현장 안내를 확인하세요.':value.state==='permission'?'브라우저의 이 사이트 위치 권한을 허용한 뒤 ‘위치 다시 시도’를 눌러 주세요.':value.state==='stale'||value.state==='uncertain'?'화면을 켜고 GPS가 다시 잡힐 때까지 기다려 주세요.':'저장된 보행 경로 기준 · 실제 표지판과 횡단보도를 따라 이동하세요.';
+  const explanation=value.state==='off'?'저장된 도보 지도에서 재탐색을 시도해요. 경로를 찾지 못하면 안전한 보행로로 기존 경로에 돌아와 주세요.':value.state==='transit'?`${value.part.line||'철도'} · 승하차는 현장 안내와 탑승 열차에서 확인하세요.`:value.state==='reference'?'개략선·역내 통로·차량 이동은 회전 안내를 하지 않아요. 현장 안내를 확인하세요.':value.state==='permission'?'브라우저의 이 사이트 위치 권한을 허용한 뒤 ‘위치 다시 시도’를 눌러 주세요.':value.state==='stale'||value.state==='uncertain'?'화면을 켜고 GPS가 다시 잡힐 때까지 기다려 주세요.':active.rerouted?'저장된 도로로 재탐색한 도보 경로 · 실제 표지판과 횡단보도를 따라 이동하세요.':'저장된 보행 경로 기준 · 실제 표지판과 횡단보도를 따라 이동하세요.';
   setText('#navigationNote',explanation);$('#navigationRetry').hidden=!['permission'].includes(value.state);
   setText('#navigationOffline',navigator.onLine?packageReady?'오프라인 준비됨':'출발 전 오프라인 저장':packageReady?'오프라인 길 안내':'오프라인 · 열린 경로 안내');
   renderDirection();
@@ -40,7 +58,7 @@
  function steps(){
   const list=$('#navigationSteps');list.replaceChildren();
   for(const p of active.plan.parts){
-   const li=document.createElement('li');li.textContent=p.walkPath?`${p.from||active.plan.from} → ${p.to||active.plan.to} · 도보`:p.mode==='transfer'?`${p.to} · 현장 표지판 확인`:`${p.line||p.mode} · ${p.from} → ${p.to}`;list.append(li);
+   const li=document.createElement('li');li.textContent=p.walkPath?`${stationLabel(p.from||active.plan.from)} → ${stationLabel(p.to||active.plan.to)} · 도보`:p.mode==='transfer'?`${stationLabel(p.to)} · 현장 표지판 확인`:`${p.line||p.mode} · ${stationLabel(p.from)} → ${stationLabel(p.to)}`;list.append(li);
    for(const cue of active.plan.cues.filter(c=>c.partIndex===p.index)){const item=document.createElement('li');item.textContent=metres(cue.atM-p.startM)+' 지점 · '+cue.text;item.className='navigation-step-turn';list.append(item);}
   }
  }
@@ -59,7 +77,7 @@
   const current=generation;OfflinePack.verifyStored().then(value=>{if(active&&generation===current){packageReady=value;render();}});
  }
  function stop({clearSaved=true,keepGPS=false}={}){
-  if(!active)return;active=null;previous=null;generation++;if(timer)clearInterval(timer);timer=null;
+  if(!active)return;active=null;previous=null;if(rerouteLine){map.removeLayer(rerouteLine);rerouteLine=null;}generation++;if(timer)clearInterval(timer);timer=null;
   $('#navigationCard').hidden=true;document.querySelector('.map-panel').classList.remove('navigation-active');
   if(clearSaved)clear();if(ownsGPS&&!keepGPS)RouteLocation.stop();ownsGPS=false;refresh();
  }
