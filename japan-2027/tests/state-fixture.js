@@ -5,7 +5,7 @@
  Object.defineProperty(window,'localStorage',{configurable:true,value:{getItem:k=>qa.storage.get(k)||null,setItem:(k,v)=>qa.storage.set(k,String(v)),removeItem:k=>qa.storage.delete(k)}});
  qa.sessionStorage??=new Map();Object.defineProperty(window,'sessionStorage',{configurable:true,value:{getItem:k=>qa.sessionStorage.get(k)||null,setItem:(k,v)=>qa.sessionStorage.set(k,String(v)),removeItem:k=>qa.sessionStorage.delete(k)}});
  const NativeDate=Date;window.Date=class extends NativeDate{constructor(...args){super(...(args.length?args:[qa.clock??NativeDate.now()]));}static now(){return qa.clock??NativeDate.now();}};
- if(qa.mockGPS){Object.defineProperty(window,'isSecureContext',{value:true,configurable:true});Object.defineProperty(navigator,'geolocation',{configurable:true,value:{watchPosition:fn=>{qa.gpsReceiver=fn;return 17;},clearWatch:()=>{qa.gpsReceiver=null;}}});}
+ if(qa.mockGPS){Object.defineProperty(window,'isSecureContext',{value:true,configurable:true});Object.defineProperty(navigator,'geolocation',{configurable:true,value:{watchPosition:(fn,error)=>{qa.gpsReceiver=fn;qa.gpsError=error;return 17;},clearWatch:()=>{qa.gpsReceiver=null;qa.gpsError=null;}}});}
  if(qa.mockOrientation){Object.defineProperty(window,'DeviceOrientationEvent',{configurable:true,value:{requestPermission:absolute=>{qa.orientationCalls=(qa.orientationCalls||0)+1;qa.absolutePermission=absolute;return qa.orientationResult==='pending'?new Promise(resolve=>qa.resolveOrientation=resolve):Promise.resolve(qa.orientationResult||'granted');}}});}
  Object.defineProperty(document,'hidden',{configurable:true,get:()=>!!qa.hidden});
  const nativeFetch=window.fetch.bind(window);
