@@ -21,7 +21,7 @@
  let map,active=null,sheet,body,footer,closing=false,playbackState={active:false,running:false};
  function options(className,extra={}){return {maxWidth:340,maxHeight:map?RouteUICore.popupMaxHeight(map.getContainer().clientHeight,innerHeight):300,className,autoPan:!mobile(),autoPanPaddingTopLeft:[12,20],autoPanPaddingBottomRight:[12,105],...extra};}
  function closeDetail(){if(!active)return;closing=true;map.closePopup(active.popup);closing=false;}
- function actions(popup){const index=popup.options.routeStopIndex??popup.options.routeLegIndex;return `<button type="button" data-detail-itinerary${!Number.isInteger(index)?' hidden':''}>일정에서 보기</button><button type="button" data-detail-map>지도에서 보기</button><button type="button" data-detail-play ${playbackState.active?'':'hidden'}>${playbackState.running?'일시정지':'계속 재생'}</button>`;}
+ function actions(popup){if(popup.getElement()?.querySelector('.compact-station'))return playbackState.active?`<button type="button" data-detail-play>${playbackState.running?'일시정지':'계속 재생'}</button>`:'';const index=popup.options.routeStopIndex??popup.options.routeLegIndex;return `<button type="button" data-detail-itinerary${!Number.isInteger(index)?' hidden':''}>일정에서 보기</button><button type="button" data-detail-map>지도에서 보기</button><button type="button" data-detail-play ${playbackState.active?'':'hidden'}>${playbackState.running?'일시정지':'계속 재생'}</button>`;}
  function fitPopup(popup){
   if(mobile()||!popup.getElement()?.isConnected)return;
   map.stop();const rect=popup.getElement().getBoundingClientRect(),bounds=map.getContainer().getBoundingClientRect();
@@ -36,7 +36,7 @@
   element.querySelectorAll('.detail-actions').forEach(el=>el.remove());
   if(mobile()){
    body.replaceChildren(element);element.classList.add('sheet-popup');footer.innerHTML=actions(popup);
-   sheet.querySelector('[data-sheet-title]').textContent=element.querySelector('.popup-title')?.textContent||element.querySelector('.departure-stations')?.textContent||'이동 상세';
+   sheet.querySelector('[data-sheet-title]').textContent=element.querySelector('.compact-station')?'열차 정보':element.querySelector('.popup-title')?.textContent||element.querySelector('.departure-stations')?.textContent||'이동 상세';
    RouteUI.open(sheet,{opener:active.opener,close:closeDetail,fallback:()=>$('#fitBtn')});body.scrollTop=0;
   }else{
    popup.options.maxHeight=RouteUICore.popupMaxHeight(map.getContainer().clientHeight,innerHeight);popup.update();
