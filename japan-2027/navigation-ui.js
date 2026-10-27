@@ -9,7 +9,7 @@
  function setText(id,text){const node=$(id);if(node.textContent!==text)node.textContent=text;}
  function refresh(){
   if(!ready)return;const c=focusedContext(),index=focusedIndex(c),saved=record();
-  if(active&&(!c||c.day.n!==active.day||c.variant.id!==active.variant||index!==active.index)){stop({clearSaved:false});return;}
+  if(active&&(!c||c.day.n!==active.day||c.variant.id!==active.variant||index!==active.index||c.legs[index-1]!==active.source)){stop({clearSaved:false});return;}
   const available=!!c&&!!c.legs[index-1]?.parts?.some(p=>p.coords?.length>1);$('#routeNavigationStart').disabled=!available;
   $('#routeNavigationStart').textContent=saved&&c&&saved.day===c.day.n&&saved.variant===c.variant.id&&saved.index===index?'길 안내 계속':'길 안내';
  }
@@ -26,7 +26,7 @@
   setText('#navigationDistance',actionable&&Number.isFinite(value.nextDistanceM)?value.nextDistanceM<12?'바로 앞':metres(value.nextDistanceM)+' 앞':value.state==='off'?metres(value.routeDistanceM)+' · 저장 경로까지':value.state==='reference'?'저장된 이동 정보':'GPS 확인 중');
   setText('#navigationSymbol',symbols[actionable||value.state==='reference'?value.kind:'']||'·');
   const reliable=actionable||value.state==='reference';
-  setText('#navigationRemaining',reliable&&Number.isFinite(value.remainingM)?'남은 경로 '+metres(value.remainingM):'남은 거리 확인 중');
+  setText('#navigationRemaining',reliable&&Number.isFinite(value.remainingM)?(value.state==='reference'?'참고선 남은 ':'남은 경로 ')+metres(value.remainingM):'남은 거리 확인 중');
   $('#navigationProgress').value=reliable?Math.max(0,active.plan.totalM-value.remainingM):0;
   $('#navigationFollow').textContent=status.following?'내 위치 따라가는 중':'내 위치로';$('#navigationFollow').disabled=!fix;$('#navigationFollow').setAttribute('aria-pressed',String(status.following));
   $('#navigationCompass').hidden=Boolean(RouteLocation.getHeading())||status.orientationPermission==='unsupported';
@@ -50,7 +50,7 @@
   if(state.view==='overview'){const target={day:c.day.n,variant:c.variant.id,view:'daily'};navigateScreen(target);setFocusedLeg(index);c=focusedContext();}
   const leg=c.legs[index-1],plan=TripNavigation.build(leg);if(!plan.segments.length){announce('이 구간의 저장 경로가 없어요.');return;}
   RouteUI.userExplore();stopPlay();DetailView.close();ItineraryDrawer.close();routeAll=false;applyRouteFocus();
-  ownsGPS=inheritedOwnership||!RouteLocation.isActive();active={day:c.day.n,variant:c.variant.id,index,plan};previous=null;generation++;packageReady=false;
+  ownsGPS=inheritedOwnership||!RouteLocation.isActive();active={day:c.day.n,variant:c.variant.id,index,plan,source:leg};previous=null;generation++;packageReady=false;
   document.querySelector('.map-panel').classList.add('navigation-active');$('#navigationCard').hidden=false;$('#navigationMore').open=false;
   setText('#navigationDestination',stopLabel(c.variant.stops[index]));$('#navigationProgress').max=plan.totalM;steps();save();
   // Keep permission requests in the original button activation, including iOS compass permission.

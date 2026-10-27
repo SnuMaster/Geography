@@ -64,6 +64,12 @@
   await report('다른 날짜의 선박 안내는 선택 날짜 유지·회전 지시 없음',async()=>{
    const w=await load(),d=w.document,b=w.__routebook;b.setDay(21);b.selectLeg(5);w.DetailView.close();d.querySelector('#routeNavigationStart').click();await sleep(20);check(b.state.day===21,'오늘 날짜로 안내가 바뀜');const part=b.getLeg(5).parts.find(p=>p.mode==='ferry'&&p.geometryAccuracy!=='schematic'),p=part.coords[Math.floor(part.coords.length/2)];qa.gpsReceiver({timestamp:qa.clock,coords:{latitude:p[0],longitude:p[1],accuracy:8,speed:0,heading:null}});await until(()=>d.querySelector('#navigationCard').dataset.state==='reference');check(!/오른쪽|왼쪽/.test(d.querySelector('#navigationInstruction').textContent),'항로에 도보 회전 안내');w.RouteNavigation.stop();
   });
+  await report('안내 중 경로 자료 교체 시 이전 선형 안내 종료',async()=>{
+   const w=await load(),d=w.document,b=w.__routebook;d.querySelector('#routeNavigationStart').click();const key=b.state.day+'-'+b.state.variant;b.state.routeData.days[key]=b.state.routeData.days[key].map(l=>({...l}));b.selectLeg(1);check(!w.RouteNavigation.isActive(),'새 경로에 이전 안내 유지');w.DetailView.close();
+  });
+  await report('전체 여정 확대에서 선택한 날짜·구간으로 길 안내 시작',async()=>{
+   const w=await load(),d=w.document,b=w.__routebook;b.showOverview();b.map.setView([35.714,139.797],13,{animate:false});await until(()=>d.querySelector('.overview-place-marker')&&!d.querySelector('#routeNavigationStart').disabled);const day=d.querySelector('#routeFocusPanel').dataset.day,index=d.querySelector('#routeFocusPanel').dataset.focusedLeg;d.querySelector('#routeNavigationStart').click();check(b.state.view==='daily'&&String(b.state.day)===day,'전체 지도 날짜 변경');check(d.querySelector('#routeFocusPanel').dataset.focusedLeg===index&&w.RouteNavigation.isActive(),'선택 이동 누락');w.RouteNavigation.stop();
+  });
   status.textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;run.disabled=false;
  };
  await load();run.disabled=false;run.dataset.ready='true';
