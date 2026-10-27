@@ -92,6 +92,8 @@
 .compact-line{display:flex;align-items:center;gap:9px;min-width:0;color:#284b3e;font-size:14px}
 .compact-line>strong{min-width:0;overflow-wrap:anywhere}
 .compact-line .departure-station-code{width:35px;height:35px;font-size:11px}
+.compact-station[data-departure-profile^="kansai-jr-osaka-"] .departure-station-code,
+.compact-station[data-departure-profile="kansai-jr-shinimamiya-morinomiya"] .departure-station-code{font-size:9px;letter-spacing:-.15px;line-height:1;text-align:center;white-space:nowrap}
 .compact-line .departure-reverse{margin-left:auto;min-height:36px;min-width:36px;font-size:19px}
 .compact-station .departure-stations-aligned{grid-template-columns:minmax(0,max-content) max-content minmax(0,max-content);grid-template-rows:auto auto;column-gap:10px;row-gap:2px;margin:16px 0}
 .compact-station .departure-stations-aligned .departure-origin{grid-column:1}
