@@ -401,6 +401,13 @@ function renderOverview({redraw=true,fit=true}={}){
 
 function bindEvents(){
  bindRouteFocus();
+ ReservationUI.initChecklist?.({context:()=>({days:state.data.days,preferences:state.selectedVariantByDay})});
+ window.addEventListener('routebook:booking-jump',event=>{
+  const target=event.detail;DetailView.close();navigateScreen({day:target.day,variant:target.variant,view:'daily'});window.ItineraryDrawer?.open();
+  if(Number.isInteger(target.leg)){window.dispatchEvent(new CustomEvent('routebook:detail-jump',{detail:{itinerary:true,kind:'leg',index:target.leg,day:target.day,variant:target.variant}}));return;}
+  const index=getStops().findIndex(stop=>target.stopKey?stop.reservationKey===target.stopKey:target.stop&&stop.name.includes(target.stop));
+  if(index>=0)selectStop(index,false,true,{source:'user'});
+ });
  $('#noticeBtn').addEventListener('click',()=>RouteUI.showDialog($('#noticeDialog')));
  $('#closeNotices').addEventListener('click',()=>{$('#noticeDialog').close();RouteUI.release($('#noticeDialog'));});
  document.addEventListener('click',event=>{if(event.target.closest('[data-show-notices]'))RouteUI.showDialog($('#noticeDialog'));});
