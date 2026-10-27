@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1] / 'japan-2027'
-revision = '20261027-streetmaps-2'
+revision = '20261027-streetmaps-3'
 worker = (root / 'sw.js').read_text()
 shell = re.search(r'const FILES=(\[.*?\]);', worker).group(1)
 shell = json.loads(shell.replace("'", '"'))

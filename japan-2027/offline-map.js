@@ -6,23 +6,25 @@
  async function refresh(){
   if(!owner||!roads||!owner.hasLayer(layer))return;const day=currentDay();if(day===loadedDay)return;
   const serial=++request;loadedDay=day;roads.clearLayers();const data=await window.OfflineRoads?.get(day);if(serial!==request||!data)return;
-  const renderer=roadRenderer||(roadRenderer=L.canvas({padding:.3,pane:'offlineBase'}));let labelCount=0;
+  const renderer=roadRenderer||(roadRenderer=L.canvas({padding:.3,pane:'offlineRoads'}));let labelCount=0,labels=[];
   for(const item of data.elements||[]){const tags=item.tags||{};
    if(item.type==='way'&&item.geometry?.length>1){const pts=item.geometry.map(p=>[p.lat,p.lon]).filter(p=>p.every(Number.isFinite));if(pts.length<2)continue;
-    if(tags.highway)L.polyline(pts,{...roadStyle(tags),pane:'offlineBase',interactive:false,renderer}).addTo(roads);
-    else if(tags.railway)L.polyline(pts,{color:'#a6a8a0',weight:1.5,dashArray:'3 4',pane:'offlineBase',interactive:false,renderer}).addTo(roads);
-    else if(tags.building)L.polygon(pts,{color:'#dedbd0',fillColor:'#e9e6dc',fillOpacity:.8,weight:.5,pane:'offlineBase',interactive:false,renderer}).addTo(roads);
+    if(tags.highway)L.polyline(pts,{...roadStyle(tags),pane:'offlineRoads',interactive:false,renderer}).addTo(roads);
+    else if(tags.railway)L.polyline(pts,{color:'#a6a8a0',weight:1.5,dashArray:'3 4',pane:'offlineRoads',interactive:false,renderer}).addTo(roads);
+    else if(tags.building)L.polygon(pts,{color:'#dedbd0',fillColor:'#e9e6dc',fillOpacity:.8,weight:.5,pane:'offlineRoads',interactive:false,renderer}).addTo(roads);
    }
-   if(item.type==='node'&&tags.name&&Number.isFinite(item.lat)&&Number.isFinite(item.lon)&&labelCount++<100){
+   if(item.type==='node'&&tags.name&&Number.isFinite(item.lat)&&Number.isFinite(item.lon)&&labelCount<80&&!labels.some(p=>RouteMatch.distance(p,[item.lat,item.lon])<180)){labels.push([item.lat,item.lon]);labelCount++;
     const label=String(tags['name:ko']||tags.name).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    L.marker([item.lat,item.lon],{pane:'offlineBase',interactive:false,keyboard:false,icon:L.divIcon({className:'offline-road-label',html:label,iconSize:[100,18]})}).addTo(roads);
+    L.marker([item.lat,item.lon],{pane:'offlineRoads',interactive:false,keyboard:false,icon:L.divIcon({className:'offline-road-label',html:label,iconSize:[100,18]})}).addTo(roads);
    }
   }
  }
  async function show(map){
   owner=map;map.getContainer().classList.add('offline-map-active');
   const pane=map.getPane('offlineBase')||map.createPane('offlineBase');pane.style.zIndex='210';pane.style.pointerEvents='none';
-  if(!layer){layer=L.layerGroup();roads=L.layerGroup();map.on('zoomend',()=>{if(!roads||!owner)return;if(owner.getZoom()<12){if(owner.hasLayer(roads))owner.removeLayer(roads);}else if(owner.hasLayer(layer)&&!owner.hasLayer(roads))roads.addTo(owner);});}
+  const roadPane=map.getPane('offlineRoads')||map.createPane('offlineRoads');roadPane.style.zIndex='211';roadPane.style.pointerEvents='none';
+  if(!layer){layer=L.layerGroup();roads=L.layerGroup();map.on('zoomend',()=>{if(!roads||!owner)return;owner.getContainer().classList.toggle('offline-show-labels',owner.getZoom()>=16);if(owner.getZoom()<12){if(owner.hasLayer(roads))owner.removeLayer(roads);}else if(owner.hasLayer(layer)&&!owner.hasLayer(roads))roads.addTo(owner);});}
+  map.getContainer().classList.toggle('offline-show-labels',map.getZoom()>=16);
   if(!map.hasLayer(layer))layer.addTo(map);if(map.getZoom()>=12&&!map.hasLayer(roads))roads.addTo(map);
   if(!landReady&&!loading)loading=(async()=>{try{const url='assets/maps/offline-land.json?v='+TravelStore.VERSION,land=await(navigator.onLine?TravelStore.readJson(url,{preferCache:true,timeout:3000}):TravelStore.readCachedJson(url));
    L.geoJSON(land,{pane:'offlineBase',interactive:false,style:{color:'#b5c5b5',weight:1,fillColor:'#f4f4e9',fillOpacity:1}}).addTo(layer);
