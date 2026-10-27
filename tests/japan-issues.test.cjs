@@ -56,3 +56,11 @@ test('a temporary map server failure falls back to a second public data server',
  const ctx={RouteMatch:GPS,URL,URLSearchParams,Response,AbortController,setTimeout,clearTimeout,document:{baseURI:'https://example.test/japan-2027/'},navigator:{onLine:true},caches:{open:async()=>({match:async k=>storage.get(k)?.clone(),put:async(k,v)=>storage.set(k,v.clone())})},fetch:async url=>{calls.push(url);if(calls.length===1)return new Response('',{status:502});return new Response(JSON.stringify({elements:[{type:'way',nodes:[1,2],geometry:[{lat:35,lon:139},{lat:35.001,lon:139}],tags:{highway:'footway'}}]}));}};
  vm.createContext(ctx);vm.runInContext(source,ctx);const result=await ctx.OfflineRoads.save({n:2,variants:[{id:'main',stops:[{lat:35,lng:139}]}]},{days:{}});assert.equal(result.day,2);assert.equal(calls.length,2);assert.match(calls[0],/private\.coffee/);assert.match(calls[1],/overpass-api\.de/);
 });
+
+test('partially downloaded street areas are reused after an interrupted day',async()=>{
+ const source=fs.readFileSync(require.resolve('../japan-2027/offline-roads.js'),'utf8'),storage=new Map();let count=0,fail=true;
+ const ctx={RouteMatch:GPS,URL,URLSearchParams,Response,AbortController,clearTimeout,setTimeout:(f,ms)=>setTimeout(f,ms===1500?0:ms),document:{baseURI:'https://example.test/japan-2027/'},navigator:{onLine:true},caches:{open:async()=>({match:async k=>storage.get(k)?.clone(),put:async(k,v)=>storage.set(k,v.clone()),delete:async k=>storage.delete(k)})},fetch:async()=>{count++;if(fail&&count>1)return new Response('',{status:502});return new Response(JSON.stringify({elements:[{type:'way',id:count,nodes:[1,2],geometry:[{lat:35,lon:139},{lat:35.001,lon:139}],tags:{highway:'footway'}}]}));}};
+ vm.createContext(ctx);vm.runInContext(source,ctx);const day={n:3,variants:[{id:'main',stops:[{lat:35,lng:139},{lat:35.1,lng:139},{lat:35.2,lng:139}]}]};
+ await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/502/);assert.ok([...storage.keys()].some(k=>k.includes('?grid=')));assert.equal(await ctx.OfflineRoads.get(3),null);
+ fail=false;const prior=count;const result=await ctx.OfflineRoads.save(day,{days:{}});assert.equal(count-prior,1);assert.equal(result.day,3);assert.equal([...storage.keys()].filter(k=>k.includes('?grid=')).length,0);assert.ok(await ctx.OfflineRoads.get(3));
+});
