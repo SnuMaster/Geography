@@ -30,7 +30,8 @@ if sys.argv[1] == 'plan':
         points = [p for day in days for p in day['points'] if predicate(p[1])]
         if not points:
             raise SystemExit(f'No {country} coverage points')
-        (out / f'{country}.geojson').write_text(json.dumps(mapping(polygon(points))))
+        feature = {'type':'Feature', 'properties':{}, 'geometry':mapping(polygon(points))}
+        (out / f'{country}.geojson').write_text(json.dumps(feature))
     sys.exit(0)
 
 if sys.argv[1] != 'build':
@@ -86,6 +87,12 @@ for day, items in zip(days, elements):
     roads = sum(1 for item in items if item['type']=='way' and 'highway' in item['tags'])
     if roads < 10:
         raise SystemExit(f"Day {day['day']} has too few roads: {roads}")
+    for lat, lon in day['points']:
+        covered = any(item['type']=='way' and 'highway' in item['tags'] and
+                      any(abs(p['lat']-lat)<=.010 and abs(p['lon']-lon)<=.013 for p in item['geometry'])
+                      for item in items)
+        if not covered:
+            raise SystemExit(f"Day {day['day']} has no road around one of its planned areas")
     payload = {'version':1, 'day':day['day'], 'generatedAt':generated,
                'points':day['points'], 'elements':items}
     data = json.dumps(payload, ensure_ascii=False, separators=(',',':')).encode()
@@ -93,6 +100,6 @@ for day, items in zip(days, elements):
     filename = f"day-{day['day']}.json.gz"
     (out / filename).write_bytes(compressed)
     manifest['days'][str(day['day'])] = {'path':filename, 'sha256':hashlib.sha256(compressed).hexdigest(),
-                                          'bytes':len(compressed), 'points':day['points']}
+                                          'bytes':len(compressed), 'expandedBytes':len(data), 'points':day['points']}
     print(f"Day {day['day']}: {roads} roads, {len(data)//1024} KiB JSON, {len(compressed)//1024} KiB gzip", flush=True)
 (out / 'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, separators=(',',':')))

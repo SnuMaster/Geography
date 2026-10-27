@@ -18,6 +18,7 @@ jobs:
           python3 -m pip install --user --break-system-packages 'osmium>=4,<5' 'shapely>=2,<3'
       - name: Prepare coverage polygons
         run: |
+          python3 scripts/check-offline-street-build.py
           node scripts/generate-offline-street-plan.cjs /tmp/street-plan.json
           python3 scripts/build-offline-streets.py plan /tmp/street-plan.json /tmp/coverage
       - name: Download and extract OpenStreetMap data
