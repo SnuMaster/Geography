@@ -27,7 +27,7 @@ test('offline manifest covers every active timetable and matches the exact shipp
 });
 
 function packFixture(){
- const revision='20261027-simple-gps',base='https://example.test/japan-2027/',memory=new Map(),files=new Map(),storage=new Map(),nodes=new Map(),events=[];
+ const revision='20261027-route-focus',base='https://example.test/japan-2027/',memory=new Map(),files=new Map(),storage=new Map(),nodes=new Map(),events=[];
  const entries=[{path:'index.html',kind:'shell',text:'<!doctype html><title>offline</title>'},{path:'data.json',kind:'json',text:'{"days":[1,22]}'}].map(f=>({...f,bytes:Buffer.byteLength(f.text),sha256:crypto.createHash('sha256').update(f.text).digest('hex')}));
  const manifest={revision,totalBytes:entries.reduce((n,f)=>n+f.bytes,0),files:entries};let fail=false,corrupt=false,finalized=0;
  const node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',disabled:false,hidden:false,value:0});return nodes.get(id);};

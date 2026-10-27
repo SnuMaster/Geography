@@ -105,7 +105,7 @@ function applyFlightRouteReferences(routes,payload){
  }
  return routes;
 }
-function selectLeg(i){window.RouteLocation?.pauseFollow();hideRailHover();const leg=getLeg(i);if(!leg)return;pausePlay();window.FlightPlayback?.pause();map.stop();const coords=leg.parts.flatMap(p=>p.coords);map.fitBounds(L.latLngBounds(coords),{padding:[50,80],maxZoom:16,animate:false});highlightDirection(leg);const middle=coords[Math.floor(coords.length/2)];L.popup(DetailView.options('route-info-popup',{routeLegIndex:i,routeDay:leg.dayNumber,routeVariant:leg.variant,interactionSource:'user'})).setLatLng(middle).setContent(legHtml(leg)).openOn(map);}
+function selectLeg(i){setFocusedLeg(i);window.RouteLocation?.pauseFollow();hideRailHover();const leg=getLeg(i);if(!leg)return;pausePlay();window.FlightPlayback?.pause();map.stop();const coords=leg.parts.flatMap(p=>p.coords);map.fitBounds(L.latLngBounds(coords),{padding:[50,80],maxZoom:16,animate:false});highlightDirection(leg);const middle=coords[Math.floor(coords.length/2)];L.popup(DetailView.options('route-info-popup',{routeLegIndex:i,routeDay:leg.dayNumber,routeVariant:leg.variant,interactionSource:'user'})).setLatLng(middle).setContent(legHtml(leg)).openOn(map);}
 
 
 const modesIn=stops=>[...new Set(stops.slice(1).map(s=>s.modeFromPrevious))];
@@ -194,7 +194,7 @@ function renderMap(fit=true){
  window.RouteLocation?.refresh();
  hideRailHover();railSymbolKeys.clear();railSymbolGroups.clear();map.closePopup();
  setTiles(state.view==='overview'||state.day===1||state.day>=21||window.RouteLocation?.isActive()?'world':'gsi');
- routeLayer.clearLayers();markers=[];arrows=[];legLines=[];stopGroups=[];
+ routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];markers=[];arrows=[];legLines=[];stopGroups=[];
  if(state.view==='overview'){renderOverviewMap(fit);return;}
  const stops=getStops();
  for(let i=1;i<stops.length;i++){
@@ -205,21 +205,21 @@ function renderMap(fit=true){
     if(part.coords.length<2||part.distanceM<8)return;
     const color=railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
     const style={color,weight:4.5,opacity:part.mode==='ferry'?1:part.geometryAccuracy==='schematic'?.6:state.night?.6:1,lineCap:'round',lineJoin:'round',dashArray:part.geometryAccuracy==='schematic'&&part.mode==='ferry'?'2 6':['flight','ferry'].includes(part.mode)?'9 7':part.mode==='transfer'?'3 5':null};
-    L.polyline(part.coords,{color:'#fff',weight:8.5,opacity:.97,interactive:false}).addTo(routeLayer);
-    const line=L.polyline(part.coords,style).addTo(routeLayer);
-    const hit=L.polyline(part.coords,{weight:18,opacity:0,color,interactive:true}).addTo(routeLayer);
+    routeVisual(L.polyline(part.coords,{color:'#fff',weight:8.5,opacity:.97,interactive:false}).addTo(routeLayer),detailed,i);
+    const line=routeVisual(L.polyline(part.coords,style).addTo(routeLayer),detailed,i);
+    const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0,color,interactive:true}).addTo(routeLayer),detailed,i);
     hit.bindPopup(()=>legHtml(detailed,part),DetailView.options('route-info-popup',{routeLegIndex:i,routeDay:detailed.dayNumber,routeVariant:detailed.variant}));
     hit.on('mouseover',e=>{line.setStyle({weight:7,opacity:1});showRailHover(e,detailed,part);});
     hit.on('mousemove',positionRailHover);
     hit.on('mouseout',()=>{hideRailHover();line.setStyle({weight:i===state.selected?6:4.5,opacity:state.night?.6:1});});
-    hit.on('click',()=>{hideRailHover();});
+    hit.on('click',()=>{hideRailHover();setFocusedLeg(i);});
     legLines.push({line,index:i,color});addRailMapSymbol(part,detailed);
    });continue;
   }
   if(map.distance([a.lat,a.lng],[b.lat,b.lng])<15)continue;
   const points=pathPoints(a,b),style={color:m.color,weight:3.1,opacity:state.night?.45:.88,lineCap:'round',lineJoin:'round',dashArray:b.modeFromPrevious==='walk'?null:'7 7'};
-  L.polyline(points,{color:'#fff',weight:6.7,opacity:.9,interactive:false}).addTo(routeLayer);
-  const line=L.polyline(points,style).addTo(routeLayer);line.bindPopup(`<div class="popup-time">${m.label} · ${i} → ${i+1}</div><div class="popup-title">${esc(a.name)} → ${esc(b.name)}</div><div class="popup-desc">${esc(b.transportFromPrevious)}</div>${['flight','ferry'].includes(b.modeFromPrevious)?'':`<div class="popup-links"><a href="${directionsUrl(a,b)}" target="_blank" rel="noopener">실제 경로 길찾기 ↗</a></div>`}`);legLines.push({line,index:i,color:m.color});
+  routeVisual(L.polyline(points,{color:'#fff',weight:6.7,opacity:.9,interactive:false}).addTo(routeLayer),null,i);
+  const line=routeVisual(L.polyline(points,style).addTo(routeLayer),null,i);line.bindPopup(`<div class="popup-time">${m.label} · ${i} → ${i+1}</div><div class="popup-title">${esc(a.name)} → ${esc(b.name)}</div><div class="popup-desc">${esc(b.transportFromPrevious)}</div>${['flight','ferry'].includes(b.modeFromPrevious)?'':`<div class="popup-links"><a href="${directionsUrl(a,b)}" target="_blank" rel="noopener">실제 경로 길찾기 ↗</a></div>`}`);legLines.push({line,index:i,color:m.color});
  }
  const groups=new Map();stops.forEach((s,i)=>{const key=s.lat.toFixed(5)+','+s.lng.toFixed(5);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(i);});
  groups.forEach(indices=>{
@@ -231,7 +231,7 @@ function renderMap(fit=true){
  $('.map-legend').classList.toggle('line-colors-active',hasDetailedRoutes());$('.map-legend>span:nth-child(2)').innerHTML=hasDetailedRoutes()?'<i class="legend-line rail"></i>철도: 노선색·기호':'<i class="legend-line rail"></i>전철·버스';
  const flightLegs=(state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]).filter(l=>l?.parts.some(p=>p.mode==='flight'));
  $('.route-caution').textContent=hasDetailedRoutes()?'선·기호를 누르면 이동 상세가 열려요.'+(flightLegs.length?' 항공: '+[...new Set(flightLegs.map(l=>window.FlightPlayback?.geometryLabel(l)||'개략 항로'))].join(' · ')+'. 재생 화면에서 따라갈 수 있어요.':''):'이 지역은 기존 방문 순서 표시입니다. 실제 경로는 구간별 길찾기를 확인하세요.';
- if(fit)fitRoute([1,12,16,18].includes(getDay().n)&&hasDetailedRoutes());requestAnimationFrame(updateArrowAngles);
+ applyRouteFocus();if(fit){if(routeAll)fitRoute([1,12,16,18].includes(getDay().n)&&hasDetailedRoutes());else fitFocusedLeg();}requestAnimationFrame(updateArrowAngles);
 }
 function markerIcon(indices){const stops=getStops(),first=stops[indices[0]],active=indices.includes(state.selected),night=state.night&&indices.some(i=>isNight(stops[i]));return L.divIcon({className:'route-marker',html:`<div class="pin-number ${first.kind} ${active?'active':''} ${night?'night':''}"><span>${indices[0]+1}</span>${indices.length>1?'<small class="repeat-place" title="같은 장소 재방문">↻</small>':''}</div>`,iconSize:[44,44],iconAnchor:[22,38]});}
 function fitRoute(focus=false){
@@ -252,13 +252,13 @@ function selectStop(index,fly=true,scroll=false,options={}){
  $$('.stop-card').forEach(el=>{const active=Number(el.dataset.stop)===index;el.classList.toggle('active',active);el.setAttribute('aria-pressed',active);});
  stopGroups.forEach(g=>{g.marker.setIcon(markerIcon(g.indices));g.marker.setZIndexOffset(g.indices.includes(index)?1000:100);});
  legLines.forEach(({line,index:i,color})=>line.setStyle({color,weight:i===index?6:4.5,opacity:state.night?(i===index?.95:.4):(i===index?1:.75)}));
- highlightDirection(getLeg(index));const s=stops[index];if(fly){const z=['airport','port'].includes(s.kind)?12:15;map.stop();map.setView([s.lat,s.lng],Math.max(map.getZoom(),z),{animate:false});if(options.source!=='auto'||!RouteUI.mobile())markers[index]?.bindPopup(popupHtml(s,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:options.source||'user'})).openPopup();}
+ setFocusedLeg(Math.max(1,index));const s=stops[index];if(fly){const z=['airport','port'].includes(s.kind)?12:15;map.stop();map.setView([s.lat,s.lng],Math.max(map.getZoom(),z),{animate:false});if(options.source!=='auto'||!RouteUI.mobile())markers[index]?.bindPopup(popupHtml(s,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:options.source||'user'})).openPopup();}
  if(scroll){const el=$(`#stop-${index}`),scroller=$('#itineraryScroll');if(window.innerWidth>1024&&el){scroller.scrollTo({top:Math.max(0,scroller.scrollTop+el.getBoundingClientRect().top-scroller.getBoundingClientRect().top-35),behavior:'smooth'});}else if(window.innerWidth<=1024&&el){el.scrollIntoView({behavior:'smooth',block:'center'});}}
  renderPlayback();
  if(options.history!==false)updateUrl('replace');
 }
 function renderPlayback(){
- const overview=state.view==='overview',running=!!state.playing&&!state.playing.paused;
+ const overview=state.view==='overview',running=!!state.playing&&!state.playing.paused;document.body.classList.toggle('route-playing',!!state.playing);
  $('#previousStop').hidden=overview;$('#nextStop').hidden=overview;
  $('#previousStop').disabled=!overview&&state.selected<=0;$('#nextStop').disabled=!overview&&state.selected>=getStops().length-1;
  $('#playBtn').innerHTML=icon(running?'pause':'play')+'<span>'+(overview?'1일차부터 보기':running?'일시정지':state.playing?.paused?'계속 재생':'동선 따라가기')+'</span>';
@@ -345,12 +345,12 @@ function overviewLegHtml(leg,part){return withDayContext(leg.dayNumber,leg.varia
 function renderOverviewMap(fit=true){
  if(overviewRendering||state.view!=='overview')return;overviewRendering=true;
  try{
-  hideRailHover();routeLayer.clearLayers();railSymbolKeys.clear();railSymbolGroups.clear();arrows=[];
+  hideRailHover();routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];railSymbolKeys.clear();railSymbolGroups.clear();arrows=[];
   const detailed=!fit&&map.getZoom()>=10,stops=overviewCities(),legs=overviewLegs();
   const draw=(leg,part,local=false)=>{if(part.coords?.length<2)return;const color=railInfo(part)?.color||(MODE[part.mode]||MODE.rail).color,schematic=part.mode==='ferry'&&part.geometryAccuracy==='schematic';
-   L.polyline(part.coords,{color:'#fff',weight:local?7:5,opacity:.9,interactive:false}).addTo(routeLayer);
-   L.polyline(part.coords,{color,weight:schematic?2:local?4:3,opacity:local||!detailed?.9:.45,dashArray:part.mode==='ferry'?null:schematic?'2 6':part.mode==='flight'?'9 7':part.mode==='transfer'?'3 5':null,interactive:false}).addTo(routeLayer);
-   const hit=L.polyline(part.coords,{weight:18,opacity:0}).addTo(routeLayer);hit.bindPopup(()=>overviewLegHtml(leg,part),symbolOptions(leg));
+   routeVisual(L.polyline(part.coords,{color:'#fff',weight:local?7:5,opacity:.9,interactive:false}).addTo(routeLayer),leg);
+   routeVisual(L.polyline(part.coords,{color,weight:schematic?2:local?4:3,opacity:.9,dashArray:part.mode==='ferry'?null:schematic?'2 6':part.mode==='flight'?'9 7':part.mode==='transfer'?'3 5':null,interactive:false}).addTo(routeLayer),leg);
+   const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0}).addTo(routeLayer),leg);hit.bindPopup(()=>overviewLegHtml(leg,part),symbolOptions(leg));
    hit.on('mouseover',e=>showRailHover(e,leg,part));hit.on('mousemove',positionRailHover);hit.on('mouseout',hideRailHover);if(local||!detailed)addRailMapSymbol(part,leg);
   };
   for(const leg of legs)for(const part of (window.TripPersonal?.displayParts(leg)||railParts(leg)))draw(leg,part);
@@ -369,13 +369,13 @@ function renderOverviewMap(fit=true){
     for(const group of MapPlan.groups(variant.stops)){
      const s=group.stop;if(!b.pad(.15).contains([s.lat,s.lng]))continue;const i=group.indices[0];
      const marker=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker overview-place-marker',html:`<div class="pin-number ${s.kind}"><span>${i+1}</span>${group.indices.length>1?'<small class="repeat-place">↻</small>':''}</div>`,iconSize:[44,44],iconAnchor:[22,38]}),title:day.date+' '+stopLabel(s),alt:day.date+' '+stopLabel(s)}).addTo(routeLayer);
-     marker.bindTooltip(esc(s.name),{direction:'top',offset:[0,-25],className:'stop-tooltip'});
+     overviewPlaceGroups.push({indices:group.indices,marker});marker.on('click',()=>{focusedLegs.set(day.n+'-'+variant.id,Math.max(1,i));applyRouteFocus();});marker.bindTooltip(esc(s.name),{direction:'top',offset:[0,-25],className:'stop-tooltip'});
      marker.bindPopup(()=>withDayContext(day.n,variant.id,()=>popupHtml(s,i)),DetailView.options('place-info-popup',{routeStopIndex:i,routeDay:day.n,routeVariant:variant.id}));
     }
     $('.route-caution').textContent='전체 22일 동선 · 선택 날짜의 장소 표시';
    }else $('.route-caution').textContent='이동하거나 지도를 축소해 다른 지역을 찾아보세요.';
   }
-  if(fit)fitRoute();
+  applyRouteFocus();if(fit)fitRoute();
  }finally{overviewRendering=false;}
 }
 
@@ -394,6 +394,7 @@ function renderOverview({redraw=true,fit=true}={}){
 }
 
 function bindEvents(){
+ bindRouteFocus();
  window.addEventListener('routebook:online',()=>{refreshTrip();announce('연결 복구 · 새 일정 자료를 확인 중입니다.');});
  window.addEventListener('routebook:apply-trip-update',event=>applyTripUpdate(event.detail));
  window.addEventListener('routebook:reservation-change',handleReservationChange);
@@ -412,7 +413,7 @@ function bindEvents(){
  $('#cityFilters').addEventListener('click',e=>{const b=e.target.closest('[data-city]');if(!b)return;state.filter=b.dataset.city;renderDays();updateUrl('replace');});$('#daySearch').addEventListener('input',e=>{state.search=e.target.value.trim();renderDays();updateUrl('replace');});
  $('#dailyView').addEventListener('click',()=>setDay(state.day));$('#overviewView').addEventListener('click',showOverview);
  $('#prevDay').addEventListener('click',()=>setDay(state.day-1,{scrollNav:true}));$('#nextDay').addEventListener('click',()=>setDay(state.day+1,{scrollNav:true}));
- $('#fitBtn').addEventListener('click',()=>{pausePlay();window.FlightPlayback?.pause();window.RouteLocation?.pauseFollow();map.closePopup();fitRoute();});$('#focusBtn').addEventListener('click',()=>{pausePlay();window.FlightPlayback?.pause();window.RouteLocation?.pauseFollow();map.closePopup();fitRoute(true);});
+ $('#fitBtn').addEventListener('click',()=>{pausePlay();window.FlightPlayback?.pause();window.RouteLocation?.pauseFollow();map.closePopup();routeAll=true;applyRouteFocus();fitRoute();});$('#focusBtn').addEventListener('click',()=>{pausePlay();window.FlightPlayback?.pause();window.RouteLocation?.pauseFollow();map.closePopup();fitRoute(true);});
  $('#nightBtn').addEventListener('click',()=>{state.night=!state.night;$('#nightBtn').setAttribute('aria-pressed',state.night);$('#nightSetting').setAttribute('aria-pressed',state.night);preserveDetails(renderStops);renderMap(false);if(state.night){const ns=getStops().filter(isNight);if(ns.length)map.fitBounds(L.latLngBounds(ns.map(s=>[s.lat,s.lng])),{paddingTopLeft:[30,window.innerWidth<=740?155:175],paddingBottomRight:[30,window.innerWidth<=740?110:135],maxZoom:15});else announce('이 날은 이동·낮 산책 위주 일정이에요.');}else fitRoute();});
  $('#previousStop').addEventListener('click',()=>{pausePlay();selectStop(Math.max(0,state.selected-1));});$('#nextStop').addEventListener('click',()=>{pausePlay();selectStop(Math.min(getStops().length-1,state.selected+1));});
  $('#playBtn').addEventListener('click',()=>{if(state.view==='overview'){setDay(1);return;}if(state.playing&&!state.playing.paused){pausePlay();window.FlightPlayback?.pause();return;}startPlay();});
