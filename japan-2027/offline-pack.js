@@ -1,8 +1,9 @@
 'use strict';
 (function(){
- const REVISION='20261027-streetmaps-5',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261027-streetmaps-6',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
+ const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}
  function render({status=true}={}){const saved=record(),ready=saved?.revision===REVISION&&saved.complete;
   const button=$('#offlinePackBtn');if(button)button.textContent=running?'오프라인 저장 중':ready?'오프라인 준비됨':'오프라인 저장';
@@ -61,20 +62,22 @@
  async function saveStreets(){
   if(streetRunning)return;const trip=window.__routebook?.state;if(!trip?.data?.days?.length){$('#offlineStreetStatus').textContent='일정이 준비된 뒤 다시 시도해 주세요.';return;}
   const controller=new AbortController();streetRunning=controller;$('#offlineStreetStart').disabled=true;$('#offlineStreetCancel').hidden=false;
-  const days=trip.data.days;let ok=0,fail=[];
+  const days=trip.data.days;let ok=0,fail=[],oldest=null;
   try{for(const day of days){
    if(controller.signal.aborted)break;
    $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} 처리 중`;
-   const existing=await OfflineRoads.get(day.n);if(existing&&Date.now()-existing.savedAt<30*86400000){ok++;continue;}
-   try{await OfflineRoads.save(day,trip.routeData,{signal:controller.signal,progress:(part,total)=>{$('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} ${part}/${total}구역 완료`;}});ok++;await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push({date:day.date||String(day.n),message:e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message});break;}
+   const existing=await OfflineRoads.get(day.n);if(existing&&Date.now()-existing.savedAt<30*86400000&&OfflineRoads.covers(existing,OfflineRoads.centres(day,trip.routeData))){ok++;const date=streetDate(existing);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);continue;}
+   try{const saved=await OfflineRoads.save(day,trip.routeData,{signal:controller.signal,progress:(part,total)=>{$('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} ${part}/${total}구역 완료`;}});ok++;const date=streetDate(saved);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);if(!saved.generatedAt)await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push({date:day.date||String(day.n),message:e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message});break;}
   }
   if(controller.signal.aborted)$('#offlineStreetStatus').textContent=`상세 지도 저장 중단 · ${ok}/${days.length}일 저장됨. 다시 누르면 이어서 저장해요.`;
   else if(fail.length)$('#offlineStreetStatus').textContent=`${ok}/${days.length}일 저장 · ${fail[0].date}에서 중단 · ${fail[0].message}. 다시 누르면 저장한 구역 다음부터 진행해요.`;
-  else $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 완료 · 일정 주변 도로와 철도를 오프라인에서 볼 수 있어요.`;
+  else $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 완료 · 일정 주변 도로와 철도를 오프라인에서 볼 수 있어요.${oldest?' 지도 자료 준비일: '+new Date(oldest).toLocaleDateString('ko-KR')+'.':''}`;
   window.OfflineMap?.invalidate();window.dispatchEvent(new Event('routebook:offline-roads-ready'));
   }finally{streetRunning=null;$('#offlineStreetStart').disabled=false;$('#offlineStreetCancel').hidden=true;}
  }
- async function show(){RouteUI.showDialog($('#offlinePackDialog'));render();try{const list=await getManifest();$('#offlinePackSize').textContent='약 '+format(list.totalBytes)+' · 전체 '+list.files.length+'개 자료';}catch(e){$('#offlinePackSize').textContent=e.message;}}
+ async function show(){RouteUI.showDialog($('#offlinePackDialog'));render();try{const list=await getManifest();$('#offlinePackSize').textContent='약 '+format(list.totalBytes)+' · 전체 '+list.files.length+'개 자료';}catch(e){$('#offlinePackSize').textContent=e.message;}
+  const info=await window.OfflineRoads?.bundleInfo();const size=$('#offlineStreetSize');if(size)size.textContent=info?.days===22?`상세 지도 전체 약 ${format(info.storedBytes)} 저장 공간 · 다운로드 약 ${format(info.downloadBytes)}`:'';
+ }
  document.addEventListener('DOMContentLoaded',()=>{
   $('#offlineStreetStart').addEventListener('click',saveStreets);$('#offlineStreetCancel').addEventListener('click',()=>streetRunning?.abort());
   $('#offlinePackBtn').addEventListener('click',show);$('#offlinePackStart').addEventListener('click',start);$('#offlinePackCancel').addEventListener('click',()=>running?.controller.abort());
