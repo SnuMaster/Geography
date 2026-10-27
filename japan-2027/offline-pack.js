@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261027-streetmaps-4',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261027-streetmaps-5',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}
@@ -66,10 +66,10 @@
    if(controller.signal.aborted)break;
    $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} 처리 중`;
    const existing=await OfflineRoads.get(day.n);if(existing&&Date.now()-existing.savedAt<30*86400000){ok++;continue;}
-   try{await OfflineRoads.save(day,trip.routeData,{signal:controller.signal});ok++;await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push((day.date||String(day.n))+' · '+(e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message));break;}
+   try{await OfflineRoads.save(day,trip.routeData,{signal:controller.signal,progress:(part,total)=>{$('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} ${part}/${total}구역 완료`;}});ok++;await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push({date:day.date||String(day.n),message:e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message});break;}
   }
   if(controller.signal.aborted)$('#offlineStreetStatus').textContent=`상세 지도 저장 중단 · ${ok}/${days.length}일 저장됨. 다시 누르면 이어서 저장해요.`;
-  else if(fail.length)$('#offlineStreetStatus').textContent=`${ok}/${days.length}일 저장 · ${fail.join(', ')}부터 저장하지 못했어요. 인터넷·지도 서버를 확인한 뒤 다시 누르면 이어서 저장해요.`;
+  else if(fail.length)$('#offlineStreetStatus').textContent=`${ok}/${days.length}일 저장 · ${fail[0].date}에서 중단 · ${fail[0].message}. 다시 누르면 저장한 구역 다음부터 진행해요.`;
   else $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 완료 · 일정 주변 도로와 철도를 오프라인에서 볼 수 있어요.`;
   window.OfflineMap?.invalidate();window.dispatchEvent(new Event('routebook:offline-roads-ready'));
   }finally{streetRunning=null;$('#offlineStreetStart').disabled=false;$('#offlineStreetCancel').hidden=true;}

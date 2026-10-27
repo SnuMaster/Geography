@@ -20,9 +20,8 @@
  }
  function id(day){return new URL('offline-streets/day-'+Number(day)+'.json',document.baseURI).href;}
  async function get(day){try{const cache=await caches.open(CACHE),r=await cache.match(id(day));if(!r)return null;const value=await r.json();return value?.version===1&&value.day===Number(day)&&Array.isArray(value.elements)&&value.elements.length?value:null;}catch(_){return null;}}
- async function save(day,routeData,{signal}={}){
-  if(!navigator.onLine)throw Error('상세 지도를 저장하려면 인터넷이 필요해요.');
-  const points=centres(day,routeData);let value=null,lastError=null;
+ async function fetchGroup(points,signal){
+  let value=null,lastError=null;
   for(const endpoint of ENDPOINTS){
    if(signal?.aborted)throw new DOMException('중단','AbortError');
    const timeout=new AbortController(),timer=setTimeout(()=>timeout.abort(),45000),cancel=()=>timeout.abort();signal?.addEventListener('abort',cancel,{once:true});
@@ -36,9 +35,26 @@
    finally{clearTimeout(timer);signal?.removeEventListener('abort',cancel);}
   }
   if(!value)throw Error('지도 서버 연결 실패 · '+(lastError?.name==='AbortError'?'응답 시간 초과':lastError?.message||'다시 시도해 주세요.'));
-  const payload={version:1,day:day.n,savedAt:Date.now(),points,elements:value.elements.filter(e=>e.type==='way'&&Array.isArray(e.geometry)||e.type==='node'&&Number.isFinite(e.lat)&&Number.isFinite(e.lon))};
-  const cache=await caches.open(CACHE);await cache.put(id(day.n),new Response(JSON.stringify(payload),{headers:{'Content-Type':'application/json'}}));return payload;
+  return value.elements.filter(e=>e.type==='way'&&Array.isArray(e.geometry)||e.type==='node'&&Number.isFinite(e.lat)&&Number.isFinite(e.lon));
  }
+ async function save(day,routeData,{signal,progress}={}){
+  if(!navigator.onLine)throw Error('상세 지도를 저장하려면 인터넷이 필요해요.');
+  const points=centres(day,routeData),cache=await caches.open(CACHE),groups=[];
+  for(let i=0;i<points.length;i+=2)groups.push(points.slice(i,i+2));
+  const all=new Map(),chunkKeys=[];
+  for(let i=0;i<groups.length;i++){
+   if(signal?.aborted)throw new DOMException('중단','AbortError');
+   const group=groups[i],key=id(day.n)+'?grid='+encodeURIComponent(group.map(p=>p.join(',')).join(';'));chunkKeys.push(key);let saved=null;
+   try{const response=await cache.match(key);if(response){const value=await response.json();if(Date.now()-value.savedAt<30*86400000&&Array.isArray(value.elements))saved=value.elements;}}catch(_){}
+   if(!saved){saved=await fetchGroup(group,signal);await cache.put(key,new Response(JSON.stringify({savedAt:Date.now(),elements:saved}),{headers:{'Content-Type':'application/json'}}));}
+   for(const e of saved)all.set(e.type+':'+e.id,e);progress?.(i+1,groups.length);
+   if(i+1<groups.length)await new Promise((resolve,reject)=>{const timer=setTimeout(()=>{signal?.removeEventListener('abort',cancel);resolve();},1500),cancel=()=>{clearTimeout(timer);reject(new DOMException('중단','AbortError'));};signal?.addEventListener('abort',cancel,{once:true});});
+  }
+  const payload={version:1,day:day.n,savedAt:Date.now(),points,elements:[...all.values()]};
+  if(!payload.elements.length)throw Error('도로 자료가 비어 있어 저장하지 않았어요.');
+  await cache.put(id(day.n),new Response(JSON.stringify(payload),{headers:{'Content-Type':'application/json'}}));for(const key of chunkKeys)try{await cache.delete?.(key);}catch(_){}return payload;
+ }
+
  function walkable(tags={}){
   const road=tags.highway;if(!road||/^(motorway|motorway_link|trunk|trunk_link|construction|proposed|raceway)$/.test(road))return false;
   if(/^(no|private)$/.test(tags.access||'')&&!/^(yes|designated|permissive)$/.test(tags.foot||''))return false;
