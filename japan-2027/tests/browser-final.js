@@ -214,8 +214,8 @@
   for(const width of [320,1280]){
    frame.style.width=width+'px';frame.style.height='900px';let w=await load(14,{date:'2026-10-28T10:00:00+09:00'}),d=w.document,b=w.__routebook;
    click(w,'#bookingChecklistBtn');let dialog=d.querySelector('#bookingChecklistDialog');check(dialog.open,'예약 목록 열기 실패 '+width);
-   let summary=w.ReservationUI.checklistSummary();check(summary.total===22&&summary.done===0&&summary.alternatives===2,'기본 일정 예약 수 오류 '+JSON.stringify(summary));
-   for(const key of ['flight-tokyo','hotel-tokyo','fuji-seats','flight-osaka','hotel-osaka','flight-fukuoka','hotel-fukuoka','ferry-busan','hotel-busan','ktx-return','wasake','teien','yamazaki','zutomayo','hiramatsu'])check(dialog.querySelectorAll(`[data-booking-item="${key}"]`).length===1,'예약 누락·중복 '+key);
+   let summary=w.ReservationUI.checklistSummary();check(summary.total===24&&summary.done===0&&summary.alternatives===2,'기본 일정 예약 수 오류 '+JSON.stringify(summary));
+   for(const key of ['flight-tokyo','hotel-tokyo','fuji-seats','flight-osaka','hotel-osaka','flight-fukuoka','hotel-fukuoka','ferry-busan','hotel-busan','ktx-return','wasake','teien','skytree','kobe-port-tower','yamazaki','zutomayo','hiramatsu'])check(dialog.querySelectorAll(`[data-booking-item="${key}"]`).length===1,'예약 누락·중복 '+key);
    check(dialog.querySelector('[data-booking-item="zutomayo"] .booking-next-date').textContent.includes('10/29'),'공연 신청 마감 누락');
    check(dialog.querySelector('.booking-alternatives [data-booking-item="ishikawa-tour"]')&&dialog.querySelector('.booking-alternatives [data-booking-item="tsurutontan"]'),'대체 예약 분리 누락');
    const rect=dialog.getBoundingClientRect();check(rect.left>=0&&rect.right<=width+1&&rect.top>=0&&rect.bottom<=900,'예약창 화면 넘침 '+width);
@@ -230,10 +230,10 @@
    click(w,'#closeBookingChecklist');b.selectStop(1);const popup=b.map._popup.getElement();check(popup.querySelector('[data-reservation-status="yamazaki"]').value==='예약완료','일정 카드 상태 미반영');
    const status=popup.querySelector('[data-reservation-status="yamazaki"]');status.value='신청';status.dispatchEvent(new w.Event('change',{bubbles:true}));close(w);
    b.setVariant('no-yamazaki');click(w,'#bookingChecklistBtn');dialog=d.querySelector('#bookingChecklistDialog');check(dialog.querySelector('.booking-alternatives [data-booking-item="yamazaki"]')&&!dialog.querySelector('[data-booking-complete="yamazaki"]').checked,'대체안 전환·상태 동기화 실패');
-   check(w.ReservationUI.checklistSummary().total===20,'우지 대체안에 야마자키·산쇼테이 중복 계산');
+   check(w.ReservationUI.checklistSummary().total===22,'우지 대체안에 야마자키·산쇼테이 중복 계산');
    dialog.querySelector('[data-booking-details="ferry-busan"]').open=true;click(w,'[data-booking-jump="ferry-busan"]');check(!dialog.open&&b.state.day===21&&b.state.view==='daily'&&w.ItineraryDrawer.isOpen(),'예약에서 해당 일정 이동 실패');check(d.querySelector('[data-leg="5"]').classList.contains('search-highlight'),'승선 구간 선택 오류');
   }
-  return '320/1280px · 24개 예약 후보 · 현재 일정22개 · 체크/메모 저장 · 야마자키 동기화 · 대체안·일정 연결';
+  return '320/1280px · 26개 예약 후보 · 현재 일정24개 · 체크/메모 저장 · 야마자키 동기화 · 대체안·일정 연결';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };

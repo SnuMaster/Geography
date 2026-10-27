@@ -37,6 +37,8 @@
   {key:'ktx-return',group:'travel',kind:'필수',name:'부산 → 서대구 KTX',day:22,leg:6,date:'1/29 · 서대구 정차편',note:'예매 오픈 후 서대구 정차·좌석 확인',url:'https://www.korail.com/ticket/search/general',details:['일정의 330편·시각은 현재표 참고입니다. 2027/1/29 운행과 서대구 정차를 확인해 예매하세요.','좌석을 확보한 뒤 체크하세요. 다른 도착역 표와 구분하세요.']},
   {key:'wasake',group:'visit',kind:'필수',name:'와사케 아사쿠사 사케 체험',day:2,stop:'와사케 아사쿠사',date:'1/9 · 20:00 목표',note:'1인·영어 진행·실제 열린 회차 예약',url:'https://lp.wasake.jp/',details:['공식 사이트의 예약 캘린더에서 날짜와 프로그램을 선택하세요.','20:00은 일정 목표이며, 실제 예약 가능한 회차와 소요시간을 확인하세요.']},
   {key:'teien',group:'visit',kind:'필수',name:'도쿄도 정원미술관',day:10,stop:'도쿄도 정원미술관',date:'1/17 · 10:00 목표',note:'리투아니아 전시 날짜·입장 회차 예약',url:'https://www.teien-art-museum.ne.jp/visit/ticket/',source:'https://www.teien-art-museum.ne.jp/exhibition/270116-0328_lithuania/',details:['해당 전시는 일시 지정 예약제입니다. 무료 입장 대상자는 별도 조건을 확인하세요.','1/17 실제 판매 회차를 확인해 입장권을 구매하세요.']},
+  {key:'skytree',group:'visit',kind:'추천',name:'도쿄 스카이트리 입장권',day:2,stop:'도쿄 스카이트리',date:'1/9 · 15:30 목표',note:'노을 시간대 입장을 위해 시간 지정 예매',url:'https://www.tokyo-skytree.jp/ticket/',details:['350m 전망층과 450m 회랑을 모두 이용할지 확인해 표를 고르세요.','현장권 구매도 가능하지만, 일정 시각을 맞추려면 공식 예매권을 확인하세요. 카페 좌석 예약은 별개이며 기본 일정에 추가하지 않아요.']},
+  {key:'kobe-port-tower',group:'visit',kind:'추천',name:'고베 포트타워 입장권',day:15,stop:'고베 포트타워',date:'1/22 · 16:30 목표',note:'시간 지정 입장권 미리 확보',url:'https://www.kobe-port-tower.com/ticket/',details:['전망층·옥상은 일시 지정 입장권이 필요해요. 현장권은 해당 시간대에 잔여석이 있을 때만 판매됩니다.','전망층만 볼지 옥상까지 갈지 선택하세요. 옥상은 날씨에 따라 닫힐 수 있습니다.']},
   {key:'gekkeikan',group:'visit',kind:'추천',name:'월계관 오쿠라기념관',day:13,stop:'월계관 오쿠라기념관',date:'1/20 · 10:45 회차 목표',note:'일반 관람 우선예약 자리 확인',url:'https://www.gekkeikan.co.jp/enjoy/museum/',details:['일정은 일반 관람 기준이며 제조공장 투어와 구분합니다.','공식 안내에서 2027년 1월 예약창과 실제 회차를 확인하세요.']},
   {key:'tokyo-city-view',group:'visit',kind:'추천',name:'Tokyo City View 입장권',day:10,stop:'Tokyo City View',date:'1/17 · 16:30 목표',note:'해당 날짜 운영·입장권 확인',url:'https://tcv.roppongihills.com/en/',details:['공식 Buy Tickets에서 전시·전망대 입장 범위와 날짜를 확인하세요.','일몰 시간대 계획을 유지하려면 실제 입장 가능한 시각을 확인하세요.']},
   {key:'ishikawa-tour',group:'visit',kind:'조건 확인',name:'이시카와 양조장 해설 투어 문의',day:8,variant:'brewery',stop:'후사 이시카와 양조장',date:'1/15 · 양조장 대체안',note:'평일 1인 해설 투어 가능 여부 먼저 문의',url:'https://www.tamajiman.co.jp/tour/',details:['소규모 해설 투어는 인원·요일 조건이 있어 평일 1인 참가를 확정할 수 없어요. 영어 투어는 별도 문의이며 답변에 최대 1주가 걸릴 수 있습니다.','예약 없는 자유 산책과 해설 투어는 별개입니다. 참가 확정을 받았을 때만 완료로 체크하세요.']},
@@ -66,6 +68,7 @@
   for(const item of checklistItems){const day=context.days.find(d=>d.n===item.day);if(!day)continue;
    (item.variant&&item.variant!==JourneyState.chosen(day,context.preferences)?alternatives:active).push(item);
   }
+  active.sort((a,b)=>a.day-b.day);alternatives.sort((a,b)=>a.day-b.day);
   return {context,active,alternatives,done:active.filter(isComplete).length};
  }
  function itemTiming(item,context){const day=context.days.find(d=>d.n===item.day),variant=day?.variants.find(v=>v.id===itemVariant(item,context));return variant?.stops.find(s=>s.reservationKey===item.key)?.reservationTiming||{};}
