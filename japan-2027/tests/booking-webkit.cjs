@@ -27,6 +27,13 @@ const assert=(ok,message)=>{if(!ok)throw Error(message);};
     await page.locator('[data-booking-filter="pending"]').click();assert(await page.locator('[data-booking-item="zutomayo"]').count()===0,'completed item still shown in pending');
     await page.locator('[data-booking-filter="done"]').click();assert(await page.locator('[data-booking-item="zutomayo"]').count()===1,'completed item missing in done');
     await page.reload();await page.waitForFunction(()=>!!window.__routebook);await page.locator('#bookingChecklistBtn').click();assert(await page.locator('[data-booking-complete="zutomayo"]').isChecked(),'completion was not restored after reload');
+    await page.locator('#closeBookingChecklist').click();await page.locator('#tripPlanBtn').click();
+    assert(await page.locator('#tripPlanBody [data-plan-day]').count()===22,'trip reading view is missing days');
+    let geometry=await page.locator('#tripPlanDialog').evaluate(d=>{const r=d.getBoundingClientRect(),b=d.querySelector('#tripPlanBody');return {top:r.top,bottom:r.bottom,body:b.clientHeight,overflow:b.scrollWidth>b.clientWidth+1};});assert(geometry.top>=-1&&geometry.bottom<=height+1&&geometry.body>100&&!geometry.overflow,'trip reading layout is clipped');
+    await page.locator('#tripPlanDetails').click();assert(await page.locator('#tripPlanDetails').getAttribute('aria-pressed')==='true','trip details toggle failed');await page.locator('#tripPlanDetails').click();
+    await page.screenshot({path:`qa-webkit-plan-${name}.png`});
+    await page.locator('#tripPlanDay').selectOption('22');const last=await page.locator('[data-plan-day="22"]').boundingBox();assert(last&&last.y>=0&&last.y<height,'jump to last trip day is not visible');
+    await page.locator('#closeTripPlan').click();await page.locator('#tripPlanBtn').click();await page.locator('#closeTripPlan').click();
     assert(errors.length===0,'page errors: '+errors.join(', '));
    }catch(e){failures.push(`${name}: ${e.message}`);console.error('FAIL',name,e.message,'errors',errors);}
    await context.close();
