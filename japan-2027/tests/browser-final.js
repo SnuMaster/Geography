@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/45';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/46';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -234,6 +234,22 @@
    dialog.querySelector('[data-booking-details="ferry-busan"]').open=true;click(w,'[data-booking-jump="ferry-busan"]');check(!dialog.open&&b.state.day===21&&b.state.view==='daily'&&w.ItineraryDrawer.isOpen(),'예약에서 해당 일정 이동 실패');check(d.querySelector('[data-leg="5"]').classList.contains('search-highlight'),'승선 구간 선택 오류');
   }
   return '320/1280px · 26개 예약 후보 · 현재 일정24개 · 체크/메모 저장 · 야마자키 동기화 · 대체안·일정 연결';
+ });
+ await report(46,'여행 계획 전체 읽기·선택 대체안·확정 시각·날짜 이동',async()=>{
+  for(const width of [320,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(14),d=w.document,b=w.__routebook;
+   click(w,'#tripPlanBtn');let dialog=d.querySelector('#tripPlanDialog'),body=d.querySelector('#tripPlanBody');check(dialog.open,'여행 계획 창 열기 실패');
+   check(body.querySelectorAll('[data-plan-day]').length===22,'22일 일정 누락');
+   for(const day of b.state.data.days){const v=day.variants.find(v=>v.id===w.JourneyState.chosen(day,b.state.selectedVariantByDay)),section=body.querySelector(`[data-plan-day="${day.n}"]`),rows=section.querySelectorAll('[data-plan-stop]');check(rows.length===v.stops.length,'하루 일정 수 불일치 '+day.n);v.stops.forEach((stop,i)=>{check(rows[i].querySelector('.trip-plan-time').textContent===stop.time,'시각 불일치 '+day.n);check(rows[i].querySelector('strong').textContent===(w.TripPersonal.stopName(stop)||stop.name),'장소 불일치 '+day.n);});}
+   const rect=dialog.getBoundingClientRect();check(rect.left>=0&&rect.right<=width+1&&rect.top>=0&&rect.bottom<=900&&body.clientHeight>100,'계획창 크기·본문 접힘 '+width);check(body.scrollWidth<=body.clientWidth+1,'계획창 가로 넘침');
+   check(w.getComputedStyle(body.querySelector('.trip-plan-description')).display==='none','기본 설명 숨김 실패');click(w,'#tripPlanDetails');check(w.getComputedStyle(body.querySelector('.trip-plan-description')).display!=='none','상세 설명 표시 실패');click(w,'#tripPlanDetails');
+   change(w,'#tripPlanDay','22');check(body.scrollTop>0&&body.querySelector('[data-plan-day="22"]').getBoundingClientRect().top>=body.getBoundingClientRect().top-1&&body.querySelector('[data-plan-day="22"]').getBoundingClientRect().top<body.getBoundingClientRect().bottom-40,'마지막 날짜 바로가기 실패');
+   click(w,'#closeTripPlan');b.setVariant('no-yamazaki');click(w,'#tripPlanBtn');check(body.querySelector('[data-plan-day="14"]').dataset.planVariant==='no-yamazaki'&&body.querySelector('[data-plan-day="14"]').textContent.includes('뵤도인'),'선택한 우지 일정 미반영');
+   click(w,'[data-plan-map="14"]');check(!dialog.open&&b.state.day===14&&b.state.variant==='no-yamazaki'&&!w.ItineraryDrawer.isOpen(),'지도 복귀·선택 대체안 오류');
+   b.setVariant('main');b.selectStop(1);change(w,'[data-reservation-status="yamazaki"]','예약완료');change(w,'[data-reservation-time="yamazaki"]','2027-01-21T14:00');close(w);click(w,'#tripPlanBtn');check(body.querySelector('[data-plan-day="14"] [data-plan-stop="1"] .trip-plan-time').textContent.includes('14:00')&&body.querySelector('[data-plan-day="14"] .trip-plan-confirmed'),'확정 예약 시각 미반영');
+   d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));check(!dialog.open&&d.activeElement.id==='tripPlanBtn','닫기·포커스 복귀 실패');
+  }
+  return '22일 모든 선택 일정·시각 일치 · 설명 토글 · 날짜 바로가기 · 우지 대체안·야마자키 확정 시각 · 320/1280px';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
