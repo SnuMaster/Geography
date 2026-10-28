@@ -42,5 +42,17 @@
   }
   return {status:'outside-route'};
  }
- return {stepsFor,dependencies,readyAt};
+ function planReference(leg,now,mode='auto'){
+  const localDate=at=>new Date(at+9*60*MINUTE).toISOString().slice(0,10);
+  const today=localDate(now),serviceDate=localDate(now-3*60*MINUTE),planned=leg.departureTimeKnown===false?null:leg.departureAt;
+  const currentDay=[today,serviceDate].includes(leg.serviceDate),live=mode==='now'||currentDay;
+  const startAt=mode==='now'?now:Number.isFinite(planned)?live?Math.max(planned,now):planned:null;
+  return {startAt,live,serviceDate:mode==='now'?serviceDate:leg.serviceDate,label:mode==='now'?'지금 출발 기준':currentDay?'여행일 · 현재 시각 반영':'여행일 참고'};
+ }
+ function planNext(leg,key,reference,keyFor,lookup){
+  const ready=readyAt(stepsFor(leg,keyFor),key,reference.startAt,lookup);
+  if(ready.status!=='ready')return {...ready,reference};
+  return {...lookup(key,ready.queryAt),reference,queryAt:ready.queryAt,readyAt:ready.readyAt};
+ }
+ return {stepsFor,dependencies,readyAt,planReference,planNext};
 });
