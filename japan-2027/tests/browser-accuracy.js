@@ -38,7 +38,7 @@
      const w=await load(1),d=w.document;click(w,'#rideToggle');await until(()=>d.querySelector('#rideProfile'));change(w,'#rideProfile','metro-iriya-ueno');change(w,'#rideDate','2027-01-14');await until(()=>d.querySelector('[data-ride-board]'));click(w,'[data-ride-board="0"]');await until(()=>d.querySelector('[data-ride-map]'));click(w,'[data-ride-map]');check(new URL(w.location.href).searchParams.get('day')==='7','선택 운행일과 다른 날짜 지도');return '1/14 열차 → DAY 07 (1/14)';
     });
     await record(label+' · 5 아사쿠사 카드·팝업·열차 선택 차단',async()=>{
-     const w=await load(2),d=w.document,b=w.__routebook;
+     const w=await load(2),d=w.document,b=w.__routebook;w.Date.now=()=>Date.parse('2026-11-21T10:00:00+09:00');
      const index=b.state.routeData.days['2-main'].findIndex(leg=>leg&&b.rail.keysFor(leg).some(key=>!b.rail.validityFor(key,'2027-01-09').usable));check(index>=0,'아사쿠사 구간 없음');
      check(!d.querySelector('#stopList [data-warning-leg]'),'일정 경고 중복');click(w,'[data-leg="'+(index+1)+'"]');await until(()=>d.querySelector('.departure-error')?.textContent.includes('열차 시각 없음'));
      check(!d.querySelector('[data-ride-next]'),'유효하지 않은 열차 탑승 노출');check(!d.querySelector('.station-departures .timetable-warning'),'팝업 경고 중복');
