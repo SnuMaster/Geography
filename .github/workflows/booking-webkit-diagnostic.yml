@@ -1,0 +1,24 @@
+name: Booking WebKit diagnostic
+on:
+  push:
+    branches: [codex/booking-ipad-fix-20261028]
+permissions:
+  contents: read
+jobs:
+  webkit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --prefix japan-2027/tests
+      - run: cd japan-2027/tests && npx playwright install --with-deps webkit
+      - run: node japan-2027/tests/booking-webkit.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: booking-webkit
+          path: qa-webkit-*.png
+          if-no-files-found: ignore
