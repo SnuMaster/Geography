@@ -31,8 +31,11 @@ const assert=(ok,message)=>{if(!ok)throw Error(message);};
     assert(await page.locator('#tripPlanBody [data-plan-day]').count()===22,'trip reading view is missing days');
     let geometry=await page.locator('#tripPlanDialog').evaluate(d=>{const r=d.getBoundingClientRect(),b=d.querySelector('#tripPlanBody');return {top:r.top,bottom:r.bottom,body:b.clientHeight,overflow:b.scrollWidth>b.clientWidth+1};});assert(geometry.top>=-1&&geometry.bottom<=height+1&&geometry.body>100&&!geometry.overflow,'trip reading layout is clipped');
     await page.locator('#tripPlanDetails').click();assert(await page.locator('#tripPlanDetails').getAttribute('aria-pressed')==='true','trip details toggle failed');await page.locator('#tripPlanDetails').click();
+    assert(await page.locator('[data-plan-travel]').count()===4,'essential transport rows missing');
     await page.screenshot({path:`qa-webkit-plan-${name}.png`});
     await page.locator('#tripPlanDay').selectOption('22');const last=await page.locator('[data-plan-day="22"]').boundingBox();assert(last&&last.y>=0&&last.y<height,'jump to last trip day is not visible');
+    const afterJump=await page.locator('#tripPlanDialog').evaluate(d=>{const r=d.getBoundingClientRect();return {top:r.top,bottom:r.bottom,scroll:d.scrollTop};});console.log('plan-after-jump',name,JSON.stringify(afterJump));assert(afterJump.top>=-1&&afterJump.bottom<=height+1,'trip dialog moved outside the viewport after changing date');if(height>400)assert(afterJump.scroll===0,'trip header scrolled out after changing date');
+    await page.locator('[data-plan-fixed-service]').waitFor({state:'visible'});await page.waitForFunction(()=>document.querySelector('[data-plan-fixed-service]').textContent.includes('13:47:30'));await page.screenshot({path:`qa-webkit-ktx-${name}.png`});
     await page.locator('#closeTripPlan').click();await page.locator('#tripPlanBtn').click();await page.locator('#closeTripPlan').click();
     assert(errors.length===0,'page errors: '+errors.join(', '));
    }catch(e){failures.push(`${name}: ${e.message}`);console.error('FAIL',name,e.message,'errors',errors);}
