@@ -408,22 +408,26 @@ function renderTripPlan({preserveScroll=false}={}){
   const days=state.data.days.slice().sort((a,b)=>a.n-b.n);
   const sections=days.map(day=>{
    const variant=day.variants.find(v=>v.id===JourneyState.chosen(day,state.selectedVariantByDay)),label=MapPlan.label(day,variant);
-   const rows=variant.stops.map((stop,index)=>`<li class="trip-plan-stop" data-plan-stop="${index}"><span class="trip-plan-time">${esc(stop.time)}</span><div><strong>${esc(stopLabel(stop))}</strong>${stop.reservationTiming?.applied?'<small class="trip-plan-confirmed">확정 예약 시각 반영</small>':''}<div class="trip-plan-description">${index&&stop.transportFromPrevious?`<p class="trip-plan-transfer">이동 · ${esc(stop.transportFromPrevious)}</p>`:''}<p>${esc(cleanDesc(stop))}</p></div></div></li>`).join('');
+   const legs=state.routeData.days[`${day.n}-${variant.id}`]||[];
+   const rows=variant.stops.map((stop,index)=>(index?window.TripPlanTransport?.html(day,variant,legs[index-1],index-1)||'':'')+`<li class="trip-plan-stop" data-plan-stop="${index}"><span class="trip-plan-time">${esc(stop.time)}</span><div><strong>${esc(stopLabel(stop))}</strong>${stop.reservationTiming?.applied?'<small class="trip-plan-confirmed">확정 예약 시각 반영</small>':''}<div class="trip-plan-description">${index&&stop.transportFromPrevious?`<p class="trip-plan-transfer">이동 · ${esc(stop.transportFromPrevious)}</p>`:''}<p>${esc(cleanDesc(stop))}</p></div></div></li>`).join('');
    return `<section class="trip-plan-day" id="trip-plan-day-${day.n}" data-plan-day="${day.n}" data-plan-variant="${esc(variant.id)}"><header><div><small>DAY ${String(day.n).padStart(2,'0')}</small><h3>${esc(day.date)} ${esc(day.weekday)} <span>${esc(label.city)}</span></h3><p>${esc(variant.title||day.shortTitle)}${day.variants.length>1?` · ${esc(variant.label||'선택한 일정')}`:''}</p></div><button type="button" data-plan-map="${day.n}">지도에서 보기</button></header><ol>${rows}</ol>${variant.note||day.note?`<p class="trip-plan-description trip-plan-note">${esc(variant.note||day.note)}</p>`:''}${reservationWarningsHtml(variant)}</section>`;
   }).join('');
   $('#tripPlanDay').innerHTML='<option value="">날짜 선택</option>'+days.map(day=>`<option value="${day.n}">${esc(day.date)} ${esc(day.weekday)} · ${esc(MapPlan.label(day,day.variants.find(v=>v.id===JourneyState.chosen(day,state.selectedVariantByDay))).city)}</option>`).join('');
   $('#tripPlanStatus').textContent=state.incompleteData?`불러온 ${days.length}일 일정 · 일부 지역 자료 연결을 확인해 주세요.`:`${days.length}일 전체 일정 · 선택한 대체안과 확정 예약 시각 반영`;
-  body.innerHTML=sections;body.scrollTop=scroll;
+  body.innerHTML=sections;body.scrollTop=scroll;if(dialog.open)mountTripPlanTransport();
  }catch(error){
-  console.error('Trip plan rendering failed',error);
+  window.TripPlanTransport?.stop();console.error('Trip plan rendering failed',error);
   body.innerHTML='<div class="trip-plan-error" role="alert"><p>여행 계획을 표시하지 못했어요.</p><button type="button" data-plan-retry>다시 불러오기</button></div>';
  }
 }
-function closeTripPlan(){const dialog=$('#tripPlanDialog');if(dialog?.open){dialog.close();RouteUI.release(dialog);}}
+function mountTripPlanTransport(){window.TripPlanTransport?.mount($('#tripPlanDialog'),{context:()=>({routes:state.routeData}),openTimetable:(key,date,day,variant)=>{closeTripPlan();DetailView.close();navigateScreen({day,variant,view:'daily'});window.RideTracker?.open(key,date);}});}
+function closeTripPlan(){const dialog=$('#tripPlanDialog');if(dialog?.open){window.TripPlanTransport?.stop();dialog.close();RouteUI.release(dialog);}}
 function bindTripPlan(){
  const dialog=$('#tripPlanDialog'),body=$('#tripPlanBody');if(!dialog||!body||!$('#tripPlanBtn'))return;
- $('#tripPlanBtn').addEventListener('click',()=>{renderTripPlan();$('#tripPlanBtn').focus({preventScroll:true});RouteUI.showDialog(dialog);dialog.scrollTop=0;body.scrollTop=0;});
+ $('#tripPlanBtn').addEventListener('click',()=>{renderTripPlan();$('#tripPlanBtn').focus({preventScroll:true});RouteUI.showDialog(dialog);dialog.scrollTop=0;body.scrollTop=0;mountTripPlanTransport();});
  $('#closeTripPlan').addEventListener('click',closeTripPlan);
+ dialog.addEventListener('close',()=>window.TripPlanTransport?.stop());
+ $('#tripPlanNow')?.addEventListener('click',event=>{const active=event.currentTarget.getAttribute('aria-pressed')!=='true';event.currentTarget.setAttribute('aria-pressed',String(active));event.currentTarget.textContent=active?'열차: 지금 기준':'열차: 여행일';window.TripPlanTransport?.setMode(active?'now':'auto');});
  $('#tripPlanDay').addEventListener('change',event=>{const section=body.querySelector(`[data-plan-day="${Number(event.target.value)}"]`);if(!section)return;const scroller=getComputedStyle(dialog).overflowY==='auto'?dialog:body;scroller.scrollTop+=section.getBoundingClientRect().top-scroller.getBoundingClientRect().top-12;});
  $('#tripPlanDetails').addEventListener('click',event=>{const show=event.currentTarget.getAttribute('aria-pressed')!=='true';event.currentTarget.setAttribute('aria-pressed',String(show));event.currentTarget.textContent=show?'설명 숨기기':'설명 보기';dialog.dataset.details=String(show);});
  body.addEventListener('click',event=>{

@@ -1,7 +1,7 @@
 name: Japan travel QA
 on:
   push:
-    branches: [main, codex/japan-final-qa]
+    branches: [main, codex/japan-final-qa, codex/plan-transport-20261028]
   pull_request:
   workflow_dispatch:
 permissions:
