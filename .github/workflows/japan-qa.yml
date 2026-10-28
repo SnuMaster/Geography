@@ -1,7 +1,7 @@
 name: Japan travel QA
 on:
   push:
-    branches: [main, codex/japan-final-qa]
+    branches: [main, codex/japan-final-qa, codex/booking-ipad-fix-20261028]
   pull_request:
   workflow_dispatch:
 permissions:
@@ -32,4 +32,24 @@ jobs:
         with:
           name: japan-qa-screens
           path: qa-*.png
+          if-no-files-found: ignore
+  booking-webkit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: japan-2027/tests/package-lock.json
+      - run: npm ci --prefix japan-2027/tests
+      - run: cd japan-2027/tests && npx playwright install --with-deps webkit
+      - name: Booking checklist on WebKit mobile and tablet layouts
+        run: node japan-2027/tests/booking-webkit.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: booking-webkit-screens
+          path: qa-webkit-*.png
           if-no-files-found: ignore
