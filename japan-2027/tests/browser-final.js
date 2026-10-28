@@ -256,7 +256,7 @@
   let w=await load(1,{date:'2027-01-08T17:00:00+09:00'}),d=w.document,b=w.__routebook;click(w,'#tripPlanBtn');
   check(d.querySelectorAll('[data-plan-travel="항공"]').length===3&&d.querySelectorAll('[data-plan-travel="선박"]').length===1,'항공·선박 계획편 누락');
   check(d.querySelector('[data-plan-day="1"] [data-plan-travel]').textContent.includes('11:10')&&d.querySelector('[data-plan-day="1"] [data-plan-travel]').textContent.includes('13:20'),'항공 출발·도착 시각 누락');
-  const railIndex=b.state.routeData.days['1-main'].findIndex(l=>w.RailDepartures.keysFor(l).includes('jr-ueno-tokyo'));
+  const railIndex=b.state.routeData.days['1-main'].findIndex(l=>b.rail.keysFor(l).includes('jr-ueno-tokyo'));
   let row=d.querySelector(`[data-plan-rail="1:main:${railIndex}"]`);row.scrollIntoView({block:'center'});await until(()=>row.querySelector('[data-plan-train-id]'));
   const originalTimes=JSON.stringify(b.state.data.days[0].variants[0].stops.map(s=>s.time)),first=Number(row.querySelector('[data-plan-departure]').dataset.planDeparture);
   qa.clock=first;await until(()=>Number(row.querySelector('[data-plan-departure]')?.dataset.planDeparture)>first);check(row.textContent.includes('현재 시각 반영'),'여행일 현재 기준 표시 누락');check(JSON.stringify(b.state.data.days[0].variants[0].stops.map(s=>s.time))===originalTimes,'열차 후보 변경이 계획 시각을 변경함');
@@ -265,7 +265,7 @@
   const future=Number(row.querySelector('[data-plan-departure]').dataset.planDeparture);qa.clock+=3600000;await sleep(1200);check(Number(row.querySelector('[data-plan-departure]').dataset.planDeparture)===future&&row.textContent.includes('여행일 참고'),'미래 일정이 현재 날짜로 바뀜');
   click(w,'#tripPlanNow');await until(()=>Number(row.querySelector('[data-plan-departure]')?.dataset.planDeparture)<future);check(row.textContent.includes('지금 출발 기준')&&Number(row.querySelector('[data-plan-departure]').dataset.planDeparture)>qa.clock,'지금 기준 전환 실패');click(w,'#tripPlanNow');
   change(w,'#tripPlanDay','22');let fixed=d.querySelector('[data-plan-day="22"] [data-plan-fixed-service]');fixed.scrollIntoView({block:'center'});await until(()=>fixed.textContent.includes('13:47:30'));check(fixed.textContent.includes('12:44')&&fixed.textContent.includes('정차')&&!fixed.textContent.includes('도착'),'KTX 원본 정차 시각·초 단위 손실');
-  const invalid=[...d.querySelectorAll('[data-plan-rail]')].find(n=>{const l=b.state.routeData.days[`${n.dataset.planRailDay}-${n.dataset.planRailVariant}`][Number(n.dataset.planRailLeg)];return w.RailDepartures.keysFor(l).some(k=>!w.RailDepartures.validityFor(k,l.serviceDate).usable);});check(invalid,'만료 구간 검증 대상 없음');invalid.scrollIntoView({block:'center'});await until(()=>invalid.textContent.includes('시간표 갱신 필요'));check(!invalid.querySelector('[data-plan-train-id]'),'만료 시간표에 열차 생성');
+  const invalid=[...d.querySelectorAll('[data-plan-rail]')].find(n=>{const l=b.state.routeData.days[`${n.dataset.planRailDay}-${n.dataset.planRailVariant}`][Number(n.dataset.planRailLeg)];return b.rail.keysFor(l).some(k=>!b.rail.validityFor(k,l.serviceDate).usable);});check(invalid,'만료 구간 검증 대상 없음');invalid.scrollIntoView({block:'center'});await until(()=>invalid.textContent.includes('시간표 갱신 필요'));check(!invalid.querySelector('[data-plan-train-id]'),'만료 시간표에 열차 생성');
   check(d.querySelector('[data-plan-transport-clock]').textContent.includes('지연 미반영'),'시간표 기준 문구 누락');click(w,'#closeTripPlan');check(!qa.errors.length,'열차 읽기 창 오류 '+qa.errors.join(', '));
   return '항공3·선박1·KTX330 · 출발 경계 자동 교체 · 화면 복귀 갱신 · 미래/현재 구분 · 원래 일정 유지 · 만료 자료 차단';
  });
