@@ -420,14 +420,13 @@ function renderTripPlan({preserveScroll=false}={}){
   body.innerHTML='<div class="trip-plan-error" role="alert"><p>여행 계획을 표시하지 못했어요.</p><button type="button" data-plan-retry>다시 불러오기</button></div>';
  }
 }
-function mountTripPlanTransport(){window.TripPlanTransport?.mount($('#tripPlanDialog'),{context:()=>({routes:state.routeData}),openTimetable:(key,date,day,variant)=>{closeTripPlan();DetailView.close();navigateScreen({day,variant,view:'daily'});window.RideTracker?.open(key,date);}});}
+function mountTripPlanTransport(){window.TripPlanTransport?.mount($('#tripPlanDialog'),{context:()=>({routes:state.routeData}),openTimetable:(key,date,day,variant)=>{closeTripPlan();DetailView.close();navigateScreen({day,variant,view:'daily'});window.RideTracker?.open(key);}});}
 function closeTripPlan(){const dialog=$('#tripPlanDialog');if(dialog?.open){window.TripPlanTransport?.stop();dialog.close();RouteUI.release(dialog);}}
 function bindTripPlan(){
  const dialog=$('#tripPlanDialog'),body=$('#tripPlanBody');if(!dialog||!body||!$('#tripPlanBtn'))return;
  $('#tripPlanBtn').addEventListener('click',()=>{renderTripPlan();$('#tripPlanBtn').focus({preventScroll:true});RouteUI.showDialog(dialog);dialog.scrollTop=0;body.scrollTop=0;mountTripPlanTransport();});
  $('#closeTripPlan').addEventListener('click',closeTripPlan);
  dialog.addEventListener('close',()=>window.TripPlanTransport?.stop());
- $('#tripPlanNow')?.addEventListener('click',event=>{const active=event.currentTarget.getAttribute('aria-pressed')!=='true';event.currentTarget.setAttribute('aria-pressed',String(active));event.currentTarget.textContent=active?'열차: 지금 기준':'열차: 여행일';window.TripPlanTransport?.setMode(active?'now':'auto');});
  $('#tripPlanDay').addEventListener('change',event=>{const section=body.querySelector(`[data-plan-day="${Number(event.target.value)}"]`);if(!section)return;const scroller=getComputedStyle(dialog).overflowY==='auto'?dialog:body;scroller.scrollTop+=section.getBoundingClientRect().top-scroller.getBoundingClientRect().top-12;});
  $('#tripPlanDetails').addEventListener('click',event=>{const show=event.currentTarget.getAttribute('aria-pressed')!=='true';event.currentTarget.setAttribute('aria-pressed',String(show));event.currentTarget.textContent=show?'설명 숨기기':'설명 보기';dialog.dataset.details=String(show);});
  body.addEventListener('click',event=>{
