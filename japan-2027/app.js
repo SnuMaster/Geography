@@ -310,6 +310,7 @@ function navigateScreen(target,options={}){
  $('#itineraryScroll').scrollTop=0;
  if(state.view==='overview')renderOverview();else{renderDays();renderHeader();renderStops();renderMap();}renderPlayback();
  if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];map.setView([stop.lat,stop.lng],15,{animate:false});if(!options.snapshot?.itineraryOpen)markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
+ if($('#tripPlanDialog')?.open)renderTripPlan({preserveScroll:true});
  if(options.history!=='none')updateUrl(options.history||'push');
  const snapshot=options.snapshot;
  requestAnimationFrame(()=>{
@@ -399,7 +400,42 @@ function renderOverview({redraw=true,fit=true}={}){
  if(redraw)renderMap(fit);
 }
 
+function renderTripPlan({preserveScroll=false}={}){
+ const dialog=$('#tripPlanDialog'),body=$('#tripPlanBody');
+ if(!dialog||!body)return;
+ const scroll=preserveScroll?body.scrollTop:0;
+ try{
+  const days=state.data.days.slice().sort((a,b)=>a.n-b.n);
+  const sections=days.map(day=>{
+   const variant=day.variants.find(v=>v.id===JourneyState.chosen(day,state.selectedVariantByDay)),label=MapPlan.label(day,variant);
+   const rows=variant.stops.map((stop,index)=>`<li class="trip-plan-stop" data-plan-stop="${index}"><span class="trip-plan-time">${esc(stop.time)}</span><div><strong>${esc(stopLabel(stop))}</strong>${stop.reservationTiming?.applied?'<small class="trip-plan-confirmed">확정 예약 시각 반영</small>':''}<div class="trip-plan-description">${index&&stop.transportFromPrevious?`<p class="trip-plan-transfer">이동 · ${esc(stop.transportFromPrevious)}</p>`:''}<p>${esc(cleanDesc(stop))}</p></div></div></li>`).join('');
+   return `<section class="trip-plan-day" id="trip-plan-day-${day.n}" data-plan-day="${day.n}" data-plan-variant="${esc(variant.id)}"><header><div><small>DAY ${String(day.n).padStart(2,'0')}</small><h3>${esc(day.date)} ${esc(day.weekday)} <span>${esc(label.city)}</span></h3><p>${esc(variant.title||day.shortTitle)}${day.variants.length>1?` · ${esc(variant.label||'선택한 일정')}`:''}</p></div><button type="button" data-plan-map="${day.n}">지도에서 보기</button></header><ol>${rows}</ol>${variant.note||day.note?`<p class="trip-plan-description trip-plan-note">${esc(variant.note||day.note)}</p>`:''}${reservationWarningsHtml(variant)}</section>`;
+  }).join('');
+  $('#tripPlanDay').innerHTML='<option value="">날짜 선택</option>'+days.map(day=>`<option value="${day.n}">${esc(day.date)} ${esc(day.weekday)} · ${esc(MapPlan.label(day,day.variants.find(v=>v.id===JourneyState.chosen(day,state.selectedVariantByDay))).city)}</option>`).join('');
+  $('#tripPlanStatus').textContent=state.incompleteData?`불러온 ${days.length}일 일정 · 일부 지역 자료 연결을 확인해 주세요.`:`${days.length}일 전체 일정 · 선택한 대체안과 확정 예약 시각 반영`;
+  body.innerHTML=sections;body.scrollTop=scroll;
+ }catch(error){
+  console.error('Trip plan rendering failed',error);
+  body.innerHTML='<div class="trip-plan-error" role="alert"><p>여행 계획을 표시하지 못했어요.</p><button type="button" data-plan-retry>다시 불러오기</button></div>';
+ }
+}
+function closeTripPlan(){const dialog=$('#tripPlanDialog');if(dialog?.open){dialog.close();RouteUI.release(dialog);}}
+function bindTripPlan(){
+ const dialog=$('#tripPlanDialog'),body=$('#tripPlanBody');if(!dialog||!body||!$('#tripPlanBtn'))return;
+ $('#tripPlanBtn').addEventListener('click',()=>{renderTripPlan();$('#tripPlanBtn').focus({preventScroll:true});RouteUI.showDialog(dialog);dialog.scrollTop=0;body.scrollTop=0;});
+ $('#closeTripPlan').addEventListener('click',closeTripPlan);
+ $('#tripPlanDay').addEventListener('change',event=>{const section=body.querySelector(`[data-plan-day="${Number(event.target.value)}"]`);if(!section)return;const scroller=getComputedStyle(dialog).overflowY==='auto'?dialog:body;scroller.scrollTop+=section.getBoundingClientRect().top-scroller.getBoundingClientRect().top-12;});
+ $('#tripPlanDetails').addEventListener('click',event=>{const show=event.currentTarget.getAttribute('aria-pressed')!=='true';event.currentTarget.setAttribute('aria-pressed',String(show));event.currentTarget.textContent=show?'설명 숨기기':'설명 보기';dialog.dataset.details=String(show);});
+ body.addEventListener('click',event=>{
+  if(event.target.closest('[data-plan-retry]')){renderTripPlan();return;}
+  const button=event.target.closest('[data-plan-map]');if(!button)return;
+  const day=state.data.days.find(day=>day.n===Number(button.dataset.planMap));if(!day)return;
+  closeTripPlan();DetailView.close();window.ItineraryDrawer?.close({restore:false});
+  navigateScreen({day:day.n,variant:JourneyState.chosen(day,state.selectedVariantByDay),view:'daily'},{scrollNav:true});
+ });
+}
 function bindEvents(){
+ bindTripPlan();
  bindRouteFocus();
  ReservationUI.initChecklist?.({context:()=>({days:state.data.days,preferences:state.selectedVariantByDay})});
  window.addEventListener('routebook:booking-jump',event=>{
@@ -469,6 +505,7 @@ function preparePersonalTrip(){
 }
 function handleReservationChange(){
  const detail=DetailView.context();pausePlay();window.FlightPlayback?.pause();preparePersonalTrip();
+ if($('#tripPlanDialog')?.open)renderTripPlan({preserveScroll:true});
  if(state.view==='overview'){renderOverview({redraw:false});if(Number.isInteger(detail?.routeStopIndex)){const day=state.data.days.find(d=>d.n===detail.routeDay),v=day?.variants.find(v=>v.id===detail.routeVariant);if(v)DetailView.refreshContent(withDayContext(day.n,v.id,()=>popupHtml(v.stops[detail.routeStopIndex],detail.routeStopIndex)));}return;}
  preserveDetails(()=>{renderHeader();renderStops();});renderDays();
  if(Number.isInteger(detail?.routeStopIndex))DetailView.refreshContent(popupHtml(getStops()[detail.routeStopIndex],detail.routeStopIndex));
