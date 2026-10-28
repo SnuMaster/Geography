@@ -8,20 +8,25 @@ const assert=(ok,message)=>{if(!ok)throw Error(message);};
  await new Promise(r=>server.listen(0,'127.0.0.1',r));
  const browser=await webkit.launch(),base=`http://127.0.0.1:${server.address().port}/japan-2027/`,failures=[];
  try{
-  for(const [name,width,height] of [['iphone',390,844],['ipad-portrait',768,1024],['ipad-landscape',1366,1024]]){
+  for(const [name,width,height] of [['iphone',390,844],['phone-landscape',667,375],['ipad-portrait',768,1024],['ipad-landscape',1366,1024]]){
    const context=await browser.newContext({viewport:{width,height},deviceScaleFactor:2,isMobile:true,hasTouch:true,userAgent:name==='iphone'?'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1':'Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'});
    const page=await context.newPage(),errors=[];page.on('pageerror',e=>errors.push(e.message));
    try{
-    await page.goto(base+'?day=14');await page.waitForSelector('#ridePanel',{state:'attached'});await page.locator('#bookingChecklistBtn').click();
-    for(const filter of ['all','pending','done','all']){
-     if(filter!=='all'||await page.locator('[data-booking-filter="done"]').getAttribute('aria-pressed')==='true')await page.locator(`[data-booking-filter="${filter}"]`).click();
-     const m=await page.evaluate(()=>{const dialog=document.querySelector('#bookingChecklistDialog'),body=dialog.querySelector('.booking-dialog-body'),first=body.querySelector('.booking-item, .booking-empty'),dr=dialog.getBoundingClientRect(),br=body.getBoundingClientRect(),fr=first?.getBoundingClientRect(),cs=getComputedStyle(body);return {filter:dialog.querySelector('[data-booking-filter][aria-pressed=true]')?.dataset.bookingFilter,count:dialog.querySelectorAll('[data-booking-item]').length,dialog:{top:dr.top,bottom:dr.bottom,height:dr.height},body:{top:br.top,bottom:br.bottom,height:br.height,client:body.clientHeight,scroll:body.scrollHeight,flex:cs.flex},first:fr&&{top:fr.top,bottom:fr.bottom,height:fr.height},text:body.innerText.slice(0,80)};});
+    await page.goto(base+'?day=14');await page.waitForFunction(()=>!!window.__routebook);await page.locator('#bookingChecklistBtn').click();
+    for(const [index,filter] of ['all','pending','done','pending','done','all'].entries()){
+     if(index){
+      await page.evaluate(()=>{const d=document.querySelector('#bookingChecklistDialog'),body=d.querySelector('.booking-dialog-body');body.scrollTop=body.scrollHeight;d.scrollTop=d.scrollHeight;});
+      await page.locator(`[data-booking-filter="${filter}"]`).click();
+     }
+     const m=await page.evaluate(()=>{const dialog=document.querySelector('#bookingChecklistDialog'),body=dialog.querySelector('.booking-dialog-body'),first=body.querySelector('.booking-item, .booking-empty'),dr=dialog.getBoundingClientRect(),br=body.getBoundingClientRect(),fr=first?.getBoundingClientRect(),cs=getComputedStyle(body),scroll=getComputedStyle(dialog).overflowY==='auto'?dialog:body,sr=scroll.getBoundingClientRect();return {filter:dialog.querySelector('[data-booking-filter][aria-pressed=true]')?.dataset.bookingFilter,count:dialog.querySelectorAll('[data-booking-item]').length,dialog:{top:dr.top,bottom:dr.bottom,height:dr.height},body:{top:br.top,bottom:br.bottom,height:br.height,client:body.clientHeight,scroll:body.scrollHeight,flex:cs.flex},scrollBox:{top:sr.top,bottom:sr.bottom,scrollTop:scroll.scrollTop},first:fr&&{top:fr.top,bottom:fr.bottom,height:fr.height},text:body.innerText.slice(0,80)};});
      console.log(name,filter,JSON.stringify(m));await page.screenshot({path:`qa-webkit-${name}-${filter}.png`});
-     assert(m.filter===filter,'wrong filter');assert(m.body.client>=80,'checklist body collapsed');assert(m.first&&m.first.top<m.body.bottom&&m.first.bottom>m.body.top,'first result not visible in scroll area');assert(m.dialog.top>=-1&&m.dialog.bottom<=height+1,'dialog exceeds viewport');
+     assert(m.filter===filter,'wrong filter');assert(m.body.client>=80,'checklist body collapsed');assert(m.first&&m.first.top<m.scrollBox.bottom&&m.first.bottom>m.scrollBox.top,'first result not visible in scroll area');assert(m.first.top<height&&m.first.bottom>0,'first result outside viewport');assert(m.dialog.top>=-1&&m.dialog.bottom<=height+1,'dialog exceeds viewport');if(index)assert(m.scrollBox.scrollTop<2,'filter did not return to the top');
+     if(filter==='pending'||filter==='all')assert(m.count>=24,'pending checklist entries missing');else assert(m.count===0&&m.text.includes('이 조건에 맞는 예약이 없어요'),'empty done state missing');
     }
-    await page.locator('[data-booking-complete="zutomayo"]').check();assert((await page.locator('#bookingChecklistCount').textContent()).includes('1 / 24'),'count did not update');
+    await page.locator('[data-booking-complete="zutomayo"]').check();await page.waitForFunction(()=>document.querySelector('#bookingChecklistCount').textContent.includes('1 / 24'));
     await page.locator('[data-booking-filter="pending"]').click();assert(await page.locator('[data-booking-item="zutomayo"]').count()===0,'completed item still shown in pending');
     await page.locator('[data-booking-filter="done"]').click();assert(await page.locator('[data-booking-item="zutomayo"]').count()===1,'completed item missing in done');
+    await page.reload();await page.waitForFunction(()=>!!window.__routebook);await page.locator('#bookingChecklistBtn').click();assert(await page.locator('[data-booking-complete="zutomayo"]').isChecked(),'completion was not restored after reload');
     assert(errors.length===0,'page errors: '+errors.join(', '));
    }catch(e){failures.push(`${name}: ${e.message}`);console.error('FAIL',name,e.message,'errors',errors);}
    await context.close();

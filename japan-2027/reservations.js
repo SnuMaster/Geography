@@ -102,7 +102,7 @@
   button.addEventListener('click',()=>{renderChecklist();RouteUI.showDialog(dialog);});
   document.getElementById('closeBookingChecklist').addEventListener('click',closeChecklist);
   dialog.addEventListener('click',event=>{
-   const filter=event.target.closest('[data-booking-filter]');if(filter){checklistFilter=filter.dataset.bookingFilter;renderChecklist();return;}
+   const filter=event.target.closest('[data-booking-filter]');if(filter){checklistFilter=filter.dataset.bookingFilter;renderChecklist();dialog.scrollTop=0;dialog.querySelector('.booking-dialog-body').scrollTop=0;return;}
    const jump=event.target.closest('[data-booking-jump]'),item=checklistItems.find(item=>item.key===jump?.dataset.bookingJump);if(!item)return;
    const context=checklistContext();closeChecklist();window.dispatchEvent(new CustomEvent('routebook:booking-jump',{detail:{day:item.day,variant:itemVariant(item,context),leg:item.leg,stop:item.stop,stopKey:item.stopKey}}));
   });
