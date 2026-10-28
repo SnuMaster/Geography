@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/46';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/47';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -250,6 +250,24 @@
    d.dispatchEvent(new w.KeyboardEvent('keydown',{key:'Escape',bubbles:true}));check(!dialog.open&&d.activeElement.id==='tripPlanBtn','닫기·포커스 복귀 실패');
   }
   return '22일 모든 선택 일정·시각 일치 · 설명 토글 · 날짜 바로가기 · 우지 대체안·야마자키 확정 시각 · 320/1280px';
+ });
+ await report(47,'기본 화면 중요 교통편·다음 열차 자동 교체·참고 날짜·만료 자료',async()=>{
+  frame.style.width='390px';frame.style.height='900px';frame.scrollIntoView({block:'start'});
+  let w=await load(1,{date:'2027-01-08T17:00:00+09:00'}),d=w.document,b=w.__routebook;click(w,'#tripPlanBtn');
+  check(d.querySelectorAll('[data-plan-travel="항공"]').length===3&&d.querySelectorAll('[data-plan-travel="선박"]').length===1,'항공·선박 계획편 누락');
+  check(d.querySelector('[data-plan-day="1"] [data-plan-travel]').textContent.includes('11:10')&&d.querySelector('[data-plan-day="1"] [data-plan-travel]').textContent.includes('13:20'),'항공 출발·도착 시각 누락');
+  const railIndex=b.state.routeData.days['1-main'].findIndex(l=>b.rail.keysFor(l).includes('jr-ueno-tokyo'));
+  let row=d.querySelector(`[data-plan-rail="1:main:${railIndex}"]`);row.scrollIntoView({block:'center'});await until(()=>row.querySelector('[data-plan-train-id]'));
+  const originalTimes=JSON.stringify(b.state.data.days[0].variants[0].stops.map(s=>s.time)),first=Number(row.querySelector('[data-plan-departure]').dataset.planDeparture);
+  qa.clock=first;await until(()=>Number(row.querySelector('[data-plan-departure]')?.dataset.planDeparture)>first);check(row.textContent.includes('현재 시각 반영'),'여행일 현재 기준 표시 누락');check(JSON.stringify(b.state.data.days[0].variants[0].stops.map(s=>s.time))===originalTimes,'열차 후보 변경이 계획 시각을 변경함');
+  const beforeHidden=Number(row.querySelector('[data-plan-departure]').dataset.planDeparture);qa.hidden=true;d.dispatchEvent(new w.Event('visibilitychange'));qa.clock=beforeHidden+60000;await sleep(1200);check(Number(row.querySelector('[data-plan-departure]').dataset.planDeparture)===beforeHidden,'숨긴 화면 계속 갱신');qa.hidden=false;d.dispatchEvent(new w.Event('visibilitychange'));await until(()=>Number(row.querySelector('[data-plan-departure]')?.dataset.planDeparture)>beforeHidden);
+  click(w,'#closeTripPlan');w=await load(1,{date:'2026-10-28T10:00:00+09:00'});d=w.document;b=w.__routebook;click(w,'#tripPlanBtn');row=d.querySelector(`[data-plan-rail="1:main:${railIndex}"]`);row.scrollIntoView({block:'center'});await until(()=>row.querySelector('[data-plan-departure]'));
+  const future=Number(row.querySelector('[data-plan-departure]').dataset.planDeparture);qa.clock+=3600000;await sleep(1200);check(Number(row.querySelector('[data-plan-departure]').dataset.planDeparture)===future&&row.textContent.includes('여행일 참고'),'미래 일정이 현재 날짜로 바뀜');
+  click(w,'#tripPlanNow');await until(()=>Number(row.querySelector('[data-plan-departure]')?.dataset.planDeparture)<future);check(row.textContent.includes('지금 출발 기준')&&Number(row.querySelector('[data-plan-departure]').dataset.planDeparture)>qa.clock,'지금 기준 전환 실패');click(w,'#tripPlanNow');
+  change(w,'#tripPlanDay','22');let fixed=d.querySelector('[data-plan-day="22"] [data-plan-fixed-service]');fixed.scrollIntoView({block:'center'});await until(()=>fixed.textContent.includes('13:47:30'));check(fixed.textContent.includes('12:44')&&fixed.textContent.includes('정차')&&!fixed.textContent.includes('도착'),'KTX 원본 정차 시각·초 단위 손실');
+  const invalid=[...d.querySelectorAll('[data-plan-rail]')].find(n=>{const l=b.state.routeData.days[`${n.dataset.planRailDay}-${n.dataset.planRailVariant}`][Number(n.dataset.planRailLeg)];return b.rail.keysFor(l).some(k=>!b.rail.validityFor(k,l.serviceDate).usable);});check(invalid,'만료 구간 검증 대상 없음');invalid.scrollIntoView({block:'center'});await until(()=>invalid.textContent.includes('시간표 갱신 필요'));check(!invalid.querySelector('[data-plan-train-id]'),'만료 시간표에 열차 생성');
+  check(d.querySelector('[data-plan-transport-clock]').textContent.includes('지연 미반영'),'시간표 기준 문구 누락');click(w,'#closeTripPlan');check(!qa.errors.length,'열차 읽기 창 오류 '+qa.errors.join(', '));
+  return '항공3·선박1·KTX330 · 출발 경계 자동 교체 · 화면 복귀 갱신 · 미래/현재 구분 · 원래 일정 유지 · 만료 자료 차단';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
