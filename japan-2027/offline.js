@@ -8,13 +8,12 @@
  function status(){
   const el=document.querySelector('#offlineStatus');if(!el)return;
   const offline=!navigator.onLine||stale.size>0;el.dataset.offline=String(offline);
-  let label=el.querySelector('[data-store-label]'),button=el.querySelector('[data-store-apply]');
-  if(!label){el.textContent='';label=document.createElement('span');label.dataset.storeLabel='';el.append(label);button=document.createElement('button');button.type='button';button.dataset.storeApply='';button.textContent='새 자료 적용';button.addEventListener('click',()=>{if(pendingSnapshot)window.dispatchEvent(new CustomEvent('routebook:apply-trip-update',{detail:pendingSnapshot}));});el.append(button);}
-  button.hidden=!pendingSnapshot;
-  label.textContent=(pendingSnapshot?'새 일정 자료 준비됨 · 현재 화면은 이전 자료':offline?'저장 자료 표시 · 오프라인/통신 불안정':storageAvailable?'현장 자료 · 이 브라우저에 저장':'온라인 자료 · 브라우저 저장 사용 불가')+(displayedAt?' · 표시 자료 확인 '+new Date(displayedAt).toLocaleString('ko-KR',{timeZone:'Asia/Tokyo'}):hasDisplayedData?' · 표시 자료 확인 시각 미확인':' · 일정 자료 확인 중')+' · 시간표는 예정 시각·실시간 지연 미반영';
+  let label=el.querySelector('[data-store-label]');
+  if(!label){el.textContent='';label=document.createElement('span');label.dataset.storeLabel='';el.append(label);}
+  label.textContent=(pendingSnapshot?'새 일정 대기 · 현재 작업 후 자동 적용':offline?'저장 자료 표시 · 오프라인/통신 불안정':storageAvailable?'현장 자료 · 이 브라우저에 저장':'온라인 자료 · 브라우저 저장 사용 불가')+(displayedAt?' · 표시 자료 확인 '+new Date(displayedAt).toLocaleString('ko-KR',{timeZone:'Asia/Tokyo'}):hasDisplayedData?' · 표시 자료 확인 시각 미확인':' · 일정 자료 확인 중')+' · 시간표는 예정 시각·실시간 지연 미반영';
  }
  function useSnapshot(value){hasDisplayedData=true;displayedAt=Number.isFinite(value?.updatedAt)?value.updatedAt:null;pendingSnapshot=null;stale.delete('snapshot');status();}
- function offerSnapshot(value){pendingSnapshot=value;stale.delete('snapshot');status();}
+ function offerSnapshot(value){pendingSnapshot=value;stale.delete('snapshot');status();window.dispatchEvent(new CustomEvent('routebook:trip-update-ready',{detail:value}));}
 
  async function fallbackCache(){
   if(!dbPromise)dbPromise=new Promise((resolve,reject)=>{const r=indexedDB.open(CACHE,1);r.onupgradeneeded=()=>r.result.createObjectStore('responses');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
@@ -45,3 +44,4 @@
  window.addEventListener('online',()=>{status();window.dispatchEvent(new Event('routebook:online'));});window.addEventListener('offline',status);document.addEventListener('DOMContentLoaded',register);
  window.TravelStore={markStale:()=>{stale.add('snapshot');status();},readJson,readCachedJson,cache,pinFiles,saveSnapshot,snapshot,checkedAt,useSnapshot,offerSnapshot,trimTimetables,status,VERSION};
 })();
+
