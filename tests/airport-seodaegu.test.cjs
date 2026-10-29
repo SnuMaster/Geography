@@ -9,11 +9,11 @@ const at=value=>Date.parse(value+'+09:00');
 test('airport access follows detailed mapped rail geometry, including the monorail coastal curve',()=>{
  const {routes}=load();
  for(const [day,index,min,max]of [['12-main',1,6500,8500],['12-main',2,16500,18000],['18-main',3,3000,3600]]){
-  const leg=routes.days[day][index],p=leg.parts[0];
+  const leg=routes.days[day][index],p=leg.parts.find(p=>['rail','metro'].includes(p.mode));
   assert.ok(p.coords.length>40,day);assert.ok(p.distanceM>min&&p.distanceM<max,day);
   for(let i=1;i<p.coords.length;i++)assert.ok(Location.distance(p.coords[i-1],p.coords[i])<600,day+' disconnected line');
  }
- const mono=routes.days['12-main'][2].parts[0];
+ const mono=routes.days['12-main'][2].parts.find(p=>p.mode==='rail');
  assert.ok(mono.coords.some(([lat,lng])=>lat>35.61&&lat<35.63&&lng<139.753),'monorail must pass the Tennozu coast rather than cut diagonally to the airport');
 });
 
@@ -23,7 +23,7 @@ test('January 29 plan, outgoing clock, fare and destination all agree on Seodaeg
  assert.equal(leg.departureAt,at('2027-01-29T12:20:00'));assert.equal(leg.fare.min,16300);assert.equal(leg.fare.max,16300);
  assert.equal(stops.length,7);assert.ok(day.title.includes('서대구'));assert.ok(day.variants[0].schedule.at(-1)[1].includes('서대구'));
  assert.ok(Location.distance([stops.at(-1).lat,stops.at(-1).lng],[35.8813666,128.5417368])<10);
- assert.ok(Location.distance(leg.parts[0].coords.at(-1),[35.8813221,128.5402289])<10);
+ assert.ok(Location.distance(leg.parts.find(p=>p.mode==='rail').coords.at(-1),[35.8813221,128.5402289])<10);
 });
 
 test('330 preserves official seconds and distinguishes a source stop event from an invented arrival',()=>{
