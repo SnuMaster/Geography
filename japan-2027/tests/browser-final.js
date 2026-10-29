@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/51';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/52';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -322,6 +322,16 @@
   w.RouteLocation.start({preserveDay:true});gps(35.72,139.78,qa.clock);check(w.RouteLocation.isActive(),'GPS 시작 실패');qa.clock+=60000;w.dispatchEvent(new w.Event('routebook:online'));await until(()=>calls===1&&d.querySelector('#offlineStatus').textContent.includes('대기'));await sleep(1100);check(!b.state.data.days.find(day=>day.n===12).title.includes('자동 갱신'),'GPS 중 경로 교체');
   const input=d.querySelector('#daySearch');input.focus();w.RouteLocation.stop();title='자동 갱신 최종';qa.clock+=60000;d.dispatchEvent(new w.Event('visibilitychange'));await until(()=>calls===2);await sleep(1100);check(d.activeElement===input&&!b.state.data.days.find(day=>day.n===12).title.includes('자동 갱신'),'입력 중 초점 또는 자료 변경');
   input.blur();await until(()=>b.state.data.days.find(day=>day.n===12).title==='자동 갱신 최종');check(b.state.day===12,'자동 갱신 뒤 날짜 변경');check(!qa.errors.length,'자동 갱신 오류 '+qa.errors.join(', '));return 'GPS·검색 입력 보호 · 복귀 시 다시 확인 · 최신 묶음만 반영';
+ });
+ await report(52,'나리타 실내 접근·1/19 호텔/버스 A1/공항 환승·전체 239구간 연결',async()=>{
+  for(const width of [390,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(12),b=w.__routebook,d=w.document,legs=b.state.routeData.days['12-main'];
+   check(legs[0].parts.map(p=>p.mode).join(',')==='walk,metro,transfer'&&legs[0].walkDistanceM>500,'호텔 접근 도보 누락');check(legs[7].parts.map(p=>p.mode).join(',')==='walk,rail,walk'&&b.getStops()[7].name.includes('A1 하차'),'A1 하차→호텔 도보 누락');
+   for(const i of [1,3,8]){b.selectLeg(i);await until(()=>d.querySelector('[data-ride-next]'));const c=d.querySelector('.station-departures');check(c._rideTrains[0].departureAt>qa.clock,'현재 열차 연결 유실 '+i);check(c.scrollWidth<=c.clientWidth+1,'환승 열차 카드 넘침 '+i);close(w);}
+   b.setDay(1);check(b.getLeg(4).parts[0].mode==='transfer'&&b.getLeg(4).walkDistanceM<250,'나리타 외부 우회 잔류');let count=0;
+   for(const day of b.state.data.days)for(const v of day.variants){const ls=b.state.routeData.days[day.n+'-'+v.id];for(let i=0;i<ls.length;i++){count++;const ps=ls[i].parts,dist=w.RouteMatch.distance,id=day.n+'-'+v.id+':'+i,limit=p=>p.mode==='flight'&&['screen-reference','recorded-reference'].includes(p.flightTrack?.status)?10000:70;check(dist([v.stops[i].lat,v.stops[i].lng],ps[0].coords[0])<=limit(ps[0]),id+' 출발 연결 누락');check(dist(ps.at(-1).coords.at(-1),[v.stops[i+1].lat,v.stops[i+1].lng])<=limit(ps.at(-1)),id+' 도착 연결 누락');for(let j=1;j<ps.length;j++)check(dist(ps[j-1].coords.at(-1),ps[j].coords[0])<=70,id+' 환승 연결 누락');}}
+   check(count===239,'전체 대체안 검사 누락');b.setDay(22);check(d.querySelector('[data-leg="6"] img[src*="operators/ktx.svg"]'),'역내 도보 추가 뒤 KTX 로고 누락');check(!qa.errors.length,'연결 UI 오류 '+qa.errors.join(', '));
+  }return '390/1280px · 교통 카드와 현재 열차 · 대체안 포함239구간 연결 검사';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
