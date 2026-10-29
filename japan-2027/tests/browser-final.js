@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/48';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/49';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -283,6 +283,18 @@
   qa.clock=Date.parse('2026-10-29T12:30:00+09:00');let count=0;
   for(const day of b.state.data.days){b.setDay(day.n,{history:'none'});const legs=b.state.routeData.days[`${day.n}-${b.state.variant}`],i=legs.findIndex(l=>b.rail.keysFor(l).length);if(i<0)continue;b.selectLeg(i+1);await until(()=>{const s=d.querySelector('.station-departures');return s?._rideTrains?.length||s?.querySelector('.departure-error');});const card=d.querySelector('.station-departures');check(card.dataset.queryMode==='current'&&card.dataset.serviceDate==='2026-10-29','여행일에 고정된 카드 '+day.n);if(card._rideTrains.length)check(card._rideTrains[0].departureAt>qa.clock&&w.DepartureCore.japanDate(card._rideTrains[0].departureAt)==='2026-10-29','현재 날짜 다음 편 오류 '+day.n);const reverse=card.querySelector('[data-departure-direction]');if(reverse){reverse.click();await until(()=>card._rideTrains?.length||card.querySelector('.departure-error'));check(card._rideTrains[0]?.departureAt>qa.clock,'반대방향 현재 편 없음 '+day.n);}close(w);count++;}
   check(count>=20,'여행일 검증 누락');check(!qa.errors.length,'JS 오류 '+qa.errors.join(', '));return '제보한 주오선 00~23시 · 자정/03시 · 막차 뒤 첫차 · '+count+'개 날짜 현재 편·역방향';
+ });
+ await report(49,'1/25 호텔·철도·A1 공항버스 연결과 현재 열차',async()=>{
+  for(const width of [390,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(18),d=w.document,b=w.__routebook,l=b.getLeg(1),stops=b.getStops();
+   check(l.parts.map(p=>p.mode).join(',')==='walk,rail,walk','호텔 전체를 철도로 표시');check(l.parts[1].coords.length>=7&&l.parts[1].from==='動物園前'&&l.parts[1].to==='天王寺','실제 한 정거장 철도 누락');
+   for(let i=1;i<l.parts.length;i++)check(w.RouteMatch.distance(l.parts[i-1].coords.at(-1),l.parts[i].coords[0])<1,'이동 구간 틈');check(w.RouteMatch.distance(l.parts.at(-1).coords.at(-1),[stops[1].lat,stops[1].lng])<1,'A1 연결 오류');
+   check(stops[1].name.includes('A1')&&stops[1].address.includes('14번')||stops[1].address.includes('14番'),'A1·14번 출구 누락');
+   b.selectLeg(1);await until(()=>d.querySelector('[data-ride-next]'));const card=d.querySelector('.station-departures');check(card.dataset.departureProfile==='kansai-metro-dobutsuenmae-tennoji','역명 아닌 호텔 별칭 시간표');check(card.dataset.queryMode==='current'&&card._rideTrains[0].departureAt>qa.clock,'현재 다음 열차 유실');click(w,'.compact-route-details summary');check(d.querySelector('.compact-route-details').textContent.includes('A1'),'승차장 도보 안내 누락');check(d.documentElement.scrollWidth<=width+1,'가로 넘침');close(w);
+   const bus=b.getLeg(2);check(bus.parts.map(p=>p.mode).join(',')==='bus,walk'&&bus.parts[0].durationMinutes===30,'버스 소요시간·ANA 도보 구분 오류');check(bus.fare.min===730&&l.fare.min===190,'운임 변경');check(b.getLeg(3).travel.depart==='1/25 10:45'&&b.getLeg(3).travel.arrive==='1/25 12:00','항공편 변경');
+   b.selectStop(1);check(d.querySelector('.leaflet-popup-content').textContent.includes('14번 출구')&&d.querySelector('.leaflet-popup-content').textContent.includes('A1'),'정류장 상세 안내 누락');close(w);check(!qa.errors.length,'UI 오류 '+qa.errors.join(', '));
+  }
+  return '390/1280px · 도보-미도스지선-14번출구 A1 · 버스30분·ANA 도보 · 현재 열차·기존 운임·항공편 유지';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
