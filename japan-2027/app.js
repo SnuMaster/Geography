@@ -308,8 +308,8 @@ function navigateScreen(target,options={}){
  if(options.snapshot)state.night=!!options.snapshot.night;state.passEnabled=!!state.pass.enabled;
  if(options.snapshot){state.search=options.snapshot.search||'';state.filter=options.snapshot.filter||'all';$('#daySearch').value=state.search;}
  $('#itineraryScroll').scrollTop=0;
- if(state.view==='overview')renderOverview();else{renderDays();renderHeader();renderStops();renderMap();}renderPlayback();
- if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];map.setView([stop.lat,stop.lng],15,{animate:false});if(options.restorePopup!==false&&!options.snapshot?.itineraryOpen)markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
+ if(state.view==='overview')renderOverview({fit:!options.preserveMapView});else{renderDays();renderHeader();renderStops();renderMap(!options.preserveMapView);}renderPlayback();
+ if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0){selectStop(index,false,false,{history:false});const stop=stops[index];if(!options.preserveMapView)map.setView([stop.lat,stop.lng],15,{animate:false});if(options.restorePopup!==false&&!options.snapshot?.itineraryOpen)markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
  if($('#tripPlanDialog')?.open)renderTripPlan({preserveScroll:true});
  if(options.history!=='none')updateUrl(options.history||'push');
  const snapshot=options.snapshot;
@@ -569,10 +569,10 @@ function applyTripUpdate(snapshot){
  if(flightRouteReferences)applyFlightRouteReferences(state.routeData,flightRouteReferences);
  state.incompleteData=false;$('#overviewView').disabled=false;preparePersonalTrip();
  state.selectedVariantByDay=JourneyState.preferences(state.data.days,state.selectedVariantByDay);
- overviewFocus=overviewDay;navigateScreen(screen,{history:'replace',snapshot:screen,restorePopup:false});
+ overviewFocus=overviewDay;navigateScreen(screen,{history:'replace',snapshot:screen,restorePopup:false,preserveMapView:true});
  routeAll=all;if(leg!==null&&focus?.key===focusedContext()?.key)setFocusedLeg(leg);else applyRouteFocus();
  const details=[...document.querySelectorAll('#dayHeader details,#stopList details,#routeDetails details')];for(const index of expanded)if(details[index])details[index].open=true;
- const generation=screenGeneration;requestAnimationFrame(()=>{if(generation!==screenGeneration)return;map.setView(centre,zoom,{animate:false});$('#itineraryScroll').scrollTop=screen.scroll.itinerary;$('#dayList').scrollTop=screen.scroll.days;window.scrollTo({left:screen.scroll.x,top:screen.scroll.y,behavior:'instant'});if(hadFocus&&activeId)document.getElementById(activeId)?.focus({preventScroll:true});updateUrl('replace');});
+ map.setView(centre,zoom,{animate:false});$('#itineraryScroll').scrollTop=screen.scroll.itinerary;$('#dayList').scrollTop=screen.scroll.days;window.scrollTo({left:screen.scroll.x,top:screen.scroll.y,behavior:'instant'});if(hadFocus&&activeId)document.getElementById(activeId)?.focus({preventScroll:true});updateUrl('replace');
  TravelStore.useSnapshot(snapshot);announce('새 일정 자료를 자동 반영했어요.');
 }
 async function main(){
