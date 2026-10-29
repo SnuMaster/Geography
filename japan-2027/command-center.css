@@ -42,3 +42,5 @@ body.command-center .topbar{height:66px;padding:0 18px;gap:18px;background:#1114
 .command-center #detailSheet .popup-links a{background:#293b50;color:#ffd0a8;border:1px solid #50617a;min-height:44px;padding:10px 12px;border-radius:7px}
 .command-center #detailSheet .rail-symbol,.command-center #detailSheet .departure-station-code{color:#17212d}
 .command-center #detailSheet .popup-links a{color:#ffd0a8!important}
+.command-center .topbar>#ccSidebarToggle{flex:none;min-width:54px;min-height:44px;padding:8px 10px;background:#ff8b42;color:#111418;font-size:11px;font-weight:600;border:1px solid #ff8b42}
+@media(max-width:740px){body.command-center .topbar{grid-template-columns:minmax(0,1fr) 44px auto;gap:0 8px}.command-center .topbar>#ccSidebarToggle{grid-column:2;grid-row:1;min-width:44px;width:44px;white-space:nowrap;padding:4px;font-size:10px}.command-center .trip-summary{grid-column:3;grid-row:1;min-width:125px}.command-center .header-actions{grid-row:2;grid-column:1/-1}}
