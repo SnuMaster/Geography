@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/49';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/50';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -295,6 +295,25 @@
    b.selectStop(1);check(d.querySelector('.leaflet-popup-content').textContent.includes('14번 출구')&&d.querySelector('.leaflet-popup-content').textContent.includes('A1'),'정류장 상세 안내 누락');close(w);check(!qa.errors.length,'UI 오류 '+qa.errors.join(', '));
   }
   return '390/1280px · 도보-미도스지선-14번출구 A1 · 버스30분·ANA 도보 · 현재 열차·기존 운임·항공편 유지';
+ });
+ await report(50,'막차 뒤 첫차 표시·자정 운행·첫차 후 정상 복귀·읽기 창',async()=>{
+  for(const width of [320,1280]){
+   frame.style.width=width+'px';frame.style.height='900px';const w=await load(18,{date:'2026-10-29T00:05:00+09:00'}),d=w.document,b=w.__routebook,k='kansai-metro-dobutsuenmae-tennoji',file=w.RailDepartureProfiles.profiles[k].file,original=w.fetch.bind(w);
+   const train=(id,departure,destinationArrival)=>({id,departure,destinationArrival,type:'Local',destination:'덴노지',validThrough:'2026-10-31'});
+   const table={schemaVersion:2,profiles:{[k]:{Weekday:[train('first-w','05:00','05:02'),train('day-w','12:00','12:02'),train('last-w','24:30','24:32')],SaturdayHoliday:[train('first-h','05:30','05:32'),train('day-h','12:30','12:32'),train('last-h','24:10','24:12')]}}};
+   w.fetch=(url,options)=>String(url).startsWith(file)?Promise.resolve(new w.Response(JSON.stringify(table),{status:200,headers:{'Content-Type':'application/json'}})):original(url,options);
+   b.selectLeg(1);await until(()=>d.querySelector('.station-departures')?._rideTrains?.[0]?.id==='last-w');const card=d.querySelector('.station-departures'),label=()=>card.querySelector('.departure-heading strong').textContent;
+   check(label()==='다음 열차'&&card.dataset.serviceEnded==='false','자정 운행 중인데 운행 종료 표시');
+   qa.clock=Date.parse('2026-10-29T00:30:00+09:00');await until(()=>card.dataset.serviceEnded==='true');check(label()==='운행 종료 · 첫차'&&card.querySelector('.departure-next-time strong').textContent==='05:00','막차 뒤 첫차 시각 표시 실패');check(card.querySelector('[data-departure-countdown]').textContent.startsWith('첫차까지 '),'첫차 카운트다운 누락');
+   qa.clock=Date.parse('2026-10-29T03:01:00+09:00');await until(()=>card.dataset.serviceDate==='2026-10-29');check(card.dataset.serviceEnded==='true','03시 첫차 안내 유실');
+   qa.clock=Date.parse('2026-10-29T05:00:00+09:00');await until(()=>card._rideTrains[0]?.id==='day-w');check(label()==='다음 열차'&&card.dataset.serviceEnded==='false','첫차 뒤 운행 종료 잔류');
+   qa.clock=Date.parse('2026-10-29T23:59:00+09:00');await until(()=>card._rideTrains[0]?.id==='last-w');check(label()==='다음 열차'&&card.querySelector('.departure-next-time strong').textContent==='내일 00:30','다음 날짜 심야열차를 첫차로 오인');
+   qa.clock=Date.parse('2026-10-31T02:00:00+09:00');await until(()=>card._rideTrains[0]?.id==='first-h');check(card.dataset.serviceEnded==='true'&&card.querySelector('.departure-next-time strong').textContent==='05:30','토요일 첫차 오류');check(card.scrollWidth<=card.clientWidth+1&&d.documentElement.scrollWidth<=width+1,'첫차 문구 가로 넘침');close(w);
+   click(w,'#tripPlanBtn');change(w,'#tripPlanDay','18');let row=d.querySelector('[data-plan-rail="18:main:0"]');row.scrollIntoView({block:'center'});await until(()=>row.querySelector('[data-plan-first-train="true"]'));check(row.textContent.includes('운행 종료')&&row.textContent.includes('첫차 05:30')&&row.textContent.includes('첫차까지'),'읽기 창 첫차 안내 누락');
+   qa.clock=Date.parse('2026-10-31T05:30:00+09:00');await until(()=>row.querySelector('[data-plan-first-train="false"]'));check(row.textContent.includes('12:30 출발')&&row.textContent.includes('지금 기준')&&!row.textContent.includes('운행 종료'),'읽기 창 첫차 뒤 복귀 실패');click(w,'#closeTripPlan');
+   b.selectLeg(1);await until(()=>d.querySelector('[data-ride-next]'));qa.clock=Date.parse('2026-11-21T04:00:00+09:00');await until(()=>d.querySelector('.departure-error'));check(d.querySelector('.departure-heading strong').textContent==='다음 열차'&&!d.querySelector('[data-ride-next]'),'시각 없는 자료에 운행 종료·첫차 오표시');close(w);check(!qa.errors.length,'첫차 UI 오류 '+qa.errors.join(', '));
+  }
+  return '320/1280px · 00:xx 운행/막차/03시/토요일·첫차 출발 경계 · 계획 읽기 창 · 자료 없음 구분';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
