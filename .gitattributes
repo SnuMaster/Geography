@@ -1,0 +1,8 @@
+# Offline integrity hashes are calculated over the exact bytes served by Pages.
+japan-2027/** text=auto eol=lf
+japan-2027/vendor/leaflet.css -text
+*.gz -text
+*.woff2 -text
+*.png -text
+*.webp -text
+*.ico -text
