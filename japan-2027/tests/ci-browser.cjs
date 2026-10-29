@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   const profiles=['kansai-jr-osaka-yamazaki','day12-metro-iriya-ueno','korail-busan-seodaegu'];
   const allAvailable=await preparedPage.evaluate(async keys=>{for(const key of keys)if(!await RailDepartures.getSchedule(key))return false;return true;},profiles);
   if(!allAvailable)failures.push({suite:'prepared-offline-timetables',message:'a previously unopened timetable is missing'});
-  await preparedPage.locator('[data-day="22"]').click();if(!(await preparedPage.locator('#stopList').textContent()).includes('서대구'))failures.push({suite:'prepared-offline-day22',message:'all-trip navigation failed offline'});
+  await preparedPage.locator('#ccDaySelect').selectOption('22');if(!(await preparedPage.locator('#stopList').textContent()).includes('서대구'))failures.push({suite:'prepared-offline-day22',message:'all-trip navigation failed offline'});
   const count=await preparedPage.evaluate(async()=>{const c=await TravelStore.cache();return(await c.keys()).filter(r=>r.url.includes('/timetables/')).length;});
   if(count<102)failures.push({suite:'prepared-offline-pinning',count});
   if(!await preparedPage.evaluate(()=>OfflinePack.verifyStored()))failures.push({suite:'prepared-offline-integrity',message:'ready package was incomplete after reload'});
