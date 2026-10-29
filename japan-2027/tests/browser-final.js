@@ -9,7 +9,7 @@
  const key='jr-ueno-tokyo',hibiya='tokyometro-hibiya-iriya-akihabara';
  const pick=async(w,k=key,date='2027-01-08')=>{await w.RideTracker.open(k,date);await until(()=>w.document.querySelector('[data-ride-board]'));click(w,'[data-ride-board]');await until(()=>w.document.querySelector('#ridePosition'));};
  const gps=(lat,lng,timestamp,accuracy=10)=>qa.gpsReceiver?.({timestamp,coords:{latitude:lat,longitude:lng,accuracy,speed:0,heading:null}});
- $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/50';
+ $('#run').onclick=async()=>{if($('#run').disabled)return;$('#run').disabled=true;$('#results').replaceChildren();total=failed=0;$('#status').textContent='검증 시작 · 0/51';
  await report(1,'대구 세계 지도',async()=>{const w=await load(1);w.__routebook.map.setView([35.8941,128.6589],16,{animate:false});const tile=w.document.querySelector('.leaflet-tile');await until(()=>w.document.querySelector('.leaflet-tile[src*=openstreetmap]'));check(w.__routebook.map.getZoom()===16,'확대 실패');return '대구16배 확대 · 한국을 지원하는 OSM URL 사용 (공급자 응답은 네트워크 상태에 따름)';});
  await report(2,'72시간권 실제 적용 경계',async()=>{const w=await load(2),b=w.__routebook,d=w.document;d.querySelector('.day-tools').open=true;change(w,'#passToggle',true);/* checkbox handled explicitly */d.querySelector('#passToggle').checked=true;d.querySelector('#passToggle').dispatchEvent(new w.Event('change',{bubbles:true}));change(w,'#passStart','2027-01-09T09:00');change(w,'#passPurchased',true);const f={min:200,max:200,currency:'JPY',passEligible:true},l={parts:[{lineId:'TokyoMetro.Hibiya',mode:'metro'}]},start=Date.parse('2027-01-09T09:00:00+09:00');check(w.FareCore.quote(f,{...l,departureAt:start},{pass:b.state.pass}).amount===0,'시작 이후 할인 안 됨');check(!w.FareCore.quote(f,{...l,departureAt:start+72*3600000},{pass:b.state.pass}).passApplied,'만료 뒤 할인');return '09:00포함 / 72시간 만료 시각 제외';});
  await report(3,'패스 날짜 이동·새로고침 유지',async()=>{let w=frame.contentWindow,b=w.__routebook;const saved=b.state.pass.startAt;b.setDay(12);b.setDay(2);check(b.state.pass.startAt===saved&&b.state.passEnabled,'날짜 이동 유실');w=await load(2,{reset:false});check(w.__routebook.state.pass.startAt===saved&&w.__routebook.state.passEnabled,'새로고침 유실');});
@@ -50,9 +50,9 @@
   check(d.querySelector('.departure-clock').textContent.includes('지금 10:00:00'),'지금 기준 누락');
   check(d.querySelector('[data-departure-countdown]'),'현재 편 카운트다운 누락');close(w);return '미래 1/8 일정의 환승 구간도 실제 10/26 10시 이후 첫 출발편';
  });
- await report(34,'새 자료 적용 전 표시 시각 유지·일부 실패 시 혼합 차단·선택 상태 보존',async()=>{
-  const w=await load(14),b=w.__routebook,d=w.document;b.setVariant('no-yamazaki');await pick(w);
-  click(w,'[data-ride-close]');const ride=qa.storage.get('routebook-boarded-train-v1'),previous=d.querySelector('#offlineStatus').textContent,original=w.fetch.bind(w);
+ await report(34,'완전한 새 자료 자동 반영·읽는 중 보류·지도/선택/예약/탑승 기록 보존',async()=>{
+  frame.style.width='1280px';frame.style.height='900px';const w=await load(14),b=w.__routebook,d=w.document;b.selectStop(1);change(w,'.leaflet-popup-content [data-reservation-status=yamazaki]','신청');close(w);b.setVariant('no-yamazaki');await pick(w);
+  click(w,'[data-ride-close]');const ride=qa.storage.get('routebook-boarded-train-v1'),booking=qa.storage.get('routebook-reservations-v1'),original=w.fetch.bind(w);
   let blocked=true;
   w.fetch=async(url,options)=>{
    if(blocked&&String(url).startsWith('tokyo-data.json'))throw Error('partial refresh fixture');
@@ -62,14 +62,15 @@
   };
   qa.clock+=60000;w.dispatchEvent(new w.Event('routebook:online'));
   await until(()=>d.querySelector('#offlineStatus').dataset.offline==='true');
-  check(d.querySelector('[data-store-apply]').hidden,'일부 실패 자료 적용 노출');check(!d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'실패한 묶음이 화면에 반영됨');
-  blocked=false;w.dispatchEvent(new w.Event('routebook:online'));await until(()=>!d.querySelector('[data-store-apply]').hidden);
-  check(d.querySelector('#offlineStatus').textContent.includes('현재 화면은 이전 자료'),'새 자료와 표시 자료 혼동');
-  check(!d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'사용자 적용 전에 일정 덮어쓰기');
-  click(w,'[data-store-apply]');check(b.state.day===14&&b.state.variant==='no-yamazaki','날짜·대체안 유실');
-  check(d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'새 일정 적용 실패');check(qa.storage.get('routebook-boarded-train-v1')===ride,'탑승 기록 유실');
-  check(d.querySelector('[data-store-apply]').hidden,'적용 버튼 잔류');check(!d.querySelector('#offlineStatus').textContent.includes('이전 자료'),'표시 자료 시각 미갱신');
-  return '실패한 파일은 합치지 않음 · 적용 버튼으로 새 자료 반영 · 날짜·우지안·탑승 기록 보존';
+  check(!d.querySelector('[data-store-apply]'),'수동 적용 버튼 잔류');check(!d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'일부 실패한 묶음이 화면에 반영됨');
+  click(w,'#tripPlanBtn');const body=d.querySelector('#tripPlanBody');body.scrollTop=300;const scroll=body.scrollTop;
+  blocked=false;w.dispatchEvent(new w.Event('routebook:online'));await until(()=>d.querySelector('#offlineStatus').textContent.includes('자동 적용'));
+  check(d.querySelector('#tripPlanDialog').open&&body.scrollTop===scroll,'읽던 창이나 스크롤 변경');check(!d.querySelector('#dayHeader').textContent.includes('새 자료 우지'),'열린 읽기 창을 강제 교체');
+  click(w,'#closeTripPlan');w.ItineraryDrawer.open({focus:false});b.map.setView([34.71,135.53],14,{animate:false});d.querySelector('#itineraryScroll').scrollTop=200;const before=d.querySelector('#itineraryScroll').scrollTop,focus=d.querySelector('#routeFocusPanel').dataset.focusedLeg;
+  await until(()=>d.querySelector('#dayHeader').textContent.includes('새 자료 우지'));await sleep(100);
+  check(b.state.day===14&&b.state.variant==='no-yamazaki','날짜·대체안 유실');check(Math.abs(b.map.getCenter().lat-34.71)<.00001&&b.map.getZoom()===14,'지도 위치·확대 유실');check(Math.abs(d.querySelector('#itineraryScroll').scrollTop-before)<3,'일정 스크롤 유실');check(d.querySelector('#routeFocusPanel').dataset.focusedLeg===focus,'선택 이동 구간 유실');
+  check(qa.storage.get('routebook-boarded-train-v1')===ride,'탑승 기록 유실');check(qa.storage.get('routebook-reservations-v1')===booking,'예약 기록 유실');check(!d.querySelector('[data-store-apply]'),'적용 버튼 잔류');check(!d.querySelector('#offlineStatus').textContent.includes('대기'),'적용 뒤 대기 상태 잔류');check(!qa.errors.length,'자동 반영 오류 '+qa.errors.join(', '));
+  return '일부 실패는 보류 · 읽기 창 종료 뒤 자동 반영 · 날짜/우지안/지도/스크롤/탑승 기록 유지';
  });
  await report(35,'모바일·데스크톱 예약 시각 즉시 반영·팝업 유지·충돌 경고·초기화',async()=>{
   for(const width of [320,1280]){
@@ -102,7 +103,7 @@
  await report(37,'공항 이동선 상세 좌표·거리·팝업 연결',async()=>{
   frame.style.width='1280px';frame.style.height='900px';const w=await load(12),b=w.__routebook;
   for(const [day,i,min,max]of [[12,2,6500,8500],[12,3,16500,18000],[18,4,3000,3600]]){
-   b.setDay(day);const leg=b.getLeg(i);check(leg.parts[0].coords.length>40,'직선 경로 잔류');check(leg.distanceM>min&&leg.distanceM<max,'선로 거리 오류');
+   b.setDay(day);const leg=b.getLeg(i);check(leg.parts.find(p=>['rail','metro'].includes(p.mode)).coords.length>40,'직선 경로 잔류');check(leg.distanceM>min&&leg.distanceM<max,'선로 거리 오류');
    b.selectLeg(i);check(w.document.querySelector('.station-departures'),'시간표 연결 유실');check(w.document.querySelector('.geometry-note').textContent.includes('N02'),'철도 선형 출처 미표시');close(w);
   }
   return 'JR·모노레일·후쿠오카 공항선 원본 좌표와 기존 시간표 연결 유지';
@@ -314,6 +315,13 @@
    b.selectLeg(1);await until(()=>d.querySelector('[data-ride-next]'));qa.clock=Date.parse('2026-11-21T04:00:00+09:00');await until(()=>d.querySelector('.departure-error'));check(d.querySelector('.departure-heading strong').textContent==='다음 열차'&&!d.querySelector('[data-ride-next]'),'시각 없는 자료에 운행 종료·첫차 오표시');close(w);check(!qa.errors.length,'첫차 UI 오류 '+qa.errors.join(', '));
   }
   return '320/1280px · 00:xx 운행/막차/03시/토요일·첫차 출발 경계 · 계획 읽기 창 · 자료 없음 구분';
+ });
+ await report(51,'GPS·입력 중 새 자료 보류·최신 묶음만 자동 반영·앱 복귀 확인',async()=>{
+  const w=await load(12),b=w.__routebook,d=w.document,original=w.fetch.bind(w);let title='자동 갱신 1차',calls=0;
+  w.fetch=async(url,options)=>{if(String(url).startsWith('west-data.json')){calls++;const response=await original(url,options),data=await response.json();data.days.find(day=>day.n===12).title=title;return new w.Response(JSON.stringify(data),{headers:{'Content-Type':'application/json'}});}return original(url,options);};
+  w.RouteLocation.start({preserveDay:true});gps(35.72,139.78,qa.clock);check(w.RouteLocation.isActive(),'GPS 시작 실패');qa.clock+=60000;w.dispatchEvent(new w.Event('routebook:online'));await until(()=>calls===1&&d.querySelector('#offlineStatus').textContent.includes('대기'));await sleep(1100);check(!b.state.data.days.find(day=>day.n===12).title.includes('자동 갱신'),'GPS 중 경로 교체');
+  const input=d.querySelector('#daySearch');input.focus();w.RouteLocation.stop();title='자동 갱신 최종';qa.clock+=60000;d.dispatchEvent(new w.Event('visibilitychange'));await until(()=>calls===2);await sleep(1100);check(d.activeElement===input&&!b.state.data.days.find(day=>day.n===12).title.includes('자동 갱신'),'입력 중 초점 또는 자료 변경');
+  input.blur();await until(()=>b.state.data.days.find(day=>day.n===12).title==='자동 갱신 최종');check(b.state.day===12,'자동 갱신 뒤 날짜 변경');check(!qa.errors.length,'자동 갱신 오류 '+qa.errors.join(', '));return 'GPS·검색 입력 보호 · 복귀 시 다시 확인 · 최신 묶음만 반영';
  });
  $('#status').textContent=`완료 · ${total-failed}/${total} 통과 · 실패 ${failed}`;$('#run').disabled=false;
  };
