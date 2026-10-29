@@ -1,6 +1,8 @@
+> 실제 연결 상태와 로그인 방법은 [DEPLOYMENT.md](DEPLOYMENT.md)를 먼저 확인하세요. 아래는 설정 원리와 재배포 안내입니다.
+
 # japan-2027 개인 AI 백엔드 설정
 
-이 폴더는 기존 GitHub Pages 여행 지도를 확장하는 Cloudflare Worker입니다. 프런트엔드 `japan-2027/assistant-config.js`는 **기본 비활성화**입니다. 인증·실제 API·모바일 검증 후 활성화하세요. main과 운영 사이트는 이 개발 작업에서 배포하지 않습니다.
+이 폴더는 기존 GitHub Pages 여행 지도를 확장하는 Cloudflare Worker입니다. 프런트엔드 `japan-2027/assistant-config.js`는 **로컬·CI 및 지정 외 도메인에서 비활성화**입니다. 인증·실제 API·모바일 검증 후 활성화하세요. main과 운영 사이트는 이 개발 작업에서 배포하지 않습니다.
 
 ## 구성
 
@@ -70,7 +72,7 @@ node --test tests/*.test.cjs
 node scripts/japan-qa.cjs
 ```
 
-오프라인 패키지 revision을 바꿀 때 `sw.js`, `offline-pack.js`, 두 빌더와 테스트 fixture를 함께 맞춥니다. 이번 revision은 `20261029-assistant-1`입니다. `.gitattributes`는 Windows와 Pages 사이의 줄바꿈 차이로 무결성 해시가 달라지는 문제를 방지합니다. Leaflet vendor CSS의 원본 CRLF는 그대로 보존합니다.
+오프라인 패키지 revision을 바꿀 때 `sw.js`, `offline-pack.js`, 두 빌더와 테스트 fixture를 함께 맞춥니다. 이번 revision은 `20261029-assistant-2`입니다. `.gitattributes`는 Windows와 Pages 사이의 줄바꿈 차이로 무결성 해시가 달라지는 문제를 방지합니다. Leaflet vendor CSS의 원본 CRLF는 그대로 보존합니다.
 
 ## 5. 외부 서비스와 추가 비용
 
