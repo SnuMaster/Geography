@@ -115,6 +115,7 @@
     for (let offset = -1; offset <= lookAhead; offset++) {
       const start = today + offset * DAY;
       const serviceDate = japanDate(start);
+      if (options.onlyServiceDate && serviceDate !== options.onlyServiceDate) continue;
       if (!validity(options,serviceDate).usable) continue;
       const serviceWeekday = new Date(start + JST).getUTCDay();
       const calendar = scheduleCalendar(schedules, serviceDate, options);
@@ -178,5 +179,19 @@
     return results.sort((a, b) => a.departureAt - b.departureAt || String(a.id || '').localeCompare(String(b.id || ''))).slice(0, limit);
   }
 
-  return Object.freeze({validity,timeLabel,renderSignature, parseTime, japanDate, calendarFor, formatTime, formatCountdown, nextTrains });
+  function firstTrainForDate(schedules, serviceDate, options = {}) {
+    const start = dateStart(serviceDate);
+    if (start === null) return null;
+    const boundary = Number.isInteger(options.serviceDayHour) && options.serviceDayHour >= 0 && options.serviceDayHour <= 6 ? options.serviceDayHour : 3;
+    return nextTrains(schedules, start + boundary * 60 * MINUTE - 1,
+      {...options, onlyServiceDate:serviceDate, lookAheadDays:1, limit:1})[0] || null;
+  }
+  function isFirstTrain(first, train, now) {
+    if (!first || !train || !Number.isFinite(now) || !Number.isFinite(train.departureAt) || train.departureAt <= now) return false;
+    // Match the source service and minute; RideCore may retain source seconds.
+    return first.serviceDate === train.serviceDate &&
+      Math.floor(first.departureAt / MINUTE) === Math.floor(train.departureAt / MINUTE) &&
+      (!first.id || !train.id || first.id === train.id);
+  }
+  return Object.freeze({validity,timeLabel,renderSignature, parseTime, japanDate, calendarFor, formatTime, formatCountdown, nextTrains, firstTrainForDate, isFirstTrain });
 });
