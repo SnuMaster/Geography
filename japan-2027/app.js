@@ -572,7 +572,7 @@ function applyTripUpdate(snapshot){
  overviewFocus=overviewDay;navigateScreen(screen,{history:'replace',snapshot:screen,restorePopup:false,preserveMapView:true});
  routeAll=all;if(leg!==null&&focus?.key===focusedContext()?.key)setFocusedLeg(leg);else applyRouteFocus();
  const details=[...document.querySelectorAll('#dayHeader details,#stopList details,#routeDetails details')];for(const index of expanded)if(details[index])details[index].open=true;
- map.setView(centre,zoom,{animate:false});$('#itineraryScroll').scrollTop=screen.scroll.itinerary;$('#dayList').scrollTop=screen.scroll.days;window.scrollTo({left:screen.scroll.x,top:screen.scroll.y,behavior:'instant'});if(hadFocus&&activeId)document.getElementById(activeId)?.focus({preventScroll:true});updateUrl('replace');
+ map.setView(centre,zoom,{animate:false,reset:true});$('#itineraryScroll').scrollTop=screen.scroll.itinerary;$('#dayList').scrollTop=screen.scroll.days;window.scrollTo({left:screen.scroll.x,top:screen.scroll.y,behavior:'instant'});if(hadFocus&&activeId)document.getElementById(activeId)?.focus({preventScroll:true});updateUrl('replace');
  TravelStore.useSnapshot(snapshot);announce('새 일정 자료를 자동 반영했어요.');
 }
 async function main(){
