@@ -104,7 +104,7 @@
    const done=visited[key]===true;
    button.setAttribute('aria-pressed',String(done));
    button.setAttribute('aria-label',String(index+1)+'번째 '+stop.name+' 방문 '+(done?'완료 취소':'완료 표시'));
-   button.textContent=done?'✓':'○';
+   const caption=done?'✓':'○';if(button.textContent!==caption)button.textContent=caption;
    card.classList.toggle('cc-completed',done);
   }
  }
