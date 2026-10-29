@@ -29,3 +29,8 @@ npm exec --yes --package=wrangler -- wrangler deploy --secrets-file .dev.vars
 ```
 
 키 교체는 새 키를 안전하게 준비하고 Secret을 갱신한 뒤 검증합니다. 누적 예산 객체를 삭제하거나 초기화하지 않습니다. 이전 작성 시점의 기능 상태·미검증 목록은 `japan-2027/ASSISTANT_IMPLEMENTATION.md`에 있으며, 이 파일이 API/Worker 연결 상태의 최신 기록입니다. 실제 iPhone/Android 센서·카메라·키보드 및 Uber 앱 검증은 별도로 남아 있습니다.
+## 2026-10-30 커맨드 센터 후속 배포
+
+Worker 버전 `1858af69-585d-4f51-bddf-22d78069846f`에서 인증된 `/exchange` GET을 추가했습니다. ECB JPY/KRW 기준일·조회 시각을 반환하며, OpenAI를 호출하지 않습니다. 실제 조회 200을 확인했습니다. `WEATHER_ENABLED=true`로 설정했고 2027-01-11은 실제 인증 조회에서 `예보 제공 기간 밖`을 반환했습니다. 현재 범위 안의 예보와 실제 휴대폰 센서는 별도 검증이 필요합니다.
+
+최신 UI·기능별 상태·외부 제한은 [커맨드 센터 기록](../japan-2027/COMMAND_CENTER.md)을 보세요. 초기 문서의 날씨 비활성 표기는 이 설정으로 대체합니다. 개인 자료 서버 동기화와 종료/잠금 중 푸시는 미연결입니다.
