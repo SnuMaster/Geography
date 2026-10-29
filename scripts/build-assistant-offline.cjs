@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const root=path.join(__dirname,'../japan-2027'),revision='20261029-assistant-3';
+const root=path.join(__dirname,'../japan-2027'),revision='20261030-command-1';
 const shell=JSON.parse(fs.readFileSync(path.join(root,'sw.js'),'utf8').match(/const FILES=(\[.*?\]);/)[1].replaceAll("'",'"'));
 require(path.join(root,'rail-departure-profiles.js'));
 const previous=JSON.parse(fs.readFileSync(path.join(root,'offline-manifest.json'),'utf8'));
