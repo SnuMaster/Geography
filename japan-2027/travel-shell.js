@@ -9,7 +9,8 @@
  function selectTab(id){for(const b of document.querySelectorAll('[data-shell-tab]')){const selected=b.dataset.shellTab===id;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1;}for(const p of document.querySelectorAll('[data-shell-pane]'))p.hidden=p.dataset.shellPane!==id;}
  function init(value){
   api=value;document.body.classList.add('travel-shell');document.querySelector('meta[name=theme-color]').content='#faf7f0';
-  const brand=document.querySelector('.brand');brand.innerHTML='<span class="brandmark" aria-hidden="true"><svg viewBox="0 0 64 48"><circle cx="44" cy="16" r="13" fill="#f67b3d"/><path d="m2 42 23-29 15 18 9-9 14 20z" fill="#263545"/><path d="m25 13-9 12 8-3 5 4 5-2z" fill="#faf7f0"/><path d="M2 44q20-9 40 0t22 0" fill="none" stroke="#263545" stroke-width="2"/></svg></span><span>ROUTEBOOK<small class="brand-year">JAPAN 2027 · 旅の記録</small></span>';
+  const brand=document.querySelector('.brand');brand.innerHTML='<span class="brandmark" aria-hidden="true"><img src="assets/kiseki-crest.svg" width="61" height="61" alt="" decoding="async"></span><span>KISEKI<small class="brand-year">JAPAN TRAVEL PLANNER</small></span>';brand.setAttribute('aria-label','KISEKI · 일본 여행 1일차로 이동');
+  document.title='KISEKI · JAPAN 2027';
   const header=document.querySelector('.header-actions'),mapViews=[$('#overviewView'),$('#dailyView')];
   const mapButton=document.createElement('button');mapButton.id='shellMap';mapButton.type='button';title(mapButton,'지도','map');mapButton.onclick=()=>{if(matchMedia('(max-width:740px)').matches&&$('#ccSidebarToggle').getAttribute('aria-expanded')==='true')$('#ccSidebarToggle').click();$('#fitBtn').click();};
   const budget=document.createElement('button');budget.id='shellBudget';budget.type='button';title(budget,'경비 정리','wallet');budget.onclick=()=>TravelAssistant.openTool('경비·준비물·저장 조정안');
