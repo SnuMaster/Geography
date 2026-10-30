@@ -2,7 +2,7 @@
 // Adapt to the available CSS viewport, not a phone name or physical-pixel guess.
 (function(){
  const $=s=>document.querySelector(s),panels=new Map(),cards=new Map();
- let previous='',focusSize=null,ready=false;
+ let previous='',focusSize=null,ready=false,scrollKey='';
  const mode=()=>innerWidth<700?'cover':innerWidth<=1100?'fold':'desktop';
  const editable=el=>el?.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,[contenteditable=true]');
  function sidebar(open){document.body.classList.toggle('cc-sidebar-closed',!open);$('#ccSidebarToggle')?.setAttribute('aria-expanded',String(open));}
@@ -15,6 +15,7 @@
   document.body.dataset.keyboard=keyboard?'open':'closed';
   document.body.dataset.keyboardTarget=keyboard?(el.closest('#ccSidebar')?'itinerary':el.closest('.assistant-body')?'assistant-body':'composer'):'';
   const style=document.documentElement.style;style.setProperty('--viewport-height',height+'px');style.setProperty('--viewport-top',top+'px');style.setProperty('--viewport-left',left+'px');
+  const key=keyboard?[el.id,height,top,innerWidth].join('|'):'';if(key!==scrollKey){scrollKey=key;if(key)requestAnimationFrame(()=>{if(document.activeElement!==el)return;const r=el.getBoundingClientRect();if(r.top<top+8||r.bottom>top+height-8)el.scrollIntoView({block:'nearest',inline:'nearest'});});}
  }
  function sync(){
   if(!ready)return;const current=mode();
