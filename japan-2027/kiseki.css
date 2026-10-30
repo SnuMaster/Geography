@@ -1,0 +1,34 @@
+/* KISEKI editorial skin. A purely visual layer over existing journey logic. */
+body.command-center.travel-shell{--ink:#202c39;--paper:#fbf8f1;--white:#fffdfa;--border:#e9e1d6;--orange:#d65b2d;--green:#d65b2d;--leaf:#cc693b;color:#202c39;background:#fbf8f1}
+body.command-center.travel-shell .topbar{background:linear-gradient(105deg,#fffdf8 0%,#faf5eb 76%,#f7e7dd 100%);border-bottom:1px solid #e8e0d5}
+body.command-center.travel-shell .brand{letter-spacing:5px;font:500 26px/1.05 Georgia,'Times New Roman',serif;color:#162436;gap:10px}
+body.command-center.travel-shell .brandmark,body.command-center.travel-shell .brandmark svg{width:61px;height:61px;flex:none}
+body.command-center.travel-shell .brand-year{letter-spacing:2.4px;font:500 8px/1.4 RouteSans,sans-serif;color:#6e6a65;margin-top:7px}
+body.command-center.travel-shell .topbar .header-actions button:focus-visible{outline-color:#c58e5e}
+body.command-center.travel-shell .topbar>#ccSidebarToggle{background:#fff0e2;color:#c45125}
+body.command-center.travel-shell .trip-summary strong{color:#ce512a;font-family:Georgia,serif;font-size:17px}
+body.command-center.travel-shell .offline-status{background:#f7f2e9;color:#7a776f}
+body.command-center.travel-shell .shell-hero{background-color:#f4e8d5;background-image:linear-gradient(90deg,#fffdf9 3%,#fffdf9bd 49%,#fffdf900 100%),url('assets/journey-scene.svg');background-size:cover;background-position:center right}
+body.command-center.travel-shell .shell-hero:after{background:linear-gradient(90deg,#fffdfa 0%,#fffdfaab 46%,transparent 93%)}
+body.command-center.travel-shell .shell-hero .cc-day-heading strong{font-family:Georgia,'Times New Roman',RouteSans,serif;font-size:clamp(19px,2vw,29px);font-weight:500;letter-spacing:-.5px}
+body.command-center.travel-shell .shell-hero .cc-day b{font-size:70px;color:#111f30}
+body.command-center.travel-shell .shell-hero-caption{color:#8d7364}
+body.command-center.travel-shell .shell-side-tabs button[aria-selected=true]{color:#ce502a;border-bottom-color:#da693d}
+body.command-center.travel-shell .cc-stop.selected .cc-stop-line>button{background:#fff0e1;box-shadow:inset 3px 0 #dc703d}
+body.command-center.travel-shell #shellDateDock{background:#fdfaf5;border-top:1px solid #eadfd1}
+body.command-center.travel-shell #dayList .day-item{position:relative;border-radius:10px;border-color:#e3d9cc;background:#fffdfa;transition:background .15s,transform .15s}
+body.command-center.travel-shell #dayList .day-item.active{background:#fff0de;border-color:#df7944;box-shadow:inset 0 -2px #d96d3a}
+body.command-center.travel-shell #dayList .day-item:hover{transform:translateY(-2px)}
+body.command-center.travel-shell #dayList .day-item:before{display:block;position:absolute;inset:auto 9px 7px auto;height:23px;width:29px;content:'';border:0;border-radius:4px;background:linear-gradient(150deg,#f8c5a9,#eae0cb 45%,#627b77 46%,#314b57);opacity:.53;pointer-events:none}
+body.command-center.travel-shell #shellContextCard{background:#fffdf9f4;border:1px solid #e8dace;border-radius:15px;box-shadow:0 16px 42px #3d322328}
+body.command-center.travel-shell .cc-next>small{color:#c8532e;font-weight:700}
+body.command-center.travel-shell .cc-next strong{font-family:Georgia,RouteSans,serif;font-weight:600}
+body.command-center.travel-shell .shell-view-tabs button.active{background:#182638;color:#fff;box-shadow:0 5px 15px #18263833}
+body.command-center.travel-shell #routeNavigationStart{background:#1c293a;color:#fff}
+body.command-center.travel-shell #ccFilters{background:#fffdf8f0}
+body.command-center.travel-shell .shell-map-toolbar{gap:12px}
+body.command-center.travel-shell button:focus-visible,body.command-center.travel-shell a:focus-visible{outline:3px solid #d97138;outline-offset:2px}
+@media(min-width:1200px){body.command-center.travel-shell{--shell-side:340px;--shell-head:86px;--shell-dock:125px}body.command-center.travel-shell .shell-hero{height:220px;padding:24px}body.command-center.travel-shell #dayList .day-item{width:153px;min-width:153px;height:94px;min-height:94px}body.command-center.travel-shell #dayList{height:100px}body.command-center.travel-shell #shellContextCard{width:min(360px,calc(100% - 90px))}}
+@media(max-width:1199px){body.command-center.travel-shell .brand{font-size:20px;letter-spacing:2.6px}body.command-center.travel-shell .brandmark,body.command-center.travel-shell .brandmark svg{width:44px;height:44px}}
+@media(max-width:740px){body.command-center.travel-shell .brand{font-size:16px;letter-spacing:1.6px}body.command-center.travel-shell .brandmark,body.command-center.travel-shell .brandmark svg{width:36px;height:36px}body.command-center.travel-shell .shell-hero .cc-day b{font-size:43px}body.command-center.travel-shell .shell-hero .cc-day-heading strong{font-size:20px}}
+@media(prefers-reduced-motion:reduce){body.command-center.travel-shell #dayList .day-item{transition:none}body.command-center.travel-shell #dayList .day-item:hover{transform:none}}
