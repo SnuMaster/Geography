@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261030-command-1',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261030-travel-2',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
