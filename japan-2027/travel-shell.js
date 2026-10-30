@@ -35,6 +35,7 @@
   const dock=document.createElement('nav');dock.id='shellDateDock';dock.setAttribute('aria-label','22일 전체 여행 날짜');dock.innerHTML='<div class="shell-dock-title"><span>전체 일정</span><strong>22 DAYS</strong></div><button type="button" id="shellDatesPrevious" aria-label="이전 날짜 카드 보기">‹</button><button type="button" id="shellDatesNext" aria-label="다음 날짜 카드 보기">›</button>';dock.insertBefore($('#dayList'),dock.lastChild);document.querySelector('.workspace').append(dock);
   $('#shellDatesPrevious').onclick=()=>$('#dayList').scrollBy({left:-350,behavior:reducedMotion()?'instant':'smooth'});$('#shellDatesNext').onclick=()=>$('#dayList').scrollBy({left:350,behavior:reducedMotion()?'instant':'smooth'});
   const card=document.createElement('section');card.id='shellContextCard';card.setAttribute('aria-label','다음 방문과 선택 구간');card.append(document.querySelector('.cc-next'),$('#routeFocusPanel'));map.append(card);document.querySelector('.cc-next>small').insertAdjacentHTML('afterend','<span id="shellNextCount"></span>');
+  RouteViewport.init();
   new ResizeObserver(()=>{api.app.map.invalidateSize();alignDates();}).observe(document.querySelector('.route-workspace'));
  }
  const reducedMotion=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
@@ -47,6 +48,7 @@
   const stop=c.stops[api.app.state.selected]||c.stops.find(s=>s.kind!=='home'),previousUID=memoUID;memoUID=stop?.kind==='home'?'':stop?.uid||'';$('#shellMemoPlace').textContent=stop?api.name(stop):'장소를 선택하세요';if(previousUID!==memoUID||document.activeElement!==$('#shellMemo'))$('#shellMemo').value=drafts.get(memoUID)??api.data.notes[memoUID]??'';if(previousUID!==memoUID)$('#shellMemoStatus').textContent=drafts.has(memoUID)?'작성 중 · 아직 저장하지 않았습니다.':'메모는 이 기기에 저장되며 AI로 전송하지 않습니다.';$('#shellMemo').disabled=!memoUID;$('#shellSaveMemo').disabled=!memoUID;
   $('#shellNextCount').textContent=next?String(c.stops.indexOf(next)+1).padStart(2,'0')+' / '+c.stops.length:'완료';
   for(const button of $('#dayList').querySelectorAll('[data-day]')){const d=days.find(d=>d.n===Number(button.dataset.day));if(!d)continue;button.dataset.dayNumber=String(d.n).padStart(2,'0');if(d.n===c.day.n)button.setAttribute('aria-current','date');else button.removeAttribute('aria-current');}
+  RouteViewport.refreshCard();
   if(lastDay!==c.day.n){lastDay=c.day.n;requestAnimationFrame(()=>{const card=$('#dayList .day-item.active');if(card)$('#dayList').scrollLeft=card.offsetLeft-$('#dayList').offsetLeft-20;});}
  }
  window.TravelShell={init,render};
