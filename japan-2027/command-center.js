@@ -8,7 +8,7 @@
  function dialog(id){RouteUI.showDialog($('#'+id));}
  function closeDialog(id){$('#'+id).close();RouteUI.release($('#'+id));}
  function render(){if(!app)return;const c=context(),p=personal(),rows=C.compare(c.stops,c.legs,data.plans[c.key]),done=TravelAssistantCore.progress(c.stops,c.day.n,c.variant.id,p.visits),next=C.next(c.stops,data.plans[c.key],p.visits,c.day.n,c.variant.id,(c.stops[app.state.selected]||(['hotel','home'].includes(c.stops[0]?.kind)?c.stops[0]:null))?.uid),nextStop=c.stops.find(s=>s.uid===next?.uid),label=MapPlan.label(c.day,c.variant);
-  $('#ccDayNumber').textContent=String(c.day.n).padStart(2,'0');$('#ccCity').textContent=label.city;$('#ccDayDate').textContent=TripData.date(c.day.n)+' · '+c.day.weekday;$('#ccDaySelect').value=c.day.n;
+  $('#ccDayNumber').textContent=String(c.day.n).padStart(2,'0');$('#ccCity').textContent=label.city;$('#ccDayDate').textContent=TripData.date(c.day.n)+' · '+c.day.weekday;$('#ccDaySelect').value=c.day.n;const option=$('#ccDaySelect').selectedOptions[0];if(option)option.textContent=c.day.date+' · '+label.city;
   $('#ccVariant').innerHTML=c.day.variants.map(v=>`<option value="${esc(v.id)}">${esc(v.label||v.title||v.id)}</option>`).join('');$('#ccVariant').value=c.variant.id;$('#ccProgress').value=done.done;$('#ccProgress').max=done.total;$('#ccProgressText').textContent=`방문 ${done.done} / ${done.total} · 남음 ${done.remaining}`;
   $('#ccNextName').textContent=nextStop?name(nextStop):'선택 장소 이후 남은 방문 없음';$('#ccNextTime').textContent=next?.time||'방문 체크를 확인하세요';$('#ccNext').disabled=!nextStop;$('#ccNext').dataset.uid=next?.uid||'';
   $('#ccPlanStatus').textContent=data.plans[c.key]?`나의 승인 조정안 · ${rows.filter(r=>!r.routeKnown).length}개 연결 경로 확인 필요 · 지도는 검증된 원본 경로`:'저장된 여행 계획 · 시각·운임은 실시간 정보가 아닙니다.';
