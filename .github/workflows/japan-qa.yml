@@ -27,6 +27,12 @@ jobs:
           npm ci --prefix japan-2027/tests
       - name: Accuracy, state, mobile and integrated browser suites
         run: node japan-2027/tests/ci-browser.cjs
+      - name: Assistant state, privacy and offline fallback on Chromium
+        run: node japan-2027/tests/assistant-browser.cjs
+      - name: Command center layout, personal plans and private records on Chromium
+        run: node japan-2027/tests/command-browser.cjs
+      - name: Standard Fold8 cover, main display, folding and keyboard layouts on Chromium
+        run: node japan-2027/tests/fold-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -47,6 +53,12 @@ jobs:
       - run: cd japan-2027/tests && npx playwright install --with-deps webkit
       - name: Booking checklist on WebKit mobile and tablet layouts
         run: node japan-2027/tests/booking-webkit.cjs
+      - name: Assistant mobile panel on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-browser.cjs
+      - name: Command center layout, personal plans and private records on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/command-browser.cjs
+      - name: Standard Fold8 cover, main display, folding and keyboard layouts on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/fold-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

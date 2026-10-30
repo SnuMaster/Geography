@@ -1,0 +1,55 @@
+'use strict';
+// A presentation adapter over the existing journey, reservations and personal store.
+(function(){
+ const $=s=>document.querySelector(s);
+ let api,memoUID='',drafts=new Map(),lastDay=0;
+ const icons={map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16"/>',book:'<path d="M8 5H5v16h14V5h-3M9 3h6v4H9zM8 12h8m-8 4h6"/>',wallet:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 8h18m-5 5h5m-4 0v3"/>',records:'<path d="M3 6h7l2 2h9v12H3zM7 14l3-3 4 4 3-2"/>',settings:'<path d="m12 3 2 3 4-1 1 4 3 3-3 2-1 4-4-1-2 4-2-4-4 1-1-4-3-2 3-3 1-4 4 1z"/><circle cx="12" cy="12" r="3"/>'};
+ const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[k]||icons.map}</svg>`;
+ function title(button,text,key){button.innerHTML=icon(key)+`<span>${text}</span>`;}
+ function selectTab(id){for(const b of document.querySelectorAll('[data-shell-tab]')){const selected=b.dataset.shellTab===id;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1;}for(const p of document.querySelectorAll('[data-shell-pane]'))p.hidden=p.dataset.shellPane!==id;}
+ function init(value){
+  api=value;document.body.classList.add('travel-shell');document.querySelector('meta[name=theme-color]').content='#faf7f0';
+  const brand=document.querySelector('.brand');brand.innerHTML='<span class="brandmark" aria-hidden="true"><svg viewBox="0 0 64 48"><circle cx="44" cy="16" r="13" fill="#f67b3d"/><path d="m2 42 23-29 15 18 9-9 14 20z" fill="#263545"/><path d="m25 13-9 12 8-3 5 4 5-2z" fill="#faf7f0"/><path d="M2 44q20-9 40 0t22 0" fill="none" stroke="#263545" stroke-width="2"/></svg></span><span>ROUTEBOOK<small class="brand-year">JAPAN 2027 · 旅の記録</small></span>';
+  const header=document.querySelector('.header-actions'),mapViews=[$('#overviewView'),$('#dailyView')];
+  const mapButton=document.createElement('button');mapButton.id='shellMap';mapButton.type='button';title(mapButton,'지도','map');mapButton.onclick=()=>{if(matchMedia('(max-width:740px)').matches&&$('#ccSidebarToggle').getAttribute('aria-expanded')==='true')$('#ccSidebarToggle').click();$('#fitBtn').click();};
+  const budget=document.createElement('button');budget.id='shellBudget';budget.type='button';title(budget,'경비 정리','wallet');budget.onclick=()=>TravelAssistant.openTool('경비·준비물·저장 조정안');
+  title($('#ccSidebarToggle'),'여행 일정','calendar');title($('#bookingChecklistBtn'),'예약 체크','book');title($('#ccRecords'),'기록·백업','records');title($('#settingsBtn'),'설정','settings');
+  const more=document.createElement('details');more.id='shellMore';more.innerHTML='<summary aria-label="보조 도구">···</summary><div class="shell-more-menu"><strong>여행 도구</strong></div>';
+  for(const id of ['noticeBtn','offlinePackBtn','tripPlanBtn','itineraryToggle','rideToggle','ccAlertsToggle','ccInstall','aboutBtn']){const button=$('#'+id);button.hidden=false;more.querySelector('div').append(button);}
+  more.addEventListener('click',e=>{if(e.target.closest('button'))more.open=false;});document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary').focus();}});
+  header.replaceChildren(mapButton,$('#bookingChecklistBtn'),budget,$('#ccRecords'),$('#settingsBtn'));
+  document.querySelector('.topbar').append(more,document.querySelector('.trip-summary'));
+  const map=document.querySelector('.map-panel'),bar=document.createElement('div');bar.className='shell-map-toolbar';bar.setAttribute('aria-label','지도 보기');
+  const views=document.createElement('div');views.className='shell-view-tabs';views.setAttribute('role','group');views.setAttribute('aria-label','지도 범위');views.append(...mapViews);bar.append(views,$('#ccFilters'));map.append(bar);$('#overviewView').textContent='전체 여정';$('#dailyView').textContent='오늘 동선';
+  const mission=document.querySelector('.cc-mission'),hero=document.createElement('div');hero.className='shell-hero';hero.append(mission.querySelector('.cc-kicker'),mission.querySelector('.cc-day-heading'));hero.insertAdjacentHTML('beforeend','<p id="shellDaySummary"></p><span class="shell-hero-caption">JOURNEY NOTES</span>');mission.prepend(hero);
+  const selectRow=document.createElement('div');selectRow.className='shell-date-select';selectRow.innerHTML='<button id="shellPrevDay" type="button" aria-label="이전 여행 날짜">‹</button><button id="shellNextDay" type="button" aria-label="다음 여행 날짜">›</button>';selectRow.insertBefore($('#ccDaySelect'),selectRow.lastChild);hero.after(selectRow);
+  $('#shellPrevDay').onclick=()=>changeDay(-1);$('#shellNextDay').onclick=()=>changeDay(1);
+  const tabs=document.createElement('div');tabs.className='shell-side-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','선택 날짜 정보');tabs.innerHTML='<button type="button" role="tab" id="shellTabToday" data-shell-tab="today" aria-controls="shellToday" aria-selected="true">오늘 일정</button><button type="button" role="tab" id="shellTabInfo" data-shell-tab="info" aria-controls="shellInfo" aria-selected="false">주요 정보</button><button type="button" role="tab" id="shellTabMemo" data-shell-tab="memo" aria-controls="shellMemoPane" aria-selected="false">메모</button>';
+  const today=document.createElement('section');today.id='shellToday';today.dataset.shellPane='today';today.setAttribute('role','tabpanel');today.setAttribute('aria-labelledby','shellTabToday');today.append(document.querySelector('.cc-timeline-heading'),$('#ccPlanStatus'),$('#ccTimeline'));
+  const info=document.createElement('section');info.id='shellInfo';info.dataset.shellPane='info';info.setAttribute('role','tabpanel');info.setAttribute('aria-labelledby','shellTabInfo');info.hidden=true;info.innerHTML='<p class="shell-eyebrow">DAY INFORMATION</p><h2>오늘 여행의 기준</h2><dl id="shellFacts"></dl><p class="shell-information">저장된 여행 계획입니다. 열차 운행·영업시간·현장 상황은 각 항목의 출처와 확인 시각을 확인하세요.</p>';
+  const memo=document.createElement('section');memo.id='shellMemoPane';memo.dataset.shellPane='memo';memo.setAttribute('role','tabpanel');memo.setAttribute('aria-labelledby','shellTabMemo');memo.hidden=true;memo.innerHTML='<p class="shell-eyebrow">PERSONAL NOTE</p><h2 id="shellMemoPlace"></h2><label for="shellMemo">이 장소에 남기는 메모</label><textarea id="shellMemo" rows="6" placeholder="기억할 것, 가보고 싶은 것…"></textarea><button type="button" id="shellSaveMemo">이 기기에 저장</button><p id="shellMemoStatus" role="status">메모는 AI로 전송하지 않습니다.</p>';
+  const side=$('#ccSidebar');side.append(tabs,today,info,memo);
+  selectTab('today');tabs.onclick=e=>{const b=e.target.closest('[data-shell-tab]');if(b)selectTab(b.dataset.shellTab);};tabs.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();const list=[...tabs.querySelectorAll('button')],index=list.indexOf(document.activeElement),next=e.key==='Home'?0:e.key==='End'?2:(index+(e.key==='ArrowRight'?1:2))%3;selectTab(list[next].dataset.shellTab);list[next].focus();};
+  $('#shellMemo').oninput=e=>{drafts.set(memoUID,e.target.value);$('#shellMemoStatus').textContent='작성 중 · 아직 저장하지 않았습니다.';};$('#shellSaveMemo').onclick=()=>{if(!memoUID)return;api.data.notes[memoUID]=$('#shellMemo').value;if(api.save()){drafts.delete(memoUID);$('#shellMemoStatus').textContent='이 기기에 저장했습니다 · 서버 동기화 미연결';}};
+  info.append($('#ccCalendar'));$('#ccCalendar>summary').textContent='도시·일정 검색';
+  const dock=document.createElement('nav');dock.id='shellDateDock';dock.setAttribute('aria-label','22일 전체 여행 날짜');dock.innerHTML='<div class="shell-dock-title"><span>전체 일정</span><strong>22 DAYS</strong></div><button type="button" id="shellDatesPrevious" aria-label="이전 날짜 카드 보기">‹</button><button type="button" id="shellDatesNext" aria-label="다음 날짜 카드 보기">›</button>';dock.insertBefore($('#dayList'),dock.lastChild);document.querySelector('.workspace').append(dock);
+  $('#shellDatesPrevious').onclick=()=>$('#dayList').scrollBy({left:-350,behavior:reducedMotion()?'instant':'smooth'});$('#shellDatesNext').onclick=()=>$('#dayList').scrollBy({left:350,behavior:reducedMotion()?'instant':'smooth'});
+  const card=document.createElement('section');card.id='shellContextCard';card.setAttribute('aria-label','다음 방문과 선택 구간');card.append(document.querySelector('.cc-next'),$('#routeFocusPanel'));map.append(card);document.querySelector('.cc-next>small').insertAdjacentHTML('afterend','<span id="shellNextCount"></span>');
+  RouteViewport.init();
+  new ResizeObserver(()=>{api.app.map.invalidateSize();alignDates();}).observe(document.querySelector('.route-workspace'));
+ }
+ const reducedMotion=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+ function alignDates(){const list=$('#dayList'),card=list?.querySelector('.day-item.active');if(!card)return;const r=card.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.left<b.left||r.right>b.right)list.scrollLeft+=r.left-b.left-(b.width-r.width)/2;}
+ function changeDay(delta){const days=api.app.state.data.days,index=days.findIndex(d=>d.n===api.app.state.day),next=days[index+delta];if(next)api.app.setDay(next.n);}
+ function render(c,rows,next){if(!api)return;
+  const days=api.app.state.data.days,index=days.findIndex(d=>d.n===c.day.n);$('#shellPrevDay').disabled=index===0;$('#shellNextDay').disabled=index===days.length-1;
+  const summary=MapPlan.label(c.day,c.variant);$('#shellDaySummary').textContent=summary.places||c.variant.label||c.variant.title||'선택한 날짜의 여행 기록';
+  $('#shellFacts').replaceChildren();for(const [key,val]of [['여행 날짜',TripData.date(c.day.n)+' · '+c.day.weekday],['선택한 일정',c.variant.label||c.variant.title||c.variant.id],['방문 장소',c.stops.length+'곳'],['계획 교통비',api.app.dailyCost().ic+'엔 · 저장 계획 기준']]){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=val;$('#shellFacts').append(dt,dd);}
+  const stop=c.stops[api.app.state.selected]||c.stops.find(s=>s.kind!=='home'),previousUID=memoUID;memoUID=stop?.kind==='home'?'':stop?.uid||'';$('#shellMemoPlace').textContent=stop?api.name(stop):'장소를 선택하세요';if(previousUID!==memoUID||document.activeElement!==$('#shellMemo'))$('#shellMemo').value=drafts.get(memoUID)??api.data.notes[memoUID]??'';if(previousUID!==memoUID)$('#shellMemoStatus').textContent=drafts.has(memoUID)?'작성 중 · 아직 저장하지 않았습니다.':'메모는 이 기기에 저장되며 AI로 전송하지 않습니다.';$('#shellMemo').disabled=!memoUID;$('#shellSaveMemo').disabled=!memoUID;
+  $('#shellNextCount').textContent=next?String(c.stops.indexOf(next)+1).padStart(2,'0')+' / '+c.stops.length:'완료';
+  for(const button of $('#dayList').querySelectorAll('[data-day]')){const d=days.find(d=>d.n===Number(button.dataset.day));if(!d)continue;button.dataset.dayNumber=String(d.n).padStart(2,'0');if(d.n===c.day.n)button.setAttribute('aria-current','date');else button.removeAttribute('aria-current');}
+  RouteViewport.refreshCard();
+  if(lastDay!==c.day.n){lastDay=c.day.n;requestAnimationFrame(()=>{const card=$('#dayList .day-item.active');if(card)$('#dayList').scrollLeft=card.offsetLeft-$('#dayList').offsetLeft-20;});}
+ }
+ window.TravelShell={init,render};
+})();

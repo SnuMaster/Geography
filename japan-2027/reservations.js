@@ -127,5 +127,6 @@
   window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key,field}}));
  });
  document.addEventListener('click',event=>{const b=event.target.closest('[data-reservation-alt]'),d=definitions[b?.dataset.reservationAlt];if(d)window.dispatchEvent(new CustomEvent('routebook:reservation-alt',{detail:{day:d.day,variant:d.variant}}));});
- window.ReservationUI={html,getRecords,initChecklist,closeChecklist,renderChecklist,checklistSummary:()=>{const m=checklistModel();return {total:m.active.length,done:m.done,alternatives:m.alternatives.length};}};
+ function confirmTime(key,value){if(!definitions[key]||!ReservationCore.parseTime(value))return false;const r=records[key]??={status:'미신청',time:''};r.time=value;r.updatedAt=Date.now();save();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key,field:'time'}}));return storageAvailable;}
+ window.ReservationUI={html,getRecords,getAssistantBookings:()=>checklistModel().active.map(item=>({key:item.key,day:item.day,name:item.name,status:records[item.key]?.status||(isComplete(item)?'사용자 예약 확인':'미확인'),time:records[item.key]?.time||null,confirmed:isComplete(item)})),initChecklist,closeChecklist,renderChecklist,confirmTime,definitions:Object.freeze(Object.fromEntries(Object.entries(definitions).map(([key,d])=>[key,{day:d.day}]))),checklistSummary:()=>{const m=checklistModel();return {total:m.active.length,done:m.done,alternatives:m.alternatives.length};}};
 })();

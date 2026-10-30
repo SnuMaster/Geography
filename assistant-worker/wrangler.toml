@@ -1,0 +1,29 @@
+name = "japan-2027-assistant"
+main = "worker.mjs"
+compatibility_date = "2026-10-29"
+workers_dev = true
+
+[vars]
+MODEL = "gpt-6-luna"
+ALLOWED_ORIGINS = "https://snumaster.github.io,https://codex-japan-ai-assistant.geography-3tt.pages.dev"
+MONTHLY_USD_LIMIT = "5"
+MONTHLY_REQUEST_LIMIT = "500"
+# Conservative upper tariff covers the documented long-context pricing band.
+MAX_INPUT_TOKENS = "1050000"
+INPUT_USD_PER_MILLION = "0.25"
+OUTPUT_USD_PER_MILLION = "0.75"
+WEATHER_ENABLED = "true"
+
+[secrets]
+required = ["OPENAI_API_KEY", "LOGIN_CODE_SHA256", "SESSION_SECRET"]
+
+[[durable_objects.bindings]]
+name = "BUDGET"
+class_name = "BudgetGate"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["BudgetGate"]
+
+[observability]
+enabled = false

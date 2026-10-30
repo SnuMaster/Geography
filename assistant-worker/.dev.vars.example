@@ -1,0 +1,4 @@
+# Copy to .dev.vars locally; never commit the copy.
+OPENAI_API_KEY=replace-in-cloudflare-secret
+LOGIN_CODE_SHA256=sha256-of-a-random-32-byte-personal-code
+SESSION_SECRET=independent-random-32-byte-secret

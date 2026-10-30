@@ -10,7 +10,7 @@ function focusedContext(){
 function focusedIndex(context=focusedContext()){
  if(!context||context.variant.stops.length<2)return null;
  if(!focusedLegs.has(context.key)){
-  let first=1;
+  let first=Math.max(1,context.legs.findIndex(l=>!window.CommandCore?.privateLeg(l,state.data.days))+1);
   if(state.view==='overview'){
    const bounds=map.getBounds(),stops=context.variant.stops;
    const visible=stops.findIndex((s,i)=>i>0&&bounds.contains([s.lat,s.lng])&&bounds.contains([stops[i-1].lat,stops[i-1].lng]));
@@ -20,13 +20,13 @@ function focusedIndex(context=focusedContext()){
  }
  return Math.max(1,Math.min(context.variant.stops.length-1,focusedLegs.get(context.key)));
 }
-function routeVisual(layer,leg,index=leg?.legIndex){
- routeVisuals.push({layer,day:leg?.dayNumber||state.day,variant:leg?.variant||state.variant,index});return layer;
+function routeVisual(layer,leg,index=leg?.legIndex,mode=null){
+ routeVisuals.push({layer,day:leg?.dayNumber||state.day,variant:leg?.variant||state.variant,index,private:window.CommandCore?.privateLeg(leg,state.data.days)||false,modes:mode?[mode]:(leg?.parts||[]).map(p=>p.mode)});return layer;
 }
 function focusedMatch(leg,context,index){return !!context&&leg.dayNumber===context.day.n&&leg.variant===context.variant.id&&leg.legIndex===index;}
 function fitFocusedLeg(){
  const c=focusedContext(),i=focusedIndex(c);if(!c||i===null)return;
- const leg=c.legs[i-1],stops=c.variant.stops,coords=leg?.parts.flatMap(p=>p.coords)||[[stops[i-1].lat,stops[i-1].lng],[stops[i].lat,stops[i].lng]];
+ const leg=c.legs[i-1];if(window.CommandCore?.privateLeg(leg,state.data.days))return;const stops=c.variant.stops,coords=leg?.parts.flatMap(p=>p.coords)||[[stops[i-1].lat,stops[i-1].lng],[stops[i].lat,stops[i].lng]];
  if(coords.length)map.fitBounds(L.latLngBounds(coords),{paddingTopLeft:[50,105],paddingBottomRight:[50,165],maxZoom:16,animate:false});
 }
 function setFocusedLeg(index,{fit=false}={}){
@@ -39,13 +39,13 @@ function applyRouteFocus(){
  document.body.classList.toggle('route-all',routeAll);
  for(const item of routeVisuals){
   const chosen=!!c&&item.day===c.day.n&&item.variant===c.variant.id&&item.index===index;
-  if(routeAll||chosen){if(!routeLayer.hasLayer(item.layer))routeLayer.addLayer(item.layer);}else routeLayer.removeLayer(item.layer);
+  if((routeAll||chosen)&&(window.CommandCenter?.routeVisible(item)??true)){if(!routeLayer.hasLayer(item.layer))routeLayer.addLayer(item.layer);}else routeLayer.removeLayer(item.layer);
   item.layer.getElement?.()?.setAttribute('data-focused-route',String(chosen));
   const node=item.layer.getElement?.();if(node){node.dataset.routeDay=item.day;node.dataset.routeVariant=item.variant;node.dataset.routeLeg=item.index;}
  }
  for(const group of railSymbolGroups.values()){
   const chosen=group.entries.some(e=>focusedMatch(e.leg,c,index));
-  if(routeAll||chosen){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
+  const permitted=group.entries.some(e=>window.CommandCenter?.routeVisible({day:e.leg.dayNumber,variant:e.leg.variant,modes:[e.part.mode]})??true);if((routeAll||chosen)&&permitted){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
   const element=group.marker.getElement(),entry=visibleDirectionEntries(group)[0];if(element&&entry){element.setAttribute('aria-label',entry.part.line+' '+stationLabel(entry.part.from)+' → '+stationLabel(entry.part.to)+' 이동 상세');}if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
  }
  const groups=state.view==='overview'?overviewPlaceGroups:stopGroups,stops=c?.variant.stops||[];
@@ -67,6 +67,7 @@ function applyRouteFocus(){
  const leg=c?.legs[index-1];$('#routeFocusMode').textContent=leg?`${leg.summary||''} · ${leg.durationLabel||distanceText(leg.distanceM)}`:'';
  // A single arrow belongs to the active movement; intermediate path pieces keep their true line colors.
  highlightDirection(leg);window.RouteNavigation?.refresh();window.OfflineMap?.refresh();
+ window.dispatchEvent(new CustomEvent('routebook:route-focus'));
 }
 function bindRouteFocus(){
  const move=delta=>{RouteUI.userExplore();DetailView.close();setFocusedLeg((focusedIndex()||1)+delta,{fit:true});};

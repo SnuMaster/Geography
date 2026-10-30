@@ -1,0 +1,10 @@
+node_modules/
+.dev.vars
+.assistant-login-code
+.env
+.env.*
+!.env.example
+.wrangler/
+qa-*.png
+playwright-report/
+test-results/
