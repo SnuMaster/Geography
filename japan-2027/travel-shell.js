@@ -35,9 +35,10 @@
   const dock=document.createElement('nav');dock.id='shellDateDock';dock.setAttribute('aria-label','22일 전체 여행 날짜');dock.innerHTML='<div class="shell-dock-title"><span>전체 일정</span><strong>22 DAYS</strong></div><button type="button" id="shellDatesPrevious" aria-label="이전 날짜 카드 보기">‹</button><button type="button" id="shellDatesNext" aria-label="다음 날짜 카드 보기">›</button>';dock.insertBefore($('#dayList'),dock.lastChild);document.querySelector('.workspace').append(dock);
   $('#shellDatesPrevious').onclick=()=>$('#dayList').scrollBy({left:-350,behavior:reducedMotion()?'instant':'smooth'});$('#shellDatesNext').onclick=()=>$('#dayList').scrollBy({left:350,behavior:reducedMotion()?'instant':'smooth'});
   const card=document.createElement('section');card.id='shellContextCard';card.setAttribute('aria-label','다음 방문과 선택 구간');card.append(document.querySelector('.cc-next'),$('#routeFocusPanel'));map.append(card);document.querySelector('.cc-next>small').insertAdjacentHTML('afterend','<span id="shellNextCount"></span>');
-  new ResizeObserver(()=>api.app.map.invalidateSize()).observe(document.querySelector('.route-workspace'));
+  new ResizeObserver(()=>{api.app.map.invalidateSize();alignDates();}).observe(document.querySelector('.route-workspace'));
  }
  const reducedMotion=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+ function alignDates(){const list=$('#dayList'),card=list?.querySelector('.day-item.active');if(!card)return;const r=card.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.left<b.left||r.right>b.right)list.scrollLeft+=r.left-b.left-(b.width-r.width)/2;}
  function changeDay(delta){const days=api.app.state.data.days,index=days.findIndex(d=>d.n===api.app.state.day),next=days[index+delta];if(next)api.app.setDay(next.n);}
  function render(c,rows,next){if(!api)return;
   const days=api.app.state.data.days,index=days.findIndex(d=>d.n===c.day.n);$('#shellPrevDay').disabled=index===0;$('#shellNextDay').disabled=index===days.length-1;
