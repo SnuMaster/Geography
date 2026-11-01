@@ -159,7 +159,7 @@ function renderStops(){
  }).join('');
  $$('#stopList [data-stop]').forEach(el=>{el.addEventListener('click',e=>{if(e.target.closest('a,details'))return;selectStop(Number(el.dataset.stop),true,false);});el.addEventListener('keydown',e=>{if(e.target.closest('a,details'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();selectStop(Number(el.dataset.stop),true,false);}});});
  $$('#stopList [data-leg]').forEach(b=>b.addEventListener('click',()=>selectLeg(Number(b.dataset.leg))));
- $('#routeDetails').innerHTML=`<details><summary>이동 메모·시간표 전체</summary><h3>${icon('rail')} 오늘의 이동 메모</h3>${(v.routes||d.routes).map(s=>`<p>${esc(s)}</p>`).join('')}<p>${esc(v.note||d.note)}</p><details class="full-schedule"><summary>시간표 전체 보기</summary>${v.stops.map(s=>[s.time,s.name,s.description]).map(r=>`<div class="schedule-row"><b>${esc(r[0])}</b><div><strong>${esc(r[1])}</strong><br>${esc(r[2])}</div></div>`).join('')}</details></details>`;
+ $('#routeDetails').innerHTML=`<details><summary>이동 메모·시간표 전체</summary><h3>${icon('rail')} 오늘의 이동 메모</h3>${(v.routes||d.routes).map(s=>`<p>${esc(s)}</p>`).join('')}<p>${esc(v.note||d.note)}</p><details class="full-schedule"><summary>시간표 전체 보기</summary>${v.stops.map(s=>[s.time,stopLabel(s),cleanDesc(s)]).map(r=>`<div class="schedule-row"><b>${esc(r[0])}</b><div><strong>${esc(r[1])}</strong><br>${esc(r[2])}</div></div>`).join('')}</details></details>`;
 }
 
 function initMap(){

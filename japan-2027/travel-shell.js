@@ -39,6 +39,7 @@
   RouteViewport.init();
   RouteAccount.init();
   KisekiUI.init(api);
+  OriginalSidebar.init(api);
   new ResizeObserver(()=>{api.app.map.invalidateSize();alignDates();}).observe(document.querySelector('.route-workspace'));
  }
  const reducedMotion=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;

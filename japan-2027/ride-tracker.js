@@ -54,7 +54,7 @@
     $('#rideToggle').setAttribute('aria-expanded', 'true');
     document.body.classList.add('ride-panel-open');
     config.map.closePopup();
-    RouteUI.open(panel,{opener:lastFocus,modal:false,close:hidePanel,fallback:()=>$('#rideToggle')});
+    RouteUI.open(panel,{opener:lastFocus,modal:false,close:hidePanel,fallback:()=>$('#rideToggle').hidden?$('#ccSidebarToggle'):$('#rideToggle')});
     resume();
   }
   function hidePanel() {

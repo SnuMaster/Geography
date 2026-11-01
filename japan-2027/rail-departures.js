@@ -102,7 +102,7 @@ const RailDepartures = (() => {
    <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel||'거리')}</small><b>${esc(metrics.distance||'—')}</b></span><span><small>${esc(metrics.fareLabel||'요금')}</small><b>${esc(metrics.fare||'요금 미확인')}</b></span></div>
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
-   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}">전체 시간표</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
+   <div class="compact-actions"><button type="button" data-ride-choose="${esc(key)}">탑승 열차 선택</button><button type="button" data-ride-open="${esc(key)}">전체 시간표</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
  }
  function sectionHtml(key,metrics){const p=profiles[key];return `<section class="station-departures compact-station" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,null,metrics)}</section>`;}
  function html(day,leg,part,metrics){
@@ -185,7 +185,7 @@ const RailDepartures = (() => {
    section.dataset.departureProfile=key;section.setAttribute('aria-label',`${profiles[key].line} ${profiles[key].from} 출발역 열차 정보`);section.innerHTML=content;paint();popup.update();refresh(key);
   };
   const click=event=>{
-   const ride=event.target.closest('[data-ride-open],[data-ride-next]');
+   const ride=event.target.closest('[data-ride-open],[data-ride-next],[data-ride-choose]');
    if(ride){event.stopPropagation();const section=ride.closest('[data-departure-profile]'),key=section?.dataset.departureProfile;if(ride.hasAttribute('data-ride-next')){const train=section?._rideTrains?.[Number(ride.dataset.rideNext)];if(train&&train.departureAt>Date.now())window.RideTracker?.board(key,train.id,train.serviceDate,train.departureAt);else paint();}else window.RideTracker?.open(key);return;}
    const reverse=event.target.closest('[data-departure-direction]');
    if(reverse&&element.contains(reverse)){event.stopPropagation();const section=reverse.closest('[data-departure-profile]');selectProfile(section,reverse.dataset.departureDirection);section?.querySelector('[data-departure-direction]')?.focus({preventScroll:true});}

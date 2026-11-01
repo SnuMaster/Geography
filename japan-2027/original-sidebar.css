@@ -1,0 +1,29 @@
+/* Original itinerary in the existing collapsible left column. */
+.command-center.original-sidebar .shell-hero{display:none!important}
+.command-center.original-sidebar #shellToday{overflow:hidden}
+.command-center.original-sidebar #ccSidebar #itineraryPanel{position:relative;inset:auto;width:100%;height:100%;max-height:none;min-height:0;display:flex;flex-direction:column;flex:1;background:transparent;border:0;box-shadow:none;z-index:auto;padding:0;overflow:hidden}
+.command-center.original-sidebar #itineraryPanel .itinerary-panel-bar,.command-center.original-sidebar #itineraryPanel .day-pagination{display:none}
+.command-center.original-sidebar #itineraryScroll{flex:1;min-height:100px;max-height:none;overflow:auto;overscroll-behavior:contain;padding:0 12px 24px;scrollbar-width:thin;scrollbar-color:#d9cdbb transparent}
+.command-center.original-sidebar #dayHeader{padding:18px 12px 14px;margin:0 -12px 10px;max-height:none;overflow:visible;isolation:isolate;position:relative;background:transparent}
+.command-center.original-sidebar #dayHeader:before{content:'';position:absolute;inset:0;z-index:-1;background-image:linear-gradient(100deg,#fffdf9 4%,#fffdf9a8 58%,#fffdf961),var(--original-photo);background-size:cover;background-position:center;opacity:.35;pointer-events:none}
+.command-center.original-sidebar #dayHeader h2{font-size:21px;line-height:1.4;margin:11px 0 16px;overflow-wrap:anywhere}
+.command-center.original-sidebar #dayHeader .day-glance>div{background:#f1ede3d9;padding:9px}
+.command-center.original-sidebar #dayHeader .day-tools{font-size:11px}
+.command-center.original-sidebar #stopList .stop-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px;align-items:start;margin:9px 0}
+.original-visit{display:flex;align-items:center;justify-content:center;min-height:44px;width:44px;cursor:pointer;margin-top:5px}
+.original-visit input{width:21px;height:21px;margin:0;accent-color:#d36534;cursor:pointer}
+.command-center.original-sidebar #stopList .stop-card{min-width:0;margin:0;width:100%;padding:12px 9px;gap:8px;background:#fffdf8e8}
+.command-center.original-sidebar #stopList .stop-content{min-width:0;flex:1}
+.command-center.original-sidebar #stopList .stop-number{width:23px;height:23px;min-width:23px;font-size:10px}
+.command-center.original-sidebar #stopList .stop-name{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
+.command-center.original-sidebar #stopList .stop-desc{font-size:11px;line-height:1.7;overflow-wrap:anywhere}
+.command-center.original-sidebar #stopList .stop-links{display:flex;flex-wrap:wrap;gap:6px}
+.command-center.original-sidebar #stopList .stop-links a{min-height:44px;display:inline-flex;align-items:center}
+.command-center.original-sidebar #stopList .is-visited .stop-card{background:#edf1e8;border-color:#d5ddcc}
+.command-center.original-sidebar #stopList .is-visited .stop-name{text-decoration:line-through;color:#6b7866}
+.command-center.original-sidebar .leg-route-button{width:100%;min-width:0;padding:10px 8px;white-space:normal;overflow-wrap:anywhere}
+.command-center.original-sidebar .leg-route-button>span{min-width:0}.command-center.original-sidebar .leg-line-badges{flex-wrap:wrap}
+.original-plan-tools{border-top:1px solid #e4dbce;margin-top:18px;padding-top:10px}.original-plan-tools p{font-size:11px;line-height:1.7}.original-plan-tools button{min-height:44px;border:1px solid #ded5c6;border-radius:8px;padding:7px 12px;margin:4px 5px 4px 0}
+.command-center #mapSettings #kisekiLegal{font-size:12px;border-top:1px solid #ded5c6;padding:12px 0;margin-top:14px}.command-center #mapSettings #kisekiLegal summary{cursor:pointer}
+.compact-station [data-ride-choose]{min-height:44px;grid-column:1/-1;background:#c76636;color:#fffdf7;border-color:#c76636}
+@media(max-width:699px){.command-center.original-sidebar #stopList .stop-row{grid-template-columns:44px minmax(0,1fr)}.original-visit{width:44px}.command-center.original-sidebar #stopList .stop-name{font-size:15px}.command-center.original-sidebar #stopList .stop-desc{font-size:12px}}
