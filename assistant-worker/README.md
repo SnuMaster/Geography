@@ -49,7 +49,7 @@ Wrangler는 SQLite Durable Object `BudgetGate`를 마이그레이션으로 생�
 
 시간 초과·API 오류·사용량 누락은 과금 여부가 불명확하므로 예약액을 유지합니다. 재시도는 사용자 실행으로만 합니다. 예약액 해제를 위한 공개 API는 없습니다. 운영자가 OpenAI 사용량을 대조한 뒤 관리해야 하며, 객체를 삭제해 예산을 우회하면 안 됩니다. Worker 재시작·탭 재열기로 한도가 초기화되지 않습니다.
 
-모델 교체는 `MODEL`, `MAX_INPUT_TOKENS`, `INPUT_USD_PER_MILLION`, `OUTPUT_USD_PER_MILLION`을 함께 변경합니다. 기본 모델의 문서상 상한보다 낮은 설정은 거부합니다. 다른 모델은 공식 최대 입력·가격·이미지 및 JSON 스키마 지원을 검증한 뒤 `VERIFIED_CUSTOM_MODEL`을 해당 모델 ID로 명시해야 합니다. 자동 상위 모델 전환은 구현하지 않았습니다.
+기본 선택 모델은 `MODEL`로 지정하며 서버 `providers.mjs`의 allowlist 안에서만 허용합니다. 새 모델은 공식 입력 상한·가격·이미지 및 JSON 스키마 지원을 확인한 후 allowlist와 테스트를 함께 수정합니다. 기본 모델의 `MAX_INPUT_TOKENS`, `INPUT_USD_PER_MILLION`, `OUTPUT_USD_PER_MILLION` 값은 allowlist 상한을 낮추는 데 사용할 수 없습니다. 자동 상위 모델 전환과 공급자 자동 재시도는 하지 않습니다.
 
 ## 4. 프런트엔드 연결
 
@@ -103,3 +103,16 @@ node scripts/japan-qa.cjs
 6. 실제 Uber 앱에서 목적지 전달을 확인하되 테스트 중 최종 호출하지 않습니다. 공식 열차·장소 자료는 방문 전 재확인합니다.
 
 회귀 테스트와 기능별 상태는 `../japan-2027/ASSISTANT_IMPLEMENTATION.md`에 기록합니다.
+
+
+## GPT·Claude 모델 선택과 사용량
+
+서버 전용 providers.mjs에 허용 모델·입출력 단가·최대 입력 상한을 둡니다. GPT-6 Luna/Sol은 기존 OPENAI_API_KEY, Claude Haiku/Sonnet/Opus 5.5는 선택 사항인 ANTHROPIC_API_KEY를 사용합니다. 키는 서버 Secret에만 둡니다. 클라이언트가 제공한 키·가격·임의 모델 ID는 사용하지 않습니다. GPT는 Responses store:false, Claude는 Messages 구조화 JSON을 사용하며 기존 장소 ID·사진 동의·개인정보 경계를 유지합니다. Claude 키가 없으면 API는 생성 요청을 거부하고 UI 선택도 비활성화합니다. 모델 목록의 키 등록됨은 계정별 모델 접근 보장이 아니며 실제 접근은 요청 시 확인합니다.
+
+GET /models와 GET /usage는 로그인 후에만 읽을 수 있습니다. 모델 선택·목록 갱신은 유료 생성 요청을 실행하지 않습니다. POST /chat와 /analyze에 model ID를 전달합니다. 비용 예약은 서버의 모델별 보수적 상한으로 계산하고 모든 공급자가 기존 월 $5/500회·분당 6회 한도를 함께 사용합니다. 결과의 실제 입력·출력 토큰에 서버 단가를 곱한 예상 비용으로 정산합니다. 캐시 할인은 반영하지 않고 Claude Haiku의 긴 입력 단가를 사용하므로 공급자 청구서와 다를 수 있습니다. 실패·시간 초과로 사용량을 확인할 수 없으면 기존처럼 예약 비용을 유지하고 자동 재시도하지 않습니다. 모델별 집계는 이 기능 적용 후 확인한 사용량부터입니다.
+
+창에는 확인된 입력·출력/누적 토큰과 사이트 남은 사용·예약 예산을 표시합니다. 실제 API 계정의 남은 크레딧/토큰을 조회하는 기능은 없습니다. 타 앱의 사용·크레딧 지급·구매·만료를 임의로 추산하지 않습니다. 도구에는 공급자 Billing 페이지 링크를 제공합니다. 참고: [OpenAI Usage API](https://developers.openai.com/api/reference/resources/admin/subresources/organization/subresources/usage), [Claude Usage and Cost API](https://platform.claude.com/docs/en/manage-claude/usage-cost-api). 조직 전체 사용량의 관리자 조회를 일반 모델 키로 우회하지 않습니다.
+
+Claude 사용 준비: Claude Console에서 본인이 API 키를 발급한 후 Cloudflare의 japan-2027-assistant → Settings → Variables and Secrets에서 ANTHROPIC_API_KEY를 Secret으로 추가합니다. 또는 로컬에서 npx --no-install wrangler secret put ANTHROPIC_API_KEY를 실행해 비공개 프롬프트에 직접 입력합니다. 키를 채팅·Git·브라우저 저장소에 붙여넣지 마세요. 등록 후 모델/사용량 새로고침으로 활성화 여부를 확인합니다. 계정·이용약관·크레딧 등록은 사용자가 직접 진행합니다. 현재 Claude 키는 미등록이고 실제 Claude 응답/계정 접근은 미검증입니다.
+
+단가·모델 정보 확인일 2026-11-02: [OpenAI 가격](https://developers.openai.com/api/docs/pricing), [Claude 모델](https://platform.claude.com/docs/en/models/overview), [Claude 가격](https://platform.claude.com/docs/en/about-claude/pricing), [Claude 구조화 출력](https://platform.claude.com/docs/en/build-with-claude/structured-outputs). 가격/모델을 바꿀 때 서버 allowlist·예약 상한과 테스트를 함께 검토하세요.

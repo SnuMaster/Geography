@@ -31,6 +31,8 @@ jobs:
         run: node japan-2027/tests/assistant-browser.cjs
       - name: Simple assistant chat, tools and explicit request cancellation on Chromium
         run: node japan-2027/tests/assistant-simple-browser.cjs
+      - name: Model choice and usage on Chromium
+        run: node japan-2027/tests/assistant-models-browser.cjs
       - name: Japanese station disruption links on Chromium
         run: node japan-2027/tests/rail-station-links-browser.cjs
       - name: Date-by-date expenses and existing personal records on Chromium
@@ -71,6 +73,8 @@ jobs:
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-browser.cjs
       - name: Simple assistant chat, tools and explicit request cancellation on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-simple-browser.cjs
+      - name: Model choice and usage on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-models-browser.cjs
       - name: Japanese station disruption links on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/rail-station-links-browser.cjs
       - name: Date-by-date expenses and existing personal records on WebKit

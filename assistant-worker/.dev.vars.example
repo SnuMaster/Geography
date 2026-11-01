@@ -1,3 +1,6 @@
 # Copy to .dev.vars locally; never commit the copy.
 OPENAI_API_KEY=replace-in-cloudflare-secret
 SESSION_SECRET=independent-random-32-byte-secret
+
+# Optional Claude provider: add as a server Secret only after obtaining a Claude API key.
+# ANTHROPIC_API_KEY=your-anthropic-api-key
