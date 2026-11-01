@@ -1,7 +1,8 @@
 'use strict';
 // Exercises the checklist in WebKit, including its actual scrollable geometry.
 const {webkit}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path');
-const tool=async(page,id)=>{if(!await page.locator('#'+id).isVisible())await page.locator('#shellMore>summary').click();await page.locator('#'+id).click();};
+// The removed trip-plan entry retains its renderer for internal regression coverage only.
+const tool=async(page,id)=>{if(id==='tripPlanBtn')return page.locator('#tripPlanBtn').evaluate(el=>el.click());if(!await page.locator('#'+id).isVisible())await page.locator('#shellMore>summary').click();await page.locator('#'+id).click();};
 const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml','.woff2':'font/woff2'};
 const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!file.startsWith(root+path.sep)&&file!==root){res.writeHead(403).end();return;}const target=fs.existsSync(file)&&fs.statSync(file).isDirectory()?path.join(file,'index.html'):file;fs.readFile(target,(err,body)=>{if(err){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':types[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store'});res.end(body);});});
 const assert=(ok,message)=>{if(!ok)throw Error(message);};

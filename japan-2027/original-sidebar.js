@@ -9,7 +9,7 @@
  }
  function init(value){if(api)return;api=value;document.body.classList.add('original-sidebar');
   const parking=document.createElement('div');parking.id='originalLegacyControls';parking.hidden=true;document.body.append(parking);
-  for(const id of ['itineraryToggle','rideToggle','ccInstall','aboutBtn','shareBtn']){const node=$('#'+id);node.hidden=true;parking.append(node);}
+  for(const id of ['tripPlanBtn','itineraryToggle','rideToggle','ccInstall','aboutBtn','shareBtn']){const node=$('#'+id);node.hidden=true;parking.append(node);}
   const plan=document.createElement('section');plan.className='original-plan-tools';plan.innerHTML='<h3>일정 조정</h3><p>원본 일정은 그대로 유지됩니다. 조정안은 확인한 뒤 별도로 적용합니다.</p>';plan.append($('#ccEdit'),$('#ccUndo'),$('#ccPlanStatus'));$('#shellInfo').append(plan);parking.append(document.querySelector('.cc-timeline-heading'),$('#ccTimeline'));
   $('#shellTabToday').textContent='원본 일정';const panel=$('#itineraryPanel');$('#itineraryScroll').prepend($('#dayHeader'));
   ItineraryDrawer.dock($('#shellToday'),{open:()=>{$('#shellTabToday').click();sidebar(true);},close:()=>sidebar(false),isOpen:()=>!document.body.classList.contains('cc-sidebar-closed')&&$('#shellTabToday').getAttribute('aria-selected')==='true'});
