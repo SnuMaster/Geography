@@ -26,6 +26,11 @@
 .original-plan-tools{border-top:1px solid #e4dbce;margin-top:18px;padding-top:10px}.original-plan-tools p{font-size:11px;line-height:1.7}.original-plan-tools button{min-height:44px;border:1px solid #ded5c6;border-radius:8px;padding:7px 12px;margin:4px 5px 4px 0}
 .command-center #mapSettings #kisekiLegal{font-size:12px;border-top:1px solid #ded5c6;padding:12px 0;margin-top:14px}.command-center #mapSettings #kisekiLegal summary{cursor:pointer}
 .compact-station [data-ride-choose]{min-height:44px;background:#c76636;color:#fffdf7;border-color:#c76636}
+.command-center #shellMore .shell-more-menu{max-height:calc(var(--viewport-height,100dvh) - var(--shell-head) - 20px);overflow-y:auto;overscroll-behavior:contain}
+.command-center #shellMore #ccFilters{width:auto;margin:0;padding:0 10px;border:0;background:transparent;box-shadow:none;font-size:12px;white-space:normal}
+.command-center #shellMore #ccFilters summary{min-height:44px;padding:12px 0;font-size:12px;line-height:20px}
+.command-center #shellMore #ccFilters select{min-height:44px;font-size:16px}
+.command-center #shellMore #ccFilters input{width:20px;height:20px;flex:none}
 body.command-center.travel-shell .topbar>#ccAlertsToggle{display:inline-flex;flex:none;min-width:44px;min-height:44px;border-radius:9px}
 body.command-center.travel-shell .topbar>#ccAlertsToggle[aria-pressed=true]{background:#f9e3ca;color:#a94318;box-shadow:inset 0 0 0 1px #d99b6b}
 @media(max-width:1100px){body.command-center.travel-shell .topbar>#ccAlertsToggle{width:44px;padding:10px}#ccAlertsToggle>span{display:none}}
