@@ -32,6 +32,16 @@
  function rest(stop,nextStop,leg){const end=T.interval(stop||{}).end,start=T.interval(nextStop||{}).start,travel=leg?.durationMinutes;if(!end||!start||!Number.isFinite(travel))return null;return Math.max(0,T.minutes(start)-T.minutes(end)-travel-10);}
  function uber(stop,clientId){if(!stop||stop.kind==='home'||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lng)||!clientId)return null;const u=new URL('https://m.uber.com/looking');u.searchParams.set('client_id',clientId);u.searchParams.set('drop[0]',JSON.stringify({latitude:stop.lat,longitude:stop.lng,addressLine1:stop.name}));return u.href;}
  function uberOptions(stop,clientId=''){if(!stop||stop.kind==='home'||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lng)||Math.abs(stop.lat)>90||Math.abs(stop.lng)>180)return null;const app=new URL('uber://riderequest');app.searchParams.set('pickup','my_location');app.searchParams.set('dropoff[latitude]',String(stop.lat));app.searchParams.set('dropoff[longitude]',String(stop.lng));app.searchParams.set('dropoff[nickname]',stop.name);return {app:clientId?uber(stop,clientId):app.href,web:clientId?uber(stop,clientId).replace('/looking','/'):'https://m.uber.com/',prefilledWeb:!!clientId};}
+ // Maps URLs have no flight/ferry mode. Use named public endpoints, never a device/home origin.
+ function googleMapsOptions(from,to,leg,label=s=>s.name){
+  const query=s=>{if(!s||s.kind==='home'||!String(s.name||'').trim())return null;const name=String(label(s)||s.name),ja=name.match(/[（(]([^()（）]*[\u3040-\u30ff\u3400-\u9fff][^()（）]*)[)）]/)?.[1];return [ja&&!/[가-힣]/.test(ja)?(s.kind==='station'?ja.replace(/駅$/,'')+'駅':ja):name,s.area].filter(Boolean).join(' ');};
+  const destination=query(to);if(!destination)return null;
+  const modes=(leg?.parts||[]).map(p=>p.mode),special=modes.includes('flight')?'flight':modes.includes('ferry')?'ferry':null,origin=query(from);
+  const mode=modes.some(m=>['rail','metro','bus'].includes(m))?'transit':modes.includes('taxi')?'driving':modes.length&&modes.every(m=>['walk','transfer'].includes(m))?'walking':null;
+  const directions=!!origin&&!special&&!!mode,center=!!special&&Number.isFinite(to.lat)&&Number.isFinite(to.lng)&&Math.abs(to.lat)<=90&&Math.abs(to.lng)<=180,u=new URL(directions?'https://www.google.com/maps/dir/':center?'https://www.google.com/maps/@':'https://www.google.com/maps/search/');u.searchParams.set('api','1');
+  if(directions){u.searchParams.set('origin',origin);u.searchParams.set('destination',destination);u.searchParams.set('travelmode',mode);}else if(center){u.searchParams.set('map_action','map');u.searchParams.set('center',to.lat+','+to.lng);u.searchParams.set('zoom','17');}else u.searchParams.set('query',destination);
+  return {href:u.href,label:special==='flight'?'도착 공항 지도':special==='ferry'?'도착 항구 지도':directions?'Google Maps 길찾기':'목적지 지도',directions,special};
+ }
  function validAction(action,days){return action?.type==='open_place_on_map'&&days.some(d=>d.n===action.day&&d.variants.some(v=>v.id===action.variant&&v.stops.some(s=>s.uid===action.placeId)));}
- return {STORE,categories,packing,load,save,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,uberOptions,validAction};
+ return {STORE,categories,packing,load,save,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
 });
