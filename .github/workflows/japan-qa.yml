@@ -33,6 +33,8 @@ jobs:
         run: node japan-2027/tests/rail-station-links-browser.cjs
       - name: Date-by-date expenses and existing personal records on Chromium
         run: node japan-2027/tests/expense-browser.cjs
+      - name: Active navigation containment and controls on Chromium
+        run: node japan-2027/tests/navigation-layout-browser.cjs
       - name: Code-free account signup and shared login on Chromium
         run: node japan-2027/tests/account-browser.cjs
       - name: Command center layout, personal plans and private records on Chromium
@@ -67,6 +69,8 @@ jobs:
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/rail-station-links-browser.cjs
       - name: Date-by-date expenses and existing personal records on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/expense-browser.cjs
+      - name: Active navigation containment and controls on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/navigation-layout-browser.cjs
       - name: Code-free account signup and shared login on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/account-browser.cjs
       - name: Command center layout, personal plans and private records on WebKit
