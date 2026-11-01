@@ -116,3 +116,10 @@ GET /models와 GET /usage는 로그인 후에만 읽을 수 있습니다. 모델
 Claude 사용 준비: Claude Console에서 본인이 API 키를 발급한 후 Cloudflare의 japan-2027-assistant → Settings → Variables and Secrets에서 ANTHROPIC_API_KEY를 Secret으로 추가합니다. 또는 로컬에서 npx --no-install wrangler secret put ANTHROPIC_API_KEY를 실행해 비공개 프롬프트에 직접 입력합니다. 키를 채팅·Git·브라우저 저장소에 붙여넣지 마세요. 등록 후 모델/사용량 새로고침으로 활성화 여부를 확인합니다. 계정·이용약관·크레딧 등록은 사용자가 직접 진행합니다. 현재 Claude 키는 미등록이고 실제 Claude 응답/계정 접근은 미검증입니다.
 
 단가·모델 정보 확인일 2026-11-02: [OpenAI 가격](https://developers.openai.com/api/docs/pricing), [Claude 모델](https://platform.claude.com/docs/en/models/overview), [Claude 가격](https://platform.claude.com/docs/en/about-claude/pricing), [Claude 구조화 출력](https://platform.claude.com/docs/en/build-with-claude/structured-outputs). 가격/모델을 바꿀 때 서버 allowlist·예약 상한과 테스트를 함께 검토하세요.
+# Astra·Terra 추가 · 2026-11-02
+
+모델 선택에 `gpt-6-astra`(GPT-6 Astra), `gpt-6.1-terra`(GPT-6.1 Terra)를 추가했습니다. 기본 Luna와 기존 Sol/Claude 선택은 유지합니다. 동일한 서버 OpenAI Secret을 사용하며 새 키는 필요하지 않습니다. 브라우저 목록은 인증된 `/models`에서 받아오므로 모델·사용량 새로고침 또는 사이트 재실행으로 갱신합니다.
+
+두 모델은 사용자가 질문 또는 동의한 사진 분석을 실행할 때만 동일한 요청의 입력을 `/v1/responses/input_tokens`로 먼저 계산합니다. 실패·잘못된 토큰 수는 생성 전에 차단합니다. 서버에서 확인한 입력 수에 1,024토큰 여유와 최대 출력 1,200토큰을 더해 비용을 예약하며 클라이언트 토큰 수·요율은 무시합니다. 전체 컨텍스트 비용을 매번 예약해서 Astra가 월 $5 한도에 항상 막히는 문제를 피합니다. 긴 컨텍스트 상한 요율은 Astra 입력 $20/출력 $75, Terra 입력 $2/출력 $7.5(각 100만 토큰당), 캐시 할인 미반영입니다. 실제 청구액은 더 낮을 수 있으며 기존 표시는 예상 비용입니다. 월 예산·요청 횟수와 생성 분당 제한은 유지하고 입력 계산에도 외부 조회 제한을 적용합니다.
+
+공식 근거: [Astra](https://developers.openai.com/api/docs/models/gpt-6-astra), [Terra](https://developers.openai.com/api/docs/models/gpt-6.1-terra), [입력 토큰 계산](https://developers.openai.com/api/docs/guides/token-counting). 기존 키로 두 모델 메타데이터와 공개 텍스트/JSON schema 입력 계산의 200 응답을 확인했습니다. 실제 유료 답변 생성은 실행하지 않았습니다. Claude 키는 여전히 미설정입니다.
