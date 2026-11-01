@@ -31,6 +31,7 @@
  }
  function rest(stop,nextStop,leg){const end=T.interval(stop||{}).end,start=T.interval(nextStop||{}).start,travel=leg?.durationMinutes;if(!end||!start||!Number.isFinite(travel))return null;return Math.max(0,T.minutes(start)-T.minutes(end)-travel-10);}
  function uber(stop,clientId){if(!stop||stop.kind==='home'||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lng)||!clientId)return null;const u=new URL('https://m.uber.com/looking');u.searchParams.set('client_id',clientId);u.searchParams.set('drop[0]',JSON.stringify({latitude:stop.lat,longitude:stop.lng,addressLine1:stop.name}));return u.href;}
+ function uberOptions(stop,clientId=''){if(!stop||stop.kind==='home'||!Number.isFinite(stop.lat)||!Number.isFinite(stop.lng)||Math.abs(stop.lat)>90||Math.abs(stop.lng)>180)return null;const app=new URL('uber://riderequest');app.searchParams.set('pickup','my_location');app.searchParams.set('dropoff[latitude]',String(stop.lat));app.searchParams.set('dropoff[longitude]',String(stop.lng));app.searchParams.set('dropoff[nickname]',stop.name);return {app:clientId?uber(stop,clientId):app.href,web:clientId?uber(stop,clientId).replace('/looking','/'):'https://m.uber.com/',prefilledWeb:!!clientId};}
  function validAction(action,days){return action?.type==='open_place_on_map'&&days.some(d=>d.n===action.day&&d.variants.some(v=>v.id===action.variant&&v.stops.some(s=>s.uid===action.placeId)));}
- return {STORE,categories,packing,load,save,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,validAction};
+ return {STORE,categories,packing,load,save,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,uberOptions,validAction};
 });
