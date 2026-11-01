@@ -27,6 +27,7 @@
 .command-center #mapSettings #kisekiLegal{font-size:12px;border-top:1px solid #ded5c6;padding:12px 0;margin-top:14px}.command-center #mapSettings #kisekiLegal summary{cursor:pointer}
 .compact-station [data-ride-choose]{min-height:44px;background:#c76636;color:#fffdf7;border-color:#c76636}
 .command-center #shellMore .shell-more-menu{max-height:calc(var(--viewport-height,100dvh) - var(--shell-head) - 20px);overflow-y:auto;overscroll-behavior:contain}
+.command-center:has(.ride-mini:not([hidden])) #shellMore .shell-more-menu{max-height:calc(var(--viewport-height,100dvh) - var(--shell-head) - 110px)}
 .command-center #shellMore #ccFilters{width:auto;margin:0;padding:0 10px;border:0;background:transparent;box-shadow:none;font-size:12px;white-space:normal}
 .command-center #shellMore #ccFilters summary{min-height:44px;padding:12px 0;font-size:12px;line-height:20px}
 .command-center #shellMore #ccFilters select{min-height:44px;font-size:16px}
