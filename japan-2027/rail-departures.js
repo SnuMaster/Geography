@@ -43,7 +43,8 @@ const RailDepartures = (() => {
   if(p?.country!=='JP'||!stop)return null;
   const name=String(stop.nameJa||stop.name||'').trim();if(!name)return null;
   const region=p.lineId==='West.FK'?'福岡市':p.lineId?.startsWith('West.')?'関西':'';
-  const query=[name.replace(/駅$/,'')+'駅',p.operator||p.line,region,'日本'].filter(Boolean).join(' ');
+  // Mixed Korean line names can make Maps autocorrect Japanese station names.
+  const query=[name.replace(/駅$/,'')+'駅',region,'日本'].filter(Boolean).join(' ');
   const url=new URL('https://www.google.com/maps/search/');url.search=new URLSearchParams({api:'1',query}).toString();return url.href;
  }
  function disruptionHtml(p,stops){

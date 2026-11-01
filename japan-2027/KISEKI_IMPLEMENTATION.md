@@ -69,7 +69,7 @@ WebKit은 `ASSISTANT_BROWSER=webkit`로 동일한 새 검사들을 실행합니�
 
 ## 일본 역별 지연 확인 링크
 
-일본 구간의 열차 정보·전체 시간표·탑승 중 화면에 `지연 현황 확인하기`를 추가했습니다. 출발역·도착역과 탑승 열차의 중간 정차역을 한글(일본어) 링크로 표시합니다. 역명·노선·지역을 사용한 [Google Maps 공식 검색 URL](https://developers.google.com/maps/documentation/urls/get-started#search)로 새 창을 열며 API 키·AI 호출·GPS 전송은 필요하지 않습니다. 한국 KTX에는 표시하지 않습니다.
+일본 구간의 열차 정보·전체 시간표·탑승 중 화면에 `지연 현황 확인하기`를 추가했습니다. 출발역·도착역과 탑승 열차의 중간 정차역을 한글(일본어) 링크로 표시합니다. 일본어 역명·지역을 사용한 [Google Maps 공식 검색 URL](https://developers.google.com/maps/documentation/urls/get-started#search)로 새 창을 열며 API 키·AI 호출·GPS 전송은 필요하지 않습니다. 한국 KTX에는 표시하지 않습니다.
 
 Google Maps의 정보 제공 여부는 역·노선에 따라 다르며, 이 사이트는 지연 정보를 수신하거나 시간표·예정 도착 시각에 자동 반영하지 않습니다. 기존 공식 시간표·수동 지연 보정·일정·경로 좌표는 유지합니다. 오프라인에서도 메뉴는 남지만 Google Maps에서 자료를 열려면 연결이 필요합니다.
 

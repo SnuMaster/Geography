@@ -7,9 +7,12 @@ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-
 test('all Japanese route endpoints open encoded station searches; Korean KTX has no disruption links',()=>{
  for(const p of Object.values(ctx.RailDepartureProfiles.profiles)){
   if(p.country==='KR'){assert.equal(ctx.api.stationMapUrl(p,{name:p.from}),null);assert.equal(ctx.api.disruptionHtml(p),'');continue;}
-  for(const stop of [{name:p.from,nameJa:p.fromJa},{name:p.to,nameJa:p.toJa}]){const u=new URL(ctx.api.stationMapUrl(p,stop));assert.equal(u.origin,'https://www.google.com');assert.equal(u.pathname,'/maps/search/');assert.equal(u.searchParams.get('api'),'1');assert.ok(u.searchParams.get('query').includes(stop.nameJa));assert.ok(u.searchParams.get('query').includes(p.line));assert.match(u.searchParams.get('query'),/日本$/);}
+  for(const stop of [{name:p.from,nameJa:p.fromJa},{name:p.to,nameJa:p.toJa}]){const u=new URL(ctx.api.stationMapUrl(p,stop));assert.equal(u.origin,'https://www.google.com');assert.equal(u.pathname,'/maps/search/');assert.equal(u.searchParams.get('api'),'1');assert.ok(u.searchParams.get('query').includes(stop.nameJa));assert.doesNotMatch(u.searchParams.get('query'),/[가-힣]/);assert.match(u.searchParams.get('query'),/日本$/);}
   assert.match(ctx.api.disruptionHtml(p),/지연 현황 확인하기/);assert.match(ctx.api.disruptionHtml(p),/자동 반영되지/);
  }
+});
+test('Uguisudani keeps its exact Japanese name without the line text that triggered a different station',()=>{
+ const p=ctx.RailDepartureProfiles.profiles['jr-east-yamanote-uguisudani-ikebukuro'];assert.equal(new URL(ctx.api.stationMapUrl(p,{name:p.from,nameJa:p.fromJa})).searchParams.get('query'),'鶯谷駅 日本');
 });
 test('intermediate stops are linked and deduplicated without transmitting GPS, dates or train IDs',()=>{
  const p=ctx.RailDepartureProfiles.profiles['fukuoka-hakata-ohori'],data=require('../japan-2027/'+p.file).profiles['fukuoka-hakata-ohori'].Weekday[0],html=ctx.api.disruptionHtml(p,[...data.stops,data.stops[0]]);
