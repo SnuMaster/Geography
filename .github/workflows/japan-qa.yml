@@ -29,7 +29,7 @@ jobs:
         run: node japan-2027/tests/ci-browser.cjs
       - name: Assistant state, privacy and offline fallback on Chromium
         run: node japan-2027/tests/assistant-browser.cjs
-      - name: Shared account login and owner enrollment on Chromium
+      - name: Code-free account signup and shared login on Chromium
         run: node japan-2027/tests/account-browser.cjs
       - name: Command center layout, personal plans and private records on Chromium
         run: node japan-2027/tests/command-browser.cjs
@@ -59,7 +59,7 @@ jobs:
         run: node japan-2027/tests/booking-webkit.cjs
       - name: Assistant mobile panel on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-browser.cjs
-      - name: Shared account login and owner enrollment on WebKit
+      - name: Code-free account signup and shared login on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/account-browser.cjs
       - name: Command center layout, personal plans and private records on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/command-browser.cjs

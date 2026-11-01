@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
-<title id="title">KISEKI Japan Travel Planner</title><desc id="desc">A golden circular emblem framing Mount Fuji, a warm red sun and sakura petals.</desc>
+<title id="title">KISEKI 日本旅行プランナー</title><desc id="desc">A golden circular emblem framing Mount Fuji, a warm red sun and sakura petals.</desc>
 <defs><clipPath id="circle"><circle cx="64" cy="64" r="52"/></clipPath><linearGradient id="sun" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#f47856"/><stop offset="1" stop-color="#ba382c"/></linearGradient><linearGradient id="mount" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#375169"/><stop offset="1" stop-color="#142536"/></linearGradient></defs>
 <circle cx="64" cy="64" r="57" fill="#fff9ef" stroke="#c6a26b" stroke-width="3.4"/>
 <g clip-path="url(#circle)"><circle cx="78" cy="42" r="27" fill="url(#sun)"/>

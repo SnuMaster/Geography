@@ -15,7 +15,7 @@ OUTPUT_USD_PER_MILLION = "0.75"
 WEATHER_ENABLED = "true"
 
 [secrets]
-required = ["OPENAI_API_KEY", "LOGIN_CODE_SHA256", "SESSION_SECRET"]
+required = ["OPENAI_API_KEY", "SESSION_SECRET"]
 
 [[durable_objects.bindings]]
 name = "BUDGET"
