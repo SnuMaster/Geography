@@ -1,6 +1,28 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const origin='https://snumaster.github.io';
+
+test('owner enrollment requires the existing private code, stores a salted hash and shares the capped AI session',async()=>{
+ const f=await fixture(),body={username:'My_Trip',password:'test-only-long-password',code:f.code};
+ assert.equal((await f.run('/account/register',{...body,code:'wrong-private-code-at-least-32-characters'},'')).status,401);assert.equal(f.memory.has('owner-account'),false);
+ const result=await f.run('/account/register',body,'');assert.equal(result.status,200);const data=await result.json();assert.equal(data.user,'my_trip');assert.equal(await f.m.authenticated(f.req('/me',null,data.token),f.env,origin),true);
+ const saved=f.memory.get('owner-account');assert.equal(saved.username,'my_trip');assert.equal(saved.iterations,100000);assert.ok(saved.salt.length>=20);assert.doesNotMatch(JSON.stringify(saved),/test-only-long-password|test-only-random-code/);assert.equal(saved.password,undefined);
+ assert.equal((await f.run('/account/login',{username:'my_trip',password:'another-wrong-password'},'')).status,401);
+ assert.equal((await f.run('/account/login',{username:'not_an_account',password:body.password},'')).status,401);
+ const login=await f.run('/account/login',{username:'MY_TRIP',password:body.password},'');assert.equal(login.status,200);assert.ok((await login.json()).token);
+ assert.equal((await f.run('/account/register',body,'')).status,409);assert.equal((await(await f.run('/usage')).json()).budget.requests,0);
+});
+test('owner enrollment is atomic, rejects invalid credentials and never opens public signup',async()=>{
+ const f=await fixture(),body={username:'owner',password:'test-only-strong-passphrase',code:f.code};
+ for(const invalid of [{...body,username:'<script>'},{...body,password:'short'},{...body,password:'x'.repeat(129)}])assert.equal((await f.run('/account/register',invalid,'')).status,400);
+ const pair=await Promise.all([f.run('/account/register',body,''),f.run('/account/register',{...body,username:'other'},'')]);assert.deepEqual(pair.map(r=>r.status).sort(),[200,409]);
+ assert.equal((await f.run('/account/register',body,'','https://evil.test')).status,403);
+});
+test('password login uses the existing shared brute-force limiter and generic failure',async()=>{
+ const f=await fixture(),body={username:'unknown',password:'test-only-long-password'};
+ for(let i=0;i<10;i++){const r=await f.run('/account/login',body,'');assert.equal(r.status,401);assert.equal((await r.json()).error,'아이디 또는 비밀번호를 확인하세요.');}
+ assert.equal((await f.run('/session',{code:f.code},'')).status,429);assert.equal((await f.run('/account/register',{...body,code:f.code},'')).status,429);assert.equal(f.memory.has('owner-account'),false);
+});
 async function fixture(vars={}){const m=await import('../assistant-worker/worker.mjs'),memory=new Map();let queue=Promise.resolve();const tx={get:async k=>structuredClone(memory.get(k)),put:async(k,v)=>memory.set(k,structuredClone(v)),delete:async k=>memory.delete(k)};const storage={transaction:fn=>{const p=queue.then(()=>fn(tx));queue=p.catch(()=>{});return p;}};const code='test-only-random-code-at-least-32-characters',env={ALLOWED_ORIGINS:origin,LOGIN_CODE_SHA256:await m.digest(code),SESSION_SECRET:'test-only-independent-session-secret-123456',OPENAI_API_KEY:'test-key-never-forward-to-browser',...vars};const gate=new m.BudgetGate({storage},env);env.BUDGET={idFromName:x=>x,get:()=>({fetch:(url,init)=>gate.fetch(new Request(url,init))})};const token=await m.issueToken(env,origin);const req=(path,body,bearer=token,site=origin)=>new Request('https://api.example.test'+path,{method:body?'POST':'GET',headers:{Origin:site,'Content-Type':'application/json',...(bearer?{Authorization:'Bearer '+bearer}:{})},body:body?JSON.stringify(body):undefined});return {m,env,code,token,req,gate,memory,run:(path,body,bearer=token,site=origin)=>m.default.fetch(req(path,body,bearer,site),env)};}
 test('unauthenticated, forged, expired, foreign-origin and unconfigured API fail closed',async()=>{const f=await fixture();assert.equal((await f.run('/me',null,'')).status,401);assert.equal((await f.run('/me',null,'bad.token')).status,401);assert.equal((await f.run('/me',null,await f.m.issueToken(f.env,origin,Date.now()-1900000))).status,401);assert.equal((await f.run('/me',null,f.token,'https://evil.test')).status,403);assert.equal((await f.m.default.fetch(f.req('/me'),{})).status,403);assert.equal((await f.run('/me')).status,200);assert.equal((await f.run('/usage')).headers.get('cache-control'),'no-store');});
 test('cookie-free login succeeds only with personal code; preflight allows explicit bearer headers',async()=>{const f=await fixture();assert.equal((await f.run('/session',{code:'bad'},'')).status,401);const r=await f.run('/session',{code:f.code},'');assert.equal(r.status,200);assert.equal(r.headers.has('set-cookie'),false);assert.ok((await r.json()).token);const pre=await f.m.default.fetch(new Request('https://api.example.test/chat',{method:'OPTIONS',headers:{Origin:origin}}),f.env);assert.equal(pre.status,204);assert.match(pre.headers.get('Access-Control-Allow-Headers'),/Authorization/);assert.equal(pre.headers.has('Access-Control-Allow-Credentials'),false);});

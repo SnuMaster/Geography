@@ -29,8 +29,12 @@ jobs:
         run: node japan-2027/tests/ci-browser.cjs
       - name: Assistant state, privacy and offline fallback on Chromium
         run: node japan-2027/tests/assistant-browser.cjs
+      - name: Shared account login and owner enrollment on Chromium
+        run: node japan-2027/tests/account-browser.cjs
       - name: Command center layout, personal plans and private records on Chromium
         run: node japan-2027/tests/command-browser.cjs
+      - name: KISEKI brand, photographs and full itinerary integration on Chromium
+        run: node japan-2027/tests/kiseki-browser.cjs
       - name: Standard Fold8 cover, main display, folding and keyboard layouts on Chromium
         run: node japan-2027/tests/fold-browser.cjs
       - uses: actions/upload-artifact@v4
@@ -55,8 +59,12 @@ jobs:
         run: node japan-2027/tests/booking-webkit.cjs
       - name: Assistant mobile panel on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-browser.cjs
+      - name: Shared account login and owner enrollment on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/account-browser.cjs
       - name: Command center layout, personal plans and private records on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/command-browser.cjs
+      - name: KISEKI brand, photographs and full itinerary integration on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/kiseki-browser.cjs
       - name: Standard Fold8 cover, main display, folding and keyboard layouts on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/fold-browser.cjs
       - uses: actions/upload-artifact@v4

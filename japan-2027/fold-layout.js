@@ -2,8 +2,11 @@
 // Adapt to the available CSS viewport, not a phone name or physical-pixel guess.
 (function(){
  const $=s=>document.querySelector(s),panels=new Map(),cards=new Map();
+ try{const saved=JSON.parse(localStorage.getItem('kiseki-layout-v1')||'{}');for(const key of ['cover','fold','desktop'])if(typeof saved[key]==='boolean')cards.set(key,saved[key]);}catch(_){}
  let previous='',focusSize=null,ready=false,scrollKey='';
- const mode=()=>innerWidth<700?'cover':innerWidth<=1100?'fold':'desktop';
+ // Mobile innerWidth may temporarily include an old, overflowing detail sheet.
+ // Use the same layout viewport queries as CSS so folding can resolve that overflow.
+ const mode=()=>matchMedia('(max-width:699px)').matches?'cover':matchMedia('(max-width:1100px)').matches?'fold':'desktop';
  const editable=el=>el?.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]),textarea,[contenteditable=true]');
  function sidebar(open){document.body.classList.toggle('cc-sidebar-closed',!open);$('#ccSidebarToggle')?.setAttribute('aria-expanded',String(open));}
  function card(expanded){document.body.classList.toggle('cc-card-collapsed',!expanded);const b=$('#foldCardToggle');if(b){b.setAttribute('aria-expanded',String(expanded));b.setAttribute('aria-label',expanded?'이동 정보 접기':'이동 정보 펼치기');b.textContent=expanded?'⌃':'⌄';}}
@@ -19,13 +22,13 @@
  }
  function sync(){
   if(!ready)return;const current=mode();
-  if(previous!==current){if(previous){panels.set(previous,!document.body.classList.contains('cc-sidebar-closed'));cards.set(previous,!document.body.classList.contains('cc-card-collapsed'));}document.body.dataset.viewport=current;sidebar(panels.has(current)?panels.get(current):current!=='cover');card(cards.has(current)?cards.get(current):current==='desktop');if(current==='desktop')$('.route-focus-summary').append($('#routeNavigationStart'));else $('.fold-card-bar').insertBefore($('#routeNavigationStart'),$('#foldCardToggle'));previous=current;}
+  if(previous!==current){if(previous){panels.set(previous,!document.body.classList.contains('cc-sidebar-closed'));cards.set(previous,!document.body.classList.contains('cc-card-collapsed'));}document.body.dataset.viewport=current;sidebar(panels.has(current)?panels.get(current):current!=='cover');card(cards.has(current)?cards.get(current):current==='desktop');$('.fold-card-bar').insertBefore($('#routeNavigationStart'),$('#foldCardToggle'));previous=current;}
   visual();refreshCard();
  }
- function refreshCard(){if(!ready)return;const source=$('#ccNext'),next=$('#foldNext');next.disabled=source.disabled;$('#foldNextName').textContent=$('#ccNextName').textContent;$('#routeNavigationStart').setAttribute('aria-label','선택한 이동 구간 길 안내');$('#routeNavigationStart').title=$('#routeFocusTitle').textContent;}
+ function refreshCard(){if(!ready)return;const source=$('#ccNext'),next=$('#foldNext');next.disabled=source.disabled;$('#foldNextName').textContent=$('#ccNextName').textContent;$('#foldNext small').textContent='다음 방문 · '+$('#ccNextTime').textContent;$('#routeNavigationStart').setAttribute('aria-label','선택한 이동 구간 길 안내');$('#routeNavigationStart').title=$('#routeFocusTitle').textContent;}
  function init(){
   if(ready)return;ready=true;const target=$('#shellContextCard'),bar=document.createElement('div');bar.className='fold-card-bar';bar.innerHTML='<button id="foldNext" type="button"><small>다음 방문</small><strong id="foldNextName"></strong></button><button id="foldCardToggle" type="button" aria-controls="ccNext routeFocusDetail routeFocusCount" aria-expanded="false" aria-label="이동 정보 펼치기">⌄</button>';target.prepend(bar);bar.insertBefore($('#routeNavigationStart'),$('#foldCardToggle'));
-  $('#foldNext').onclick=()=>$('#ccNext').click();$('#foldCardToggle').onclick=()=>card($('#foldCardToggle').getAttribute('aria-expanded')!=='true');
+  $('#foldNext').onclick=()=>$('#ccNext').click();$('#foldCardToggle').onclick=()=>{const expanded=$('#foldCardToggle').getAttribute('aria-expanded')!=='true';card(expanded);cards.set(mode(),expanded);try{localStorage.setItem('kiseki-layout-v1',JSON.stringify(Object.fromEntries(cards)));}catch(_){}};
   // Request cancellation remains reachable while the keyboard hides voice controls.
   $('#assistantPanel header>div').prepend($('#assistantCancel'));
   const tile=$('#tileError'),notice=document.createElement('dialog');notice.id='foldMapNoticeDialog';notice.setAttribute('aria-label','배경지도 연결 안내');notice.innerHTML='<header><strong>배경지도 연결 안내</strong><button id="foldMapNoticeClose" type="button" aria-label="지도 연결 안내 닫기">×</button></header><p>배경지도 통신이 불안정해도 장소와 저장된 경로는 사용할 수 있습니다. 지도 설정에서 내장 오프라인 지도를 선택할 수 있습니다.</p>';notice.append(tile);document.body.append(notice);

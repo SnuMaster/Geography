@@ -4,5 +4,6 @@ japan-2027/vendor/leaflet.css -text
 *.gz -text
 *.woff2 -text
 *.png -text
+*.jpg -text
 *.webp -text
 *.ico -text

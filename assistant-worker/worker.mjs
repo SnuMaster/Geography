@@ -7,6 +7,10 @@ function unb64(s){return Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'
 async function sign(key,value){const k=await crypto.subtle.importKey('raw',enc.encode(key),{name:'HMAC',hash:'SHA-256'},false,['sign']);return b64(await crypto.subtle.sign('HMAC',k,enc.encode(value)));}
 export async function digest(value){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',enc.encode(value)))].map(x=>x.toString(16).padStart(2,'0')).join('');}
 function equal(a,b){if(typeof a!=='string'||typeof b!=='string'||a.length!==b.length)return false;let v=0;for(let i=0;i<a.length;i++)v|=a.charCodeAt(i)^b.charCodeAt(i);return v===0;}
+// Owner-only enrollment: an existing private code is required, never public AI signup.
+const accountName=value=>typeof value==='string'?value.trim().toLowerCase():'';
+const validAccount=b=>/^[a-z0-9][a-z0-9_-]{2,31}$/.test(accountName(b.username))&&typeof b.password==='string'&&b.password.length>=12&&b.password.length<=128;
+async function passwordHash(password,salt){const key=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveBits']);return b64(await crypto.subtle.deriveBits({name:'PBKDF2',hash:'SHA-256',salt:unb64(salt),iterations:100000},key,256));}
 export async function issueToken(env,origin,now=Date.now()){const payload=b64(enc.encode(JSON.stringify({sub:'owner',origin,exp:Math.floor(now/1000)+1800})));return payload+'.'+await sign(env.SESSION_SECRET,payload);}
 export async function authenticated(request,env,origin,now=Date.now()){try{const token=request.headers.get('Authorization')?.replace(/^Bearer /,''),[p,s,...extra]=(token||'').split('.');if(extra.length||!equal(await sign(env.SESSION_SECRET,p||''),s||''))return false;const claims=JSON.parse(new TextDecoder().decode(unb64(p)));return claims.sub==='owner'&&claims.origin===origin&&Number.isInteger(claims.exp)&&claims.exp>now/1000&&claims.exp<=now/1000+1801;}catch(_){return false;}}
 async function json(request,max=MAX_BODY){if(Number(request.headers.get('Content-Length')||0)>max)throw Error('size');const reader=request.body?.getReader();if(!reader)throw Error('invalid');let size=0,chunks=[];while(true){let timer;const result=await Promise.race([reader.read(),new Promise((_,reject)=>{timer=setTimeout(()=>{reader.cancel().catch(()=>{});reject(Error('timeout'));},8000);})]).finally(()=>clearTimeout(timer));const {done,value}=result;if(done)break;size+=value.length;if(size>max){await reader.cancel();throw Error('size');}chunks.push(value);}const body=new Uint8Array(size);let i=0;for(const c of chunks){body.set(c,i);i+=c.length;}return JSON.parse(new TextDecoder().decode(body));}
@@ -17,6 +21,13 @@ export function actionsFor(actions,context){const allowed=[...(context?.stops||[
 export function exchangeRates(xml){const date=/time=['"](\d{4}-\d{2}-\d{2})['"]/.exec(xml)?.[1],rate=currency=>Number(new RegExp("currency=['\"]"+currency+"['\"]\\s+rate=['\"]([0-9.]+)['\"]").exec(xml)?.[1]);const jpy=rate('JPY'),krw=rate('KRW');if(!date||![jpy,krw].every(n=>Number.isFinite(n)&&n>0))throw Error('exchange');return {date,krwPerJpy:krw/jpy,status:'ECB 기준환율 · 환전·카드 적용환율 아님',source:'https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml'};}
 async function handle(request,env,origin){const u=new URL(request.url),path=u.pathname;if(!env.LOGIN_CODE_SHA256||!/^[a-f0-9]{64}$/.test(env.LOGIN_CODE_SHA256)||!env.SESSION_SECRET||env.SESSION_SECRET.length<32||!env.BUDGET)return fail(503,'인증 백엔드 설정 필요');
  if(path==='/session'&&request.method==='POST'){const rate=await call(env,'login',{});if(!rate.ok)return fail(429,'로그인 요청 제한 · 잠시 후 다시 시도하세요.');const body=await json(request,1024);if(typeof body.code!=='string'||body.code.length<32||body.code.length>256||!equal(await digest(body.code),env.LOGIN_CODE_SHA256))return fail(401,'로그인 실패');return Response.json({token:await issueToken(env,origin),expiresIn:1800});}
+ if(['/account/register','/account/login'].includes(path)&&request.method==='POST'){
+  const rate=await call(env,'login',{});if(!rate.ok)return fail(429,'로그인 요청 제한 · 잠시 후 다시 시도하세요.');
+  const b=await json(request,2048);if(!validAccount(b))return fail(400,'아이디는 영문·숫자·밑줄·하이픈 3~32자, 비밀번호는 12~128자로 입력하세요.');
+  if(path==='/account/register'&&(typeof b.code!=='string'||b.code.length<32||b.code.length>256||!equal(await digest(b.code),env.LOGIN_CODE_SHA256)))return fail(401,'개인 로그인 코드를 확인하세요.');
+  const result=await call(env,path.endsWith('register')?'account-register':'account-login',{username:accountName(b.username),password:b.password});if(!result.ok)return result;
+  const account=await result.json();return Response.json({token:await issueToken(env,origin),expiresIn:1800,user:account.username});
+ }
  if(!await authenticated(request,env,origin))return fail(401,'개인 로그인이 필요합니다.');
  if(path==='/me'&&request.method==='GET')return Response.json({authenticated:true,user:'owner'});
  if(path==='/usage'&&request.method==='GET')return call(env,'usage',{});
@@ -40,6 +51,8 @@ export class BudgetGate {
  constructor(state,env){this.storage=state.storage;this.env=env;}
  async fetch(request){const op=new URL(request.url).pathname.slice(1),body=await request.json(),now=Date.now(),month=new Date(now+9*3600000).toISOString().slice(0,7),config=settings(this.env);
   return this.storage.transaction(async tx=>{
+   if(op==='account-register'){if(await tx.get('owner-account'))return fail(409,'이미 가입된 개인 계정이 있습니다. 로그인하거나 기존 개인 코드를 이용하세요.');const salt=b64(crypto.getRandomValues(new Uint8Array(16))),hash=await passwordHash(body.password,salt);await tx.put('owner-account',{username:body.username,salt,hash,algorithm:'PBKDF2-SHA256',iterations:100000});return Response.json({username:body.username});}
+   if(op==='account-login'){const account=await tx.get('owner-account'),hash=await passwordHash(body.password,account?.salt||'AAAAAAAAAAAAAAAAAAAAAA');if(!account||!equal(hash,account.hash)||body.username!==account.username)return fail(401,'아이디 또는 비밀번호를 확인하세요.');return Response.json({username:account.username});}
    const rateKey=op==='login'?'login':op==='external'?'external':'ai',rate=await tx.get('rate-'+rateKey)||{start:now,count:0};if(now-rate.start>=60000){rate.start=now;rate.count=0;}
    if(['login','reserve','external'].includes(op)){if(rate.count>=(op==='reserve'?6:10))return fail(429,'요청 빈도 제한');rate.count++;await tx.put('rate-'+rateKey,rate);if(op!=='reserve')return Response.json({ok:true});}
    const key='month-'+month,record=await tx.get(key)||{charged:0,requests:0,inputTokens:0,outputTokens:0};

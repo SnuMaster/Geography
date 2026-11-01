@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-labelledby="title desc">
+<title id="title">KISEKI Japan Travel Planner</title><desc id="desc">A golden circular emblem framing Mount Fuji, a warm red sun and sakura petals.</desc>
+<defs><clipPath id="circle"><circle cx="64" cy="64" r="52"/></clipPath><linearGradient id="sun" x1="0" y1="0" x2=".2" y2="1"><stop stop-color="#f47856"/><stop offset="1" stop-color="#ba382c"/></linearGradient><linearGradient id="mount" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#375169"/><stop offset="1" stop-color="#142536"/></linearGradient></defs>
+<circle cx="64" cy="64" r="57" fill="#fff9ef" stroke="#c6a26b" stroke-width="3.4"/>
+<g clip-path="url(#circle)"><circle cx="78" cy="42" r="27" fill="url(#sun)"/>
+<path d="M-5 103 46 38 64 61 81 45 137 110v24H-5z" fill="url(#mount)"/>
+<path d="m46 38-17 23 12-6 7 7 7-4 9 3z" fill="#fff9ef"/>
+<path d="M-4 106q26-10 51 0t47 0t46 0M-1 114q34-10 62 0t68 0" fill="none" stroke="#c6a26b" stroke-width="2" opacity=".8"/>
+<path d="M8 82q33-17 58-2" fill="none" stroke="#b47b70" stroke-width="1.6"/>
+<g fill="#e5a19c"><path d="M24 25q5 7 2 13-7-2-8-9 4 2 6-4Z"/><path d="M33 29q-1 7-8 9-2-6 4-11l4 2Z"/><path d="M35 40q-6 4-11 0 4-5 10-5Z"/><path d="M19 41q-4-6 1-11 5 4 4 10Z"/><circle cx="26" cy="37" r="2" fill="#d4b37c"/><path d="M103 70q7 0 9 6-6 4-11-1Z"/><path d="M98 74q-3 7-10 6 0-7 7-9Z"/><path d="M94 83q-7 0-8-7 7-2 10 4Z"/><path d="M106 81q-3 7-10 4 0-7 6-9Z"/><circle cx="99" cy="77" r="2" fill="#d4b37c"/></g>
+<path d="M8 25q6 18 17 18M116 63q-7 15-16 16" fill="none" stroke="#a86d62" stroke-width="1.1"/>
+</g>
+<circle cx="64" cy="64" r="52" fill="none" stroke="#c6a26b" stroke-width="1" opacity=".72"/>
+</svg>
