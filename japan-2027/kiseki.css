@@ -53,3 +53,5 @@ body.command-center[data-viewport=desktop] .fold-card-bar{display:flex;align-ite
 
 /* Keep the travel surface quiet; required credits remain in About and on the map. */
 body.command-center.travel-shell{--shell-status:0px!important}.command-center #offlineStatus,.command-center .shell-hero-caption{display:none!important}#accountAvailability:empty{display:none}#kisekiLegal{margin-top:20px;border-top:1px solid #e2d9ca;padding-top:12px}#kisekiLegal>summary{min-height:44px;cursor:pointer;font-size:12px}#kisekiLegal .source-note{font-size:10px}
+
+body.command-center.travel-shell:has(#offlineStatus[data-notice=true]){--shell-status:24px!important}.command-center #offlineStatus[data-notice=true]{display:block!important;height:24px;min-height:24px;padding:4px 12px}

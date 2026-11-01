@@ -7,7 +7,7 @@
  function key(url){return new URL(url,document.baseURI).href;}
  function status(){
   const el=document.querySelector('#offlineStatus');if(!el)return;
-  const offline=!navigator.onLine||stale.size>0;el.dataset.offline=String(offline);
+  const offline=!navigator.onLine||stale.size>0;el.dataset.offline=String(offline);el.dataset.notice=String(offline||!!pendingSnapshot||!storageAvailable);
   let label=el.querySelector('[data-store-label]');
   if(!label){el.textContent='';label=document.createElement('span');label.dataset.storeLabel='';el.append(label);}
   label.textContent=(pendingSnapshot?'새 일정 대기 · 현재 작업 후 자동 적용':offline?'저장 자료 표시 · 오프라인/통신 불안정':storageAvailable?'현장 자료 · 이 브라우저에 저장':'온라인 자료 · 브라우저 저장 사용 불가')+(displayedAt?' · 표시 자료 확인 '+new Date(displayedAt).toLocaleString('ko-KR',{timeZone:'Asia/Tokyo'}):hasDisplayedData?' · 표시 자료 확인 시각 미확인':' · 일정 자료 확인 중')+' · 시간표는 예정 시각·실시간 지연 미반영';
