@@ -39,6 +39,19 @@ const RailDepartures = (() => {
  function keysFor(leg,part){return [...new Set((part?[part]:leg?.parts||[]).map(p=>keyFor(leg,p)).filter(Boolean))];}
  function supported(day,leg,part){return Number(day)>=1&&Number(day)<=22&&keysFor(leg,part).length>0;}
  function safeUrl(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:null;}catch(_){return null;}}
+ function stationMapUrl(p,stop){
+  if(p?.country!=='JP'||!stop)return null;
+  const name=String(stop.nameJa||stop.name||'').trim();if(!name)return null;
+  const region=p.lineId==='West.FK'?'福岡市':p.lineId?.startsWith('West.')?'関西':'';
+  const query=[name.replace(/駅$/,'')+'駅',p.operator||p.line,region,'日本'].filter(Boolean).join(' ');
+  const url=new URL('https://www.google.com/maps/search/');url.search=new URLSearchParams({api:'1',query}).toString();return url.href;
+ }
+ function disruptionHtml(p,stops){
+  if(p?.country!=='JP')return '';
+  const stations=stops?.length?stops:[{name:p.from,nameJa:p.fromJa},{name:p.to,nameJa:p.toJa}],seen=new Set();
+  const anchors=stations.map(stop=>{const url=stationMapUrl(p,stop);if(!url||seen.has(url))return '';seen.add(url);return `<a href="${esc(url)}" target="_blank" rel="noopener noreferrer" data-rail-station-map>${esc(window.TripPersonal.station(stop.name,stop.nameJa,'JP'))} ↗</a>`;}).join('');
+  return anchors?`<details class="rail-disruption-links"><summary>지연 현황 확인하기</summary><div class="rail-station-map-links">${anchors}</div><p>Google Maps에서 역별 운행 정보를 확인하세요. 정보 제공 여부는 역·노선에 따라 달라요. 이 지도의 시간표에는 자동 반영되지 않아요.</p></details>`:'';
+ }
  function links(p){
   const directions=new URL('https://www.google.com/maps/dir/'),station=p.country==='KR'?'역':'駅';
   const stationQuery=name=>`${String(name).replace(/(?:역|駅)$/,'')}${station} ${p.operator||''}`;
@@ -88,7 +101,7 @@ const RailDepartures = (() => {
    <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel||'거리')}</small><b>${esc(metrics.distance||'—')}</b></span><span><small>${esc(metrics.fareLabel||'요금')}</small><b>${esc(metrics.fare||'요금 미확인')}</b></span></div>
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
-   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}">전체 시간표</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>`;
+   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}">전체 시간표</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
  }
  function sectionHtml(key,metrics){const p=profiles[key];return `<section class="station-departures compact-station" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,null,metrics)}</section>`;}
  function html(day,leg,part,metrics){
@@ -185,7 +198,7 @@ const RailDepartures = (() => {
  function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else unmount();});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
  function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
- return {notice,noticeItems,validityFor,travelDate,supported,html,attach,keysFor,keyFor,calendarOptions,getSchedule,isFirstTrain,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
+ return {notice,noticeItems,validityFor,travelDate,supported,html,attach,keysFor,keyFor,calendarOptions,getSchedule,isFirstTrain,stationMapUrl,disruptionHtml,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
 })();
 
 // A reading-view departure board. It never changes an itinerary or a boarded train.
