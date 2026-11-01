@@ -16,7 +16,7 @@
   if(panel.hidden)return;
   panel.hidden=true;document.body.classList.remove('itinerary-open');toggle.setAttribute('aria-expanded','false');RouteUI.release(panel,{restore});resizeMap();
  }
- toggle.addEventListener('click',()=>{RouteUI.userExplore();panel.hidden?open({from:toggle}):close();});closeButton.addEventListener('click',()=>close());
+ toggle.addEventListener('click',()=>{RouteUI.userExplore();(docked?docked.isOpen():!panel.hidden)?close():open({from:toggle});});closeButton.addEventListener('click',()=>close());
  window.addEventListener('routebook:detail-jump',event=>{if(event.detail.itinerary)open();});
  // A selected detail takes the place of the list; returning to the itinerary reopens it.
  function attach(map){map.on('popupopen',()=>{if(!docked)close();});}
