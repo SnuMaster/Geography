@@ -1,6 +1,6 @@
 'use strict';
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./data-model'):root.TripData);if(typeof module==='object'&&module.exports)module.exports=api;else root.TravelAssistantCore=api;})(globalThis,function(T){
- const STORE='routebook-assistant-v1',categories=['식비','교통비','입장료','쇼핑','기타'];
+ const STORE='routebook-assistant-v1',categories=['식비','교통비','입장료','쇼핑','기타','항공료','숙박비','선박료'];
  const packing=['여권','교통권','충전기','보조배터리','예약 확인','필수 서류','Visit Japan Web 입국 절차 확인','eSIM·로밍 개통 확인','결제 카드·현금 확인','여행 보험','상비약','겨울 외투'];
  function load(storage){try{const v=JSON.parse(storage.getItem(STORE)||'{}');return {visits:v.visits||{},expenses:Array.isArray(v.expenses)?v.expenses:[],packing:v.packing||{},adjustments:v.adjustments||[],budget:v.budget||{JPY:0,KRW:0}};}catch(_){return {visits:{},expenses:[],packing:{},adjustments:[],budget:{JPY:0,KRW:0}};}}
  function save(storage,value){storage.setItem(STORE,JSON.stringify(value));}
