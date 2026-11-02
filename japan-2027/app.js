@@ -111,7 +111,7 @@ function applyFlightRouteReferences(routes,payload){
  }
  return routes;
 }
-function selectLeg(i){setFocusedLeg(i);window.RouteLocation?.pauseFollow();hideRailHover();const leg=getLeg(i);if(!leg||leg.private||getStops().some(s=>s.kind==='home'&&(s.uid===leg.fromUid||s.uid===leg.toUid)))return;if(window.CommandCore?.privateLeg(leg,state.data.days)){announce('비공개 출발·도착 구간은 지도 표시를 제한합니다.');return;}pausePlay();window.FlightPlayback?.pause();map.stop();const coords=leg.parts.flatMap(p=>p.coords);map.fitBounds(L.latLngBounds(coords),{padding:[50,80],maxZoom:16,animate:false});highlightDirection(leg);const middle=coords[Math.floor(coords.length/2)];L.popup(DetailView.options('route-info-popup',{routeLegIndex:i,routeDay:leg.dayNumber,routeVariant:leg.variant,interactionSource:'user'})).setLatLng(middle).setContent(legHtml(leg)).openOn(map);}
+function selectLeg(i){setFocusedLeg(i);window.RouteLocation?.pauseFollow();hideRailHover();const leg=getLeg(i);if(!leg)return;if(window.CommandCore?.privateLeg(leg,state.data.days)){announce('비공개 출발·도착 구간은 지도 표시를 제한합니다.');return;}pausePlay();window.FlightPlayback?.pause();map.stop();const coords=leg.parts.flatMap(p=>p.coords);map.fitBounds(L.latLngBounds(coords),{padding:[50,80],maxZoom:16,animate:false});highlightDirection(leg);const middle=coords[Math.floor(coords.length/2)];L.popup(DetailView.options('route-info-popup',{routeLegIndex:i,routeDay:leg.dayNumber,routeVariant:leg.variant,interactionSource:'user'})).setLatLng(middle).setContent(legHtml(leg)).openOn(map);}
 
 
 const modesIn=stops=>[...new Set(stops.slice(1).map(s=>s.modeFromPrevious))];
@@ -203,7 +203,7 @@ function renderMap(fit=true){
  routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];markers=[];arrows=[];legLines=[];stopGroups=[];
  if(state.view==='overview'){renderOverviewMap(fit);return;}
  const stops=getStops();
- for(let i=1;i<stops.length;i++){if(stops[i-1]?.kind==='home'||stops[i]?.kind==='home')continue;
+ for(let i=1;i<stops.length;i++){
   const a=stops[i-1],b=stops[i],m=MODE[b.modeFromPrevious]||MODE.walk;
   const detailed=getLeg(i);
   if(detailed){
@@ -327,7 +327,6 @@ function setDay(n,options={}){if(Number(n)===state.day&&state.view==='daily'&&!o
 function setVariant(id,options={}){if(id===state.variant&&state.view==='daily')return;navigateScreen({day:state.day,variant:id,view:'daily'},options);}
 function showOverview(){if(state.view==='overview')return;navigateScreen({day:state.day,variant:state.variant,view:'overview'});}
 function overviewStops(){return [
- 
  {name:'대구공항',lat:35.8941,lng:128.6589,modeFromPrevious:'taxi',days:'동대구 → 대구공항',n:1},
  {name:'도쿄',lat:35.7007,lng:139.774,modeFromPrevious:'flight',days:'1/8–19 · 11박',n:2},
  {name:'오사카',lat:34.6674,lng:135.501,modeFromPrevious:'flight',days:'1/19–25 · 6박 · 교토·나라·고베',n:12},
@@ -582,7 +581,7 @@ async function main(){
  OfflinePack.configure({finalize:finalizeOfflineTrip});
  try{
  const stored=await TravelStore.snapshot();const saved=stored?{...stored,...window.TripPersonal.patch(stored.data,stored.routes)}:null;
- if(saved){state.data=saved.data;state.routeData=saved.routes;tripSignature=saved.sourceSignature||await sourceSignature({data:state.data,routes:state.routeData});TravelStore.useSnapshot(saved);}
+ if(saved){await TravelStore.saveSnapshot(saved.data,saved.routes,saved.sourceSignature,saved.updatedAt);state.data=saved.data;state.routeData=saved.routes;tripSignature=saved.sourceSignature||await sourceSignature({data:state.data,routes:state.routeData});TravelStore.useSnapshot(saved);}
  else{
   const results=await Promise.allSettled(tripFiles.map(f=>TravelStore.readJson(f+'?v='+TravelStore.VERSION)));
   const [base,tokyo,routes,west,westRoutes]=results.map(r=>r.status==='fulfilled'?r.value:null);

@@ -3,7 +3,7 @@ export const MAX_OUTPUT=1200;
 export const MODELS=Object.freeze([
  {id:'gpt-6-luna',label:'GPT-6 Luna',provider:'openai',context:1050000,inputRate:0.25,outputRate:0.75},
  {id:'gpt-6.1-terra',label:'GPT-6.1 Terra',provider:'openai',context:1050000,inputRate:2,outputRate:7.5,countInput:true},
- {id:'gpt-6-sol',label:'GPT-6 Sol',provider:'openai',context:1050000,inputRate:4,outputRate:15},
+ {id:'gpt-6-sol',label:'GPT-6 Sol',provider:'openai',context:1050000,inputRate:4,outputRate:15,countInput:true},
  {id:'gpt-6-astra',label:'GPT-6 Astra',provider:'openai',context:1050000,inputRate:20,outputRate:75,countInput:true},
  {id:'claude-haiku-5-5',label:'Claude Haiku 5.5',provider:'anthropic',context:1000000,inputRate:0.5,outputRate:2.5},
  {id:'claude-sonnet-5-5',label:'Claude Sonnet 5.5',provider:'anthropic',context:1000000,inputRate:2,outputRate:10},
