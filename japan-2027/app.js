@@ -397,7 +397,7 @@ function renderOverview({redraw=true,fit=true}={}){
  $('#dayHeader').innerHTML=`<div class="detail-date-row"><span class="detail-date">JAN 08 — JAN 29, 2027</span><span class="detail-badge">21박 22일</span></div><h2>전체 여정 한눈에</h2><p>날짜를 눌러 상세 일정으로. 항로에 마우스를 대면 선택편·시간·요금이 나와요.</p>`;
  $('#dayNote').innerHTML=`<details class="overview-budget"><summary>여행 예산·비용 비교</summary><div class="trip-cost-comparison">${summary('기본안 기준',baseline)}${summary('현재 선택 기준',selected)}</div><p class="summary-scope">교통은 시내·근교 및 한국 KTX 포함. 항공·선박·숙소·식음료 별도. 관광·입장료는 입장료·체험만 합산합니다. 식사·카페·음료·시음·쇼핑은 별도이며 중복 합산하지 않습니다.</p><div class="day-note fixed-event"><strong>1/23 나라 고정</strong>18:15 불꽃놀이 → 18:30 와카쿠사산 점화</div></details>`;
  renderOverviewPreview(overviewContext);
- $('#routeDetails').innerHTML=`<div class="airline-overview-strip" aria-label="선택한 항공사">${['trinity','jal','ana'].map(key=>airlineLogo({mode:'flight',line:key==='trinity'?'TW251':key.toUpperCase()})).join('')}</div><h3>항공·선박 별도 비용</h3><p>1/8 TW251 이전 견적311,300원(TripFlex 포함)<br>1/19 JAL 이전 견적12,090엔<br>1/25 ANA NH1189 이전 견적9,120엔<br>1/28 뉴 카멜리아호 현재 공시2등19,900엔(세금·연료·터미널 포함)</p><p>항공 견적은 현재 판매가가 아닙니다. 선박 연료·2027 운항, 택시 미터 별도. 부산→서대구 KTX 고속선 일반실16,300원(2026.9 공식표). 12:44 출발·13:47:30 정차330편 현재표 참고, 여행일 운행·좌석 재확인. 도쿄72시간권 적용 시 실제 이용 구간을 차감하고 구입비2,000엔을 더합니다.</p><a href="fare-evidence.json" target="_blank" class="evidence-link">구간별 운임·출처 전체 ↗</a>`;
+ $('#routeDetails').replaceChildren();
  if(redraw)renderMap(fit);
 }
 

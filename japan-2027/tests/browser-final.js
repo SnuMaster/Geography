@@ -116,7 +116,7 @@
   await w.RideTracker.open(key,'2027-01-29');await until(()=>d.querySelector('#rideSearch'));input(w,'#rideSearch','330');
   check(d.querySelector('.ride-train-option').textContent.includes('12:44'),'330편 검색 실패');click(w,'[data-ride-board]');await until(()=>d.querySelector('#ridePosition'));
   check(d.querySelector('#ridePanel').textContent.includes('서대구'),'탑승 추적 종점 오류');click(w,'[data-ride-close]');
-  b.showOverview();check(d.querySelector('#routeDetails').textContent.includes('부산→서대구'),'전체 여정 구간 누락');check(d.querySelector('#routeDetails').textContent.includes('16,300'),'전체 여정 운임 오류');
+  b.showOverview();check(!d.querySelector('#routeDetails').hasChildNodes(),'삭제한 전체 여정 비용 설명 잔류');check(!d.querySelector('.airline-overview-strip'),'삭제한 항공사 로고 묶음 잔류');
   return '12:44 출발·13:47:30 정차 원값 · 서대구 종점 · 일반실16,300원 · 미발권 참고 계획';
  });
  await report(39,'전체 지도 확대·지역별 날짜·상세 장소·일정 이동',async()=>{
