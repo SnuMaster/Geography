@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 120" preserveAspectRatio="none">
+  <!-- Original pale vector illustration, with no external resources. -->
+  <defs>
+    <linearGradient id="fold" x1="0" y1="0" x2=".4" y2="1">
+      <stop stop-color="#ffffff" stop-opacity=".65"/>
+      <stop offset=".45" stop-color="#e6e4df" stop-opacity=".2"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".6"/>
+    </linearGradient>
+    <g id="solid"><path d="M-17-3h34v6h-34z"/></g>
+    <g id="broken"><path d="M-17-3h15v6h-15zm19 0h15v6H2z"/></g>
+  </defs>
+  <path fill="#fcfbf7" d="M0 0h400v120H0z"/>
+  <circle cx="85" cy="60" r="43" fill="#ee5260" opacity=".25"/>
+  <g transform="translate(307 60) rotate(33.69)" opacity=".25">
+    <circle r="30" fill="#da4258"/>
+    <path d="M-30 0a30 30 0 0 0 60 0a15 15 0 0 0-30 0a15 15 0 0 1-30 0" fill="#3084c6"/>
+  </g>
+  <!-- Geon (NW), Gam (NE), Ri (SW), Gon (SE). -->
+  <g fill="#404b5b" opacity=".23">
+    <g transform="translate(259 22) rotate(-56.31)"><use href="#solid" y="-9"/><use href="#solid"/><use href="#solid" y="9"/></g>
+    <g transform="translate(355 22) rotate(56.31)"><use href="#broken" y="-9"/><use href="#solid"/><use href="#broken" y="9"/></g>
+    <g transform="translate(259 98) rotate(56.31)"><use href="#solid" y="-9"/><use href="#broken"/><use href="#solid" y="9"/></g>
+    <g transform="translate(355 98) rotate(-56.31)"><use href="#broken" y="-9"/><use href="#broken"/><use href="#broken" y="9"/></g>
+  </g>
+  <path d="M-20 5C65-14 93 55 181 30S314-6 420 26v18C308 13 266 61 179 48S68 3-20 25z" fill="url(#fold)"/>
+  <path d="M-20 82C65 40 120 102 208 76S330 56 420 92v18C326 72 291 103 207 92S66 70-20 103z" fill="url(#fold)"/>
+</svg>
