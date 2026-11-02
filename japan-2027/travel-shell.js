@@ -12,13 +12,12 @@
   const brand=document.querySelector('.brand');brand.innerHTML='<span class="brandmark" aria-hidden="true"><img src="assets/kiseki-crest.svg" width="61" height="61" alt="" decoding="async"></span><span>KISEKI<small class="brand-year">日本旅行プランナー</small></span>';brand.setAttribute('aria-label','KISEKI · 일본 여행 1일차로 이동');
   document.title='KISEKI · JAPAN 2027';
   const header=document.querySelector('.header-actions'),mapViews=[$('#overviewView'),$('#dailyView')];
-  const mapButton=document.createElement('button');mapButton.id='shellMap';mapButton.type='button';title(mapButton,'지도','map');mapButton.onclick=()=>{if(matchMedia('(max-width:740px)').matches&&$('#ccSidebarToggle').getAttribute('aria-expanded')==='true')$('#ccSidebarToggle').click();$('#fitBtn').click();};
   const budget=document.createElement('button');budget.id='shellBudget';budget.type='button';title(budget,'경비 정리','wallet');budget.onclick=()=>TravelAssistant.openTool('경비·준비물·저장 조정안');
   title($('#ccSidebarToggle'),'여행 일정','calendar');title($('#bookingChecklistBtn'),'예약 체크','book');title($('#ccRecords'),'기록·백업','records');title($('#settingsBtn'),'설정','settings');
   const more=document.createElement('details');more.id='shellMore';more.innerHTML='<summary aria-label="보조 도구">···</summary><div class="shell-more-menu"><strong>여행 도구</strong></div>';
   for(const id of ['noticeBtn','offlinePackBtn','tripPlanBtn','itineraryToggle','rideToggle','ccAlertsToggle','ccInstall','aboutBtn']){const button=$('#'+id);button.hidden=false;more.querySelector('div').append(button);}
   more.addEventListener('click',e=>{if(e.target.closest('button'))more.open=false;});document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary').focus();}});
-  header.replaceChildren(mapButton,$('#bookingChecklistBtn'),budget,$('#ccRecords'),$('#settingsBtn'));
+  header.replaceChildren($('#bookingChecklistBtn'),budget,$('#ccRecords'),$('#settingsBtn'));
   const alerts=more.querySelector('#ccAlertsToggle');alerts.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>알림</span>';alerts.setAttribute('aria-label','여행 알림');alerts.title='여행 알림 켜기·끄기';
   document.querySelector('.topbar').append(alerts,more,document.querySelector('.trip-summary'));
   const map=document.querySelector('.map-panel'),bar=document.createElement('div');bar.className='shell-map-toolbar';bar.setAttribute('aria-label','지도 보기');

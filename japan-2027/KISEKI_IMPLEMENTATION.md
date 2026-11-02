@@ -174,3 +174,5 @@ Frankfurter 공개 API의 ECB 공급원을 고정하며 별도 API 키·로그�
 공급원: https://frankfurter.dev/javascript/ · ECB 고시: https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.en.html
 
 자동 검사: 환율 단위·잘못된 통화/날짜/수치·동시 요청·하루/자정 갱신·브라우저 재실행·저장 실패·오프라인·과거값 유지 5개 단위검사. Chromium/WebKit의320/390/616/657/816/1088/1280/1440px 및 Fold12화면/접기·키보드 회귀로 배치·44px 클릭·출처 창 초점 복귀·기존 계산기 공유·날짜 변경 무호출을 검사합니다. 공급원은 모의 응답을 사용하며 실제 공개 API GET200, 출처 ECB 고시일 및 CORS 허용을 별도로 확인했습니다.
+
+상단 메뉴 후속: Map 버튼을 생성/번역 목록에서 제거했습니다. Reservations·Expenses·Records 및 지도 화면·확대/축소·전체/오늘/선택 구간 전환은 유지합니다.
