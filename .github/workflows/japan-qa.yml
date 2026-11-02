@@ -35,6 +35,8 @@ jobs:
         run: node japan-2027/tests/assistant-models-browser.cjs
       - name: Original itinerary sidebar and train entry on Chromium
         run: node japan-2027/tests/original-sidebar-browser.cjs
+      - name: Daily exchange board, cache and offline rate on Chromium
+        run: node japan-2027/tests/exchange-board-browser.cjs
       - name: Inline station cards and independent original popup on Chromium
         run: node japan-2027/tests/inline-train-browser.cjs
       - name: Japanese station disruption links on Chromium
@@ -81,6 +83,8 @@ jobs:
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-models-browser.cjs
       - name: Original itinerary sidebar and train entry on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/original-sidebar-browser.cjs
+      - name: Daily exchange board, cache and offline rate on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/exchange-board-browser.cjs
       - name: Inline station cards and independent original popup on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/inline-train-browser.cjs
       - name: Japanese station disruption links on WebKit
