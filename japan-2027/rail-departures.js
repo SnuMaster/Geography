@@ -58,8 +58,27 @@ const RailDepartures = (() => {
  function disruptionHtml(p){
   const url=departureMapUrl(p);if(!url)return '';
   const name=window.TripPersonal.station(p.from,p.fromJa,'JP');
-  return '<div class="rail-disruption-links"><a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" data-rail-station-map aria-label="'+esc(name+' 출발역 Google Maps 운행 정보')+'" title="Google Maps 출발역 운행 정보 · 정보 제공 여부는 Google Maps에 따릅니다">지연 현황 확인하기 ↗</a></div>';
+  return '<div class="rail-disruption-links"><a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" data-rail-station-map aria-label="'+esc(name+' 출발역 Google Maps 운행 정보 · 새 창')+'" title="Google Maps 출발역 운행 정보 · 팝업 창으로 열기 (모바일에서는 새 탭으로 열릴 수 있습니다)">지연 현황 확인하기 ↗</a></div>';
  }
+ function openDepartureWindow(event){
+  if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const link=event.target.closest?.('a[data-rail-station-map]');if(!link)return;
+  let url;try{url=new URL(link.href);if(url.origin!=='https://www.google.com'||!/^\/maps\/(place|search)\//.test(url.pathname))return;}catch{return;}
+  const width=Math.max(320,Math.min(520,(window.screen?.availWidth||window.innerWidth)-32)),height=Math.max(360,Math.min(800,(window.screen?.availHeight||window.innerHeight)-64));
+  const left=Math.max(0,Math.round((window.screenX||0)+((window.outerWidth||width)-width)/2)),top=Math.max(0,Math.round((window.screenY||0)+((window.outerHeight||height)-height)/2));
+  let popup;
+  try{
+   // Open a same-origin blank window synchronously so blocked windows can use the native link.
+   // No external document is loaded until opener/referrer access has been removed.
+   popup=window.open('about:blank','_blank',`popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
+   if(!popup)return;
+   popup.opener=null;
+   const doc=popup.document,meta=doc.createElement('meta');meta.name='referrer';meta.content='no-referrer';doc.head.append(meta);doc.title='출발역 운행 정보';
+   const destination=doc.createElement('a');destination.href=url.href;destination.rel='noopener noreferrer';destination.referrerPolicy='no-referrer';doc.body.append(destination);destination.click();
+   event.preventDefault();
+  }catch{try{popup?.close();}catch{}/* The original noreferrer link remains the fallback. */}
+ }
+ document.addEventListener('click',openDepartureWindow,true);
  function links(p){
   const directions=new URL('https://www.google.com/maps/dir/'),station=p.country==='KR'?'역':'駅';
   const stationQuery=name=>`${String(name).replace(/(?:역|駅)$/,'')}${station} ${p.operator||''}`;
