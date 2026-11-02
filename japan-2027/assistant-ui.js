@@ -30,7 +30,7 @@
  function openPlace(a){if(!C.validAction(a,app.state.data.days))return;close();app.setDay(a.day);app.setVariant(a.variant);const i=app.getStops().findIndex(s=>s.uid===a.placeId);if(i>=0)app.selectStop(i,true);}
  function action(s){return {type:'open_place_on_map',day:snapshot.day,variant:snapshot.variant,placeId:s.uid||s.id};}
 
- function tools(show){$('#assistantChat').hidden=show;$('#assistantToolsPane').hidden=!show;$('#assistantPanel footer').hidden=show;$('#assistantToolsButton').textContent=show?'채팅':'도구';$('#assistantToolsButton').setAttribute('aria-expanded',String(show));$('#assistantPanel').dataset.tools=String(show);}
+ function tools(show){$('#assistantPanel header>strong').textContent=show?'여행 도구':'여행비서';$('#assistantChat').hidden=show;$('#assistantToolsPane').hidden=!show;$('#assistantPanel footer').hidden=show;$('#assistantToolsButton').textContent=show?'채팅':'도구';$('#assistantToolsButton').setAttribute('aria-expanded',String(show));$('#assistantPanel').dataset.tools=String(show);}
  function updateMode(){const translating=$('#assistantMode').value!=='chat';$('#assistantTranslation').hidden=!translating;$('#assistantInput').placeholder=translating?'번역할 문장을 입력하세요':'궁금한 점을 물어보세요';$('#assistantInput').setAttribute('aria-label',translating?'번역할 문장':'여행 질문');$('#assistantEmpty strong').textContent=translating?'어떤 문장을 번역할까요?':'무엇을 도와드릴까요?';}
  function setBusy(value){busy=value;$('#assistantSend').disabled=value;$('#assistantCancel').hidden=!value;$('#assistantCancel').disabled=!value;$('#assistantPanel').setAttribute('aria-busy',String(value));window.AssistantModels?.setBusy(value);}
  function simplePanel(){
@@ -42,6 +42,10 @@
   for(const detail of [...body.children])if(detail.tagName==='DETAILS')extras.append(detail);body.append(chat,extras);
   const full=document.createElement('p');full.id='assistantContextDetails';$('#assistantConnectionDetails').append(full,sensor);if(description)$('#assistantConnectionDetails').append(description);
   const audio=document.createElement('details');audio.id='assistantAudioTools';audio.innerHTML='<summary>읽어주기</summary>';audio.append($('#assistantSpeakStop'),$('#assistantSpeakRepeat'),$('#assistantSpeechStatus'));extras.append(audio);
+  const grid=document.createElement('div');grid.className='assistant-tool-grid';
+  const groups=[[$('#assistantPhoto').closest('details'),'사진·티켓'],[$('#assistantPhrases').closest('details'),'일본어·긴급'],[more,'이동·장소'],[$('#assistantVisits').closest('details'),'방문 체크'],[$('#assistantExpense').closest('details'),'경비·준비물'],[audio,'음성'],[$('#assistantConnectionDetails'),'설정·사용량']];
+  for(const [detail,label]of groups){detail.querySelector('summary').textContent=label;detail.setAttribute('name','assistant-tool');grid.append(detail);detail.addEventListener('toggle',()=>{if(detail.open)for(const [other]of groups)if(other!==detail)other.open=false;});}
+  extras.append(grid);
   const header=$('#assistantPanel header>div'),cancel=$('#assistantCancel'),voiceRow=$('#assistantPanel footer>div');cancel.hidden=true;cancel.textContent='중단';cancel.setAttribute('aria-label','AI 요청 중단');header.prepend(cancel);voiceRow.remove();
   const button=document.createElement('button');button.type='button';button.id='assistantToolsButton';button.textContent='도구';button.setAttribute('aria-controls','assistantToolsPane');button.setAttribute('aria-expanded','false');button.onclick=()=>tools($('#assistantToolsPane').hidden);header.insertBefore(button,$('#assistantClose'));
   const translation=document.createElement('div');translation.id='assistantTranslation';const mode=$('#assistantMode');$('#assistantForm').prepend(translation);translation.append(mode);const end=document.createElement('button');end.id='assistantModeExit';end.type='button';end.textContent='번역 끝내기';end.onclick=()=>{mode.value='chat';updateMode();};translation.append(end);mode.onchange=updateMode;$('#assistantForm label[for=assistantInput]').classList.add('assistant-input-label');
