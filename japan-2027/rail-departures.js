@@ -66,17 +66,15 @@ const RailDepartures = (() => {
   let url;try{url=new URL(link.href);if(url.origin!=='https://www.google.com'||!/^\/maps\/(place|search)\//.test(url.pathname))return;}catch{return;}
   const width=Math.max(320,Math.min(520,(window.screen?.availWidth||window.innerWidth)-32)),height=Math.max(360,Math.min(800,(window.screen?.availHeight||window.innerHeight)-64));
   const left=Math.max(0,Math.round((window.screenX||0)+((window.outerWidth||width)-width)/2)),top=Math.max(0,Math.round((window.screenY||0)+((window.outerHeight||height)-height)/2));
-  let popup;
   try{
-   // Open a same-origin blank window synchronously so blocked windows can use the native link.
-   // No external document is loaded until opener/referrer access has been removed.
-   popup=window.open('about:blank','_blank',`popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`);
-   if(!popup)return;
-   popup.opener=null;
-   const doc=popup.document,meta=doc.createElement('meta');meta.name='referrer';meta.content='no-referrer';doc.head.append(meta);doc.title='출발역 운행 정보';
-   const destination=doc.createElement('a');destination.href=url.href;destination.rel='noopener noreferrer';destination.referrerPolicy='no-referrer';doc.body.append(destination);destination.click();
+   // A real destination URL also works in browsers that do not display about:blank windows.
+   // noreferrer implies noopener; a null handle may mean success, so never open a second window automatically.
+   const popup=window.open(url.href,'_blank',`popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,noopener,noreferrer`);
    event.preventDefault();
-  }catch{try{popup?.close();}catch{}/* The original noreferrer link remains the fallback. */}
+   if(!popup&&!link.parentElement.querySelector('[data-rail-popup-fallback]')){
+    const help=document.createElement('small'),fallback=document.createElement('a');fallback.href=url.href;fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.referrerPolicy='no-referrer';fallback.dataset.railPopupFallback='';fallback.textContent='새 탭으로 열기 ↗';fallback.setAttribute('aria-label',link.getAttribute('aria-label')+' · 새 탭으로 열기');help.append(document.createElement('br'),fallback);link.parentElement.append(help);
+   }
+  }catch{/* If window.open is unavailable, let the original noreferrer link open normally. */}
  }
  document.addEventListener('click',openDepartureWindow,true);
  function links(p){
