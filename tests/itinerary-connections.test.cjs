@@ -6,9 +6,9 @@ const routes={days:{...require('../japan-2027/tokyo-routes.json').days,...requir
 require('../japan-2027/rail-departure-profiles');
 const patched=P.patch(T.merge(base,tokyo,west),routes),{data}=T.prepare(patched.data,patched.routes);
 const point=s=>[s.lat,s.lng],close=(a,b)=>assert.ok(G.distance(a,b)<1,JSON.stringify([a,b]));
-test('all 239 primary and alternate itinerary legs connect stops and adjacent parts without a 70m omission',()=>{
+test('public itinerary legs connect without a 70m omission and private legs contain no coordinates',()=>{
  let count=0;for(const d of data.days)for(const v of d.variants){const ls=routes.days[`${d.n}-${v.id}`];assert.equal(ls.length,v.stops.length-1);
-  for(let i=0;i<ls.length;i++){count++;const ps=ls[i].parts,id=`${d.n}-${v.id}:${i}`;assert.ok(G.distance(point(v.stops[i]),ps[0].coords[0])<=70,id+' missing access');assert.ok(G.distance(ps.at(-1).coords.at(-1),point(v.stops[i+1]))<=70,id+' missing exit');for(let j=1;j<ps.length;j++)assert.ok(G.distance(ps[j-1].coords.at(-1),ps[j].coords[0])<=70,id+' missing transfer');for(const p of ps)if(['rail','metro'].includes(p.mode))assert.ok(p.coords.length>2,id+' schematic hotel-to-rail chord');}
+  for(let i=0;i<ls.length;i++){count++;if(v.stops[i].kind==='home'||v.stops[i+1].kind==='home'){assert.equal(ls[i].private,true);assert.ok(ls[i].parts.every(p=>p.coords.length===0));continue;}const ps=ls[i].parts,id=`${d.n}-${v.id}:${i}`;assert.ok(G.distance(point(v.stops[i]),ps[0].coords[0])<=70,id+' missing access');assert.ok(G.distance(ps.at(-1).coords.at(-1),point(v.stops[i+1]))<=70,id+' missing exit');for(let j=1;j<ps.length;j++)assert.ok(G.distance(ps[j-1].coords.at(-1),ps[j].coords[0])<=70,id+' missing transfer');for(const p of ps)if(['rail','metro'].includes(p.mode))assert.ok(p.coords.length>2,id+' schematic hotel-to-rail chord');}
  }assert.equal(count,239);
 });
 test('Narita B1 station access stays indoors instead of a 1.4km road loop',()=>{

@@ -3,7 +3,7 @@
  * Raw rail schedules and the original reference routes stay untouched. */
 (function(root,factory){const api=factory();if(typeof module==='object'&&module.exports)module.exports=api;else root.TripPersonal=api;})(globalThis,function(){
  const HOME=Object.freeze({name:'비공개 출발·도착지',kind:'home',lat:null,lng:null,address:'',privateLocation:true});
- const ROAD_ROUTES={};
+
  const EXTRA_JA={
   '공항제2빌딩':'空港第２ビル','게이세이우에노':'京成上野','신바시':'新橋',
   '모토마치주카가이':'元町・中華街','간나이':'関内','하세':'長谷',
@@ -81,15 +81,7 @@
    passEligible:false,passExtraMin:0,passExtraMax:0,sources:[],breakdown:[],confidence:'unknown'};
  }
  function taxiPart(from,to){
-  const key=from.name===HOME.name?'home-airport':to.name===HOME.name?'seodaegu-home':null;
-  const route=key&&ROAD_ROUTES[key];
-  const coords=route?[[from.lat,from.lng],...route.coords,[to.lat,to.lng]]:[[from.lat,from.lng],[to.lat,to.lng]];
-  return {mode:'taxi',line:'Uber Taxi · 택시 호출',from:from.name,to:to.name,
-   coords,distanceM:route?Math.round(route.meters):distance(from,to),
-   durationMinutes:route?Math.round(route.seconds/60):null,
-   geometrySource:route?'OSRM 자동차 도로망 복원 경로 · 출발/도착 픽업 위치와 도로 좌표는 짧은 연결선 · 교통상황/실제 Uber 배차 경로와 다를 수 있음':'두 장소 대표점의 직선 연결 · 실제 도로 경로/주행거리 아님',
-   geometryAccuracy:route?'reference':'schematic',
-   source:route?.source||null};
+  return {mode:'taxi',line:'Uber Taxi · 비공개 구간',from:from.name,to:to.name,coords:[],distanceM:null,durationMinutes:null,geometrySource:'비공개 출발·도착 구간 · 좌표 미보관',geometryAccuracy:'private',source:null};
  }
  function displayParts(leg){
   // Keep the chart-derived sea line and the two separate port connectors intact.
@@ -99,56 +91,22 @@
  }
 
  function patch(data,routes){
-  // Every planned taxi transfer is requested via Uber, including Japanese city taxis.
+  const privateStrings=new Set();
   for(const day of data?.days||[])for(const variant of day.variants||[])for(const stop of variant.stops||[]){
-   if(stop.modeFromPrevious==='taxi'&&stop.transportFromPrevious&&!/Uber/i.test(stop.transportFromPrevious))
-    stop.transportFromPrevious=stop.transportFromPrevious.replace(/택시/g,'Uber Taxi');
+   if(stop.kind==='home')for(const value of [stop.name,stop.address,stop.address?.match(/[가-힣]+(?:로|길)\s*\d+(?:-\d+)?/)?.[0]])if(value&&value!==HOME.name&&value.length>3)privateStrings.add(value);
+   if(stop.modeFromPrevious==='taxi'&&stop.transportFromPrevious&&!/Uber/i.test(stop.transportFromPrevious))stop.transportFromPrevious=stop.transportFromPrevious.replace(/택시/g,'Uber Taxi');
   }
-  for(const legs of Object.values(routes?.days||{}))for(const leg of legs||[]){
-   if(!leg)continue;
-   for(const part of leg.parts||[])if(part.mode==='taxi'&&part.line&&!/Uber/i.test(part.line))part.line=part.line.replace(/택시/g,'Uber Taxi');
-   if(leg.parts?.some(p=>p.mode==='taxi')&&leg.summary&&!/Uber/i.test(leg.summary))leg.summary=leg.summary.replace(/택시/g,'Uber Taxi');
+  for(const legs of Object.values(routes?.days||{}))for(const leg of legs||[]){if(!leg)continue;for(const part of leg.parts||[])if(part.mode==='taxi'&&part.line&&!/Uber/i.test(part.line))part.line=part.line.replace(/택시/g,'Uber Taxi');if(leg.parts?.some(p=>p.mode==='taxi')&&leg.summary&&!/Uber/i.test(leg.summary))leg.summary=leg.summary.replace(/택시/g,'Uber Taxi');}
+  const firstVariant=data?.days?.find(d=>d.n===1)?.variants?.find(v=>v.id==='main'),first=firstVariant?.stops?.[0],airport=firstVariant?.stops?.[1];
+  if(first&&airport){Object.assign(first,HOME,{time:'07:10-07:20',modeFromPrevious:'walk',transportFromPrevious:'비공개 출발지 · Uber Taxi 호출 준비'});airport.transportFromPrevious='비공개 출발지 → 대구국제공항 · Uber Taxi (호출 시 소요시간 확인)';}
+  const last=data?.days?.find(d=>d.n===22)?.variants?.find(v=>v.id==='main'),lastLegs=routes?.days?.['22-main'];
+  if(last&&lastLegs?.length){const station=last.stops.find(s=>s.uid==='d22-main-6');if(station)station.transportFromPrevious='부산 → 서대구 KTX-산천330 직통 · 현재표 참고';if(!last.stops.some(s=>s.uid==='d22-main-home')&&last.stops.at(-1)?.uid==='d22-main-6'){const from=last.stops.at(-1),home={...HOME,uid:'d22-main-home',id:'d22-main-home',area:'대구',time:'서대구역 하차 후 · 귀가 시각 미확정',modeFromPrevious:'taxi',transportFromPrevious:'서대구역 → 비공개 도착지 · Uber Taxi 호출'};last.stops.push(home);lastLegs.push({fromUid:from.uid,toUid:home.uid});}}
+  // Redact old offline snapshots as well as newly loaded files, without dropping place UIDs or visit records.
+  for(const day of data?.days||[])for(const variant of day.variants||[]){const stops=variant.stops||[];for(const stop of stops)if(stop.kind==='home'){Object.assign(stop,HOME,{description:'비공개 출발·도착지 · 주소와 좌표는 저장하지 않습니다.',source:null,precision:'private',coordinateNote:'주소·좌표·경로 미보관',mapQuery:''});stop.details={stayLabel:'현장 상황에 따라 조정',costStatus:'unknown',costLabel:'비공개 구간 · 앱에서 확인'};}
+   const legs=routes?.days?.[day.n+'-'+variant.id]||[];for(const leg of legs){if(!leg)continue;const from=stops.find(s=>s.uid===leg.fromUid),to=stops.find(s=>s.uid===leg.toUid);if(from?.kind!=='home'&&to?.kind!=='home')continue;const ids={fromUid:leg.fromUid,toUid:leg.toUid};for(const key of Object.keys(leg))delete leg[key];Object.assign(leg,ids,{from:from?.name||HOME.name,to:to?.name||HOME.name,private:true,parts:[taxiPart(from||HOME,to||HOME)],fare:fare(),distanceM:null,walkDistanceM:0,durationMinutes:null,distanceLabel:'비공개 구간 · 거리 미확인',durationLabel:'소요시간은 앱에서 확인',summary:'Uber Taxi · 비공개 출발·도착 구간',note:'주소·좌표·이동 경로는 저장하지 않습니다.'});}
   }
-  const firstDay=data?.days?.find(d=>d.n===1),first=firstDay?.variants?.find(v=>v.id==='main')?.stops?.[0];
-  const airport=firstDay?.variants?.find(v=>v.id==='main')?.stops?.[1],firstLeg=routes?.days?.['1-main']?.[0];
-  if(first&&airport&&firstLeg&&firstLeg.parts?.[0]?.mode==='taxi'){
-   Object.assign(first,{name:HOME.name,kind:'home',lat:HOME.lat,lng:HOME.lng,address:HOME.address,
-    time:'07:10-07:20',modeFromPrevious:'walk',transportFromPrevious:'자택 출발 · Uber Taxi 호출 준비',
-    description:'대구공항 08:20 도착 목표. 택시 호출·실제 소요시간을 확인하고 여유 있게 출발하세요.',
-    precision:'building representative point',coordinateNote:'건물 대표 좌표. 승차 위치는 Uber 앱에서 확인.'});
-   airport.transportFromPrevious='비공개 출발·도착지 → 대구국제공항 · Uber Taxi (호출 시 소요시간 확인)';
-   const p=taxiPart(first,airport);firstLeg.from=first.name;firstLeg.to=airport.name;
-   firstLeg.parts=[p];firstLeg.summary='Uber Taxi · 비공개 출발·도착지 → 대구국제공항';
-   firstLeg.distanceM=p.distanceM;firstLeg.walkDistanceM=0;
-   firstLeg.distanceLabel='자동차 도로 기준 약 '+(p.distanceM/1000).toFixed(1)+'km · 실제 Uber 경로 다를 수 있음';
-   firstLeg.durationMinutes=p.durationMinutes;firstLeg.durationLabel='도로망 예상 약 '+p.durationMinutes+'분 · 교통 미반영';
-   firstLeg.fare=fare();firstLeg.note='자동차 도로망 경로를 지도에 표시합니다. 실제 Uber의 최종 배차/운임/혼잡/픽업 장소는 앱에서 확인하세요.';
-  }
-  const lastDay=data?.days?.find(d=>d.n===22),v=lastDay?.variants?.find(v=>v.id==='main');
-  const lastLegs=routes?.days?.['22-main'];
-  if(v&&lastLegs?.length){
-   const stationStop=v.stops.find(s=>s.uid==='d22-main-6');
-   if(stationStop){
-    // Keep the raw operator profile names stable: matching a published timetable
-    // requires "서대구역 KTX", while stopName() displays only "서대구역".
-    stationStop.transportFromPrevious='부산 → 서대구 KTX-산천330 직통 · 현재표 참고';
-   }
-   if(!v.stops.some(s=>s.uid==='d22-main-home')&&v.stops.at(-1)?.uid==='d22-main-6'){
-    const from=v.stops.at(-1),home={...HOME,uid:'d22-main-home',id:'d22-main-home',kind:'home',area:'대구',
-     time:'서대구역 하차 후 · 귀가 시각 미확정',modeFromPrevious:'taxi',
-     transportFromPrevious:'서대구역 → 비공개 출발·도착지 · Uber Taxi 호출',
-     description:'서대구역에서 Uber 앱으로 택시를 호출하세요. 이동시간·요금은 실시간 확인.',
-     source:'https://www.uber.com/global/ko/r/cities/daegu-daegu-kr/',
-     coordinateNote:'대표 좌표와 자동차 도로망 복원 경로이며, 실제 Uber 배차 경로와 다를 수 있습니다.'};
-    const part=taxiPart(from,home);
-    v.stops.push(home);lastLegs.push({fromUid:from.uid,toUid:home.uid,from:from.name,to:home.name,
-     parts:[part],fare:fare(),distanceM:part.distanceM,walkDistanceM:0,
-     distanceLabel:'자동차 도로 기준 약 '+(part.distanceM/1000).toFixed(1)+'km · 실제 Uber 경로 다를 수 있음',durationMinutes:part.durationMinutes,durationLabel:'도로망 예상 약 '+part.durationMinutes+'분 · 교통 미반영',
-     summary:'Uber Taxi · 서대구역 → 비공개 출발·도착지',
-     note:'OSRM 자동차 도로망 경로입니다. 실제 Uber 배차 차량의 주행경로·도착시간·요금은 앱에서 확인하세요.'});
-   }
-  }
-  return {data,routes};
+  function scrub(value){if(!value||typeof value!=='object')return;for(const key of Object.keys(value)){if(typeof value[key]==='string'){for(const text of privateStrings)value[key]=value[key].split(text).join(HOME.name);}else scrub(value[key]);}}
+  scrub(data);scrub(routes);return {data,routes};
  }
  return {HOME,station,stopName,japanese,patch,distance,displayParts};
 });

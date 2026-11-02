@@ -10,10 +10,10 @@ function focusedContext(){
 function focusedIndex(context=focusedContext()){
  if(!context||context.variant.stops.length<2)return null;
  if(!focusedLegs.has(context.key)){
-  let first=1;
+  let first=context.legs.findIndex(l=>!l.private&&l.parts?.some(p=>p.coords?.length>1))+1;if(first<1)first=1;
   if(state.view==='overview'){
    const bounds=map.getBounds(),stops=context.variant.stops;
-   const visible=stops.findIndex((s,i)=>i>0&&bounds.contains([s.lat,s.lng])&&bounds.contains([stops[i-1].lat,stops[i-1].lng]));
+   const visible=stops.findIndex((s,i)=>i>0&&s.kind!=='home'&&stops[i-1].kind!=='home'&&bounds.contains([s.lat,s.lng])&&bounds.contains([stops[i-1].lat,stops[i-1].lng]));
    if(visible>0)first=visible;
   }
   focusedLegs.set(context.key,first);
@@ -79,7 +79,7 @@ function bindRouteFocus(){
   applyRouteFocus();if(routeAll)fitRoute();else fitFocusedLeg();
  });
  $('#routeFocusDetail').addEventListener('click',()=>{
-  const c=focusedContext(),i=focusedIndex(c),leg=c?.legs[i-1];if(!leg)return;RouteUI.userExplore();
+  const c=focusedContext(),i=focusedIndex(c),leg=c?.legs[i-1];if(!leg||leg.private)return;RouteUI.userExplore();
   const part=(window.TripPersonal?.displayParts(leg)||leg.parts)[0],point=railMidpoint(part.coords);
   L.popup(symbolOptions(leg)).setLatLng(point).setContent(withDayContext(c.day.n,c.variant.id,()=>legHtml(leg))).openOn(map);
  });
