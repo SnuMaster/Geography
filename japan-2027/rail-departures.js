@@ -5,6 +5,7 @@ const RailDepartures = (() => {
  const manifest=globalThis.RailDepartureProfiles||{profiles:{},holidays:[]},profiles=manifest.profiles;
  const entries=Object.entries(profiles),loaded=new BoundedCache.LRU(6,16*1024*1024),pending=new Map(),failed=new Set(),attached=new WeakSet();
  let active=null,interval=null;
+ const inlineViews=new Map();
  const firstTrains=new WeakMap();
  function isFirstTrain(key,schedules,train,now){
   if(!schedules||!train)return false;
@@ -165,14 +166,14 @@ const RailDepartures = (() => {
   }
   body.querySelectorAll('[data-departure-countdown]').forEach(el=>{el.textContent=(ended?'첫차까지 ':'출발까지 ')+DepartureCore.formatCountdown(Number(el.dataset.departureCountdown)-now);});
  }
- function paint(){if(!active?.element.isConnected||document.hidden)return;const now=Date.now();active.element.querySelectorAll('[data-departure-profile]').forEach(section=>renderTrains(section,now));}
- function resumeTimer(){clearInterval(interval);interval=null;if(active&&!document.hidden){paint();interval=setInterval(paint,1000);}}
- function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active.element.removeEventListener('change',active.change);active=null;clearInterval(interval);interval=null;}
- function mount(popup){
-  unmount();const element=popup.getElement();if(!element?.querySelector('[data-departure-profile]'))return;
+ function paint(){if(document.hidden)return;const now=Date.now();for(const view of [active,...inlineViews.values()]){if(!view?.element.isConnected)continue;const sections=view.visible||view.element.querySelectorAll('[data-departure-profile]');for(const section of sections)if(section.isConnected&&view.element.contains(section))renderTrains(section,now);}}
+ function resumeTimer(){clearInterval(interval);interval=null;if((active||inlineViews.size)&&!document.hidden){paint();interval=setInterval(paint,1000);}}
+ function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active.element.removeEventListener('change',active.change);active=null;resumeTimer();}
+ function mount(popup,inline=false){
+  const element=popup.getElement();if(inline&&inlineViews.has(element)){inlineViews.get(element).sync();return;}if(!inline)unmount();if(!element?.querySelector('[data-departure-profile]'))return;
   // Retain live DOM when Leaflet remeasures the popup after async data loads.
   if(!popup.getContent()?.nodeType){const content=element.querySelector('.leaflet-popup-content'),node=document.createElement('div');while(content.firstChild)node.appendChild(content.firstChild);popup.setContent(node);}
-  const refresh=async(key,force=false)=>{await loadData(key,force);if(active?.popup===popup){paint();popup.update();}};
+  const refresh=async(key,force=false)=>{await loadData(key,force);if((inline?inlineViews.get(element)?.popup:active?.popup)===popup){paint();popup.update();}};
   const selectProfile=(section,key)=>{
    if(!profiles[key]||!section)return;
    const content=shell(key,section.dataset.serviceDate,JSON.parse(section.dataset.compactMetrics||'{}'));
@@ -193,13 +194,21 @@ const RailDepartures = (() => {
    if(retry){event.stopPropagation();retry.disabled=true;retry.textContent='불러오는 중…';const body=retry.closest('[data-departure-body]');body.dataset.signature='retrying';body.setAttribute('aria-busy','true');refresh(retry.closest('[data-departure-profile]').dataset.departureProfile,true);}
   };
   const change=event=>{if(event.target.matches('[data-departure-select]'))selectProfile(event.target.closest('.departure-panel').querySelector('[data-departure-profile]'),event.target.value);};
-  active={popup,element,click,change};element.addEventListener('click',click);element.addEventListener('change',change);resumeTimer();
-  element.querySelectorAll('[data-departure-profile]').forEach(section=>refresh(section.dataset.departureProfile));
+  const view={popup,element,click,change};element.addEventListener('click',click);element.addEventListener('change',change);
+  if(inline){
+   view.visible=new Set();let sections=[];
+   view.observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const entry of entries){if(!element.contains(entry.target))continue;if(entry.isIntersecting){view.visible.add(entry.target);refresh(entry.target.dataset.departureProfile);}else view.visible.delete(entry.target);}paint();},{rootMargin:'160px 0px'}):null;
+   view.sync=()=>{const next=[...element.querySelectorAll('[data-departure-profile]')];if(next.length===sections.length&&next.every((section,i)=>section===sections[i]))return;sections=next;view.observer?.disconnect();view.visible.clear();for(const section of sections){if(view.observer)view.observer.observe(section);else{view.visible.add(section);refresh(section.dataset.departureProfile);}}paint();};
+   inlineViews.set(element,view);view.sync();
+  }else{active=view;element.querySelectorAll('[data-departure-profile]').forEach(section=>refresh(section.dataset.departureProfile));}
+  resumeTimer();
  }
- function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else unmount();});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
+ function mountInline(element){if(element)mount({getElement:()=>element,getContent:()=>element,update:()=>{}},true);}
+ function unmountInline(){for(const view of inlineViews.values()){view.observer?.disconnect();view.element.removeEventListener('click',view.click);view.element.removeEventListener('change',view.change);}inlineViews.clear();resumeTimer();}
+ function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else{unmount();unmountInline();}});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
  function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
- return {notice,noticeItems,validityFor,travelDate,supported,html,attach,keysFor,keyFor,calendarOptions,getSchedule,isFirstTrain,stationMapUrl,disruptionHtml,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
+ return {notice,noticeItems,validityFor,travelDate,supported,html,attach,mountInline,keysFor,keyFor,calendarOptions,getSchedule,isFirstTrain,stationMapUrl,disruptionHtml,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
 })();
 
 // A reading-view departure board. It never changes an itinerary or a boarded train.
