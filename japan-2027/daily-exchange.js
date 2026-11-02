@@ -35,20 +35,12 @@
  if(typeof module==='object'&&module.exports){module.exports=core;return;}
  let client,display,dialog,timer,initialized=false;
  const $=id=>document.getElementById(id),legacy=rate=>rate?{krwPerJpy:rate.rate,date:rate.date,checkedAt:new Date(rate.checkedAt).toISOString(),source:SOURCE,status:'ECB 기준환율 · 환전·카드 적용환율 아님'}:null;
- function renderValue(text,ready){
-  const value=$('dailyExchangeValue');if(value.textContent===text&&value.classList.contains('has-rate')===ready)return;
-  value.classList.toggle('has-rate',ready);
-  if(!ready){value.textContent=text;return;}
-  const fragment=document.createDocumentFragment();
-  for(const char of text){const tile=document.createElement('span');tile.className=/\d/.test(char)?'fx-tile':/[엔원]/.test(char)?'fx-tile fx-unit':char===' '?'fx-space':char==='='?'fx-equal':'fx-punctuation';tile.textContent=char;fragment.append(tile);}
-  value.replaceChildren(fragment);
- }
  function render(state){
   if(!display)return;const rate=state.rate,saved=state.offline||!!state.error||(rate&&dayKey(rate.checkedAt)!==dayKey(Date.now()));
   display.dataset.state=state.offline?'offline':state.error?'error':rate?'ready':'loading';display.setAttribute('aria-busy',String(state.busy));
-  const value=rate?'100엔 = '+format(rate.rate)+'원':state.offline?'저장된 환율 없음':state.error?'환율 확인 필요':'환율 불러오는 중';renderValue(value,!!rate);
+  const value=rate?'100엔 = '+format(rate.rate)+'원':state.offline?'저장된 환율 없음':state.error?'환율 확인 필요':'환율 불러오는 중';$('dailyExchangeValue').textContent=value;
   $('dailyExchangeBasis').textContent=rate?(saved?'저장값 · ':'')+rate.date.slice(5).replace('-','.')+' 고시':state.offline?'오프라인':'JPY / KRW · ECB';
-  display.title=rate?'100엔 = '+format(rate.rate)+'원 · 고시일 '+rate.date+' · ECB 기준환율 · 자세히 보기':'엔화 환율 자세히 보기';
+  display.title=rate?'100엔 = '+format(rate.rate)+'원 · 고시일 '+rate.date+(saved?' · 저장값':'')+' · ECB 기준환율 · 자세히 보기':'엔화 환율 자세히 보기';
   display.setAttribute('aria-label',rate?value+' · 고시일 '+rate.date+(saved?' · 저장값':'')+' · 환율 자세히':value+' · 환율 자세히');
   $('dailyExchangeDetailValue').textContent=rate?'100엔 = '+format(rate.rate)+'원':'확인된 환율이 없어요.';
   $('dailyExchangeDate').textContent=rate?rate.date:'—';$('dailyExchangeChecked').textContent=rate?new Date(rate.checkedAt).toLocaleString('ko-KR',{timeZone:'Asia/Tokyo'}):'조회 기록 없음';
@@ -58,7 +50,7 @@
  }
  function init(){
   if(initialized)return;const header=document.querySelector('.topbar .header-actions');if(!header)return;initialized=true;
-  display=document.createElement('button');display.id='dailyExchange';display.type='button';display.setAttribute('aria-label','엔화 환율 자세히');display.setAttribute('aria-haspopup','dialog');display.setAttribute('aria-controls','dailyExchangeDialog');display.innerHTML='<span class="exchange-flags" aria-hidden="true"></span><span class="exchange-sign" aria-hidden="true">JPY → KRW</span><strong id="dailyExchangeValue" aria-hidden="true">환율 불러오는 중</strong><small id="dailyExchangeBasis" aria-hidden="true">ECB 기준환율</small>';header.after(display);
+  display=document.createElement('button');display.id='dailyExchange';display.type='button';display.setAttribute('aria-label','엔화 환율 자세히');display.setAttribute('aria-haspopup','dialog');display.setAttribute('aria-controls','dailyExchangeDialog');display.innerHTML='<strong id="dailyExchangeValue" aria-hidden="true">환율 불러오는 중</strong><span id="dailyExchangeBasis" hidden></span>';header.after(display);
   const compact=matchMedia('(max-width:699px) and (min-height:501px)'),place=()=>{if(compact.matches)header.prepend(display);else header.after(display);};place();compact.addEventListener('change',place);
   dialog=document.createElement('dialog');dialog.id='dailyExchangeDialog';dialog.className='cc-dialog';dialog.setAttribute('aria-labelledby','dailyExchangeTitle');dialog.innerHTML='<header><h2 id="dailyExchangeTitle">오늘의 엔화 환율</h2><button type="button" id="dailyExchangeClose" aria-label="환율 창 닫기">×</button></header><div class="cc-dialog-body"><p class="exchange-detail-value" id="dailyExchangeDetailValue"></p><dl class="exchange-detail-facts"><dt>고시 기준일</dt><dd id="dailyExchangeDate"></dd><dt>마지막 조회 · 한국/일본</dt><dd id="dailyExchangeChecked"></dd></dl><p id="dailyExchangeStatus" role="status"></p><button type="button" id="dailyExchangeRefresh">환율 새로 확인</button><p>ECB 기준환율을 Frankfurter에서 조회합니다. 실제 환전·카드 결제 환율과 수수료는 다를 수 있어요.</p><a href="'+SOURCE+'" target="_blank" rel="noopener noreferrer">ECB 고시 자료 ↗</a><a href="https://frankfurter.dev/" target="_blank" rel="noopener noreferrer">환율 제공 · Frankfurter ↗</a></div>';document.body.append(dialog);
   let storage;try{storage=localStorage;}catch{}client=createClient({storage,notify:render});render(client.state());

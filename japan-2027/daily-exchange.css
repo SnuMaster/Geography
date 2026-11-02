@@ -1,27 +1,12 @@
-/* Pale illustrated flags behind a compact, live-text split-flap board. */
-body.command-center.travel-shell .topbar #dailyExchange{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr);gap:3px;flex:0 0 174px;width:174px;min-width:0;min-height:56px;padding:5px 9px;border:1px solid #b6c0c9;border-radius:10px;background:#fbfaf6;color:#24354b;text-align:left;box-shadow:0 2px 5px #26354b0c;white-space:nowrap;cursor:pointer}
-#dailyExchange .exchange-flags{position:absolute;inset:0;z-index:-1;pointer-events:none;background:url('assets/exchange-flags.svg') center/103% 103% no-repeat;animation:exchange-drift 10s ease-in-out infinite}
-#dailyExchange .exchange-flags:after{content:'';position:absolute;inset:0;background:linear-gradient(112deg,transparent 12%,#ffffff50 35%,#6871800a 48%,#ffffff40 62%,transparent 85%);background-size:180% 100%;animation:exchange-light 10s ease-in-out infinite}
-#dailyExchange .exchange-sign{display:block;font:600 7px/1.2 RouteSans,sans-serif;letter-spacing:1px;color:#3f5064}
-#dailyExchange strong{display:flex;align-items:center;justify-content:center;gap:1px;min-width:0;max-width:100%;height:22px;font:600 12px/1.3 RouteSans,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:0;color:#26354b;white-space:nowrap}
-#dailyExchange strong:not(.has-rate){justify-content:flex-start;font-size:11px;overflow:hidden;text-overflow:ellipsis}
-#dailyExchange .fx-tile{position:relative;display:flex;align-items:center;justify-content:center;flex:1 1 0;min-width:0;height:100%;border:1px solid #465366;border-radius:3px;background:linear-gradient(#2c3c51,#223045 49%,#1c293b 50%,#29394e);color:#fffdf5;box-shadow:0 1px 1px #15233714;font-family:ui-monospace,'SFMono-Regular',Consolas,monospace;animation:exchange-arrive .35s ease-out}
-#dailyExchange .fx-tile:after{content:'';position:absolute;left:0;right:0;top:50%;height:1px;background:#0f1c2e55;box-shadow:0 1px #ffffff14;pointer-events:none}
-#dailyExchange .fx-unit{font:600 9px/1 RouteSans,sans-serif;flex:.9 1 0}
-#dailyExchange .fx-space{flex:0 0 2px;white-space:pre}
-#dailyExchange .fx-equal{flex:.9 1 0;color:#344558;font-size:10px}
-#dailyExchange .fx-punctuation{flex:.45 1 0;color:#26354b;font-size:11px}
-#dailyExchange small{display:block;text-align:right;font:500 8px/1.2 RouteSans,sans-serif;color:#46546a;letter-spacing:0}
-#dailyExchange[data-state=offline] small,#dailyExchange[data-state=error] small{color:#79502f}
-body.command-center.travel-shell .topbar #dailyExchange:hover{border-color:#8b9caf;box-shadow:0 2px 7px #26354b18}body.command-center.travel-shell .topbar #dailyExchange:focus-visible{outline:3px solid #ce874c;outline-offset:3px}
-@keyframes exchange-drift{0%,100%{background-position:42% 48%}50%{background-position:58% 52%}}
-@keyframes exchange-light{0%,100%{background-position:0 0}50%{background-position:100% 0}}
-@keyframes exchange-arrive{from{transform:perspective(100px) rotateX(-16deg);filter:brightness(.9)}to{transform:perspective(100px) rotateX(0);filter:brightness(1)}}
-@media(prefers-reduced-motion:reduce){#dailyExchange .exchange-flags,#dailyExchange .exchange-flags:after,#dailyExchange .fx-tile{animation:none}}
+/* Plain exchange text, matching the trip duration typography. */
+body.command-center.travel-shell .topbar #dailyExchange{display:flex;align-items:center;justify-content:center;flex:0 0 174px;width:174px;min-width:0;min-height:56px;padding:0 6px;border:0;border-radius:0;background:none;box-shadow:none;color:#ce512a;white-space:nowrap;cursor:pointer}
+#dailyExchange strong{display:block;min-width:0;max-width:100%;font:400 17px/1.4 Georgia,serif;letter-spacing:.3px;font-variant-numeric:tabular-nums;color:inherit;white-space:nowrap}
+body.command-center.travel-shell .topbar #dailyExchange:hover{background:none;box-shadow:none;color:#aa4523}body.command-center.travel-shell .topbar #dailyExchange:focus-visible{outline:3px solid #ce874c;outline-offset:2px}
 #dailyExchangeDialog{width:min(430px,calc(100vw - 24px))}#dailyExchangeDialog .cc-dialog-body{display:grid;gap:12px}#dailyExchangeDialog .exchange-detail-value{font-size:26px;font-weight:700;line-height:1.4;color:#344d3d;margin:8px 0;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
 .exchange-detail-facts{margin:0;display:grid;gap:5px}.exchange-detail-facts dt{font-size:11px;color:#797d6e}.exchange-detail-facts dd{margin:0 0 8px;font-size:14px;color:#344d3d}#dailyExchangeRefresh{min-height:44px;border:1px solid #c6d0bd;border-radius:8px;background:#eef2e7;color:#344d3d;padding:10px;font:600 13px RouteSans,sans-serif;cursor:pointer}#dailyExchangeDialog p{font-size:12px;line-height:1.7}#dailyExchangeDialog a{font-size:12px;min-height:44px;display:flex;align-items:center;color:#7c532e}
-@media(max-width:1350px){body.command-center.travel-shell .topbar #dailyExchange{flex-basis:142px;width:142px;padding:5px 7px;min-height:50px;gap:2px}#dailyExchange strong{font-size:11px;height:20px}#dailyExchange .fx-unit{font-size:8px}#dailyExchange .exchange-sign{font-size:6px}#dailyExchange small{font-size:7px}}
+
+@media(max-width:1350px){body.command-center.travel-shell .topbar #dailyExchange{flex-basis:142px;width:142px;min-height:50px;padding:0 5px}#dailyExchange strong{font-size:15px;letter-spacing:0}}
 @media(min-width:1101px) and (max-width:1350px){body.command-center.travel-shell .topbar .header-actions button{padding:7px;font-size:10px}body.command-center.travel-shell .topbar .header-actions button svg{display:none}}
-@media(max-width:900px){body.command-center.travel-shell .topbar #dailyExchange{flex-basis:118px;width:118px;padding:4px 5px;min-height:46px}#dailyExchange strong{font-size:10px;height:18px}#dailyExchange .fx-space{flex-basis:1px}#dailyExchange .fx-unit{font-size:7px}#dailyExchange .exchange-sign{letter-spacing:.6px}}
-@media(max-width:699px) and (min-height:501px){body.command-center.travel-shell[data-viewport=cover] .topbar .header-actions{padding:0}body.command-center.travel-shell .topbar .header-actions>#dailyExchange{flex:0 0 122px;width:122px;min-height:44px;height:44px;margin-right:5px;padding:5px;gap:3px;border-radius:6px;align-content:center}#dailyExchange .exchange-sign{display:none}#dailyExchange strong{height:19px;font-size:10px}#dailyExchange small{font-size:8px}}
-@media(max-width:699px) and (max-height:500px){body.command-center.travel-shell .topbar #dailyExchange{flex-basis:106px;width:106px;min-height:44px}#dailyExchange strong{font-size:9px}#dailyExchange .exchange-sign{display:none}}
+@media(max-width:900px){body.command-center.travel-shell .topbar #dailyExchange{flex-basis:118px;width:118px;min-height:46px;padding:0 4px}#dailyExchange strong{font-size:12px}}
+@media(max-width:699px) and (min-height:501px){body.command-center.travel-shell[data-viewport=cover] .topbar .header-actions{padding:0}body.command-center.travel-shell .topbar .header-actions>#dailyExchange{flex:0 0 122px;width:122px;min-height:44px;height:44px;margin-right:5px;padding:0 5px}#dailyExchange strong{font-size:13px}}
+@media(max-width:699px) and (max-height:500px){body.command-center.travel-shell .topbar #dailyExchange{flex-basis:106px;width:106px;min-height:44px}#dailyExchange strong{font-size:11px}}
