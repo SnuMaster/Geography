@@ -86,3 +86,13 @@
 #assistantToggle svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 @media(hover:hover){#assistantPanel.assistant-polished .assistant-quick button:hover,#assistantPanel.assistant-polished .assistant-tool-grid>details:not([open]):hover{background:#fbf2e5;border-color:#d8b797}#assistantPanel.assistant-polished #assistantSend:hover{background:#964321}}
 @media(max-width:740px){#assistantPanel.assistant-polished #assistantInput,#assistantPanel.assistant-polished #assistantModel{font-size:16px}}
+@media(max-height:760px){
+ #assistantPanel.assistant-polished .assistant-body{padding:12px}
+ #assistantPanel.assistant-polished #assistantContext{margin-bottom:8px}
+ #assistantPanel.assistant-polished #assistantEmpty{padding:14px 14px 12px;margin-bottom:10px}
+ #assistantPanel.assistant-polished #assistantEmpty>small{margin-bottom:6px}
+ #assistantPanel.assistant-polished #assistantEmpty p{margin-top:6px}
+ #assistantPanel.assistant-polished .assistant-quick{margin:0 0 10px}
+ #assistantPanel.assistant-polished .assistant-quick button{padding:8px 10px}
+ #assistantPanel.assistant-polished #assistantModelControls{padding:10px;gap:3px 8px;margin-bottom:0}
+}
