@@ -14,7 +14,7 @@ try{for(const width of [390,816,1440]){
  const source=await p.evaluate(()=>JSON.stringify({data:__routebook.state.data,routes:__routebook.state.routeData})),url=p.url();
  const card=p.locator('#stopList .itinerary-train-card').filter({hasText:'스카이라이너'}).first(),section=card.locator('[data-departure-profile]');
  await card.scrollIntoViewIfNeeded();await section.locator('[data-ride-next]').waitFor();
- assert.match(await card.innerText(),/空港第２ビル/);assert.match(await card.innerText(),/京成上野/);assert.match(await card.innerText(),/63\.3 km/);assert.match(await card.innerText(),/2,567엔/);assert.match(await card.innerText(),/지연 미반영/);
+ assert.match(await card.innerText(),/空港第２ビル/);assert.match(await card.innerText(),/京成上野/);assert.match(await card.innerText(),/63\.3 km/);assert.match(await card.innerText(),/2,567 JP¥/);assert.match(await card.innerText(),/지연 미반영/);
  assert.match(await section.locator('.departure-date-basis').textContent(),/여행 계획 날짜 2027-01-08/);assert.match(await section.locator('[data-departure-query-date]').textContent(),/현재 조회 날짜 2026-11-02/);assert.equal(await section.getAttribute('data-service-date'),'2026-11-02');assert.equal(await p.locator('#detailSheet').isVisible(),false);
  const profile=await section.getAttribute('data-departure-profile'),stations=await section.locator('.departure-stations').textContent(),metrics=await section.locator('.compact-metrics').textContent();
  assert.equal(await section.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);

@@ -21,7 +21,7 @@
     await record(label+' · 1 패스/전체 여정 + 항공 재생',async()=>{
      const w=await load(1),d=w.document;d.querySelector('.day-tools').open=true;const box=d.querySelector('#passToggle');box.checked=true;box.dispatchEvent(new w.Event('change',{bubbles:true}));
      check(d.querySelector('[data-leg="2"]').textContent.includes('311,300원'),'항공료 0 또는 통화 오류');click(w,'[data-leg="2"]');await until(()=>d.querySelector('[data-flight-replay]'));check(d.querySelector('.travel-fare').textContent.includes('311,300원'),'팝업 항공료 오류');click(w,'[data-flight-replay]');await until(()=>d.querySelector('[data-flight-state]')?.textContent.includes('재생 중'));click(w,'[data-flight-pause]');check(d.querySelector('[data-flight-state]').textContent.includes('멈춤'),'항공 일시정지 실패');click(w,'[data-flight-pause]');check(d.querySelector('[data-flight-state]').textContent.includes('재생 중'),'항공 재개 실패');click(w,'[data-flight-restart]');check(d.querySelector('[data-flight-percent]').textContent==='0%','항공 처음부터 실패');click(w,'[data-flight-stop]');click(w,'#overviewView');
-     const expected=[['TW251','311,300원'],['JAL','12,090엔'],['ANA','9,120엔'],['뉴 카멜리아','19,900엔']];
+     const expected=[['TW251','311,300원'],['JAL','12,090 JP¥'],['ANA','9,120 JP¥'],['뉴 카멜리아','19,900 JP¥']];
      for(const [title,amount] of expected){const control=[...d.querySelectorAll('.rail-map-symbol')].find(el=>(el.getAttribute('aria-label')||'').includes(title));check(control,'전체 여정 항로 버튼 없음 '+title);control.click();await until(()=>d.querySelector('.travel-fare')?.textContent.includes(amount));check(d.querySelector('.travel-fare').textContent.includes(amount),'전체 여정 금액 오류 '+title);}
      return 'KRW/JPY 원액 유지 · 재생/일시정지/종료 정상';
     });
