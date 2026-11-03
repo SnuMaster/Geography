@@ -2,7 +2,9 @@
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./data-model'):root.TripData);if(typeof module==='object'&&module.exports)module.exports=api;else root.TravelAssistantCore=api;})(globalThis,function(T){
  const STORE='routebook-assistant-v1',categories=['식비','교통비','입장료','쇼핑','기타','항공료','숙박비','선박료'];
  const packing=['여권','교통권','충전기','보조배터리','예약 확인','필수 서류','Visit Japan Web 입국 절차 확인','eSIM·로밍 개통 확인','결제 카드·현금 확인','여행 보험','상비약','겨울 외투'];
- function load(storage){try{const v=JSON.parse(storage.getItem(STORE)||'{}');return {visits:v.visits||{},expenses:Array.isArray(v.expenses)?v.expenses:[],packing:v.packing||{},adjustments:v.adjustments||[],budget:v.budget||{JPY:0,KRW:0}};}catch(_){return {visits:{},expenses:[],packing:{},adjustments:[],budget:{JPY:0,KRW:0}};}}
+ function dayBudget(day,values){if(!Number.isInteger(day)||day<1||day>22||!values||typeof values!=='object'||Array.isArray(values))throw Error('예산 날짜·금액을 확인하세요.');const result={};for(const currency of ['JPY','KRW']){const value=values[currency];if(value===undefined||value===null||typeof value==='string'&&!value.trim())continue;if(!['number','string'].includes(typeof value))throw Error('예산은 0~100,000,000 사이의 정수로 입력하세요.');const amount=Number(value);if(!Number.isSafeInteger(amount)||amount<0||amount>100000000)throw Error('예산은 0~100,000,000 사이의 정수로 입력하세요.');result[currency]=amount;}return result;}
+ function cleanDayBudgets(value){const result={};if(!value||typeof value!=='object'||Array.isArray(value))return result;for(const [key,budget]of Object.entries(value)){const day=Number(key);if(String(day)!==key)continue;try{const clean=dayBudget(day,budget);if(Object.keys(clean).length)result[key]=clean;}catch(_){}}return result;}
+ function load(storage){try{const v=JSON.parse(storage.getItem(STORE)||'{}');return {visits:v.visits||{},expenses:Array.isArray(v.expenses)?v.expenses:[],packing:v.packing||{},adjustments:v.adjustments||[],budget:v.budget||{JPY:0,KRW:0},dailyBudgets:cleanDayBudgets(v.dailyBudgets)};}catch(_){return {visits:{},expenses:[],packing:{},adjustments:[],budget:{JPY:0,KRW:0},dailyBudgets:{}};}}
  function save(storage,value){storage.setItem(STORE,JSON.stringify(value));}
  const visitKey=(day,variant,uid)=>`${day}|${variant}|${uid}`;
  function progress(stops,day,variant,records){const done=stops.filter(s=>records[visitKey(day,variant,s.uid)]===true).length;return {done,remaining:stops.length-done,total:stops.length};}
@@ -43,5 +45,5 @@
   return {href:u.href,label:special==='flight'?'도착 공항 지도':special==='ferry'?'도착 항구 지도':directions?'Google Maps 길찾기':'목적지 지도',directions,special};
  }
  function validAction(action,days){return action?.type==='open_place_on_map'&&days.some(d=>d.n===action.day&&d.variants.some(v=>v.id===action.variant&&v.stops.some(s=>s.uid===action.placeId)));}
- return {STORE,categories,packing,load,save,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
+ return {STORE,categories,packing,load,save,dayBudget,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
 });
