@@ -6,8 +6,8 @@
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "background_color": "#faf7f0",
-  "theme_color": "#faf7f0",
+  "background_color": "#faf8f2",
+  "theme_color": "#10202e",
   "description": "KISEKI · 22일 일본 여행 일정, 지도, 예약, 교통편과 AI 여행비서",
   "icons": [
     {

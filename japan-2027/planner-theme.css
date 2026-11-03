@@ -1,0 +1,116 @@
+/* Shared concierge palette. Presentation only: transport colours and map tiles retain their data styles. */
+body.command-center.travel-shell{
+ --ink:#253440;--paper:#faf8f2;--white:#fffdf8;--muted:#6f6356;--border:#d8cbbb;
+ --planner-navy:#10202e;--planner-copper:#94613f;--planner-rule:#b39a7c;
+ color:var(--ink);background:var(--paper);
+}
+
+/* The navy masthead anchors the paper surfaces below it. */
+body.command-center.travel-shell .topbar{background:#10202e;border-bottom:1px solid #b39a7c;color:#faf8f2;box-shadow:0 3px 16px #10202e19}
+body.command-center.travel-shell .topbar .brand{color:#faf8f2}
+body.command-center.travel-shell .topbar .brand-year{color:#dfd0bb}
+body.command-center.travel-shell .topbar :where(button,#shellMore>summary){color:#f1ede4;border-radius:4px}
+body.command-center.travel-shell .topbar :where(button,#shellMore>summary):hover{background:#253644;color:#fffdf8}
+body.command-center.travel-shell .topbar>#ccSidebarToggle,
+body.command-center.travel-shell .topbar>#ccSidebarToggle[aria-expanded=false]{background:#253644;color:#f2d7b2;border:1px solid #8c775e}
+body.command-center.travel-shell .topbar>#ccAlertsToggle[aria-pressed=true]{background:#33414a;color:#f2d7b2;box-shadow:inset 0 0 0 1px #b39a7c}
+body.command-center.travel-shell .topbar #accountSignup{background:#e6d7c2;color:#10202e}
+body.command-center.travel-shell .topbar #accountSignup:hover{background:#faf8f2}
+body.command-center.travel-shell .topbar #accountToggle,
+body.command-center.travel-shell .topbar #shellMore>summary{background:transparent;color:#f1ede4}
+body.command-center.travel-shell .topbar #accountToggle:hover,
+body.command-center.travel-shell .topbar #shellMore>summary:hover{background:#253644;color:#fffdf8}
+body.command-center.travel-shell :is(#accountActions,.trip-summary){border-color:#58616a}
+body.command-center.travel-shell .trip-summary{color:#f1ede4}
+body.command-center.travel-shell .trip-summary strong{color:#e1b88c}
+body.command-center.travel-shell .topbar #ccClock{color:#d0c6b7}
+body.command-center.travel-shell .topbar #dailyExchange,
+body.command-center.travel-shell .topbar #dailyExchange:hover{color:#edcba3;background:none;box-shadow:none}
+body.command-center.travel-shell .topbar #dailyExchange small{color:#d0c6b7}
+body.command-center.travel-shell .topbar .shell-more-menu{background:#faf8f2;border-color:#b39a7c;border-radius:6px;box-shadow:0 14px 45px #10202e26}
+body.command-center.travel-shell .topbar .shell-more-menu>strong{color:#6f6356;letter-spacing:1px}
+body.command-center.travel-shell .topbar .shell-more-menu button{color:#253440}
+body.command-center.travel-shell .topbar .shell-more-menu button:hover{background:#eee7db;color:#10202e}
+body.command-center.travel-shell .topbar .shell-more-menu button[aria-pressed=true]{background:#e8dfd1;color:#664429}
+body.command-center.travel-shell .offline-status{background:#eee8dd;color:#63584d;border-color:#d8cbbb}
+
+/* Itinerary photos stay visible through the existing translucent wash. */
+body.command-center.travel-shell :is(.days-sidebar,#shellDateDock){background:#faf8f2;border-color:#d8cbbb}
+body.command-center.travel-shell :is(.shell-date-select button,.shell-date-select #ccDaySelect,.cc-mission #ccVariant,.cc-timeline-heading button,.kiseki-type-filter select){background:#f3eee5;color:#253440;border-color:#d8cbbb;border-radius:4px}
+body.command-center.travel-shell .shell-side-tabs{border-color:#b39a7c}
+body.command-center.travel-shell .shell-side-tabs button{color:#655b50}
+body.command-center.travel-shell .shell-side-tabs button[aria-selected=true]{color:#10202e;border-bottom-color:#94613f}
+body.command-center.travel-shell .cc-progress{color:#63584d}
+body.command-center.travel-shell .cc-progress progress{accent-color:#94613f}
+body.command-center.travel-shell .cc-progress progress::-webkit-progress-value{background:#94613f}
+body.command-center.travel-shell .cc-progress progress::-moz-progress-bar{background:#94613f}
+body.command-center.travel-shell #dayHeader{border-bottom:1px solid #b39a7c}
+body.command-center.travel-shell #dayHeader h2{color:#10202e;font-weight:500}
+body.command-center.travel-shell #dayHeader .day-glance>div{background:#ede6d9cc;border-radius:4px}
+body.command-center.travel-shell #stopList .stop-card{background:#fffdf8;border-color:#ded4c5;border-radius:5px;box-shadow:none}
+body.command-center.travel-shell #stopList .stop-card.active{background:#eee7db;border-color:#a4896b;box-shadow:inset 2px 0 #94613f}
+body.command-center.travel-shell #stopList .stop-card.active .stop-name{color:#10202e}
+body.command-center.travel-shell #stopList .stop-card.active .stop-number{background:#10202e;color:#faf8f2}
+body.command-center.travel-shell #stopList :is(.stop-desc,.stop-time){color:#655f55}
+body.command-center.travel-shell .original-visit input{accent-color:#10202e}
+body.command-center.travel-shell .leg-route-button{border-radius:5px}
+body.command-center.travel-shell #dayList .day-item{background:#fffdf8;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell #dayList .day-item.active{background:#ede5d8;border-color:#94613f;box-shadow:inset 0 -2px #94613f}
+body.command-center.travel-shell #dayList .day-item.active:after,
+body.command-center.travel-shell #dayList .day-item.active .day-date{color:#805334}
+body.command-center.travel-shell .city-filters button.active{background:#10202e;color:#faf8f2}
+
+/* Floating map tools use the same paper, rules and selected navy state. */
+body.command-center.travel-shell :is(.shell-view-tabs,.map-title-card,.map-playbar,#shellContextCard,#routeFocusPanel,.location-card,.navigation-card,.ride-panel,.ride-mini){background:#faf8f2f5;color:#253440;border-color:#c7b8a4;border-radius:6px;box-shadow:0 8px 26px #10202e16}
+body.command-center.travel-shell .shell-view-tabs button{border-radius:4px}
+body.command-center.travel-shell .shell-view-tabs button.active:not([aria-pressed=false]),
+body.command-center.travel-shell .shell-view-tabs button[aria-pressed=true]{background:#10202e!important;color:#faf8f2!important;box-shadow:none}
+body.command-center.travel-shell .shell-view-tabs button[aria-pressed=false]{background:transparent!important;color:#4f5a60!important}
+body.command-center.travel-shell .map-action{background:#faf8f2;color:#10202e;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell .cc-next>small{color:#805334}
+body.command-center.travel-shell :is(.route-focus-buttons button,.kiseki-external-links a,.navigation-controls button){background:#f3eee5;color:#253440;border-color:#d3c4b1;border-radius:4px}
+body.command-center.travel-shell :is(#routeNavigationStart,#shellSaveMemo,#kisekiRecordExpense){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(.leaflet-popup-content-wrapper,.leaflet-popup-tip){background:#faf8f2;color:#253440}
+body.command-center.travel-shell .leaflet-popup-content-wrapper{border:1px solid #c7b8a4;border-radius:6px}
+body.command-center.travel-shell .leaflet-popup-content a{color:#805334}
+
+/* Place, train and saved-record surfaces; route emblems keep their own colours. */
+body.command-center.travel-shell :is(#detailSheet,.detail-sheet-header,.detail-sheet-body,.detail-actions){background:#faf8f2;color:#253440;border-color:#c7b8a4}
+body.command-center.travel-shell .detail-sheet-header{border-bottom:1px solid #b39a7c}
+body.command-center.travel-shell .station-departures{background:#f4f1e9;color:#253440;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell .departure-next{background:#ede5d8;border-color:#c7b8a4;border-radius:5px}
+body.command-center.travel-shell :is(.departure-next-time strong,.departure-next-count b){color:#10202e}
+body.command-center.travel-shell :is(.departure-clock,.departure-source,.departure-notice){color:#655b50}
+body.command-center.travel-shell .compact-station [data-ride-choose]{background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(dialog.cc-dialog,#accountDialog,#bookingChecklistDialog,#noticeDialog,#offlinePackDialog){background:#faf8f2;color:#253440;border:1px solid #b39a7c;border-radius:6px;box-shadow:0 18px 65px #10202e30}
+body.command-center.travel-shell :is(dialog.cc-dialog,#accountDialog,#bookingChecklistDialog,#noticeDialog,#offlinePackDialog)::backdrop{background:#10202e70;backdrop-filter:blur(3px)}
+body.command-center.travel-shell :is(.cc-dialog>header,#accountDialog>header,.booking-dialog-header,#noticeDialog>.dialog-header){background:#10202e;color:#faf8f2;border-bottom:1px solid #b39a7c}
+body.command-center.travel-shell :is(.cc-dialog>header,#accountDialog>header,.booking-dialog-header,#noticeDialog>.dialog-header) :is(h2,strong){color:#faf8f2}
+body.command-center.travel-shell :is(.cc-dialog>header,#accountDialog>header,.booking-dialog-header) small{color:#e0c5a4}
+body.command-center.travel-shell :is(.cc-dialog>header button,#accountClose,.booking-dialog-header button,#noticeDialog>.dialog-header button){background:transparent;color:#faf8f2;border-radius:4px}
+body.command-center.travel-shell :is(.cc-dialog-body,#bookingChecklistDialog,#accountDialog) :is(input,select,textarea){background:#fffdf8;color:#253440;border-color:#c7b8a4;border-radius:4px}
+body.command-center.travel-shell :is(.cc-dialog-body .cc-primary,#accountDialog button[type=submit],#accountLogout){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(.booking-summary,.booking-item,.account-tabs){background:#f3eee5;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell :is(.booking-filters button[aria-pressed=true],.variant-tabs button.active,.account-tabs button[aria-selected=true]){background:#10202e;color:#faf8f2;border-color:#10202e}
+body.command-center.travel-shell :is(.booking-details,.cc-dialog-body details){border-color:#d8cbbb}
+body.command-center.travel-shell .cc-dialog-body p{color:#635c52}
+body.command-center.travel-shell :is(.cc-dialog-body h3,.booking-item-title){color:#10202e}
+body.command-center.travel-shell :is(.cc-dialog-body button,.booking-links a){border-radius:4px}
+
+/* Expenses remain actual spending only, with currency and chart colours unchanged. */
+body.command-center.travel-shell #kisekiCostsDialog :is(.cc-dialog-body,.expense-toolbar){background:#faf8f2}
+body.command-center.travel-shell #kisekiCostsDialog .expense-cards article{background:#f0eade;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-cards .expense-actual-card{background:#10202e;color:#faf8f2;border-color:#10202e}
+body.command-center.travel-shell #kisekiCostsDialog .expense-actual-card :is(strong,small,span){color:#faf8f2}
+body.command-center.travel-shell #kisekiCostsDialog .expense-chart{background:#fffdf8;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-tabs{background:#ece4d7;border-radius:4px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-tabs button[aria-selected=true]{background:#10202e;color:#faf8f2;box-shadow:none}
+body.command-center.travel-shell #kisekiCostsDialog .expense-currencies button[aria-pressed=true]{background:#10202e;color:#faf8f2;box-shadow:none}
+body.command-center.travel-shell #kisekiCostsDialog :is(.expense-date-nav select,.expense-date-nav button){background:#fffdf8;color:#253440;border-color:#c7b8a4;border-radius:4px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-heading h3{font-weight:500}
+body.command-center.travel-shell #kisekiCostsDialog .expense-section{border-color:#d8cbbb}
+body.command-center.travel-shell #kisekiCostsDialog .expense-day-chart button{border-radius:3px}
+body.command-center.travel-shell #assistantToggle{background:#10202e;color:#faf8f2;border:1px solid #b39a7c;border-radius:5px;box-shadow:0 6px 20px #10202e26}
+body.command-center.travel-shell :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid #b77d53;outline-offset:3px}
+body.command-center.travel-shell .topbar :is(button,a,summary):focus-visible{outline-color:#f2d7b2}
+body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):focus-visible{outline-color:#94613f}

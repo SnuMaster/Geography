@@ -8,7 +8,7 @@
  function title(button,text,key){button.innerHTML=icon(key)+`<span>${text}</span>`;}
  function selectTab(id){for(const b of document.querySelectorAll('[data-shell-tab]')){const selected=b.dataset.shellTab===id;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1;}for(const p of document.querySelectorAll('[data-shell-pane]'))p.hidden=p.dataset.shellPane!==id;}
  function init(value){
-  api=value;document.body.classList.add('travel-shell');document.querySelector('meta[name=theme-color]').content='#faf7f0';
+  api=value;document.body.classList.add('travel-shell');document.querySelector('meta[name=theme-color]').content='#10202e';
   const brand=document.querySelector('.brand');brand.innerHTML='<span class="brandmark" aria-hidden="true"><img src="assets/kiseki-crest.svg" width="61" height="61" alt="" decoding="async"></span><span>KISEKI<small class="brand-year">日本旅行プランナー</small></span>';brand.setAttribute('aria-label','KISEKI · 일본 여행 1일차로 이동');
   document.title='KISEKI · JAPAN 2027';
   const header=document.querySelector('.header-actions'),mapViews=[$('#overviewView'),$('#dailyView')];
