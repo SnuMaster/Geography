@@ -13,7 +13,7 @@ body.command-center.travel-shell .topbar :where(button,#shellMore>summary){color
 body.command-center.travel-shell .topbar :where(button,#shellMore>summary):hover{background:#253644;color:#fffdf8}
 body.command-center.travel-shell .topbar>#ccSidebarToggle,
 body.command-center.travel-shell .topbar>#ccSidebarToggle[aria-expanded=false]{background:#253644;color:#f2d7b2;border:1px solid #8c775e}
-body.command-center.travel-shell .topbar>#ccAlertsToggle[aria-pressed=true]{background:#33414a;color:#f2d7b2;box-shadow:inset 0 0 0 1px #b39a7c}
+body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=true]{background:#33414a;color:#f2d7b2;box-shadow:inset 0 0 0 1px #b39a7c}
 body.command-center.travel-shell .topbar #accountSignup{background:#e6d7c2;color:#10202e}
 body.command-center.travel-shell .topbar #accountSignup:hover{background:#faf8f2}
 body.command-center.travel-shell .topbar #accountToggle,
@@ -114,3 +114,10 @@ body.command-center.travel-shell #assistantToggle{background:#10202e;color:#faf8
 body.command-center.travel-shell :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid #b77d53;outline-offset:3px}
 body.command-center.travel-shell .topbar :is(button,a,summary):focus-visible{outline-color:#f2d7b2}
 body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):focus-visible{outline-color:#94613f}
+.departure-date-basis{display:grid;gap:3px;margin:6px 0 12px;font:400 11px/1.6 RouteSans,sans-serif;color:#655b50;overflow-wrap:anywhere}
+.departure-date-basis b{font-weight:600;color:#253440}
+#ccAlertsDialog{width:min(520px,calc(100vw - 24px))}
+#ccAlertsDialog .cc-dialog-body h3{font-size:15px;margin:22px 0 7px}
+#ccAlertsDialog .cc-dialog-body h3:first-child{margin-top:0}
+#ccAlertsDialog #ccAlertsBackground{padding:12px;border-left:2px solid #94613f;background:#eee7db}
+#ccAlertsDialog #ccAlertsPermissionRequest[hidden]{display:none!important}

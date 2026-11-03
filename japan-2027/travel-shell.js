@@ -18,7 +18,7 @@
   for(const id of ['noticeBtn','offlinePackBtn','tripPlanBtn','itineraryToggle','rideToggle','ccAlertsToggle','ccInstall','aboutBtn']){const button=$('#'+id);button.hidden=false;more.querySelector('div').append(button);}
   more.addEventListener('click',e=>{if(e.target.closest('button'))more.open=false;});document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary').focus();}});
   header.replaceChildren($('#bookingChecklistBtn'),budget,$('#ccRecords'),$('#settingsBtn'));
-  const alerts=more.querySelector('#ccAlertsToggle');alerts.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>알림</span>';alerts.setAttribute('aria-label','여행 알림');alerts.title='여행 알림 켜기·끄기';
+  const alerts=more.querySelector('#ccAlertsToggle');alerts.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>알림</span>';alerts.setAttribute('aria-label','여행 알림 설정');alerts.title='여행 알림 설정';
   document.querySelector('.topbar').append(alerts,more,document.querySelector('.trip-summary'));
   const map=document.querySelector('.map-panel'),bar=document.createElement('div');bar.className='shell-map-toolbar';bar.setAttribute('aria-label','지도 보기');
   const views=document.createElement('div');views.className='shell-view-tabs';views.setAttribute('role','group');views.setAttribute('aria-label','지도 범위');views.append(...mapViews);bar.append(views);more.querySelector('.shell-more-menu').append($('#ccFilters'));map.append(bar);$('#overviewView').textContent='전체 여정';$('#dailyView').textContent='오늘 동선';

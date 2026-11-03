@@ -12,7 +12,7 @@
   for(const b of document.querySelectorAll('[data-concierge-view]'))b.setAttribute('aria-pressed',String(b.dataset.conciergeView===(show?'tools':'chat')));
  }
  function openTool(label){
-  const aliases={'경비·준비물·저장 조정안':'assistantExpense','경비·준비물':'assistantExpense','방문 체크':'assistantVisits','방문 완료 체크':'assistantVisits','연결·개인정보·사용량':'assistantConnectionDetails','설정·사용량':'assistantConnectionDetails','읽어주기':'assistantAudioTools','일본어 표현·긴급 도움 (오프라인)':'assistantPhrases','사진 번역·티켓 분석':'assistantPhoto'};
+  const aliases={'기록':'assistantRecordTools','경비·준비물·저장 조정안':'assistantExpense','경비·준비물':'assistantExpense','방문 체크':'assistantVisits','방문 완료 체크':'assistantVisits','연결·개인정보·사용량':'assistantConnectionDetails','설정·사용량':'assistantConnectionDetails','읽어주기':'assistantAudioTools','일본어 표현·긴급 도움 (오프라인)':'assistantPhrases','사진 번역·티켓 분석':'assistantPhoto'};
   const target=document.getElementById(aliases[label]);if(!target)return false;
   setTools(true);const ancestors=[];for(let d=target.closest('details');d;d=d.parentElement?.closest('details'))ancestors.unshift(d);
   for(const d of ancestors)d.open=true;target.scrollIntoView({block:'nearest'});return true;
@@ -21,7 +21,8 @@
   if(ready)return;({setTools}=options);const panel=$('#assistantPanel'),body=panel.querySelector('.assistant-body'),extras=$('#assistantToolsPane'),grid=extras.querySelector('.assistant-tool-grid');
   panel.classList.remove('assistant-polished');panel.classList.add('assistant-concierge');panel.querySelector('.assistant-emblem')?.remove();
   const rail=document.createElement('nav');rail.className='concierge-rail';rail.setAttribute('aria-label','여행비서 메뉴');rail.innerHTML='<span class="concierge-wordmark">KISEKI</span><span class="concierge-vertical" lang="ja">旅の案内人</span><span class="concierge-sun" aria-hidden="true">◒</span><button type="button" data-concierge-view="chat" aria-label="여행 채팅"><span lang="ja">旅</span><small lang="ko">여행</small></button><button type="button" data-concierge-view="tools" aria-label="여행 도구"><span lang="ja">記録</span><small lang="ko">기록</small></button><button type="button" id="conciergeSettings" aria-label="설정·사용량"><span lang="ja">設定</span><small lang="ko">설정</small></button>';panel.prepend(rail);
-  rail.onclick=e=>{const mode=e.target.closest('[data-concierge-view]');if(mode)setTools(mode.dataset.conciergeView==='tools');if(e.target.closest('#conciergeSettings'))openTool('설정·사용량');};
+  rail.querySelector('[data-concierge-view="tools"]').setAttribute('aria-label','여행 기록 열기');
+  rail.onclick=e=>{const mode=e.target.closest('[data-concierge-view]');if(mode){if(mode.dataset.conciergeView==='tools')openTool('기록');else setTools(false);}if(e.target.closest('#conciergeSettings'))openTool('설정·사용량');};
   const close=$('#assistantClose');close.textContent='×';close.setAttribute('aria-label','여행비서 접기');
   const welcome=$('#assistantEmpty');welcome.replaceChildren();welcome.innerHTML='<strong lang="ja">今日の旅</strong><small class="concierge-title-ko" lang="ko">오늘의 여행</small>';welcome.setAttribute('aria-label','질문을 입력하거나 빠른 질문을 선택하세요');
   const labels={'다음 목적지':['次の目的地','다음 목적지'],'지금 길 안내':['道案内','길 안내'],'오늘 일정':['今日の予定','오늘 일정'],'일본어 번역':['翻訳','번역']};
