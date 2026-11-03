@@ -17,16 +17,32 @@
 .command-center.original-sidebar #dayHeader h2{font-size:21px;line-height:1.4;margin:11px 0 16px;overflow-wrap:anywhere}
 .command-center.original-sidebar #dayHeader .day-glance>div{background:#f1ede3d9;padding:9px}
 .command-center.original-sidebar #dayHeader .day-tools{font-size:11px}
-.command-center.original-sidebar #stopList .stop-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:4px;align-items:start;margin:9px 0}
-.original-visit{display:flex;align-items:center;justify-content:center;min-height:44px;width:44px;cursor:pointer;margin-top:5px}
+.command-center.original-sidebar #stopList .stop-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 4px;align-items:start;margin:10px 0 14px}
+.original-visit{display:flex;align-items:center;justify-content:center;min-height:44px;width:44px;cursor:pointer;margin-top:2px}
 .original-visit input{width:21px;height:21px;margin:0;accent-color:#d36534;cursor:pointer}
-.command-center.original-sidebar #stopList .stop-card{min-width:0;margin:0;width:100%;padding:12px 9px;gap:8px;background:#fffdf8e8}
-.command-center.original-sidebar #stopList .stop-content{min-width:0;flex:1}
-.command-center.original-sidebar #stopList .stop-number{width:23px;height:23px;min-width:23px;font-size:10px}
-.command-center.original-sidebar #stopList .stop-name{font-size:14px;line-height:1.5;overflow-wrap:anywhere}
-.command-center.original-sidebar #stopList .stop-desc{font-size:11px;line-height:1.7;overflow-wrap:anywhere}
-.command-center.original-sidebar #stopList .stop-links{display:flex;flex-wrap:wrap;gap:6px}
-.command-center.original-sidebar #stopList .stop-links a{min-height:44px;display:inline-flex;align-items:center}
+.command-center.original-sidebar #stopList .stop-card{min-width:0;margin:0;width:100%;padding:12px 11px 6px;grid-template-columns:22px minmax(0,1fr);gap:8px;background:#fffdf8e8;align-items:start}
+.command-center.original-sidebar #stopList .stop-content{min-width:0;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 8px;align-items:start}
+.command-center.original-sidebar #stopList .stop-number{width:22px;height:22px;min-width:22px;font-size:10px;margin-top:0;box-shadow:none}
+.command-center.original-sidebar #stopList .stop-name{font-size:14px;line-height:1.5;overflow-wrap:anywhere;color:#253440}
+.command-center.original-sidebar #stopList .stop-desc{font-size:11px;line-height:1.6;overflow-wrap:anywhere;margin:1px 0 0}
+.command-center.original-sidebar #stopList .stop-links{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:6px;margin:0;font-size:11px;align-self:start}
+.command-center.original-sidebar #stopList .stop-links a{min-height:44px;display:inline-flex;align-items:center;gap:3px;color:#805334}
+.command-center.original-sidebar #stopList :is(.stop-time,.stop-name,.stop-desc,.place-facts){grid-column:1/-1}
+.command-center.original-sidebar #stopList .stop-time{margin:0;font-size:10px;letter-spacing:.02em;line-height:1.5;font-weight:500}
+.command-center.original-sidebar #stopList .place-facts{gap:6px;align-items:center;margin:4px 0 0}
+.command-center.original-sidebar #stopList .place-facts>span{padding:0;border:0;border-radius:0;background:none;font-size:10px;line-height:1.5;color:#756b5e;gap:0}
+.command-center.original-sidebar #stopList .place-facts>span+span:before{content:'·';margin-right:6px;color:#aa9a87}
+.command-center.original-sidebar #stopList .place-expand{margin:0;min-width:0}
+.command-center.original-sidebar #stopList .place-expand>summary{display:flex;align-items:center;gap:5px;min-height:44px;padding:0;font-size:11px;color:#805334;list-style:none}
+.command-center.original-sidebar #stopList .place-expand>summary::-webkit-details-marker{display:none}
+.command-center.original-sidebar #stopList .place-expand>summary:after{content:'⌄';font:14px RouteSans,sans-serif}
+.command-center.original-sidebar #stopList .place-expand[open]{grid-column:1/-1}
+.command-center.original-sidebar #stopList .place-expand[open]>summary:after{transform:rotate(180deg)}
+.command-center.original-sidebar #stopList .stop-content>.stop-links:only-child{grid-column:1/-1}
+.command-center.original-sidebar #stopList .stop-content:not(:has(.place-expand))>.stop-links{grid-column:1/-1;justify-content:flex-start}
+.command-center.original-sidebar #stopList .stop-card.active:after{display:none}
+.command-center.original-sidebar #stopList .stop-row:has(>.itinerary-expense) .stop-card{border-radius:5px 5px 0 0}
+.command-center.original-sidebar #stopList .stop-row>.itinerary-expense{background:#fffdf8;border-top:1px solid #eee7db;padding:9px 11px 11px}
 .command-center.original-sidebar #stopList .is-visited .stop-card{background:#edf1e8;border-color:#d5ddcc}
 .command-center.original-sidebar #stopList .is-visited .stop-name{text-decoration:line-through;color:#6b7866}
 .command-center.original-sidebar .leg-route-button{width:100%;margin-left:0;min-width:0;padding:10px 8px;white-space:normal;overflow-wrap:anywhere}
