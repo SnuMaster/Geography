@@ -16,6 +16,14 @@
  function context({day,variant,selected,leg,records,personal,online,now=Date.now(),station}){const stops=variant.stops,n=next(stops,day.n,variant.id,personal.visits,Math.max(0,selected+1));return {day:day.n,variant:variant.id,date:T.date(day.n),localTime:new Date(now+9*3600000).toISOString().slice(0,19)+'+09:00',online,selected:publicStop(stops[selected]),next:publicStop(n),progress:progress(stops,day.n,variant.id,personal.visits),stops:stops.map(publicStop),route:leg&&variant.stops.some(s=>s.kind==='home'&&(s.uid===leg.fromUid||s.uid===leg.toUid))?{id:leg.legId,status:'비공개 출발·도착 구간'}:route(leg,station),bookings:[...new Set(stops.map(s=>s.reservationKey).filter(Boolean))].map(key=>({key,status:records[key]?.status||'미신청',time:records[key]?.time||null,confirmed:['예약완료','티켓 확보'].includes(records[key]?.status)}))};}
  function expenses(items,day,budget={}){const sums={JPY:0,KRW:0},daily={JPY:0,KRW:0};for(const x of items)if(['JPY','KRW'].includes(x.currency)&&Number.isFinite(x.amount)&&x.amount>=0){sums[x.currency]+=x.amount;if(x.day===day)daily[x.currency]+=x.amount;}return {total:sums,daily,remaining:{JPY:(budget.JPY||0)-sums.JPY,KRW:(budget.KRW||0)-sums.KRW}};}
  function expense(day,currency,amount,category,memo=''){amount=Number(amount);if(!Number.isInteger(day)||day<1||day>22||!['JPY','KRW'].includes(currency)||!Number.isSafeInteger(amount)||amount<=0||amount>100000000||!categories.includes(category))throw Error('날짜·통화·정수 금액·분류를 확인하세요.');if(typeof memo!=='string'||memo.trim().length>200)throw Error('지출 메모는 200자 이하로 입력하세요.');memo=memo.trim();return {id:globalThis.crypto.randomUUID(),day,currency,amount,category,...(memo?{memo}:{})};}
+ // One editable actual payment per itinerary item; replacement never duplicates totals.
+ function itineraryExpense(items,ref,currency,value,category,memo=''){
+  if(!ref||!Number.isInteger(ref.day)||ref.day<1||ref.day>22||!['stop','leg'].includes(ref.type)||![ref.variant,ref.uid].every(v=>typeof v==='string'&&v.length>0&&v.length<=160))throw Error('일정 항목을 확인하세요.');
+  const matches=e=>e.day===ref.day&&e.itinerary?.variant===ref.variant&&e.itinerary.type===ref.type&&e.itinerary.uid===ref.uid,old=items.find(matches),others=items.filter(e=>!matches(e));
+  if(typeof value==='string'&&!value.trim())return others;
+  if(!['number','string'].includes(typeof value)||!Number.isSafeInteger(Number(value))||Number(value)<0)throw Error('실제 비용은 0~100,000,000 사이의 정수로 입력하세요.');
+  const amount=Number(value),entry=expense(ref.day,currency,amount===0?1:amount,category,memo);entry.amount=amount;entry.itinerary={variant:ref.variant,type:ref.type,uid:ref.uid};if(old)entry.id=old.id;return [...others,entry];
+ }
  function adjustments(stops,legs,minutes,records,start=0){
   if(!Number.isInteger(minutes)||minutes<1||minutes>720)throw Error('지연은 1~720분으로 입력하세요.');
   return ['순서 유지','체류 단축','선택 방문 생략'].map((label,option)=>{let previousEnd=null,skipped=false;
@@ -45,5 +53,5 @@
   return {href:u.href,label:special==='flight'?'도착 공항 지도':special==='ferry'?'도착 항구 지도':directions?'Google Maps 길찾기':'목적지 지도',directions,special};
  }
  function validAction(action,days){return action?.type==='open_place_on_map'&&days.some(d=>d.n===action.day&&d.variants.some(v=>v.id===action.variant&&v.stops.some(s=>s.uid===action.placeId)));}
- return {STORE,categories,packing,load,save,dayBudget,visitKey,progress,next,publicStop,route,context,expenses,expense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
+ return {STORE,categories,packing,load,save,dayBudget,visitKey,progress,next,publicStop,route,context,expenses,expense,itineraryExpense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
 });

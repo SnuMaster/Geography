@@ -1,18 +1,25 @@
 'use strict';
 // Mount the original itinerary once; its renderer, place IDs, route cards and storage remain authoritative.
 (function(){
- const $=s=>document.querySelector(s);let api,budgetNode,budgetDay=null,budgetDirty=false;const budgetDrafts=new Map(),budgetField=s=>budgetNode.querySelector(s);
- function rememberBudget(){if(!budgetNode||budgetDay===null)return;budgetDrafts.set(budgetDay,{JPY:budgetField('#originalBudgetJPY').value,KRW:budgetField('#originalBudgetKRW').value,open:budgetNode.open,dirty:budgetDirty});}
- function refreshBudget(c,p){
-  if(!budgetNode)return;const saved=p.dailyBudgets?.[c.day.n]||{};
-  if(budgetDay!==c.day.n){rememberBudget();budgetDay=c.day.n;const draft=budgetDrafts.get(budgetDay);budgetField('#originalBudgetJPY').value=draft?.JPY??saved.JPY??'';budgetField('#originalBudgetKRW').value=draft?.KRW??saved.KRW??'';budgetDirty=!!draft?.dirty;budgetNode.open=!!draft?.open;budgetField('#originalBudgetStatus').textContent=budgetDirty?'입력 중 · 저장 버튼을 눌러 주세요.':'';}
-  budgetField('#originalBudgetDay').textContent=c.day.date+' 예산';budgetField('#originalBudgetValue').textContent=['JPY','KRW'].filter(currency=>Object.hasOwn(saved,currency)).map(currency=>Number(saved[currency]).toLocaleString('ko-KR')+(currency==='JPY'?'엔':'원')).join(' · ')||'입력하기';
-  const header=$('#dayHeader');if(header&&!header.contains(budgetNode))header.insertBefore(budgetNode,header.querySelector('.day-tools'));
+ const $=s=>document.querySelector(s),h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let api;const drafts=new Map();
+ function expenseTarget(c,type,uid){
+  if(type==='stop'){const stop=c.stops.find(s=>s.uid===uid);if(!stop||stop.kind==='home')return null;return {name:api.name(stop),currency:stop.lng<130&&stop.lat>34?'KRW':'JPY',category:stop.kind==='hotel'?'숙박비':stop.kind==='food'||stop.foodKey?'식비':stop.kind==='sight'?'입장료':'기타'};}
+  const leg=c.legs.find(l=>l?.legId===uid);if(!leg||leg.parts.some(p=>['rail','metro'].includes(p.mode))||!leg.parts.some(p=>['bus','taxi','flight','ferry'].includes(p.mode))||CommandCore.privateLeg(leg,api.app.state.data.days))return null;
+  return {name:leg.from+' → '+leg.to,currency:leg.fare?.currency==='KRW'?'KRW':'JPY',category:leg.parts.some(p=>p.mode==='flight')?'항공료':leg.parts.some(p=>p.mode==='ferry')?'선박료':'교통비'};
  }
- function initBudget(){
-  budgetNode=document.createElement('details');budgetNode.id='originalDayBudget';budgetNode.className='original-day-budget';budgetNode.innerHTML='<summary><span><b id="originalBudgetDay">오늘 예산</b><small>철도 요금 제외</small></span><strong id="originalBudgetValue">입력하기</strong></summary><form id="originalBudgetForm"><label>엔화 예산<input id="originalBudgetJPY" type="number" min="0" max="100000000" step="1" inputmode="numeric" placeholder="엔 (JPY)"></label><label>원화 예산<input id="originalBudgetKRW" type="number" min="0" max="100000000" step="1" inputmode="numeric" placeholder="원 (KRW)"></label><p>직접 입력한 날짜별 예산이에요. 전철·철도 요금은 별도이며 자동으로 더하지 않아요. 비워서 저장하면 해당 통화 예산을 지워요.</p><button type="submit">예산 저장</button><p id="originalBudgetStatus" role="status" aria-live="polite"></p></form>';
-  const input=budgetNode.querySelector('form');input.oninput=()=>{budgetDirty=true;rememberBudget();budgetNode.querySelector('#originalBudgetStatus').textContent='입력 중 · 저장 버튼을 눌러 주세요.';};budgetNode.ontoggle=rememberBudget;
-  input.onsubmit=event=>{event.preventDefault();try{const day=api.context().day.n,values=TravelAssistantCore.dayBudget(day,{JPY:budgetNode.querySelector('#originalBudgetJPY').value,KRW:budgetNode.querySelector('#originalBudgetKRW').value});const saved=TravelAssistant.updatePersonal(p=>{p.dailyBudgets??={};if(Object.keys(values).length)p.dailyBudgets[day]=values;else delete p.dailyBudgets[day];});budgetDirty=saved===false;rememberBudget();budgetField('#originalBudgetStatus').textContent=saved===false?'기기 저장에 실패했어요. 새로고침 전에 저장 공간을 확인하세요.':Object.keys(values).length?'이 날짜의 예산을 기기에 저장했어요.':'이 날짜의 예산을 지웠어요.';}catch(error){budgetField('#originalBudgetStatus').textContent=error.message;}};
+ const refKey=(day,variant,type,uid)=>JSON.stringify([day,variant,type,uid]);
+ function mountExpense(host,c,p,type,uid){
+  const target=expenseTarget(c,type,uid);if(!target)return;const key=refKey(c.day.n,c.variant.id,type,uid),saved=p.expenses.find(e=>e.day===c.day.n&&e.itinerary?.variant===c.variant.id&&e.itinerary.type===type&&e.itinerary.uid===uid),draft=drafts.get(key);let form=host.querySelector(':scope > .itinerary-expense');
+  if(!form){form=document.createElement('form');form.className='itinerary-expense';form.dataset.expenseType=type;form.dataset.expenseUid=uid;form.dataset.itineraryDay=c.day.n;form.dataset.expenseVariant=c.variant.id;form.setAttribute('aria-label',target.name+' 실제 비용');form.innerHTML='<label><span>실제 비용</span><input name="amount" type="number" min="0" max="100000000" step="1" inputmode="numeric" placeholder="금액 입력" aria-label="'+h(target.name)+' 실제 비용 금액"></label><label class="itinerary-currency"><span class="cc-sr">통화</span><select name="currency" aria-label="'+h(target.name)+' 실제 비용 통화"><option value="JPY">엔 (¥)</option><option value="KRW">원 (₩)</option></select></label><button type="submit">저장</button><p role="status" aria-live="polite"></p>';host.append(form);}
+  if(document.activeElement?.closest('.itinerary-expense')!==form){form.elements.amount.value=draft?.amount??saved?.amount??'';form.elements.currency.value=draft?.currency??saved?.currency??target.currency;}
+  form.querySelector('p').textContent=draft?'입력 중 · 저장해 주세요.':saved?'저장됨 · Expenses에 반영':'';
+ }
+ function refreshExpenses(c,p){if(api.app.state.view!=='daily')return;for(const card of document.querySelectorAll('#stopList .stop-card[data-stop]')){const stop=c.stops[Number(card.dataset.stop)];if(stop)mountExpense(card.closest('.stop-row'),c,p,'stop',stop.uid);}for(const row of document.querySelectorAll('#stopList [data-expense-leg]')){const leg=c.legs[Number(row.dataset.expenseLeg)-1];if(leg)mountExpense(row,c,p,'leg',leg.legId);}}
+ function initExpenses(){
+  const list=$('#stopList');list.addEventListener('input',event=>{const form=event.target.closest('.itinerary-expense');if(!form)return;drafts.set(refKey(Number(form.dataset.itineraryDay),form.dataset.expenseVariant,form.dataset.expenseType,form.dataset.expenseUid),{amount:form.elements.amount.value,currency:form.elements.currency.value});form.querySelector('p').textContent='입력 중 · 저장해 주세요.';});
+  list.addEventListener('submit',event=>{const form=event.target.closest('.itinerary-expense');if(!form)return;event.preventDefault();const c=api.context(),type=form.dataset.expenseType,uid=form.dataset.expenseUid,target=expenseTarget(c,type,uid),key=refKey(c.day.n,c.variant.id,type,uid);if(!target||Number(form.dataset.itineraryDay)!==c.day.n||form.dataset.expenseVariant!==c.variant.id)return;
+   try{const amount=form.elements.amount.value,items=TravelAssistantCore.itineraryExpense(api.personal().expenses,{day:c.day.n,variant:c.variant.id,type,uid},form.elements.currency.value,amount,target.category,target.name);drafts.delete(key);const saved=TravelAssistant.updatePersonal(p=>p.expenses=items);refresh();const current=[...list.querySelectorAll('.itinerary-expense')].find(f=>f.dataset.expenseType===type&&f.dataset.expenseUid===uid);if(current)current.querySelector('p').textContent=saved===false?'기기 저장 실패 · 새로고침 전에 저장 공간을 확인하세요.':amount===''?'이 항목의 실제 비용을 지웠어요.':'저장됨 · Expenses에 반영';}catch(error){form.querySelector('p').textContent=error.message;}
+  });
  }
  function sidebar(open){document.body.classList.toggle('cc-sidebar-closed',!open);$('#ccSidebarToggle').setAttribute('aria-expanded',String(open));api.app.map.invalidateSize();}
  function railCard(leg,index){
@@ -26,9 +33,9 @@
   if(api.app.state.view==='daily')for(const card of document.querySelectorAll('#stopList .stop-card[data-stop]')){const stop=c.stops[Number(card.dataset.stop)];if(!stop)continue;card.dataset.originalPlace=stop.uid;const row=card.closest('.stop-row');let input=row.querySelector('[data-original-visit]');if(!input){const label=document.createElement('label');label.className='original-visit';input=document.createElement('input');input.type='checkbox';input.dataset.originalVisit=stop.uid;const text=document.createElement('span');text.className='cc-sr';text.textContent=api.name(stop)+' 방문 완료';input.setAttribute('aria-label',text.textContent);label.append(input,text);row.prepend(label);}const checked=!!p.visits[TravelAssistantCore.visitKey(c.day.n,c.variant.id,stop.uid)];input.checked=checked;row.classList.toggle('is-visited',checked);}
   RailDepartures.mountInline($('#stopList'));
   const photo=$('#kisekiHeroPhoto');if(photo)$('#dayHeader').style.setProperty('--original-photo','url('+JSON.stringify(photo.getAttribute('src'))+')');
-  refreshBudget(c,p);
+  refreshExpenses(c,p);
  }
- function init(value){if(api)return;api=value;document.body.classList.add('original-sidebar');initBudget();
+ function init(value){if(api)return;api=value;document.body.classList.add('original-sidebar');initExpenses();
   const parking=document.createElement('div');parking.id='originalLegacyControls';parking.hidden=true;document.body.append(parking);
   for(const id of ['tripPlanBtn','itineraryToggle','rideToggle','ccInstall','aboutBtn','shareBtn']){const node=$('#'+id);node.hidden=true;parking.append(node);}
   const plan=document.createElement('section');plan.className='original-plan-tools';plan.innerHTML='<h3>일정 조정</h3><p>원본 일정은 그대로 유지됩니다. 조정안은 확인한 뒤 별도로 적용합니다.</p>';plan.append($('#ccEdit'),$('#ccUndo'),$('#ccPlanStatus'));$('#shellInfo').append(plan);parking.append(document.querySelector('.cc-timeline-heading'),$('#ccTimeline'));
