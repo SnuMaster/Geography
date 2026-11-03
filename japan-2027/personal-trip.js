@@ -69,6 +69,18 @@
   const country=['대구','부산'].includes(stop.area)||(stop.lat>35&&stop.lng<129.7&&stop.lng>128.2)?'KR':'JP';
   return station(stop.name,null,country);
  }
+ // Named Maps searches open place information; coordinate-only searches open a bare pin.
+ function placeMapUrl(stop){
+  if(!stop||stop.kind==='home'||stop.privateLocation||!String(stop.name||'').trim())return null;
+  const url=new URL('https://www.google.com/maps/search/');url.searchParams.set('api','1');
+  // Event viewing zones deliberately retain their verified reference point, not the mountain summit.
+  if(stop.event&&Number.isFinite(stop.lat)&&Number.isFinite(stop.lng)&&Math.abs(stop.lat)<=90&&Math.abs(stop.lng)<=180){url.searchParams.set('query',stop.lat+','+stop.lng);return url.href;}
+  const korean=['대구','부산'].includes(stop.area)||(stop.lat>34&&stop.lng<130),label=stopName(stop),parenthetical=label.match(/[（(]([^()（）]*[\u3040-\u30ff\u3400-\u9fff][^()（）]*)[)）]/)?.[1];
+  let name=korean?stop.name:stop.jp||parenthetical||stop.name;
+  if(!korean&&stop.kind==='station'&&!/[가-힣]/.test(name))name=name.replace(/駅$/,'')+'駅';
+  const region=String(stop.address||stop.area||'').split(/\s*\/\s*/)[0].trim(),query=[name,region,korean?'대한민국':'日本'].filter(Boolean).join(' ');
+  url.searchParams.set('query',query);return url.href;
+ }
  function distance(a,b){
   const rad=Math.PI/180,dl=(b.lat-a.lat)*rad,dn=(b.lng-a.lng)*rad;
   const q=Math.sin(dl/2)**2+Math.cos(a.lat*rad)*Math.cos(b.lat*rad)*Math.sin(dn/2)**2;
@@ -108,5 +120,5 @@
   function scrub(value){if(!value||typeof value!=='object')return;for(const key of Object.keys(value)){if(typeof value[key]==='string'){for(const text of privateStrings)value[key]=value[key].split(text).join(HOME.name);}else scrub(value[key]);}}
   scrub(data);scrub(routes);return {data,routes};
  }
- return {HOME,station,stopName,japanese,patch,distance,displayParts};
+ return {HOME,station,stopName,japanese,placeMapUrl,patch,distance,displayParts};
 });
