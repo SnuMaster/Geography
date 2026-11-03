@@ -31,8 +31,11 @@
  }
  function summarize(legs,options={}){
   const sum={ic:0,paper:0,krw:0,unknown:0,extras:[],prepaid:{JPY:0,KRW:0},variableJPY:{min:0,max:0},variableKRW:{min:0,max:0},passCost:0};
-  for(const l of legs){if(!l)continue;const f=l.fare,q=quote(f,l,options);
-   if(l.travel||['selectedQuote','publishedTariff'].includes(f?.status)){sum.extras.push(l);continue;}
+  for(const l of legs){if(!l)continue;const f=l.fare,parts=l.parts||[];
+   // The sidebar's Japanese rail subtotal counts each railway OD fare once, including its walking transfers.
+   if(options.scope==='japan-rail'&&!(f?.currency==='JPY'&&parts.some(p=>['rail','metro'].includes(p.mode))&&parts.every(p=>['rail','metro','walk','transfer'].includes(p.mode)&&(!p.country||p.country==='JP')&&!/^KORAIL[.]/i.test(p.lineId||''))))continue;
+   const q=quote(f,l,options);
+   if(options.scope!=='japan-rail'&&(l.travel||['selectedQuote','publishedTariff'].includes(f?.status))){sum.extras.push(l);continue;}
    if(q.status==='unknown'||!['JPY','KRW'].includes(q.currency)){sum.unknown++;continue;}
    if(q.status==='prepaid'){sum.prepaid[q.currency]+=q.baseAmount;continue;}
    if(q.variable){const r=sum['variable'+q.currency];r.min+=q.amount;r.max+=q.maxAmount;continue;}

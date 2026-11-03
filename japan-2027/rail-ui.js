@@ -77,8 +77,7 @@ function splitRailService(part){
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
 function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=info.code+'|'+info.color;if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
-function railDayKey(){
- const legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[];
+function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
  return `<div class="day-line-key" aria-label="오늘 이용하는 철도 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
 }
 function initRailHover(){
