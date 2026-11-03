@@ -11,7 +11,7 @@
  function externalLinks(){
   if(!api)return;const c=api.app.focusedContext(),index=api.app.focusedIndex(c),stops=c?.variant.stops||[],from=stops[index-1],to=stops[index],maps=TravelAssistantCore.googleMapsOptions(from,to,c?.legs[index-1],TripPersonal.stopName),group=$('#kisekiExternalLinks'),google=$('#kisekiGoogleMaps');
   group.hidden=!maps;google.removeAttribute('href');
-  const uber=maps&&!maps.special?TravelAssistantCore.uberOptions(to):null;
+  const uber=maps&&!maps.special&&c?.legs[index-1]?.parts?.some(p=>p.mode==='taxi')?TravelAssistantCore.uberOptions(to):null;
   $('#kisekiUberApp').hidden=!uber;$('#kisekiUberApp').removeAttribute('href');
   if(!maps)return;google.href=maps.href;google.textContent=maps.label;google.title=maps.directions?TripPersonal.stopName(from)+' → '+TripPersonal.stopName(to):TripPersonal.stopName(to);group.setAttribute('aria-label',TripPersonal.stopName(to)+' · 선택 구간 외부 지도');
   if(uber)$('#kisekiUberApp').href=uber.app;
