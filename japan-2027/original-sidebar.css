@@ -1,9 +1,10 @@
 /* Original itinerary in the existing collapsible left column. */
 /* Actual payments on individual itinerary items, using the existing expense ledger. */
-.command-center.original-sidebar .itinerary-expense{display:grid;grid-template-columns:minmax(0,1fr) 75px 48px;align-items:end;gap:6px;margin:0;padding:10px 9px;border-top:1px solid #d9cbb9;background:#faf8f2;color:#253440;border-radius:0 0 5px 5px;min-width:0}
+.command-center.original-sidebar .itinerary-expense{display:grid;grid-template-columns:minmax(0,1fr) 34px 48px;align-items:end;gap:6px;margin:0;padding:10px 9px;border-top:1px solid #d9cbb9;background:#faf8f2;color:#253440;border-radius:0 0 5px 5px;min-width:0}
 .command-center.original-sidebar .stop-row>.itinerary-expense{grid-column:2}
-.itinerary-expense label{display:grid;gap:5px;min-width:0;font:11px RouteSans,sans-serif}.itinerary-expense input,.itinerary-expense select{box-sizing:border-box;width:100%;min-width:0;min-height:44px;font:16px RouteSans,sans-serif;padding:7px 5px;background:#fffdf9;border:1px solid #c7b8a4;border-radius:4px;color:#253440}
+.itinerary-expense label{display:grid;gap:5px;min-width:0;font:11px RouteSans,sans-serif}.itinerary-expense input{box-sizing:border-box;width:100%;min-width:0;min-height:44px;font:16px RouteSans,sans-serif;padding:7px 5px;background:#fffdf9;border:1px solid #c7b8a4;border-radius:4px;color:#253440}
 .command-center.original-sidebar .itinerary-expense button{min-width:0;min-height:44px;padding:5px;background:#10202e;color:#faf8f2;border:0;border-radius:4px;font:12px RouteSans,sans-serif}
+.itinerary-expense .itinerary-currency{display:flex;align-items:center;justify-content:center;min-height:44px;font:12px RouteSans,sans-serif;letter-spacing:.02em;color:#655b50}
 .itinerary-expense p{grid-column:1/-1;min-height:0;margin:0;font:10px/1.5 RouteSans,sans-serif;color:#655b50;overflow-wrap:anywhere}.itinerary-expense p:empty{display:none}
 .itinerary-leg-row{min-width:0}
 .command-center.original-sidebar .shell-hero{display:none!important}
