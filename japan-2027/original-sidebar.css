@@ -95,3 +95,5 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=tru
 .itinerary-train-detail:hover{background:#e0e9d8}.itinerary-train-detail:focus-visible{outline:3px solid #477b95;outline-offset:-4px}
 
 .itinerary-train-card .compact-line>.operator-logo{width:64px;height:27px;object-fit:contain;flex-shrink:0}
+
+.daily-rail-fares li .daily-rail-line{display:flex;align-items:flex-start;gap:6px}.daily-rail-fares li .daily-rail-logos{display:flex;gap:3px;flex-shrink:0;padding-top:1px}.daily-rail-fares li .daily-rail-name{font-size:12px;line-height:1.5}.daily-rail-fares .daily-rail-logos .rail-symbol{width:23px;height:23px;flex:0 0 23px;font-size:9px;line-height:1;border-width:2px;box-sizing:border-box}.daily-rail-logos>.icon{width:23px;height:23px}

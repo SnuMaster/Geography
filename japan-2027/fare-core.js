@@ -52,7 +52,7 @@
   const split=groups.length>0&&finite(fare.icYen)&&groups.every(g=>finite(g.icYen)&&(!g.currency||g.currency==='JPY')&&g.from&&g.to&&g.lineIds?.length&&g.lineIds.every(id=>parts.some(p=>p.lineId===id)))&&groups.reduce((sum,g)=>sum+g.icYen,0)===fare.icYen;
   return (split?groups:[{from:parts[0].from,to:parts.at(-1).to,icYen:finite(fare.icYen)?fare.icYen:null,checkedAt:fare.checkedAt}]).map(g=>{
    const services=g.lineIds?parts.filter(p=>g.lineIds.includes(p.lineId)):parts;
-   return {legIndex:index+1,from:g.from,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null};
+   return {legIndex:index+1,from:g.from,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],lineIds:[...new Set(services.map(p=>p.lineId).filter(Boolean))],icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null};
   });
  });}
  return Object.freeze({quote,format,summarize,passWindow,PASS_PRICE,railItems});
