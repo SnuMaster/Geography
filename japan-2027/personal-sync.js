@@ -12,11 +12,11 @@
  async function replaceFiles(values,u=user){const d=await db(u);try{await new Promise((resolve,reject)=>{const tx=d.transaction('files','readwrite'),s=tx.objectStore('files');s.clear();for(const f of values)s.put(f);tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(Error('첨부 저장 실패'));});}finally{d.close();}}
  window.AccountRecords={storage,database,scope:()=>user};
  let api,ready=false,busy=false,again=false,epoch=0,timer,remote=null,state='기기에 저장됨',applying=false,writeGeneration=0;
- const metaKey=()=>prefix('routebook-sync-meta-v1'),meta=()=>{try{return JSON.parse(get(metaKey())||'{}');}catch(_){return {};}};
+ const metaKey=()=>prefix('routebook-sync-meta-v1'),meta=()=>{try{const m=JSON.parse(get(metaKey())||'{}');if(m.base)m.base=fingerprint(JSON.parse(m.base));return m;}catch(_){return {};}};
  function status(text){state=text;const p=document.querySelector('#personalSyncStatus');if(p)p.textContent=text;window.dispatchEvent(new Event('routebook:sync-status'));}
  function conflict(show){const el=document.querySelector('#personalSyncConflict');if(el)el.hidden=!show;}
  const snapshot=()=>Object.fromEntries(KEYS.map(k=>[k,storage.getItem(k)]).filter(([,v])=>v!==null));
- const fingerprint=payload=>JSON.stringify(payload);
+ const fingerprint=value=>Array.isArray(value)?'['+value.map(fingerprint).join(',')+']':value&&typeof value==='object'?'{'+Object.keys(value).sort().map(k=>JSON.stringify(k)+':'+fingerprint(value[k])).join(',')+'}':JSON.stringify(value);
  const hasRecords=payload=>{if(payload.files.length)return true;for(const k of KEYS.slice(0,3)){const raw=payload.storage[k];if(!raw)continue;const v=JSON.parse(raw);if(k==='routebook-reservations-v1'&&Object.keys(v).length)return true;if(k==='routebook-command-v1'&&(Object.keys(v.notes||{}).length||Object.keys(v.plans||{}).length||Object.keys(v.bookings||{}).length||v.reminders?.length))return true;if(k==='routebook-assistant-v1'&&(v.expenses?.length||Object.keys(v.visits||{}).length||Object.keys(v.packing||{}).length||v.adjustments?.length||v.budget?.JPY||v.budget?.KRW))return true;}return false;};
 
  async function hash(text){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].map(n=>n.toString(16).padStart(2,'0')).join('');}
