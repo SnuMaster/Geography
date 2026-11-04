@@ -126,3 +126,11 @@ Claude 사용 준비: Claude Console에서 본인이 API 키를 발급한 후 Cl
 # Sol의 입력량 기준 예약 · 2026-11-02
 
 GPT-6 Sol도 Astra/Terra와 동일하게 서버에서 `/v1/responses/input_tokens`로 요청 입력을 확인한 뒤 비용을 예약합니다. 입력 100토큰의 보수적 예약액은 $0.022496(입력 수+1,024 여유, 최대 출력 1,200)이며 $1 월 한도로도 요청할 수 있음을 대체 API로 검증했습니다. 기존 전체 컨텍스트 기준 $4.218 예약은 Sol에 적용하지 않습니다. 서버 요율·월 한도·분당 요청 제한, 불명확한 실패의 예약 유지 정책은 변경하지 않습니다. 과거 사용/예약액은 초기화하지 않습니다. 기존 키를 그대로 사용하며 실제 답변 생성은 테스트에서 실행하지 않았습니다.
+
+## 개인 기록 동기화 (2026-11-04)
+
+인증된 계정의 GET/POST /records, GET /records/file?id=..., POST /records/file을 제공합니다. 서명·등록된 세션·Origin을 모두 확인한 뒤 토큰의 계정 식별자로 전용 Durable Object를 선택합니다. 클라이언트가 다른 사용자를 지정할 수 없습니다. 문서 revision 불일치는409이며, 파일 해시와 크기를 검증하고 계정당 요청을 분당120회로 제한합니다.
+
+기존 BUDGET 바인딩과 Secret을 유지하므로 추가 바인딩은 필요하지 않습니다. 개인 JSON·첨부는 SESSION_SECRET에서 분리한 키로 AES-GCM 암호화하고 계정 ID를 추가 인증 데이터로 사용합니다. 저장 값은48,000문자 단위로 분할합니다. Secret 교체 전에 기록 키 이전 또는 기기 백업/재업로드 절차가 필요합니다. 기록 API는 OpenAI/Anthropic에 요청하지 않지만 Cloudflare의 기존 요청·저장 요금과 한도는 적용됩니다. [공식 저장 한도](https://developers.cloudflare.com/durable-objects/platform/limits/)와 [공식 요금](https://developers.cloudflare.com/durable-objects/platform/pricing/)을 참조하세요.
+
+검사: node --test tests/account-records.test.cjs 및 japan-2027/tests/personal-sync-browser.cjs. 사진 분석과 날씨 카드 UI 검사는 japan-2027/tests/assistant-results-browser.cjs.

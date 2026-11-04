@@ -49,5 +49,5 @@
   // Keep required photo attribution available inside map settings, without an extra More menu entry.
   if($('#kisekiLegal'))$('#mapSettings').append($('#kisekiLegal'));refresh();
  }
- window.OriginalSidebar={init,refresh,railCard};
+ window.OriginalSidebar={clearDrafts:()=>drafts.clear(),init,refresh,railCard};
 })();

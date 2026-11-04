@@ -70,7 +70,7 @@ function applyRouteFocus(){
  window.dispatchEvent(new CustomEvent('routebook:route-focus'));
 }
 function bindRouteFocus(){
- const move=delta=>{RouteUI.userExplore();DetailView.close();setFocusedLeg((focusedIndex()||1)+delta,{fit:true});};
+ const move=delta=>{RouteUI.userExplore();DetailView.close();const i=(focusedIndex()||1)+delta;setFocusedLeg(i,{fit:true});if(state.view==='daily'&&getStops()[i]?.kind!=='home')selectStop(i,false,false);};
  $('#routeLegPrevious').addEventListener('click',()=>move(-1));$('#routeLegNext').addEventListener('click',()=>move(1));
  $('#routeAllToggle').addEventListener('click',()=>{
   RouteUI.userExplore();DetailView.close();
