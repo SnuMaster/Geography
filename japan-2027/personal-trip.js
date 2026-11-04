@@ -5,6 +5,7 @@
  const HOME=Object.freeze({name:'비공개 출발·도착지',kind:'home',lat:null,lng:null,address:'',privateLocation:true});
 
  const EXTRA_JA={
+  '스이도바시':'水道橋','고라쿠엔':'後楽園','가스가':'春日','도부닛코':'東武日光','도부동물공원':'東武動物公園','기타센주':'北千住','오차노미즈':'御茶ノ水','하라주쿠':'原宿','기치조지':'吉祥寺','시모키타자와':'下北沢','이케부쿠로':'池袋','긴자':'銀座','시부야':'渋谷','시조마에':'市場前','다이바':'台場','요코하마':'横浜','모토마치주카가이':'元町・中華街','사쿠라기초':'桜木町','오다와라':'小田原','하코네유모토':'箱根湯本','고라':'強羅','아타미':'熱海','기노미야':'来宮','진보초':'神保町','바쿠로요코야마':'馬喰横山','히가시니혼바시':'東日本橋',
   '공항제2빌딩':'空港第２ビル','게이세이우에노':'京成上野','신바시':'新橋',
   '모토마치주카가이':'元町・中華街','간나이':'関内','하세':'長谷',
   '가타세에노시마':'片瀬江ノ島','후지사와':'藤沢','센다기':'千駄木',
@@ -35,6 +36,7 @@
   }
   return null;
  }
+ function registerStations(names={}){for(const [ko,ja] of Object.entries(names))if(typeof ja==='string'&&ja.length<80&&ko.length<80&&/^[\u3040-\u30ff\u3400-\u9fffー・（）()\s\dＡ-Ｚａ-ｚ]+$/.test(ja)){EXTRA_JA[ko]=ja;if(!EXTRA_JA[normalized(ko)])EXTRA_JA[normalized(ko)]=ja;}}
  const JA_TO_KO={
   '三ノ宮':'산노미야','中書島':'주쇼지마','中洲川端':'나카스카와바타','京都':'교토',
   '伏見桃山':'후시미모모야마','伏見稲荷':'후시미이나리','住吉':'스미요시','元町':'모토마치',
@@ -120,5 +122,5 @@
   function scrub(value){if(!value||typeof value!=='object')return;for(const key of Object.keys(value)){if(typeof value[key]==='string'){for(const text of privateStrings)value[key]=value[key].split(text).join(HOME.name);}else scrub(value[key]);}}
   scrub(data);scrub(routes);return {data,routes};
  }
- return {HOME,station,stopName,japanese,placeMapUrl,patch,distance,displayParts};
+ return {HOME,station,stopName,japanese,registerStations,placeMapUrl,patch,distance,displayParts};
 });

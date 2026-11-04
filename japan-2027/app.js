@@ -30,7 +30,9 @@ icons();
 const MODE={walk:{label:'도보',color:'#78b995',icon:'walk'},metro:{label:'지하철',color:'#477b95',icon:'rail'},rail:{label:'철도',color:'#477b95',icon:'rail'},bus:{label:'버스',color:'#477b95',icon:'bus'},taxi:{label:'Uber Taxi',color:'#b9a7e8',icon:'taxi'},flight:{label:'비행기',color:'#c97a4c',icon:'flight'},ferry:{label:'배',color:'#73cdd2',icon:'ferry'}};
 const state={selectedVariantByDay:{},data:null,day:1,variant:'main',view:'daily',filter:'all',search:'',night:false,selected:-1,playing:null,routeData:null,passEnabled:false,pass:{enabled:false,kind:'physical',startAt:null,purchased:false}};
 let screenGeneration=0;
-const tripFiles=['data.json','tokyo-data.json','tokyo-routes.json','west-data.json','west-routes.json'];
+// One atomic revision: never mix the former 22-day itinerary with the new trip.
+const tripFiles=['trip-update.json'];
+const ACTIVE_TRIP='tokyo-20270108-22';
 let tripSignature='',tripRefresh=null,pendingTripUpdate=null,tripUpdateTimer=null,tripLastRefresh=0,tripInteractionAt=-Infinity;
 const journeyStorage=window.AccountRecords?.storage||localStorage;
 let tileProvider='',tilePreference='auto',flightPreviousProvider=null;const failedTileProviders=new Set();try{tilePreference=localStorage.getItem('routebook-map-provider')||'auto';}catch(_){}
@@ -146,7 +148,7 @@ function renderHeader(){
 
  $$('#dayHeader [data-variant]').forEach(b=>b.addEventListener('click',()=>setVariant(b.dataset.variant)));
  bindPass();
- $('#dayCounter').textContent=`${String(d.n).padStart(2,'0')} / 22`;$('#prevDay').disabled=!state.data.days.some(day=>day.n<d.n);$('#nextDay').disabled=!state.data.days.some(day=>day.n>d.n);
+ $('#dayCounter').textContent=`${String(d.n).padStart(2,'0')} / ${state.data.days.length}`;$('#prevDay').disabled=!state.data.days.some(day=>day.n<d.n);$('#nextDay').disabled=!state.data.days.some(day=>day.n>d.n);
  $('#dayNote').innerHTML=(d.important?`<div class="day-note ${d.event?'fixed-event':''}"><strong>${icon(d.event?'star':'info')} ${d.event?'1월 23일 고정 행사':'오늘 기억할 것'}</strong>${esc(d.important)}</div>`:'')+reservationWarningsHtml(v);
 }
 
@@ -211,7 +213,7 @@ function renderMap(fit=true){
    (window.TripPersonal?.displayParts(detailed)||railParts(detailed)).forEach(part=>{
     if(part.coords.length<2||part.distanceM<8)return;
     const color=railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
-    const style={color,weight:4.5,opacity:part.mode==='ferry'?1:part.geometryAccuracy==='schematic'?.6:state.night?.6:1,lineCap:'round',lineJoin:'round',dashArray:part.geometryAccuracy==='schematic'&&part.mode==='ferry'?'2 6':part.mode==='flight'?'9 7':part.mode==='ferry'?null:part.mode==='transfer'?'3 5':null};
+    const style={color,weight:4.5,opacity:part.mode==='ferry'?1:part.geometryAccuracy==='schematic'?.6:state.night?.6:1,lineCap:'round',lineJoin:'round',dashArray:part.geometryAccuracy==='schematic'?'2 6':part.mode==='flight'?'9 7':part.mode==='ferry'?null:part.mode==='transfer'?'3 5':null};
     routeVisual(L.polyline(part.coords,{color:'#172532',weight:8.5,opacity:.97,interactive:false}).addTo(routeLayer),detailed,i,part.mode);
     const line=routeVisual(L.polyline(part.coords,style).addTo(routeLayer),detailed,i,part.mode);
     const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0,color,interactive:true}).addTo(routeLayer),detailed,i,part.mode);
@@ -324,23 +326,16 @@ function navigateScreen(target,options={}){
   if(options.history!=='none')updateUrl('replace');
  });
 }
-function setDay(n,options={}){if(Number(n)===state.day&&state.view==='daily'&&!options.force)return;navigateScreen({day:Math.max(1,Math.min(22,n)),view:'daily'},options);}
+function setDay(n,options={}){if(Number(n)===state.day&&state.view==='daily'&&!options.force)return;navigateScreen({day:Math.max(1,Math.min(state.data.days.at(-1).n,n)),view:'daily'},options);}
 function setVariant(id,options={}){if(id===state.variant&&state.view==='daily')return;navigateScreen({day:state.day,variant:id,view:'daily'},options);}
 function showOverview(){if(state.view==='overview')return;navigateScreen({day:state.day,variant:state.variant,view:'overview'});}
-function overviewStops(){return [
- {name:'대구공항',lat:35.8941,lng:128.6589,modeFromPrevious:'taxi',days:'동대구 → 대구공항',n:1},
- {name:'도쿄',lat:35.7007,lng:139.774,modeFromPrevious:'flight',days:'1/8–19 · 11박',n:2},
- {name:'오사카',lat:34.6674,lng:135.501,modeFromPrevious:'flight',days:'1/19–25 · 6박 · 교토·나라·고베',n:12},
- {name:'후쿠오카',lat:33.5917,lng:130.4207,modeFromPrevious:'flight',days:'1/25–28 · 3박',n:18},
- {name:'부산',lat:35.1155,lng:129.0422,modeFromPrevious:'ferry',days:'1/28–29 · 1박',n:21},
- {name:'서대구',lat:35.8813666,lng:128.5417368,modeFromPrevious:'rail',days:'1/29 부산12:44 → 서대구13:47:30 정차 · 330편 현재표 참고',n:22}
- ];}
+function overviewStops(){return state.data.days.filter(d=>[2,3,4,6,8,10,13,14].includes(d.n)).map(d=>{const v=d.variants[0],p=v.stops.find(s=>!['hotel','home','station'].includes(s.kind)&&Number.isFinite(s.lat));return {name:MapPlan.label(d,v).city,lat:p.lat,lng:p.lng,n:d.n,days:d.n===2?'1/8–22 · 14박':d.date+' 당일치기'};});}
 function overviewLegs(){return state.data.days.flatMap(d=>state.routeData.days[`${d.n}-${JourneyState.chosen(d,state.selectedVariantByDay)}`]||[]).filter(Boolean);}
-function overviewCities(){return [{name:'대구',lat:state.data.days[0].variants[0].stops.find(s=>s.kind==='airport').lat,lng:state.data.days[0].variants[0].stops.find(s=>s.kind==='airport').lng,n:1},...overviewStops().filter(s=>['도쿄','오사카','후쿠오카','부산'].includes(s.name))];}
+function overviewCities(){return [{name:'대구',lat:state.data.days[0].variants[0].stops.find(s=>s.kind==='airport').lat,lng:state.data.days[0].variants[0].stops.find(s=>s.kind==='airport').lng,n:1},...overviewStops()];}
 function renderOverviewPreview(focus){
  overviewContext=focus;
  if(!focus){
-  const stays=['출국 · 귀가','1/8–19 · 11박','1/19–25 · 6박','1/25–28 · 3박','1/28–29 · 1박'];
+  const stays=['1/8 출국',...overviewStops().map(s=>s.days)];
   $('#stopList').innerHTML='<div class="overview-preview-intro">도시를 누르거나 지도를 확대해 보세요.</div>'+overviewCities().map((s,i)=>`<button type="button" class="overview-city-row" data-overview-city="${i}"><strong>${esc(stopLabel(s))}</strong><span>${stays[i]}</span>${icon('chevronRight')}</button>`).join('');
   $('#stopList').querySelectorAll('[data-overview-city]').forEach(button=>button.addEventListener('click',()=>{const city=overviewCities()[Number(button.dataset.overviewCity)];overviewFocus=city.n;map.setView([city.lat,city.lng],12,{animate:false});renderOverviewMap(false);}));return;
  }
@@ -356,7 +351,7 @@ function renderOverviewMap(fit=true){
  try{
   hideRailHover();routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];railSymbolKeys.clear();railSymbolGroups.clear();arrows=[];
   const detailed=!fit&&map.getZoom()>=10,stops=overviewCities(),legs=overviewLegs();
-  const draw=(leg,part,local=false)=>{if(part.coords?.length<2)return;const color=railInfo(part)?.color||(MODE[part.mode]||MODE.rail).color,schematic=part.mode==='ferry'&&part.geometryAccuracy==='schematic';
+  const draw=(leg,part,local=false)=>{if(part.coords?.length<2)return;const color=railInfo(part)?.color||(MODE[part.mode]||MODE.rail).color,schematic=part.geometryAccuracy==='schematic';
    routeVisual(L.polyline(part.coords,{color:'#172532',weight:local?7:5,opacity:.9,interactive:false}).addTo(routeLayer),leg,leg.legIndex,part.mode);
    routeVisual(L.polyline(part.coords,{color,weight:schematic?2:local?4:3,opacity:.9,dashArray:schematic?'2 6':part.mode==='ferry'?null:part.mode==='flight'?'9 7':part.mode==='transfer'?'3 5':null,interactive:false}).addTo(routeLayer),leg,leg.legIndex,part.mode);
    const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0}).addTo(routeLayer),leg);hit.bindPopup(()=>overviewLegHtml(leg,part),symbolOptions(leg));
@@ -367,7 +362,7 @@ function renderOverviewMap(fit=true){
    renderOverviewPreview(null);
    $('#mapTitle').innerHTML='<div class="map-kicker">전체 여정</div><p class="overview-map-instruction">지도를 확대하면 해당 지역의 상세 일정이 나와요.</p>';
    stops.forEach(s=>{const mk=L.marker([s.lat,s.lng],{icon:L.divIcon({className:'route-marker city-marker',html:'<span class="city-map-dot"></span>',iconSize:[44,44],iconAnchor:[22,22]}),title:s.name,alt:s.name+' 지역 일정 확대'}).addTo(routeLayer);mk.bindTooltip(esc(stopLabel(s)),{permanent:true,direction:'right',offset:[17,0],className:'stop-tooltip'});mk.on('click',()=>{overviewFocus=s.n;map.setView([s.lat,s.lng],12,{animate:false});renderOverviewMap(false);});});
-   $('.route-caution').textContent='전체 22일 경로 · 항공·선박·우버 개략 경로 포함';
+   $('.route-caution').textContent='전체 15일 경로 · 저장된 계획·지도 복원·개략 연결 구분';
   }else{
    const b=map.getBounds(),context=MapPlan.context(state.data.days,state.selectedVariantByDay,{south:b.getSouth(),north:b.getNorth(),west:b.getWest(),east:b.getEast()},map.getCenter(),overviewFocus),focus=context.focus;renderOverviewPreview(focus);
    $('#mapTitle').innerHTML=`<div class="map-kicker">${focus?esc(MapPlan.label(focus.day,focus.variant).city):'이 지역에 일정이 없어요'}</div><div class="overview-day-chips" aria-label="지도 지역의 날짜">${context.visible.map(x=>`<button type="button" data-overview-day="${x.day.n}" aria-pressed="${x===focus}">${x.day.date.slice(3)}일</button>`).join('')}</div>${focus?`<small>${esc(focus.day.date+' · '+MapPlan.label(focus.day,focus.variant).places)}</small>`:''}`;
@@ -381,7 +376,7 @@ function renderOverviewMap(fit=true){
      overviewPlaceGroups.push({indices:group.indices,marker});marker.on('click',()=>{focusedLegs.set(day.n+'-'+variant.id,Math.max(1,i));applyRouteFocus();});marker.bindTooltip(esc(stopLabel(s)),{direction:'top',offset:[0,-25],className:'stop-tooltip'});
      marker.bindPopup(()=>withDayContext(day.n,variant.id,()=>popupHtml(s,i)),DetailView.options('place-info-popup',{routeStopIndex:i,routeDay:day.n,routeVariant:variant.id}));
     }
-    $('.route-caution').textContent='전체 22일 동선 · 선택 날짜의 장소 표시';
+    $('.route-caution').textContent='전체 15일 동선 · 선택 날짜의 장소 표시';
    }else $('.route-caution').textContent='이동하거나 지도를 축소해 다른 지역을 찾아보세요.';
   }
   applyRouteFocus();if(fit)fitRoute();
@@ -392,11 +387,11 @@ function renderOverview({redraw=true,fit=true}={}){
  $('.day-pagination').hidden=true;
  window.RouteLocation?.pauseFollow();
  stopPlay();state.view='overview';renderDays();$('#dailyView').classList.remove('active');$('#overviewView').classList.add('active');$('#dailyView').setAttribute('aria-pressed','false');$('#overviewView').setAttribute('aria-pressed','true');$('#nightBtn').disabled=true;$('#nightSetting').disabled=true;
- $('#mapTitle').innerHTML='<div class="map-kicker"><span class="city-dot"></span>JAN 08 — JAN 29, 2027</div><h2>도쿄에서 시작해,<br>배로 돌아오는 여행.</h2><div class="map-route-subtitle">대구 → 도쿄 → 오사카 → 후쿠오카 → 부산</div><div class="map-card-stats"><span>'+icon('calendar')+'21박 22일</span><span>'+icon('flight')+'항공 3구간</span><span>'+icon('ferry')+'뉴 카멜리아호</span></div>';
+ $('#mapTitle').innerHTML='<div class="map-kicker"><span class="city-dot"></span>JAN 08 — JAN 22, 2027</div><h2>도쿄와 근교,<br>여유롭게 머무는 여행.</h2><div class="map-route-subtitle">대구 → 도쿄·근교 → 1/22 저녁 귀국편 미정</div><div class="map-card-stats"><span>'+icon('calendar')+'14박 15일</span><span>'+icon('flight')+'귀국편 미정</span></div>';
  const baseline=JourneyState.totals(state.data.days,state.routeData.days),selected=JourneyState.totals(state.data.days,state.routeData.days,state.selectedVariantByDay,{pass:state.pass});
  const summary=(label,c)=>`<div class="trip-cost" data-summary="${label==='기본안 기준'?'baseline':'selected'}"><small>${label} · ${label==='기본안 기준'?'패스 미적용':FareCore.passWindow(state.pass).simulation?'시작 미설정 · 전체 합계 미적용':state.passEnabled?'설정한 유효시간 반영':'패스 미적용'}</small><strong>교통 ${c.transportJPY.toLocaleString()}엔${c.transportKRW?' + '+c.transportKRW.toLocaleString()+'원':''}</strong><p>관광·입장료 ${c.admissionMin.toLocaleString()}~${c.admissionMax.toLocaleString()}엔${c.admissionUnknown?' · 미확인 '+c.admissionUnknown+'곳':''}<br>변동 교통 ${c.transportVariableJPY.min.toLocaleString()}~${c.transportVariableJPY.max.toLocaleString()}엔 · 미확인 ${c.transportUnknown}구간 별도${c.passCost?'<br>패스 구매 '+c.passCost.toLocaleString()+'엔 별도':''}${c.prepaid.JPY?'<br>선결제 '+c.prepaid.JPY+'엔':''}</p><details class="category-costs"><summary>식음료·쇼핑 등 별도 예산</summary>${Object.entries(c.categories).filter(([kind])=>['food','cafe','drink','shopping'].includes(kind)).map(([kind,value])=>`<p>${({food:'식비',cafe:'카페',drink:'음료·시음',shopping:'쇼핑'})[kind]}: ${['JPY','KRW'].map(cur=>{const r=value[cur];return r.min+'~'+r.max+(cur==='JPY'?'엔':'원')+(r.unknown?' · 미확인'+r.unknown+'곳':'');}).join(' / ')}</p>`).join('')}</details></div>`;
- $('#dayHeader').innerHTML=`<div class="detail-date-row"><span class="detail-date">JAN 08 — JAN 29, 2027</span><span class="detail-badge">21박 22일</span></div><h2>전체 여정 한눈에</h2><p>날짜를 눌러 상세 일정으로. 항로에 마우스를 대면 선택편·시간·요금이 나와요.</p>`;
- $('#dayNote').innerHTML=`<details class="overview-budget"><summary>여행 예산·비용 비교</summary><div class="trip-cost-comparison">${summary('기본안 기준',baseline)}${summary('현재 선택 기준',selected)}</div><p class="summary-scope">교통은 시내·근교 및 한국 KTX 포함. 항공·선박·숙소·식음료 별도. 관광·입장료는 입장료·체험만 합산합니다. 식사·카페·음료·시음·쇼핑은 별도이며 중복 합산하지 않습니다.</p><div class="day-note fixed-event"><strong>1/23 나라 고정</strong>18:15 불꽃놀이 → 18:30 와카쿠사산 점화</div></details>`;
+ $('#dayHeader').innerHTML=`<div class="detail-date-row"><span class="detail-date">JAN 08 — JAN 22, 2027</span><span class="detail-badge">14박 15일</span></div><h2>전체 여정 한눈에</h2><p>날짜를 눌러 상세 일정으로. 항로에 마우스를 대면 선택편·시간·요금이 나와요.</p>`;
+ $('#dayNote').innerHTML=`<details class="overview-budget"><summary>여행 예산·비용 비교</summary><div class="trip-cost-comparison">${summary('기본안 기준',baseline)}${summary('현재 선택 기준',selected)}</div><p class="summary-scope">교통은 확인된 시내·근교 계획값입니다. 스카이라이너 금액은 입력 보류·합계 제외. 항공·숙소·식음료 별도. 관광·입장료는 입장료·체험만 합산합니다. 식사·카페·음료·시음·쇼핑은 별도이며 중복 합산하지 않습니다.</p><div class="day-note"><strong>1/22 저녁 귀국 예정</strong>항공편·공항·시각 미정 · 항공권 확정 후 마지막 날 이동 연결</div></details>`;
  renderOverviewPreview(overviewContext);
  $('#routeDetails').replaceChildren();
  if(redraw)renderMap(fit);
@@ -442,7 +437,7 @@ function bindTripPlan(){
 function bindEvents(){
  bindTripPlan();
  bindRouteFocus();
- ReservationUI.initChecklist?.({context:()=>({days:state.data.days,preferences:state.selectedVariantByDay})});
+ ReservationUI.initChecklist?.({context:()=>({days:state.data.days,preferences:state.selectedVariantByDay,metadata:state.data.metadata})});
  window.addEventListener('routebook:booking-jump',event=>{
   const target=event.detail;DetailView.close();navigateScreen({day:target.day,variant:target.variant,view:'daily'});window.ItineraryDrawer?.open();
   if(Number.isInteger(target.leg)){window.dispatchEvent(new CustomEvent('routebook:detail-jump',{detail:{itinerary:true,kind:'leg',index:target.leg,day:target.day,variant:target.variant}}));return;}
@@ -504,6 +499,7 @@ function renderNotices(){
  list.innerHTML=`<p class="notice-note">열차 시각은 시간표 기준이며 실시간 지연은 반영되지 않아요. 교통 요금은 2026년 10월 검색 기준으로 여행 전 확인해 주세요.</p>${items.length?`<h3>시간표 확인 필요</h3>${items.map(item=>`<article class="notice-item"><strong>${esc(item.line)} · ${esc(item.from)} → ${esc(item.to)}</strong><p>여행일 ${esc(item.dates.map(date=>date.slice(5).replace('-','/')).join(', '))} · ${item.validUntil?`기존 시간표 ${esc(item.validUntil)}까지`:'시간표 적용 범위 밖'}</p><p>새 시간표 확인 전에는 열차 시각과 탑승 선택을 표시하지 않아요.</p>${item.url?`<a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">공식 시간표 ↗</a>`:''}</article>`).join('')}`:'<p class="notice-empty">현재 갱신이 필요한 시간표가 없어요.</p>'}`;
 }
 function preparePersonalTrip(){
+ window.TripPersonal.registerStations(state.data.metadata?.stationNames||{});
  ReservationCore.restore(state.data);TripData.prepare(state.data,state.routeData);
  ReservationCore.apply(state.data,state.routeData,ReservationUI.getRecords());TripData.prepare(state.data,state.routeData);
  renderNotices();
@@ -516,13 +512,16 @@ function handleReservationChange(){
  if(Number.isInteger(detail?.routeStopIndex))DetailView.refreshContent(popupHtml(getStops()[detail.routeStopIndex],detail.routeStopIndex));
  else if(detail)DetailView.close();
 }
-function mergeTripFiles([base,tokyo,routes,west,westRoutes]){
- return window.TripPersonal.patch(TripData.merge(base,tokyo,west),{...routes,days:{...routes.days,...westRoutes.days}});
+function mergeTripFiles([update]){
+ if(update?.data?.metadata?.id!==ACTIVE_TRIP||update.revision!==update.data.version||update.routes?.version!==update.revision)throw Error('일정 개편 자료를 다시 불러와 주세요.');
+ const trip=JSON.parse(JSON.stringify(update));
+ window.TripPersonal.registerStations(trip.data.metadata.stationNames);
+ return window.TripPersonal.patch(trip.data,trip.routes);
 }
 async function sourceSignature(trip){const bytes=new TextEncoder().encode(JSON.stringify([trip.data,trip.routes])),digest=await crypto.subtle.digest('SHA-256',bytes);return [...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('');}
 async function finalizeOfflineTrip(){const values=await Promise.all(tripFiles.map(file=>TravelStore.readCachedJson(file+'?v='+TravelStore.VERSION))),trip=mergeTripFiles(values),signature=await sourceSignature(trip);TripData.prepare(trip.data,trip.routes);for(const d of trip.data.days)for(const v of d.variants){if(trip.routes.days[`${d.n}-${v.id}`]?.length!==v.stops.length-1)throw Error('전체 일정 저장을 확인할 수 없습니다. 다시 저장해 주세요.');}const snapshot=await TravelStore.saveSnapshot(trip.data,trip.routes,signature,TravelStore.checkedAt(tripFiles.map(file=>file+'?v='+TravelStore.VERSION))||Date.now());if(signature!==tripSignature)TravelStore.offerSnapshot(snapshot);}
 function validateTrip(trip){
- if(trip.data?.days?.length!==22)throw Error('incomplete itinerary');
+ if(trip.data?.metadata?.id!==ACTIVE_TRIP||trip.data?.days?.length!==15)throw Error('incomplete itinerary');
  TripData.prepare(trip.data,trip.routes);
  for(const day of trip.data.days)for(const variant of day.variants){const legs=trip.routes.days[`${day.n}-${variant.id}`];if(!legs||legs.length!==variant.stops.length-1||legs.some(l=>!l?.parts?.length))throw Error('incomplete routes');}
 }
@@ -581,13 +580,12 @@ async function main(){
  try{if(localStorage.getItem('routebook-map-style')==='detailed')document.body.dataset.mapStyle='detailed';}catch(_){}
  OfflinePack.configure({finalize:finalizeOfflineTrip});
  try{
- const stored=await TravelStore.snapshot();const saved=stored?{...stored,...window.TripPersonal.patch(stored.data,stored.routes)}:null;
+ const stored=await TravelStore.snapshot();const saved=stored?.data?.metadata?.id===ACTIVE_TRIP?{...stored,...window.TripPersonal.patch(stored.data,stored.routes)}:null;
  if(saved){await TravelStore.saveSnapshot(saved.data,saved.routes,saved.sourceSignature,saved.updatedAt);state.data=saved.data;state.routeData=saved.routes;tripSignature=saved.sourceSignature||await sourceSignature({data:state.data,routes:state.routeData});TravelStore.useSnapshot(saved);}
  else{
   const results=await Promise.allSettled(tripFiles.map(f=>TravelStore.readJson(f+'?v='+TravelStore.VERSION)));
-  const [base,tokyo,routes,west,westRoutes]=results.map(r=>r.status==='fulfilled'?r.value:null);
-  if(base&&tokyo&&routes&&west&&westRoutes){const trip=mergeTripFiles([base,tokyo,routes,west,westRoutes]);tripSignature=await sourceSignature(trip);state.data=trip.data;state.routeData=trip.routes;TravelStore.useSnapshot(await TravelStore.saveSnapshot(state.data,state.routeData,tripSignature,TravelStore.checkedAt(tripFiles.map(f=>f+'?v='+TravelStore.VERSION))));}
-  else{if(!base)throw Error('저장된 일정이 없어요. 처음에는 통신 연결이 필요합니다.');{const patched=window.TripPersonal.patch(TripData.merge(base,tokyo,west),{days:{...(routes?.days||{}),...(westRoutes?.days||{})}});state.data=patched.data;state.routeData=patched.routes;}state.incompleteData=true;state.data.days=state.data.days.filter(d=>(d.n<=11?!!tokyo:!!west));if(!state.data.days.length)throw Error('확인된 지역 일정이 없어요. 통신 연결 후 다시 열어 주세요.');state.day=state.data.days[0].n;announce('일부 지역 자료 연결 실패 · 확인된 날짜만 표시합니다. 연결 후 새로고침해 주세요.');}
+  if(results[0].status!=='fulfilled')throw Error('개편된 도쿄 일정을 처음 열 때는 인터넷 연결이 필요합니다. 저장 후에는 오프라인으로 볼 수 있어요.');
+  const trip=mergeTripFiles([results[0].value]);validateTrip(trip);tripSignature=await sourceSignature(trip);state.data=trip.data;state.routeData=trip.routes;TravelStore.useSnapshot(await TravelStore.saveSnapshot(state.data,state.routeData,tripSignature,TravelStore.checkedAt(tripFiles.map(f=>f+'?v='+TravelStore.VERSION))));
   if(results.some(r=>r.status==='rejected'))TravelStore.markStale();
  }
  preparePersonalTrip();try{const pass=JSON.parse(journeyStorage.getItem('routebook-pass-v2')||'null');if(pass)state.pass={...state.pass,...pass};}catch(_){}state.passEnabled=!!state.pass.enabled;

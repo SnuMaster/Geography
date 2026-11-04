@@ -8,3 +8,4 @@ node_modules/
 qa-*.png
 playwright-report/
 test-results/
+.tokyo-replan-cache/

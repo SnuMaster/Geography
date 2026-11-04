@@ -3,7 +3,7 @@
 (function(){
  const $=s=>document.querySelector(s),photos=globalThis.KisekiPhotos||{};
  let api,filter='all',lastPhoto='';
- const imageFor=(day,variant)=>photos[day+'-'+variant]||photos[String(day)];
+ const imageFor=(day,variant)=>{const d=api?.app.state.data.days.find(d=>d.n===Number(day)),key=d?.photoDay??day;return photos[key+'-'+variant]||photos[String(key)];};
  function image(img,photo){img.onerror=()=>{img.onerror=null;img.src='assets/journey-scene.svg';img.dataset.fallback='true';};img.src=photo?.src||'assets/journey-scene.svg';}
  function thumbnails(){for(const button of document.querySelectorAll('#dayList [data-day],#dayList [data-result-day]')){if(button.querySelector('.kiseki-thumb'))continue;const day=Number(button.dataset.day||button.dataset.resultDay),variant=button.dataset.resultVariant||api.app.state.selectedVariantByDay[day],img=document.createElement('img');img.className='kiseki-thumb';img.alt='';img.width=52;img.height=60;img.loading='lazy';img.decoding='async';image(img,imageFor(day,variant));button.append(img);}}
  function applyFilter(){if(!api)return;const c=api.context();let count=0,total=0;for(const article of document.querySelectorAll('#ccTimeline .cc-stop')){const uid=article.querySelector('[data-cc-place]')?.dataset.ccPlace,stop=c.stops.find(s=>s.uid===uid),on=filter==='all'||(filter==='transport'?['station','airport','port'].includes(stop?.kind):filter==='food'?['food','cafe','drink'].includes(stop?.kind):filter==='stay'?['hotel','home'].includes(stop?.kind):stop?.kind===filter);article.hidden=!on;count+=on?1:0;total++;}$('#kisekiFilterCount').textContent=filter==='all'?'':count+' / '+total+'곳 표시 · 방문 기록 유지';}

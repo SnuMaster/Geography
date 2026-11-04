@@ -19,6 +19,7 @@
   return {currency,baseAmount,amount,maxAmount:finite(f.max)?f.max:amount,variable,simulation:applied&&simulation,passEligible:eligible,passUncertain:eligible&&!!pass.enabled&&boundaryUncertain,passApplied:applied,paymentStatus:prepaid?'prepaid':'unconfirmed',status};
  }
  function format(fare,leg,options){
+  if(fare?.displayBlank===true)return '';
   const q=quote(fare,leg,options),unit=q.currency==='KRW'?'원':q.currency==='JPY'?'엔':q.currency?` ${q.currency}`:'';
   if(q.status==='unknown')return '요금 미확인';
   const amount=q.amount.toLocaleString('ko-KR')+unit,prefix=q.simulation?'가상 비교 · ':'';
@@ -53,7 +54,7 @@
   const split=groups.length>0&&finite(fare.icYen)&&groups.every(g=>finite(g.icYen)&&(!g.currency||g.currency==='JPY')&&groupParts(g,parts))&&groups.reduce((sum,g)=>sum+g.icYen,0)===fare.icYen&&parts.every(p=>groups.filter(g=>groupParts(g,parts).includes(p)).length===1);
   return (split?groups:[{from:parts[0].from,to:parts.at(-1).to,icYen:finite(fare.icYen)?fare.icYen:null,checkedAt:fare.checkedAt}]).map(g=>{
    const services=split?groupParts(g,parts):parts,components=finite(g.baseIcYen)&&finite(g.reservedSurchargeYen)&&g.baseIcYen+g.reservedSurchargeYen===g.icYen?{baseIcYen:g.baseIcYen,reservedSurchargeYen:g.reservedSurchargeYen}:{};
-   return {legIndex:index+1,from:g.from||g.from_,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],lineIds:[...new Set(services.map(p=>p.lineId).filter(Boolean))],icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null,sources:(g.sources||fare.sources||[]).map(s=>typeof s==='string'?s:s?.url).filter(s=>{try{return new URL(s).protocol==='https:';}catch{return false;}}),...components};
+   return {legIndex:index+1,from:g.from||g.from_,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],lineIds:[...new Set(services.map(p=>p.lineId).filter(Boolean))],displayBlank:fare.displayBlank===true,icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null,sources:(g.sources||fare.sources||[]).map(s=>typeof s==='string'?s:s?.url).filter(s=>{try{return new URL(s).protocol==='https:';}catch{return false;}}),...components};
   });
  });}
  // Match the station board to actual itinerary parts; reverse boards do not inherit a forward fare.

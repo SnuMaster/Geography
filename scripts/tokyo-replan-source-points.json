@@ -1,0 +1,272 @@
+{
+  "checkedAt": "2026-11-05",
+  "sources": {
+    "address": "https://msearch.gsi.go.jp/address-search/AddressSearch",
+    "reference": "https://ja.wikipedia.org/w/api.php?action=query&prop=coordinates"
+  },
+  "geocodes": {
+    "dome": {
+      "address": "東京都文京区後楽1丁目3",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%87%E4%BA%AC%E5%8C%BA%E5%BE%8C%E6%A5%BD1%E4%B8%81%E7%9B%AE3",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.751709,
+              35.705284
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "東京都文京区後楽一丁目３番"
+          }
+        }
+      ]
+    },
+    "donkiAsakusa": {
+      "address": "東京都台東区浅草2丁目10",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E6%B5%85%E8%8D%892%E4%B8%81%E7%9B%AE10",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.793137,
+              35.714081
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "東京都台東区浅草二丁目１０番"
+          }
+        }
+      ]
+    },
+    "donkiShibuya": {
+      "address": "東京都渋谷区宇田川町28",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%8B%E8%B0%B7%E5%8C%BA%E5%AE%87%E7%94%B0%E5%B7%9D%E7%94%BA28",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.698029,
+              35.660374
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "東京都渋谷区宇田川町２８番"
+          }
+        }
+      ]
+    },
+    "toyosu": {
+      "address": "東京都江東区豊洲6丁目6",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B1%9F%E6%9D%B1%E5%8C%BA%E8%B1%8A%E6%B4%B26%E4%B8%81%E7%9B%AE6",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.782837,
+              35.642284
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "東京都江東区豊洲六丁目６番"
+          }
+        }
+      ]
+    },
+    "senkyaku": {
+      "address": "東京都江東区豊洲6丁目5",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B1%9F%E6%9D%B1%E5%8C%BA%E8%B1%8A%E6%B4%B26%E4%B8%81%E7%9B%AE5",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.780136,
+              35.643154
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "東京都江東区豊洲六丁目５番"
+          }
+        }
+      ]
+    },
+    "toshogu": {
+      "address": "栃木県日光市山内2301",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%A0%83%E6%9C%A8%E7%9C%8C%E6%97%A5%E5%85%89%E5%B8%82%E5%B1%B1%E5%86%852301",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.597214,
+              36.759941
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "栃木県日光市山内２３０１番地"
+          }
+        }
+      ]
+    },
+    "baien": {
+      "address": "静岡県熱海市梅園町8",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E9%9D%99%E5%B2%A1%E7%9C%8C%E7%86%B1%E6%B5%B7%E5%B8%82%E6%A2%85%E5%9C%92%E7%94%BA8",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.059601,
+              35.098312
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "静岡県熱海市梅園町８番"
+          }
+        }
+      ]
+    },
+    "kinomiyaShrine": {
+      "address": "静岡県熱海市西山町43",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E9%9D%99%E5%B2%A1%E7%9C%8C%E7%86%B1%E6%B5%B7%E5%B8%82%E8%A5%BF%E5%B1%B1%E7%94%BA43",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.067795,
+              35.100311
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "静岡県熱海市西山町４３番地"
+          }
+        }
+      ]
+    },
+    "fuua": {
+      "address": "静岡県熱海市和田浜南町10",
+      "url": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E9%9D%99%E5%B2%A1%E7%9C%8C%E7%86%B1%E6%B5%B7%E5%B8%82%E5%92%8C%E7%94%B0%E6%B5%9C%E5%8D%97%E7%94%BA10",
+      "results": [
+        {
+          "geometry": {
+            "coordinates": [
+              139.079361,
+              35.088181
+            ],
+            "type": "Point"
+          },
+          "type": "Feature",
+          "properties": {
+            "addressCode": "",
+            "title": "静岡県熱海市和田浜南町１０番"
+          }
+        }
+      ]
+    }
+  },
+  "referencePlaces": {
+    "url": "https://ja.wikipedia.org/w/api.php?action=query&titles=%E6%97%A9%E9%9B%B2%E5%B1%B1%E9%A7%85%7C%E5%A4%A7%E6%B6%8C%E8%B0%B7%E9%A7%85%7C%E7%86%B1%E6%B5%B7%E6%A2%85%E5%9C%92%7C%E6%9D%B1%E4%BA%AC%E3%83%89%E3%83%BC%E3%83%A0%E3%83%9B%E3%83%86%E3%83%AB%7C%E8%B1%8A%E6%B4%B2%E5%B8%82%E5%A0%B4%7C%E8%B1%8A%E6%B4%B2_%E5%8D%83%E5%AE%A2%E4%B8%87%E6%9D%A5&prop=coordinates&format=json&redirects=1",
+    "query": {
+      "normalized": [
+        {
+          "from": "豊洲_千客万来",
+          "to": "豊洲 千客万来"
+        }
+      ],
+      "pages": {
+        "107634": {
+          "pageid": 107634,
+          "ns": 0,
+          "title": "早雲山駅",
+          "coordinates": [
+            {
+              "lat": 35.24644444,
+              "lon": 139.03561111,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "107907": {
+          "pageid": 107907,
+          "ns": 0,
+          "title": "大涌谷駅",
+          "coordinates": [
+            {
+              "lat": 35.24430556,
+              "lon": 139.01994444,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "922559": {
+          "pageid": 922559,
+          "ns": 0,
+          "title": "豊洲市場"
+        },
+        "1161425": {
+          "pageid": 1161425,
+          "ns": 0,
+          "title": "東京ドームホテル",
+          "coordinates": [
+            {
+              "lat": 35.70369444,
+              "lon": 139.7535,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "3868823": {
+          "pageid": 3868823,
+          "ns": 0,
+          "title": "熱海梅園",
+          "coordinates": [
+            {
+              "lat": 35.09725,
+              "lon": 139.0605,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        },
+        "4888104": {
+          "pageid": 4888104,
+          "ns": 0,
+          "title": "豊洲 千客万来",
+          "coordinates": [
+            {
+              "lat": 35.64561111,
+              "lon": 139.78366667,
+              "primary": "",
+              "globe": "earth"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

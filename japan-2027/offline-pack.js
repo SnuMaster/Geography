@@ -76,7 +76,7 @@
   }finally{streetRunning=null;$('#offlineStreetStart').disabled=false;$('#offlineStreetCancel').hidden=true;}
  }
  async function show(){RouteUI.showDialog($('#offlinePackDialog'));render();try{const list=await getManifest();$('#offlinePackSize').textContent='약 '+format(list.totalBytes)+' · 전체 '+list.files.length+'개 자료';}catch(e){$('#offlinePackSize').textContent=e.message;}
-  const info=await window.OfflineRoads?.bundleInfo();const size=$('#offlineStreetSize');if(size)size.textContent=info?.days===22?`상세 지도 전체 약 ${format(info.storedBytes)} 저장 공간 · 다운로드 약 ${format(info.downloadBytes)}`:'';
+  const info=await window.OfflineRoads?.bundleInfo();const size=$('#offlineStreetSize');if(size)size.textContent=info?.days===(window.__routebook?.state.data.days.length||15)?`상세 지도 전체 약 ${format(info.storedBytes)} 저장 공간 · 다운로드 약 ${format(info.downloadBytes)}`:'';
  }
  document.addEventListener('DOMContentLoaded',()=>{
   $('#offlineStreetStart').addEventListener('click',saveStreets);$('#offlineStreetCancel').addEventListener('click',()=>streetRunning?.abort());
