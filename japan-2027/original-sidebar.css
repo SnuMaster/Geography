@@ -97,3 +97,10 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=tru
 .itinerary-train-card .compact-line>.operator-logo{width:64px;height:27px;object-fit:contain;flex-shrink:0}
 
 .daily-rail-fares li .daily-rail-line{display:flex;align-items:flex-start;gap:6px}.daily-rail-fares li .daily-rail-logos{display:flex;gap:3px;flex-shrink:0;padding-top:1px}.daily-rail-fares li .daily-rail-name{font-size:12px;line-height:1.5}.daily-rail-fares .daily-rail-logos .rail-symbol{width:23px;height:23px;flex:0 0 23px;font-size:9px;line-height:1;border-width:2px;box-sizing:border-box}.daily-rail-logos>.icon{width:23px;height:23px}
+
+/* Saved actual costs occupy one quiet line until explicitly edited. */
+.command-center.original-sidebar .itinerary-expense>[hidden]{display:none!important}
+.command-center.original-sidebar .itinerary-expense.is-saved{display:block;padding:2px 12px;border-top:1px solid #e6dfd2}
+.itinerary-expense-saved{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#665e51;font-variant-numeric:tabular-nums}
+.command-center.original-sidebar .itinerary-expense-saved button{min-width:44px;min-height:44px;background:transparent;color:#8b6545;border:0;padding:6px;font-size:12px}
+.itinerary-expense>p:empty{display:none}.itinerary-expense>[data-expense-cancel]{grid-column:1/-1;background:transparent;color:#7c6c5c}

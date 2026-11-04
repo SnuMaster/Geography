@@ -118,14 +118,16 @@ const RailDepartures = (() => {
  function stationName(parts,side){return `<strong class="departure-station-name departure-${side}"><span class="departure-station-korean">${esc(parts.korean)}</span>${parts.japanese?`<small class="departure-station-japanese" lang="ja">${esc(parts.japanese)}</small>`:''}</strong>`;}
  function shell(key,itineraryDate,metrics={}){
   const p=profiles[key],u=links(p),info=typeof RAIL_LINES==='object'?RAIL_LINES[p.lineId]:null;
+  const selected=metrics.byProfile?.[key]||metrics;
   const reverse=p.reverseKey&&profiles[p.reverseKey]?p.reverseKey:null,code=p.country==='KR'?'KTX':p.fromCode||info?.code||'철도';
   const from=stationParts(p.from,p.fromJa,p.country),to=stationParts(p.to,p.toJa,p.country),length=s=>[...s].length;
   const long=Math.max(length(from.korean),length(to.korean))>9||Math.max(length(from.japanese),length(to.japanese))>10||length(from.korean)+length(to.korean)>(reverse?10:12);
   return `<div class="compact-line"><span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span><strong>${esc(p.line)}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
    <div class="departure-stations departure-stations-aligned${long?' has-long-names':''}">${stationName(from,'origin')}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination')}</div>
-   <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel||'거리')}</small><b>${esc(metrics.distance||'—')}</b></span><span><small>${esc(metrics.fareLabel||'요금')}</small><b>${esc(metrics.fare||'요금 미확인')}</b></span></div>
+   <div class="compact-metrics"><span><small>${esc(selected.distanceLabel||'거리')}</small><b>${esc(selected.distance||'—')}</b></span><span><small>${esc(selected.fareLabel||'요금')}</small><b>${esc(selected.fare||'요금 미확인')}</b></span></div>
+   ${selected.basis?`<p class="departure-fare-basis">${esc(selected.basis)}</p>`:''}${selected.components?`<dl class="departure-fare-components">${selected.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}${selected.sources?.length?`<div class="departure-fare-sources">${selected.sources.map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
-   <div class="departure-date-basis"><span>여행 계획 날짜 <b>${esc(itineraryDate||'확인 필요')}</b></span><span data-departure-query-date>현재 날짜 기준 시간표 조회</span></div>
+   <div class="departure-date-basis"><span>여행 계획 날짜 <b>${esc(itineraryDate||'확인 필요')}</b> · 아래 열차는 현재 날짜 기준</span><span data-departure-query-date>현재 날짜 기준 저장 시간표 조회 · 실시간 지연 미반영</span></div>
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
    <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
  }
@@ -133,6 +135,12 @@ const RailDepartures = (() => {
  function html(day,leg,part,metrics){
   if(!supported(day,leg,part))return '';
   const keys=keysFor(leg,part);
+  const money=n=>n.toLocaleString('ko-KR')+' JP¥',formatDistance=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'확인 필요',byProfile={};
+  for(const key of new Set(keys.flatMap(k=>[k,profiles[k].reverseKey]).filter(Boolean))){const p=profiles[key],q=FareCore.boardingFare(leg,p);let selected={distanceLabel:'선택 구간 거리',distance:q?formatDistance(q.distanceM):'확인 필요',fareLabel:'선택 구간 요금',fare:'확인 필요',basis:'저장된 계획에 이 방향의 개별 운임이 없습니다.'};
+   if(q){const reserved=q.rows.some(r=>r.reservedSurchargeYen>0);selected={...selected,fare:money(q.amount),fareLabel:q.joined?'환승 포함 운임':reserved?'기본 + 특급·지정석':'선택 구간 IC 요금',basis:'저장된 계획 운임 · 확인 '+[...new Set(q.rows.map(r=>r.checkedAt||'날짜 미확인'))].join(' / ')+(q.joined?' · '+q.rows.map(r=>TripPersonal.station(r.from,r.fromJa)+' → '+TripPersonal.station(r.to,r.toJa)).join(' / '):''),sources:[...new Set(q.rows.flatMap(r=>r.sources))].slice(0,2),components:q.rows.filter(r=>r.reservedSurchargeYen!=null).flatMap(r=>[{label:'IC 기본운임',value:money(r.baseIcYen)},{label:'특급·지정석권 별도 구매',value:money(r.reservedSurchargeYen)}])};}
+   if(p.country==='KR'&&leg.parts.some(s=>s.lineId===p.lineId&&s.from===p.from&&s.to===p.to))selected={...metrics,fareLabel:'저장된 계획 운임',basis:'한국 철도 · IC 운임 아님 · 확인 '+(leg.fare?.checkedAt||'필요')};byProfile[key]=selected;
+  }
+  metrics={...metrics,byProfile,planFare:metrics?.fare||'확인 필요',planDistance:formatDistance(leg.distanceM)};
   const select=keys.length>1?`<label class="departure-select-label">열차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+window.TripPersonal.station(p.from,p.fromJa,p.country)+' → '+window.TripPersonal.station(p.to,p.toJa,p.country))}</option>`;}).join('')}</select></label>`:'';
   return `<div class="departure-panel">${select}${sectionHtml(keys[0],metrics,day)}</div>`;
  }

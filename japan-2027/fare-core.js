@@ -46,14 +46,17 @@
  }
  function japanRail(leg){return leg?.fare?.currency==='JPY'&&leg.parts?.some(p=>['rail','metro'].includes(p.mode))&&leg.parts.every(p=>['rail','metro','walk','transfer'].includes(p.mode)&&(!p.country||p.country==='JP')&&!/^KORAIL[.]/i.test(p.lineId||''));}
  // Keep operator OD fares together: changing trains does not always mean paying a second fare.
+ function groupParts(g,parts){const from=g.from||g.from_,candidates=[];for(let a=0;a<parts.length;a++)if(parts[a].from===from)for(let b=a;b<parts.length;b++)if(parts[b].to===g.to){const range=parts.slice(a,b+1);if(!g.lineIds||g.lineIds.length&&g.lineIds.every(id=>range.some(p=>p.lineId===id))&&range.every(p=>g.lineIds.includes(p.lineId)))candidates.push(range);}return candidates.length===1?candidates[0]:null;}
  function railItems(legs){return legs.flatMap((leg,index)=>{
   if(!japanRail(leg))return [];
   const parts=leg.parts.filter(p=>['rail','metro'].includes(p.mode)),fare=leg.fare,groups=Array.isArray(fare.breakdown)?fare.breakdown:[];
-  const split=groups.length>0&&finite(fare.icYen)&&groups.every(g=>finite(g.icYen)&&(!g.currency||g.currency==='JPY')&&g.from&&g.to&&g.lineIds?.length&&g.lineIds.every(id=>parts.some(p=>p.lineId===id)))&&groups.reduce((sum,g)=>sum+g.icYen,0)===fare.icYen;
+  const split=groups.length>0&&finite(fare.icYen)&&groups.every(g=>finite(g.icYen)&&(!g.currency||g.currency==='JPY')&&groupParts(g,parts))&&groups.reduce((sum,g)=>sum+g.icYen,0)===fare.icYen&&parts.every(p=>groups.filter(g=>groupParts(g,parts).includes(p)).length===1);
   return (split?groups:[{from:parts[0].from,to:parts.at(-1).to,icYen:finite(fare.icYen)?fare.icYen:null,checkedAt:fare.checkedAt}]).map(g=>{
-   const services=g.lineIds?parts.filter(p=>g.lineIds.includes(p.lineId)):parts;
-   return {legIndex:index+1,from:g.from,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],lineIds:[...new Set(services.map(p=>p.lineId).filter(Boolean))],icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null};
+   const services=split?groupParts(g,parts):parts,components=finite(g.baseIcYen)&&finite(g.reservedSurchargeYen)&&g.baseIcYen+g.reservedSurchargeYen===g.icYen?{baseIcYen:g.baseIcYen,reservedSurchargeYen:g.reservedSurchargeYen}:{};
+   return {legIndex:index+1,from:g.from||g.from_,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],lineIds:[...new Set(services.map(p=>p.lineId).filter(Boolean))],icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null,sources:(g.sources||fare.sources||[]).map(s=>typeof s==='string'?s:s?.url).filter(s=>{try{return new URL(s).protocol==='https:';}catch{return false;}}),...components};
   });
  });}
- return Object.freeze({quote,format,summarize,passWindow,PASS_PRICE,railItems});
+ // Match the station board to actual itinerary parts; reverse boards do not inherit a forward fare.
+ function boardingFare(leg,profile){const parts=(leg?.parts||[]).filter(p=>['rail','metro'].includes(p.mode)),matches=profile.throughParts||profile.matches||[profile.match||profile],selected=parts.filter(p=>matches.some(m=>m.lineId===p.lineId&&m.from===p.from&&m.to===p.to));if(!selected.length)return null;const rows=railItems([leg]),groups=rows.map(r=>({row:r,parts:groupParts(r,parts)})).filter(g=>g.parts?.some(p=>selected.includes(p)));if(!groups.length||!selected.every(p=>groups.some(g=>g.parts.includes(p)))||groups.some(g=>!finite(g.row.icYen)))return null;const joined=groups.some(g=>g.parts.some(p=>!selected.includes(p)));return {amount:groups.reduce((sum,g)=>sum+g.row.icYen,0),joined,rows:groups.map(g=>g.row),distanceM:selected.every(p=>finite(p.distanceM))?selected.reduce((sum,p)=>sum+p.distanceM,0):null};}
+ return Object.freeze({quote,format,summarize,passWindow,PASS_PRICE,railItems,boardingFare});
 });

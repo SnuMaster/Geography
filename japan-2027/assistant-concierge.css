@@ -80,6 +80,12 @@ body.command-center #assistantPanel.assistant-concierge>header>strong{font-famil
 #assistantPanel.assistant-concierge #assistantConnectionDetails>summary{background:#f7f1e7;color:#253440;min-height:60px;border-radius:4px;padding:10px;margin:0 0 10px}
 #assistantPanel.assistant-concierge #assistantConnectionDetails>summary .concierge-number{display:none}
 #assistantPanel.assistant-concierge .concierge-booking-actions{display:flex;gap:8px;flex-wrap:wrap}
+#assistantPanel.assistant-concierge .concierge-record-actions{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0 16px}
+#assistantPanel.assistant-concierge #assistantExtraQuestions{border:0;border-bottom:1px solid #bca486;padding:0;margin:0 0 18px;background:transparent}
+#assistantPanel.assistant-concierge #assistantExtraQuestions>summary{min-height:44px;display:flex;align-items:center;font:12px RouteSans,sans-serif;color:#756956;cursor:pointer}
+#assistantPanel.assistant-concierge #assistantExtraQuestions .assistant-tool-icon{display:none}
+#assistantPanel.assistant-concierge #assistantExtraQuestions button{font-size:12px;min-height:44px;background:#faf6ee;color:#293947;border:1px solid #d9ccb9;border-radius:5px}
+#assistantPanel.assistant-concierge #conciergeProgress{color:#efd0a6;font-variant-numeric:tabular-nums}
 #assistantPanel.assistant-concierge .concierge-rail{grid-column:1;grid-row:1/4;background:#10202e;color:#f9f4e9;display:flex;align-items:center;gap:20px;flex-direction:column;padding:22px 4px;overflow:hidden}
 #assistantPanel.assistant-concierge .concierge-wordmark{font:9px Georgia,serif;letter-spacing:1px}
 #assistantPanel.assistant-concierge .concierge-vertical{writing-mode:vertical-rl;font:400 23px/1.5 KisekiMincho,'Yu Mincho',serif;letter-spacing:4px;padding:16px 0;border-top:1px solid #9e7959;border-bottom:1px solid #9e7959}

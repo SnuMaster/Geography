@@ -22,7 +22,7 @@
  async function hash(text){return [...new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(text)))].map(n=>n.toString(16).padStart(2,'0')).join('');}
  async function capture(){const values=await files(),metadata=[];for(const f of values)metadata.push({id:f.id,owner:f.owner,name:f.name,bytes:f.data.length,hash:await hash(f.data)});return {payload:{storage:snapshot(),files:metadata},files:values};}
  const request=(path,body)=>TravelAssistant.recordsRequest(path,body);
- function reload(changed=false){if(changed)window.OriginalSidebar?.clearDrafts();TravelAssistant.reloadPersonal();window.ReservationUI?.reloadRecords();window.CommandCenter?.reloadPersonal();api?.reloadPreferences?.();window.dispatchEvent(new Event('routebook:personal-change'));}
+ function reload(changed=false){if(changed){window.OriginalSidebar?.clearDrafts();window.ExpenseUI?.clearDrafts();}TravelAssistant.reloadPersonal();window.ReservationUI?.reloadRecords();window.CommandCenter?.reloadPersonal();api?.reloadPreferences?.();window.dispatchEvent(new Event('routebook:personal-change'));}
  async function migrate(u){
   if(u==='guest'||get('routebook-records-owner-v1'))return;
   const old=await files('guest');for(const k of KEYS){const value=get(k);if(value!==null&&get(prefix(k,u))===null)set(prefix(k,u),value);}

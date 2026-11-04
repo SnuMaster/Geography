@@ -11,3 +11,13 @@
 #expenseAddForm .expense-amount-field{grid-column:1/3}#expenseAddForm .expense-memo-field{grid-column:1/4}#expenseAddForm>button{grid-column:4;grid-row:2}
 .expense-entry-list li>span{min-width:0;overflow-wrap:anywhere}.expense-entry-list .expense-entry-memo{color:#4f5b60;font-size:12px;line-height:1.6}.expense-entry-list li>b{flex:none}
 @media(max-width:699px){#expenseAddForm .expense-memo-field,#expenseAddForm>button{grid-column:1/-1;grid-row:auto}}
+
+#expenseAddForm{grid-template-columns:minmax(0,1.2fr) minmax(0,.8fr) minmax(0,.8fr);align-items:end}
+#expenseAddForm .expense-amount-field{grid-column:auto}#expenseAddForm .expense-memo-field{grid-column:1/-1}
+#expenseAddForm>button{grid-column:1/-1;grid-row:auto;justify-self:end;min-width:130px}
+#expenseAddForm>#expenseEditCancel{background:transparent;color:#765f47;min-width:100px}
+.expense-stay-range{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 0;border-block:1px solid #e1d5c2}
+.expense-stay-range p{grid-column:1/-1;font-size:11px;line-height:1.7;color:#766a5c;margin:0}
+.expense-entry-list li>span{flex:1}.expense-entry-list button{border:0;border-radius:5px;background:transparent;color:#8d6849;min-width:44px;padding:5px;font-size:12px}
+#expenseEditorTitle{font-size:17px;color:#24313d;margin:0;font-weight:600}
+@media(max-width:699px){#expenseAddForm{grid-template-columns:1fr 1fr}#expenseAddForm .expense-amount-field{grid-column:1/-1}#expenseAddForm>button{justify-self:stretch}.expense-entry-list li{padding:12px 10px;gap:8px}.expense-entry-list li>b{max-width:32%}}

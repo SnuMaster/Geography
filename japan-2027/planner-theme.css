@@ -121,3 +121,12 @@ body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):
 #ccAlertsDialog .cc-dialog-body h3:first-child{margin-top:0}
 #ccAlertsDialog #ccAlertsBackground{padding:12px;border-left:2px solid #94613f;background:#eee7db}
 #ccAlertsDialog #ccAlertsPermissionRequest[hidden]{display:none!important}
+
+/* Fare scope stays visible beside the current-date saved station board. */
+.station-departures .departure-fare-basis,.station-departures .departure-plan-total{font-size:11px;line-height:1.7;color:#60715f;margin:10px 0;overflow-wrap:anywhere}
+.station-departures .departure-plan-total{padding:10px 0;border-block:1px solid #d6dece}
+.station-departures .departure-fare-components{margin:10px 0;padding:10px 12px;border:1px solid #d6dece;border-radius:8px;background:#edf1e7}
+.departure-fare-components>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:11px;line-height:1.8}
+.departure-fare-components dt{font-weight:400}.departure-fare-components dd{margin:0;white-space:nowrap;font-weight:600}
+
+.departure-fare-sources{font-size:11px;line-height:1.8}
