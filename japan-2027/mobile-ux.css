@@ -102,6 +102,9 @@
 .compact-station .departure-stations-aligned .departure-station-japanese{display:block;margin:0;white-space:normal;overflow-wrap:anywhere}
 .compact-station .departure-stations-aligned .departure-origin{grid-column:1}
 .compact-station .departure-stations-aligned .departure-destination{grid-column:3}
+.departure-sequence-step+.departure-sequence-step{border-top:1px solid #cfc9b9;margin-top:8px}
+.departure-sequence-title{margin:0!important;padding:12px 15px 0!important;font-size:11px!important;line-height:1.5;color:#8c6849;font-weight:600;letter-spacing:.4px}
+.departure-sequence>.departure-sequence-total{padding:12px 15px;margin:0;border-top:1px solid #cfc9b9;font-size:11px;line-height:1.8;color:#60715f}
 .compact-station .departure-stations-aligned .departure-arrow{grid-column:2}
 .compact-station .departure-stations-aligned.has-long-names{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto}
 .compact-station .departure-stations-aligned.has-long-names .departure-station-name,.compact-station .departure-stations-aligned.has-long-names .departure-arrow{grid-column:1}

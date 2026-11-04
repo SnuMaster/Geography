@@ -44,8 +44,8 @@
  await report(32,'4개 화면 전체25안 데이터·연결',async()=>{const w=await load(),b=w.__routebook;let count=0;for(const [width,height] of [[320,568],[390,844],[768,1024],[1280,900]]){frame.style.width=width+'px';frame.style.height=height+'px';w.dispatchEvent(new w.Event('resize'));for(const d of b.state.data.days){b.setDay(d.n,{history:'none'});for(const v of d.variants){b.setVariant(v.id,{history:'none'});check(w.document.querySelectorAll('.stop-card').length===v.stops.length,'카드 누락');check(w.document.documentElement.scrollWidth<=w.document.documentElement.clientWidth+1,'가로 넘침 '+width+'/'+d.n);check(!/undefined|NaN/.test(w.document.querySelector('#stopList').textContent),'잘못된 값 노출 '+d.n+'/'+v.id);count++;}}}check(qa.errors.length===0,'JS 오류 '+qa.errors.join(';'));return count+'개 일정안 렌더 · 저장 개수263/238/144 보존 · console 오류 없음';});
  await report(33,'여행일·도보·앞 구간과 무관하게 승차역 현재 다음 열차',async()=>{
   frame.style.width='1280px';frame.style.height='900px';const w=await load(1,{date:'2026-10-26T10:00:00+09:00'}),d=w.document,b=w.__routebook;
-  b.selectLeg(8);change(w,'.leaflet-popup-content [data-departure-select]','jr-ueno-tokyo');await until(()=>d.querySelector('.leaflet-popup-content [data-ride-next]'));
-  const first=d.querySelector('.leaflet-popup-content .station-departures')._rideTrains[0],schedule=await b.rail.getSchedule(key),expected=w.DepartureCore.nextTrains(schedule,qa.clock,{...b.rail.calendarOptions(key),limit:1})[0];
+  b.selectLeg(8);const station33=d.querySelector('.leaflet-popup-content [data-departure-profile="jr-ueno-tokyo"]');await until(()=>station33?._rideTrains?.length);
+  const first=station33._rideTrains[0],schedule=await b.rail.getSchedule(key),expected=w.DepartureCore.nextTrains(schedule,qa.clock,{...b.rail.calendarOptions(key),limit:1})[0];
   check(first.departureAt===expected.departureAt&&first.id===expected.id,'현재 승차역의 가장 빠른 출발편 불일치');
   check(d.querySelector('.leaflet-popup-content .departure-clock').textContent.includes('지금 10:00:00'),'지금 기준 누락');
   check(d.querySelector('.leaflet-popup-content [data-departure-countdown]'),'현재 편 카운트다운 누락');close(w);return '미래 1/8 일정의 환승 구간도 실제 10/26 10시 이후 첫 출발편';
@@ -199,13 +199,12 @@
    for(const [key,item] of cases){if(width!==390&&!['JR-A47','JR-O19'].includes(item.code))continue;
     if(b.state.day!==item.day)b.setDay(item.day);if(b.state.variant!==item.variant)b.setVariant(item.variant);b.selectLeg(item.index);
     const element=b.map._popup?.getElement();check(element?.isConnected,'이동 상세 없음 '+key);
-    const select=element.querySelector('[data-departure-select]');if(select&&select.value!==key){select.value=key;select.dispatchEvent(new w.Event('change',{bubbles:true}));}
-    const section=element.querySelector('.station-departures');check(section?.dataset.departureProfile===key,'오사카 구간 선택 오류 '+key+' / '+section?.dataset.departureProfile);
-    const badge=element.querySelector('.compact-line .departure-station-code'),box=badge.getBoundingClientRect(),range=d.createRange();range.selectNodeContents(badge);
+    const section=element.querySelector('[data-departure-profile="'+key+'"]');check(section?.dataset.departureProfile===key,'오사카 구간 선택 오류 '+key+' / '+section?.dataset.departureProfile);
+    const badge=section.querySelector('.compact-line .departure-station-code'),box=badge.getBoundingClientRect(),range=d.createRange();range.selectNodeContents(badge);
     const rect=range.getBoundingClientRect();check(badge.textContent===item.code,'역 번호 불일치 '+key);check(Math.abs(box.width-35)<1&&Math.abs(box.height-35)<1,'상자 크기 변경 '+key);
     check(range.getClientRects().length===1,'번호 줄바꿈 '+key+' '+width);check(rect.left>=box.left+1&&rect.right<=box.right-1,'번호가 상자 밖으로 넘침 '+key+' '+width);
     check(Math.abs((rect.left+rect.right-box.left-box.right)/2)<2,'가로 가운데 정렬 오류 '+key+' '+width);check(Math.abs((rect.top+rect.bottom-box.top-box.bottom)/2)<2.5,'세로 가운데 정렬 오류 '+key+' '+width);
-    check(element.querySelector('.compact-line>strong').getBoundingClientRect().left>=box.right,'노선명 겹침 '+key);close(w);totalCases++;
+    check(section.querySelector('.compact-line>strong').getBoundingClientRect().left>=box.right,'노선명 겹침 '+key);close(w);totalCases++;
    }
   }
   return `오사카 ${totalCases}개 화면 · 기존 35px 크기 · 한 줄 가운데 정렬`;
@@ -271,16 +270,16 @@
  await report(48,'오차노미즈 실제 현재 열차·24시간·역방향·모든 여행일',async()=>{
   frame.style.width='390px';frame.style.height='844px';const w=await load(3,{date:'2026-10-29T00:30:00+09:00'}),d=w.document,b=w.__routebook,k='jr-east-chuorapid-ochanomizu-musashikoganei';
   const legIndex=b.state.routeData.days['3-main'].findIndex(l=>b.rail.keysFor(l).includes(k))+1;check(legIndex>0,'사용자 제보 구간 없음');b.selectLeg(legIndex);
-  const select=d.querySelector('.leaflet-popup-content [data-departure-select]');if(select)change(w,'.leaflet-popup-content [data-departure-select]',k);await until(()=>d.querySelector('.leaflet-popup-content [data-ride-next]'));
+  const station48=d.querySelector('.leaflet-popup-content [data-departure-profile="'+k+'"]');await until(()=>station48?._rideTrains?.length);
   const schedule=await b.rail.getSchedule(k),original=JSON.stringify(b.getLeg(legIndex));
   for(let hour=0;hour<24;hour++){
    qa.clock=Date.parse(`2026-10-29T${String(hour).padStart(2,'0')}:30:00+09:00`);
    const expected=w.DepartureCore.nextTrains(schedule,qa.clock,{...b.rail.calendarOptions(k),limit:1})[0];check(expected,'24시간 검증용 다음편 없음 '+hour);
-   await until(()=>d.querySelector('.leaflet-popup-content .station-departures')._rideTrains?.[0]?.departureAt===expected.departureAt);
-   const card=d.querySelector('.leaflet-popup-content .station-departures');check(card.dataset.queryMode==='current'&&card._rideTrains[0].departureAt>qa.clock,'현재 기준이 아님 '+hour);check(card.querySelector('.departure-next-time strong').textContent===w.DepartureCore.timeLabel(expected.departureAt,qa.clock),'출발/날짜 표시 불일치 '+hour);check(!card.textContent.includes('참고'),'여행일 참고 잔류 '+hour);
+   await until(()=>station48._rideTrains?.[0]?.departureAt===expected.departureAt);
+   const card=station48;check(card.dataset.queryMode==='current'&&card._rideTrains[0].departureAt>qa.clock,'현재 기준이 아님 '+hour);check(card.querySelector('.departure-next-time strong').textContent===w.DepartureCore.timeLabel(expected.departureAt,qa.clock),'출발/날짜 표시 불일치 '+hour);check(!card.textContent.includes('참고'),'여행일 참고 잔류 '+hour);
   }
-  qa.clock=Date.parse('2026-10-30T02:30:00+09:00');await until(()=>d.querySelector('.leaflet-popup-content .station-departures')._rideTrains[0]?.departureAt>qa.clock);check(d.querySelector('.leaflet-popup-content .station-departures')._rideTrains[0].serviceDate==='2026-10-30','막차 뒤 다음 운행일 첫차 누락');
-  qa.clock=Date.parse('2026-10-30T00:00:00+09:00');await until(()=>d.querySelector('.leaflet-popup-content .station-departures').dataset.serviceDate==='2026-10-29');qa.clock=Date.parse('2026-10-30T03:00:00+09:00');await until(()=>d.querySelector('.leaflet-popup-content .station-departures').dataset.serviceDate==='2026-10-30');check(JSON.stringify(b.getLeg(legIndex))===original,'현재 열차가 원래 일정 변경');close(w);
+  qa.clock=Date.parse('2026-10-30T02:30:00+09:00');await until(()=>station48._rideTrains[0]?.departureAt>qa.clock);check(station48._rideTrains[0].serviceDate==='2026-10-30','막차 뒤 다음 운행일 첫차 누락');
+  qa.clock=Date.parse('2026-10-30T00:00:00+09:00');await until(()=>station48.dataset.serviceDate==='2026-10-29');qa.clock=Date.parse('2026-10-30T03:00:00+09:00');await until(()=>station48.dataset.serviceDate==='2026-10-30');check(JSON.stringify(b.getLeg(legIndex))===original,'현재 열차가 원래 일정 변경');close(w);
   qa.clock=Date.parse('2026-10-29T12:30:00+09:00');let count=0;
   for(const day of b.state.data.days){b.setDay(day.n,{history:'none'});const legs=b.state.routeData.days[`${day.n}-${b.state.variant}`],i=legs.findIndex(l=>b.rail.keysFor(l).length);if(i<0)continue;b.selectLeg(i+1);await until(()=>{const s=d.querySelector('.leaflet-popup-content .station-departures');return s?._rideTrains?.length||s?.querySelector('.departure-error');});const card=d.querySelector('.leaflet-popup-content .station-departures');check(card.dataset.queryMode==='current'&&card.dataset.serviceDate==='2026-10-29','여행일에 고정된 카드 '+day.n);if(card._rideTrains.length)check(card._rideTrains[0].departureAt>qa.clock&&w.DepartureCore.japanDate(card._rideTrains[0].departureAt)==='2026-10-29','현재 날짜 다음 편 오류 '+day.n);const reverse=card.querySelector('[data-departure-direction]');if(reverse){reverse.click();await until(()=>card._rideTrains?.length||card.querySelector('.departure-error'));check(card._rideTrains[0]?.departureAt>qa.clock,'반대방향 현재 편 없음 '+day.n);}close(w);count++;}
   check(count>=20,'여행일 검증 누락');check(!qa.errors.length,'JS 오류 '+qa.errors.join(', '));return '제보한 주오선 00~23시 · 자정/03시 · 막차 뒤 첫차 · '+count+'개 날짜 현재 편·역방향';

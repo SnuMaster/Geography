@@ -141,8 +141,8 @@ const RailDepartures = (() => {
    if(p.country==='KR'&&leg.parts.some(s=>s.lineId===p.lineId&&s.from===p.from&&s.to===p.to))selected={...metrics,fareLabel:'저장된 계획 운임',basis:'한국 철도 · IC 운임 아님 · 확인 '+(leg.fare?.checkedAt||'필요')};byProfile[key]=selected;
   }
   metrics={...metrics,byProfile,planFare:metrics?.fare||'확인 필요',planDistance:formatDistance(leg.distanceM)};
-  const select=keys.length>1?`<label class="departure-select-label">열차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+window.TripPersonal.station(p.from,p.fromJa,p.country)+' → '+window.TripPersonal.station(p.to,p.toJa,p.country))}</option>`;}).join('')}</select></label>`:'';
-  return `<div class="departure-panel">${select}${sectionHtml(keys[0],metrics,day)}</div>`;
+  if(keys.length===1)return `<div class="departure-panel">${sectionHtml(keys[0],metrics,day)}</div>`;
+  return `<div class="departure-panel departure-sequence" aria-label="타는 순서대로 열차 정보">${keys.map((key,index)=>{const pair=[key,profiles[key].reverseKey].filter(k=>byProfile[k]),scope={...metrics,planFare:null,byProfile:Object.fromEntries(pair.map(k=>[k,byProfile[k]]))};return `<div class="departure-sequence-step" data-boarding-order="${index+1}"><p class="departure-sequence-title">${index+1}번째 탑승</p>${sectionHtml(key,scope,day)}</div>`;}).join('')}<p class="departure-plan-total departure-sequence-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준<br>환승 포함 운임은 중복 합산하지 않습니다.</p></div>`;
  }
  async function loadData(key,force=false){
   const file=profiles[key]?.file;if(!file)return null;
@@ -202,7 +202,7 @@ const RailDepartures = (() => {
  }
  function paint(){if(document.hidden)return;const now=Date.now();for(const view of [active,...inlineViews.values()]){if(!view?.element.isConnected)continue;const sections=view.visible||view.element.querySelectorAll('[data-departure-profile]');for(const section of sections)if(section.isConnected&&view.element.contains(section))renderTrains(section,now);}}
  function resumeTimer(){clearInterval(interval);interval=null;if((active||inlineViews.size)&&!document.hidden){paint();interval=setInterval(paint,1000);}}
- function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active.element.removeEventListener('change',active.change);active=null;resumeTimer();}
+ function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active=null;resumeTimer();}
  function mount(popup,inline=false){
   const element=popup.getElement();if(inline&&inlineViews.has(element)){inlineViews.get(element).sync();return;}if(!inline)unmount();if(!element?.querySelector('[data-departure-profile]'))return;
   // Retain live DOM when Leaflet remeasures the popup after async data loads.
@@ -211,12 +211,6 @@ const RailDepartures = (() => {
   const selectProfile=(section,key)=>{
    if(!profiles[key]||!section)return;
    const content=shell(key,section.dataset.itineraryDate,JSON.parse(section.dataset.compactMetrics||'{}'));
-   const select=section.closest('.departure-panel')?.querySelector('[data-departure-select]');
-   if(select){
-    select.querySelectorAll('[data-reverse-option]').forEach(option=>{if(option.value!==key)option.remove();});
-    if(!Array.from(select.options).some(option=>option.value===key)){const option=document.createElement('option');option.value=key;option.dataset.reverseOption='true';option.textContent=`반대 방향 · ${profiles[key].line} · ${profiles[key].from} → ${profiles[key].to}`;select.appendChild(option);}
-    select.value=key;
-   }
    section.dataset.departureProfile=key;section.setAttribute('aria-label',`${profiles[key].line} ${profiles[key].from} 출발역 열차 정보`);section.innerHTML=content;paint();popup.update();refresh(key);
   };
   const click=event=>{
@@ -227,8 +221,7 @@ const RailDepartures = (() => {
    const retry=event.target.closest('[data-departure-retry]');
    if(retry){event.stopPropagation();retry.disabled=true;retry.textContent='불러오는 중…';const body=retry.closest('[data-departure-body]');body.dataset.signature='retrying';body.setAttribute('aria-busy','true');refresh(retry.closest('[data-departure-profile]').dataset.departureProfile,true);}
   };
-  const change=event=>{if(event.target.matches('[data-departure-select]'))selectProfile(event.target.closest('.departure-panel').querySelector('[data-departure-profile]'),event.target.value);};
-  const view={popup,element,click,change};element.addEventListener('click',click);element.addEventListener('change',change);
+  const view={popup,element,click};element.addEventListener('click',click);
   if(inline){
    view.visible=new Set();let sections=[];
    view.observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const entry of entries){if(!element.contains(entry.target))continue;if(entry.isIntersecting){view.visible.add(entry.target);refresh(entry.target.dataset.departureProfile);}else view.visible.delete(entry.target);}paint();},{rootMargin:'160px 0px'}):null;
@@ -238,7 +231,7 @@ const RailDepartures = (() => {
   resumeTimer();
  }
  function mountInline(element){if(element)mount({getElement:()=>element,getContent:()=>element,update:()=>{}},true);}
- function unmountInline(){for(const view of inlineViews.values()){view.observer?.disconnect();view.element.removeEventListener('click',view.click);view.element.removeEventListener('change',view.change);}inlineViews.clear();resumeTimer();}
+ function unmountInline(){for(const view of inlineViews.values()){view.observer?.disconnect();view.element.removeEventListener('click',view.click);}inlineViews.clear();resumeTimer();}
  function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else{unmount();unmountInline();}});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
  function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
