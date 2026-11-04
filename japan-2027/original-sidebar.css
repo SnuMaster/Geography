@@ -17,6 +17,10 @@
 .command-center.original-sidebar #dayHeader h2{font-size:21px;line-height:1.4;margin:11px 0 16px;overflow-wrap:anywhere}
 .command-center.original-sidebar #dayHeader .day-glance>div{background:#f1ede3d9;padding:9px}
 .command-center.original-sidebar #dayHeader .day-tools{font-size:11px}
+.daily-rail-fares{margin-top:8px;padding:10px;background:#fffdf9ed;border:1px solid #ddd2c2;border-radius:5px;min-width:0}
+.daily-rail-fares ol{list-style:none;padding:0;margin:0}.daily-rail-fares li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;padding:11px 0;border-bottom:1px solid #e7dfd3;align-items:start}
+.daily-rail-fares li div{min-width:0;display:grid;gap:4px}.daily-rail-fares li strong{font-size:12px;line-height:1.5;color:#10202e;overflow-wrap:anywhere}.daily-rail-fares li span{font-size:11px;line-height:1.6;overflow-wrap:anywhere}.daily-rail-fares li small{font-size:10px;color:#766858}.daily-rail-fares li>b{font:600 12px/1.6 RouteSans,sans-serif;color:#10202e;white-space:nowrap}
+.daily-rail-total{display:flex;justify-content:space-between;gap:10px;padding:12px 0 3px;color:#10202e;font-size:12px}.daily-rail-total strong{white-space:nowrap}.daily-rail-pass{margin-top:9px}.daily-rail-pass>summary{cursor:pointer;padding:8px 0;color:#766858}
 .command-center.original-sidebar #stopList .stop-row{display:grid;grid-template-columns:44px minmax(0,1fr);gap:0 4px;align-items:start;margin:10px 0 14px}
 .original-visit{display:flex;align-items:center;justify-content:center;min-height:44px;width:44px;cursor:pointer;margin-top:2px}
 .original-visit input{width:21px;height:21px;margin:0;accent-color:#d36534;cursor:pointer}

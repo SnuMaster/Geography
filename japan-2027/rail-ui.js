@@ -80,6 +80,12 @@ function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).j
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
  return `<div class="day-line-key" aria-label="오늘 이용하는 철도 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
 }
+function dailyRailFareHtml(){
+ const legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[],items=FareCore.railItems(legs.map(l=>l&&window.CommandCore?.privateLeg(l,state.data.days)?null:l));
+ if(!items.length)return '<p class="daily-rail-empty">이 날짜에 예정된 일본 철도 구간이 없습니다.</p>';
+ const amount=n=>n===null?'IC 요금 확인 필요':n.toLocaleString('ko-KR')+' JP¥',total=items.reduce((sum,r)=>sum+(r.icYen??0),0),unknown=items.filter(r=>r.icYen===null).length;
+ return `<section class="daily-rail-fares" aria-label="오늘 탑승 열차와 IC 요금"><p>성인 1인 · IC 기준 · 패스 할인 미적용</p><ol>${items.map(r=>`<li data-rail-fare-leg="${r.legIndex}"><div><strong>${esc(r.lines.join(' → ')||'철도')}</strong><span>${esc(TripPersonal.station(r.from,r.fromJa))} → ${esc(TripPersonal.station(r.to,r.toJa))}</span>${r.combined?'<small>환승 포함 운임</small>':''}</div><b>${esc(amount(r.icYen))}</b></li>`).join('')}</ol><div class="daily-rail-total"><span>IC 합계${unknown?' · 미확인 '+unknown+'구간':''}</span><strong>${esc(amount(total))}</strong></div><p class="daily-rail-note">저장된 계획 운임 · 2027 여행 전 재확인</p></section>${state.day<=11?`<details class="daily-rail-pass"><summary>패스 비교 설정</summary>${passEditor()}</details>`:''}`;
+}
 function initRailHover(){
  railHoverCard=document.createElement('div');railHoverCard.id='railHoverCard';railHoverCard.className='rail-hover-card';railHoverCard.setAttribute('role','tooltip');railHoverCard.hidden=true;map.getContainer().appendChild(railHoverCard);
  map.on('movestart zoomstart click',hideRailHover);document.addEventListener('click',event=>{const b=event.target.closest('[data-route-direction]');if(!b)return;const group=railSymbolGroups.get(b.dataset.routeGroup),entry=group?.entries[Number(b.dataset.routeDirection)];if(!entry)return;map.closePopup();L.popup(symbolOptions(entry.leg)).setLatLng(group.point).setContent(directionHtml(group,entry)).openOn(map);});

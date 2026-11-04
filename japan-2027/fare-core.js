@@ -33,7 +33,7 @@
   const sum={ic:0,paper:0,krw:0,unknown:0,extras:[],prepaid:{JPY:0,KRW:0},variableJPY:{min:0,max:0},variableKRW:{min:0,max:0},passCost:0};
   for(const l of legs){if(!l)continue;const f=l.fare,parts=l.parts||[];
    // The sidebar's Japanese rail subtotal counts each railway OD fare once, including its walking transfers.
-   if(options.scope==='japan-rail'&&!(f?.currency==='JPY'&&parts.some(p=>['rail','metro'].includes(p.mode))&&parts.every(p=>['rail','metro','walk','transfer'].includes(p.mode)&&(!p.country||p.country==='JP')&&!/^KORAIL[.]/i.test(p.lineId||''))))continue;
+   if(options.scope==='japan-rail'&&!japanRail(l))continue;
    const q=quote(f,l,options);
    if(options.scope!=='japan-rail'&&(l.travel||['selectedQuote','publishedTariff'].includes(f?.status))){sum.extras.push(l);continue;}
    if(q.status==='unknown'||!['JPY','KRW'].includes(q.currency)){sum.unknown++;continue;}
@@ -44,5 +44,16 @@
   if(options.includePass&&options.pass?.purchased)sum.passCost=PASS_PRICE;
   return sum;
  }
- return Object.freeze({quote,format,summarize,passWindow,PASS_PRICE});
+ function japanRail(leg){return leg?.fare?.currency==='JPY'&&leg.parts?.some(p=>['rail','metro'].includes(p.mode))&&leg.parts.every(p=>['rail','metro','walk','transfer'].includes(p.mode)&&(!p.country||p.country==='JP')&&!/^KORAIL[.]/i.test(p.lineId||''));}
+ // Keep operator OD fares together: changing trains does not always mean paying a second fare.
+ function railItems(legs){return legs.flatMap((leg,index)=>{
+  if(!japanRail(leg))return [];
+  const parts=leg.parts.filter(p=>['rail','metro'].includes(p.mode)),fare=leg.fare,groups=Array.isArray(fare.breakdown)?fare.breakdown:[];
+  const split=groups.length>0&&finite(fare.icYen)&&groups.every(g=>finite(g.icYen)&&(!g.currency||g.currency==='JPY')&&g.from&&g.to&&g.lineIds?.length&&g.lineIds.every(id=>parts.some(p=>p.lineId===id)))&&groups.reduce((sum,g)=>sum+g.icYen,0)===fare.icYen;
+  return (split?groups:[{from:parts[0].from,to:parts.at(-1).to,icYen:finite(fare.icYen)?fare.icYen:null,checkedAt:fare.checkedAt}]).map(g=>{
+   const services=g.lineIds?parts.filter(p=>g.lineIds.includes(p.lineId)):parts;
+   return {legIndex:index+1,from:g.from,to:g.to,fromJa:g.fromJa,toJa:g.toJa,lines:[...new Set(services.map(p=>p.line).filter(Boolean))],icYen:g.icYen,combined:services.length>1,checkedAt:g.checkedAt||fare.checkedAt||null};
+  });
+ });}
+ return Object.freeze({quote,format,summarize,passWindow,PASS_PRICE,railItems});
 });
