@@ -46,6 +46,7 @@ test('weather and ticket alternatives remain optional and no planned stop gets a
  const stops=data.days[0].variants[0].stops,oldVisits={'1|main|d1-main-8':true};assert.equal(A.progress(stops,1,'main',oldVisits).done,0);
  P.registerStations(data.metadata.stationNames);assert.match(P.station('스이도바시'),/水道橋/);assert.match(P.station('도부닛코'),/東武日光/);
  assert.equal(P.station('도쿄메트로 우에노역'),'도쿄메트로 우에노역(上野)');assert.equal(P.station('게이세이우에노역'),'게이세이우에노역(京成上野)');
+ assert.equal(P.station('게이세이 우에노'),'게이세이 우에노(京成上野)');
 });
 test('planned connections have enough time and preserve the fixed outbound flight',()=>{
  for(const d of data.days)for(const v of d.variants)assert.deepEqual(C.warnings(v.stops,routes.days[d.n+'-'+v.id]).filter(w=>['overlap','travel'].includes(w.type)),[],d.n+'-'+v.id);

@@ -28,6 +28,7 @@
    .replace(/역(?:\s*·.*|\s+.*)?$/,'').replace(/\s+/g,'').trim();
  }
  function japanese(name){
+  if(EXTRA_JA[String(name||'').trim()])return EXTRA_JA[String(name||'').trim()];
   if(EXTRA_JA[normalized(name)])return EXTRA_JA[normalized(name)];
   const profiles=globalThis.RailDepartureProfiles?.profiles;
   for(const p of Object.values(profiles||{})){
