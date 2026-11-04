@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261104-rail-sequence-1',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261104-rail-sequence-2',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
