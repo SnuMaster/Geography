@@ -43,6 +43,12 @@ jobs:
         run: node japan-2027/tests/rail-station-links-browser.cjs
       - name: Date-by-date expenses and existing personal records on Chromium
         run: node japan-2027/tests/expense-browser.cjs
+      - name: Compact management, multi-night costs and fare scope on Chromium
+        run: node japan-2027/tests/management-browser.cjs
+      - name: Weather and selectively confirmed ticket results on Chromium
+        run: node japan-2027/tests/assistant-results-browser.cjs
+      - name: Cross-device personal records and lodging allocation on Chromium
+        run: node japan-2027/tests/personal-sync-browser.cjs
       - name: Active navigation containment and controls on Chromium
         run: node japan-2027/tests/navigation-layout-browser.cjs
       - name: Code-free account signup and shared login on Chromium
@@ -91,6 +97,12 @@ jobs:
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/rail-station-links-browser.cjs
       - name: Date-by-date expenses and existing personal records on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/expense-browser.cjs
+      - name: Compact management, multi-night costs and fare scope on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/management-browser.cjs
+      - name: Weather and selectively confirmed ticket results on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-results-browser.cjs
+      - name: Cross-device personal records and lodging allocation on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/personal-sync-browser.cjs
       - name: Active navigation containment and controls on WebKit
         run: ASSISTANT_BROWSER=webkit node japan-2027/tests/navigation-layout-browser.cjs
       - name: Code-free account signup and shared login on WebKit
