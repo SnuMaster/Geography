@@ -104,3 +104,5 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=tru
 .itinerary-expense-saved{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;color:#665e51;font-variant-numeric:tabular-nums}
 .command-center.original-sidebar .itinerary-expense-saved button{min-width:44px;min-height:44px;background:transparent;color:#8b6545;border:0;padding:6px;font-size:12px}
 .itinerary-expense>p:empty{display:none}.itinerary-expense>[data-expense-cancel]{grid-column:1/-1;background:transparent;color:#7c6c5c}
+.command-center.original-sidebar #stopList .itinerary-station-fare{grid-column:2;display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:6px 12px;padding:12px;border-top:1px solid #e6dfd2;background:#f1f3ed;font-size:12px;color:#526453;border-radius:0 0 8px 8px}
+.itinerary-station-fare strong{font-size:14px;white-space:nowrap;font-variant-numeric:tabular-nums}.itinerary-station-fare small{flex-basis:100%;font-size:10px;line-height:1.6;color:#6b7567}
