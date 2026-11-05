@@ -168,6 +168,7 @@ function renderStops(){
 function initMap(){
  map=L.map('map',{zoomControl:false,scrollWheelZoom:true,zoomSnap:.25,center:[35.7,139.8],zoom:10,minZoom:3,maxZoom:19,preferCanvas:false});
  map.attributionControl.addAttribution('<a href="https://nlftp.mlit.go.jp/ksj/gml/datalist/KsjTmplt-N02-2025.html" target="_blank" rel="noopener">MLIT N02-25 (가공)</a>');
+ map.attributionControl.addAttribution('경로: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · <a href="https://routing.openstreetmap.de/about.html" target="_blank" rel="noopener">FOSSGIS</a> · <a href="https://www.openstreetmap.org/fixthemap" target="_blank" rel="noopener">지도 수정</a>');
  L.control.zoom({position:'topright'}).addTo(map);L.control.scale({imperial:false,position:'bottomright',maxWidth:90}).addTo(map);
  setTiles('gsi');routeLayer=L.layerGroup().addTo(map);map.on('zoomend',updateArrowAngles);initRailHover();RailDepartures.attach(map);window.ItineraryDrawer?.attach(map);DetailView.attach(map);window.addEventListener('resize',()=>map.invalidateSize());
  map.on('moveend zoomend',()=>{if(state.view!=='overview'||overviewRendering||DetailView.isOpen()||window.FlightPlayback?.isActive())return;cancelAnimationFrame(overviewMoveFrame);overviewMoveFrame=requestAnimationFrame(()=>{if(state.view==='overview'&&!DetailView.isOpen())renderOverviewMap(false);});});
@@ -212,7 +213,7 @@ function renderMap(fit=true){
   const detailed=getLeg(i);
   if(detailed){
    (window.TripPersonal?.displayParts(detailed)||railParts(detailed)).forEach(part=>{
-    if(part.coords.length<2||part.distanceM<8)return;
+    if(!mapPartVisible(part)||part.coords.length<2||part.distanceM<8)return;
     const strokes=routeLineStyles(part,{night:state.night}),style=strokes.line,color=style.color;
     routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),detailed,i,part.mode);
     const line=routeVisual(L.polyline(part.coords,style).addTo(routeLayer),detailed,i,part.mode);
@@ -351,7 +352,7 @@ function renderOverviewMap(fit=true){
  try{
   hideRailHover();routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];railSymbolKeys.clear();railSymbolGroups.clear();arrows=[];
   const detailed=!fit&&map.getZoom()>=10,stops=overviewCities(),legs=overviewLegs();
-  const draw=(leg,part,local=false)=>{if(part.coords?.length<2)return;const strokes=routeLineStyles(part,{overview:true,local});
+  const draw=(leg,part,local=false)=>{if(!mapPartVisible(part)||part.coords?.length<2)return;const strokes=routeLineStyles(part,{overview:true,local});
    routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),leg,leg.legIndex,part.mode);
    routeVisual(L.polyline(part.coords,{...strokes.line,interactive:false}).addTo(routeLayer),leg,leg.legIndex,part.mode);
    const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0}).addTo(routeLayer),leg);hit.bindPopup(()=>overviewLegHtml(leg,part),symbolOptions(leg));

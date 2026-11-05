@@ -39,7 +39,7 @@ test('all variant routes retain continuous endpoints, honest geometry and distin
    for(const p of l.parts){assert.ok(p.source||p.geometryAccuracy==='private'||T.geometry(p).kind==='schematic'||p.geometrySource==='same-location');if(p.geometryAccuracy==='mapped')for(let j=1;j<p.coords.length;j++)assert.ok(G.distance(p.coords[j-1],p.coords[j])<2500,p.line);}
   }
  }
- const newRail=Object.values(routes.days).flat().flatMap(l=>l.parts).filter(p=>p.lineId==='Hakone.Ropeway');assert.ok(newRail.length);assert.ok(newRail.every(p=>p.geometryAccuracy==='schematic'&&T.geometry(p).kind==='schematic'));
+ const newRail=Object.values(routes.days).flat().flatMap(l=>l.parts).filter(p=>p.lineId==='Hakone.Ropeway');assert.ok(newRail.length);assert.ok(newRail.every(p=>p.geometryAccuracy==='mapped'&&p.coords.length>=7&&T.geometry(p).kind==='map-reference'));
 });
 test('weather and ticket alternatives remain optional and no planned stop gets another place visit record',()=>{
  assert.deepEqual(data.days[7].variants.map(v=>v.id),['main','brewery']);assert.deepEqual(data.days[10].variants.map(v=>v.id),['main','concert']);

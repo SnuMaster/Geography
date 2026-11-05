@@ -15,6 +15,17 @@ function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return ''
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
+ 'Yurikamome.Yurikamome':{code:'U',color:'#27404e',shape:'rounded',source:'https://www.yurikamome.co.jp/'},
+ 'Minatomirai.Minatomirai':{code:'MM',color:'#09357f',shape:'rounded',source:'https://www.mm21railway.co.jp/global/english/info/pdf/map.pdf'},
+ 'JR-East.KeihinTohokuNegishi':{code:'JK',color:'#00b2e5',shape:'square',source:'https://www.jreast.co.jp/map/'},
+ 'JR-East.Ito':{code:'JT',color:'#f68b1e',shape:'square',source:'https://www.jreast.co.jp/map/'},
+ 'Tobu.TobuSkytree':{code:'TS',color:'#0f6cc3',shape:'rounded',source:'https://www.tobu.co.jp/railway/guide/route/'},
+ 'Tobu.Nikko':{code:'TN',color:'#ffa500',shape:'rounded',source:'https://www.tobu.co.jp/railway/guide/route/'},
+ 'OdakyuHakone.HakoneTozan':{code:'OH',color:'#f15a22',shape:'rounded',source:'https://www.hakonenavi.jp/transportation/routemap/'},
+ 'Hakone.Cable':{code:'OH',color:'#f15a22',shape:'rounded',vehicle:'cable',source:'https://www.hakonenavi.jp/transportation/routemap/'},
+ 'Hakone.Ropeway':{code:'OH',color:'#ec6d82',shape:'rounded',vehicle:'ropeway',source:'https://www.hakonenavi.jp/transportation/routemap/'},
+ 'TobuBus.Nikko.C':{code:'C',color:'#d96a24',shape:'rounded',vehicle:'bus',source:'https://www.tobu-bus.com/pc/area/nikko/'},
+ 'Atami.FuuaShuttle':{code:'FUUA',color:'#226b8e',shape:'rounded',vehicle:'bus',source:'https://www.atamibayresort.com/access/'},
  'JR-Central.TokaidoShinkansen':{code:'新幹線',color:'#0068b7',shape:'rounded',logo:true},
  'TokyoMonorail.HanedaAirport':{code:'MO',color:'#657078',shape:'rounded',colorUnknown:true},
  'KORAIL.GyeongbuHSR':{code:'KTX',color:'#0054a6',shape:'square'},
@@ -50,7 +61,10 @@ const RAIL_LINES={
 Object.assign(RAIL_LINES,{"West.M": {"code": "M", "color": "#e5171f", "shape": "circle"}, "West.T": {"code": "T", "color": "#522886", "shape": "circle"}, "West.K": {"code": "K", "color": "#814721", "shape": "circle"}, "West.O": {"code": "O", "color": "#e80000", "shape": "square"}, "West.A": {"code": "A", "color": "#0072bc", "shape": "square"}, "West.D": {"code": "D", "color": "#a56750", "shape": "square"}, "West.E": {"code": "E", "color": "#878ddc", "shape": "square"}, "West.KH": {"code": "KH", "color": "#1d7b3b", "shape": "rounded"}, "West.HS": {"code": "HS", "color": "#1f64aa", "shape": "rounded"}, "West.KN-Namba": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Osaka": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Nara": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.HK-Arashi": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Kyoto": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Takara": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.FK": {"code": "K", "color": "#ee7d00", "shape": "circle"}, "West.FN": {"code": "N", "color": "#008b5a", "shape": "circle"}});
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
-function railInfo(part){return RAIL_LINES[part.lineId]||null;}
+function railInfo(part){return RAIL_LINES[part.lineId]||(part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
+const TRANSIT_VEHICLES={bus:'<rect x="4" y="4" width="16" height="14" rx="3"/><path d="M4 10h16M8 18v3m8-3v3M8 14h.01M16 14h.01"/>',cable:'<path d="m3 20 18-8M5 14V5h11l4 3v8M5 10h14M10 5v11M3 23l18-8"/>',ropeway:'<path d="M2 3h20M12 3v5M5 11l3-3h8l3 3v10H5zM5 15h14M12 8v13"/>'};
+function transitVehicleBadge(part,info,extra=''){return `<span class="rail-symbol transit-vehicle ${info.shape} vehicle-${info.vehicle} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc((info.vehicle==='bus'?'버스':info.vehicle==='cable'?'케이블카':'로프웨이')+' · '+part.line)}" title="${esc(part.line)}"><svg viewBox="0 0 24 24" aria-hidden="true">${TRANSIT_VEHICLES[info.vehicle]}</svg><small>${esc(info.code)}</small></span>`;}
+function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAccuracy==='schematic'||/개략|대표.*연결|미확인/.test(part.geometrySource||'')));}
 // Both strokes must share the same dash pattern: a solid casing turns a
 // schematic connection into an apparently confirmed railway on the map.
 function routeLineStyles(part,{overview=false,local=false,night=false}={}){
@@ -61,6 +75,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
 }
 function railBadge(part,extra=''){
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
+ if(info.vehicle)return transitVehicleBadge(part,info,extra);
  if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
@@ -84,10 +99,10 @@ function splitRailService(part){
  railSectionCache.set(part,result);return result;
 }
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
-function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=info.code+'|'+info.color;if(seen.has(key))return false;seen.add(key);return true;});}
+function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
- return `<div class="day-line-key" aria-label="오늘 이용하는 철도 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
+ return `<div class="day-line-key" aria-label="오늘 이용하는 교통 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
 }
 function dailyRailFareLogos(row,legs){
  const leg=legs[row.legIndex-1];if(!leg)return '';

@@ -145,3 +145,12 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet
 body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actions{flex-wrap:wrap;gap:8px;padding:10px 12px}
 body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actions button{flex:1;min-width:0;font-size:11px}
 .map-asset-credit{font-size:10px;line-height:1.7;padding:10px 14px;order:10}.map-asset-credit a{text-decoration:underline}
+
+/* Shared vehicle marks also cover bus, cable-car and ropeway services. */
+.rail-symbol.transit-vehicle{display:flex;flex-direction:column;gap:0;min-width:28px;width:28px;height:30px;border-width:2px;padding:2px;line-height:1;color:var(--rail-color);flex-shrink:0}
+.transit-vehicle>svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.transit-vehicle>small{display:block;font:700 6px/1 Arial,sans-serif;letter-spacing:0;white-space:nowrap}
+.rail-map-symbol .rail-symbol.transit-vehicle{width:33px;height:35px}
+.daily-rail-logos .rail-symbol.transit-vehicle{height:27px;width:25px;min-width:25px;flex-basis:25px}
+.command-center.original-sidebar .leg-route-button .leg-line-badges{display:flex;align-items:center;gap:5px;margin:7px 0}
+.command-center.original-sidebar .leg-line-badges .rail-symbol.transit-vehicle{height:29px;width:26px;min-width:26px;flex-basis:26px}
