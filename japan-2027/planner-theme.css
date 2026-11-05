@@ -130,3 +130,8 @@ body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):
 .departure-fare-components dt{font-weight:400}.departure-fare-components dd{margin:0;white-space:nowrap;font-weight:600}
 
 .departure-fare-sources{font-size:11px;line-height:1.8}
+
+/* A readable, shared Shinkansen pictogram in the map, fare list and itinerary. */
+.operator-logo.operator-shinkansen{width:48px;max-width:48px;height:36px;max-height:36px;padding:0;background:transparent;object-fit:contain}
+.rail-map-symbol .operator-shinkansen{width:42px;max-width:42px;height:34px;max-height:34px;filter:drop-shadow(0 1px 3px #17253235)}
+.itinerary-train-card .compact-line>.operator-shinkansen{width:42px;height:32px}

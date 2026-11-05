@@ -6,15 +6,16 @@ const AIRLINE_BRANDS={
 };
 function airlineFor(part){if(part?.mode!=='flight')return null;const line=part.line||'';return /TW251|트리니티|Trinity/i.test(line)?'trinity':/\bJAL\b/.test(line)?'jal':/\bANA\b/.test(line)?'ana':null;}
 function operatorLogo(part,extra=''){
- const isUber=part?.mode==='taxi',isKtx=part?.lineId==='KORAIL.GyeongbuHSR'||/KTX/.test(part?.line||'');
- if(!isUber&&!isKtx)return '';
- const type=isUber?'uber':'ktx',name=isUber?'Uber':'KTX';
+ const isUber=part?.mode==='taxi',isKtx=part?.lineId==='KORAIL.GyeongbuHSR'||/KTX/.test(part?.line||''),isShinkansen=part?.lineId==='JR-Central.TokaidoShinkansen';
+ if(!isUber&&!isKtx&&!isShinkansen)return '';
+ const type=isUber?'uber':isKtx?'ktx':'shinkansen',name=isUber?'Uber':isKtx?'KTX':'신칸센';
  return '<img class="operator-logo operator-'+type+' '+extra+'" src="assets/operators/'+type+'.svg" alt="'+name+' 로고" width="72" height="27" decoding="async">';
 }
 function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return '';const b=AIRLINE_BRANDS[key];return `<img class="airline-logo airline-${key} ${extra}" src="${b.src}" alt="${b.name} 로고" width="96" height="30" decoding="async">`;}
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
+ 'JR-Central.TokaidoShinkansen':{code:'新幹線',color:'#0068b7',shape:'rounded',logo:true},
  'TokyoMonorail.HanedaAirport':{code:'MO',color:'#657078',shape:'rounded',colorUnknown:true},
  'KORAIL.GyeongbuHSR':{code:'KTX',color:'#0054a6',shape:'square'},
  'TokyoMetro.Ginza':{code:'G',color:'#ff9500',shape:'circle'},
@@ -50,9 +51,17 @@ Object.assign(RAIL_LINES,{"West.M": {"code": "M", "color": "#e5171f", "shape": "
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||null;}
+// Both strokes must share the same dash pattern: a solid casing turns a
+// schematic connection into an apparently confirmed railway on the map.
+function routeLineStyles(part,{overview=false,local=false,night=false}={}){
+ const schematic=part.geometryAccuracy==='schematic',color=railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
+ const dashArray=schematic?'2 6':part.mode==='flight'?'9 7':part.mode==='transfer'?'3 5':null;
+ const weight=schematic?2:overview?(local?4:3):4.5,opacity=schematic?.6:night?.6:1;
+ return {line:{color,weight,opacity,lineCap:'round',lineJoin:'round',dashArray},casing:{color:'#fffdf8',weight:weight+3,opacity:schematic?.45:.9,dashArray,lineCap:'round',lineJoin:'round',interactive:false}};
+}
 function railBadge(part,extra=''){
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
- if(info.code==='KTX')return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
+ if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
 function splitRailService(part){
