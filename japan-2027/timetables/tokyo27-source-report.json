@@ -1,0 +1,625 @@
+{
+  "checkedAt": "2026-11-05",
+  "upstreamCommit": "c708abea8bf05ab56137a50e52c032112b6f9beb",
+  "sourceHashes": {
+    "tokyometro-hibiya": "ab436bb0c10823fbe04a178924c584e15199429ec63239e7791918e19635aadf",
+    "tokyometro-ginza": "d821f053bd94fbccdf6dc0bda68c8adf36e410b18f6a2d1fa94b818a26c2dc60",
+    "tokyometro-namboku": "3f9665f516ac39e85e3bd6f7839fd427c1f2122aa4e31743d59a96053c736f00",
+    "jreast-yamanote": "a62d5e814c20293cb52247386976c37579a6316a9a743a57f5410c33fc6558ae",
+    "jreast-takasaki": "451280e35cf7ea363e21ef6f1912888054b42215cf2683732cd3e2b9d5ea1094",
+    "jreast-tokaido": "a65c8f25b0e097552617fbc3d221edea6fce418e39874568c4b8b7cf87ce24c6",
+    "jreast-keihintohokunegishi": "817acc0c4e2e62cbfd5f520db1a6fdf0a4b83557b8d410721e62e5100373fed8",
+    "jreast-chuosobulocal": "a706698799c69de33ad3e128849f28d044af12d41558f0ebf9294a7353f97e2b",
+    "jreast-chuorapid": "1401bc999cd7066cab575898c5e3309bdbcd34d8f5ade7100efe0bc06cb70c09",
+    "jreast-yokosuka": "44569d4ae3655744f1f78f1213a70648917ec549f7d41a93671b01802c5f4069",
+    "jreast-ito": "39babd4fc3cf3f82a4095bf13278d6cafec2c64c922478f7f68ee56687fae70c",
+    "yurikamome-yurikamome": "0b4ed9a32d9d32bd4e7f7edccdaa0694b2fca74132c1bb6f23c7e5ed5854ed2b",
+    "minatomirai-minatomirai": "3039d66f103ce1b2c669e45a88ae997861dd43d8a444885114f81a7cc75be3ba",
+    "keio-inokashira": "edb53767f0e10dd7851f2eca099cbd3968b403dc53bf1cb2b6f98770a49a816b",
+    "odakyu-odawara": "6e23e3bdb43101dc65cc8c6e2c5b44d7c0b0aada2ba58ada1fe1e9ed34394918",
+    "odakyuhakone-hakonetozan": "5bd2fb3b6a96683b49611fe5fa23c393b13944cfd27d01c85f5443edcd52e307",
+    "tobu-tobuskytree": "6ffe2501b87235aa54cec02b6d555dd5031193fd28ac160478ff010deda714ff",
+    "tobu-nikko": "bb98aa9d92a4b8ebdf6e37c0b7a09af957dbee872f4ea260d454bfb7b6e6aea7",
+    "toei-shinjuku": "2f5673a4ca9852e9cfcfb4ad70dd0ac67f1d1c049e7f5f3593acb27f7906af44",
+    "toei-asakusa": "6273118bb1553547cd34470af376b4718d44b47fd423b0b90492939875baaa86",
+    "toei-oedo": "c0314e79408b2bb33f7cf1f991d91c698bc67a877a2a9e8ddee4a02435d6db47",
+    "enoden-enoden": "1d697266b83afcb229149eccef4783b15bf714e5f2e532e4dccaeca8b128476f"
+  },
+  "cableSourceSha256": "da216edeaf3dbd97ea2122445c6bc852b8595db4909fe63cc750f4f7a187415a",
+  "profiles": [
+    {
+      "key": "tokyo27-91d42d4bfb7d6a",
+      "from": "이리야",
+      "to": "긴자",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 281,
+        "SaturdayHoliday": 206
+      }
+    },
+    {
+      "key": "tokyo27-8fbe0ef2103786",
+      "from": "긴자",
+      "to": "신바시",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 326,
+        "SaturdayHoliday": 248
+      }
+    },
+    {
+      "key": "tokyo27-d32f45d1afe317",
+      "from": "신바시",
+      "to": "시조마에",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 226,
+        "SaturdayHoliday": 227
+      }
+    },
+    {
+      "key": "tokyo27-923b430677088a",
+      "from": "시조마에",
+      "to": "다이바",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 223,
+        "SaturdayHoliday": 227
+      }
+    },
+    {
+      "key": "tokyo27-26004231ca6675",
+      "from": "다이바",
+      "to": "신바시",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 238,
+        "SaturdayHoliday": 234
+      }
+    },
+    {
+      "key": "tokyo27-1ae6c75f04ab11",
+      "from": "신바시",
+      "to": "긴자",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 326,
+        "SaturdayHoliday": 248
+      }
+    },
+    {
+      "key": "tokyo27-949d44c328543f",
+      "from": "긴자",
+      "to": "이리야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 284,
+        "SaturdayHoliday": 207
+      }
+    },
+    {
+      "key": "tokyo27-a390addb6ed2cd",
+      "from": "우에노",
+      "to": "이케부쿠로",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 246,
+        "SaturdayHoliday": 247
+      }
+    },
+    {
+      "key": "tokyo27-28217b613228e3",
+      "from": "이케부쿠로",
+      "to": "우에노",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 259,
+        "SaturdayHoliday": 254
+      }
+    },
+    {
+      "key": "tokyo27-4672f31a1cedea",
+      "from": "우에노",
+      "to": "요코하마",
+      "throughParts": [
+        {
+          "lineId": "JR-East.Takasaki",
+          "from": "우에노",
+          "to": "도쿄",
+          "line": "JR 우에노도쿄라인 · 도카이도선 직통"
+        },
+        {
+          "lineId": "JR-East.Tokaido",
+          "from": "도쿄",
+          "to": "요코하마",
+          "line": "도카이도 선"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 54,
+        "SaturdayHoliday": 53
+      }
+    },
+    {
+      "key": "tokyo27-f573696ed05477",
+      "from": "요코하마",
+      "to": "모토마치·주카가이",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 297,
+        "SaturdayHoliday": 274
+      }
+    },
+    {
+      "key": "tokyo27-84132c655cd7a4",
+      "from": "사쿠라기초",
+      "to": "요코하마",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 274,
+        "SaturdayHoliday": 252
+      }
+    },
+    {
+      "key": "tokyo27-b8464687151e13",
+      "from": "요코하마",
+      "to": "우에노",
+      "throughParts": [
+        {
+          "lineId": "JR-East.Tokaido",
+          "from": "요코하마",
+          "to": "도쿄",
+          "line": "도카이도 선"
+        },
+        {
+          "lineId": "JR-East.Takasaki",
+          "from": "도쿄",
+          "to": "우에노",
+          "line": "JR 우에노도쿄라인 직통"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 53,
+        "SaturdayHoliday": 51
+      }
+    },
+    {
+      "key": "tokyo27-c61947356d6d55",
+      "from": "아키하바라",
+      "to": "기치조지",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 133,
+        "SaturdayHoliday": 159
+      }
+    },
+    {
+      "key": "tokyo27-c0ce6d3903af56",
+      "from": "시모키타자와",
+      "to": "시부야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 305,
+        "SaturdayHoliday": 267
+      }
+    },
+    {
+      "key": "tokyo27-71ec7535529bde",
+      "from": "시부야",
+      "to": "우에노",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 325,
+        "SaturdayHoliday": 247
+      }
+    },
+    {
+      "key": "tokyo27-fb7824f57b2b8c",
+      "from": "아키하바라",
+      "to": "신주쿠",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 230,
+        "SaturdayHoliday": 205
+      }
+    },
+    {
+      "key": "tokyo27-352f21b4393155",
+      "from": "신주쿠",
+      "to": "하코네유모토",
+      "throughParts": [
+        {
+          "lineId": "Odakyu.Odawara",
+          "from": "신주쿠",
+          "to": "오다와라",
+          "line": "오다큐 로망스카 · 지정석"
+        },
+        {
+          "lineId": "OdakyuHakone.HakoneTozan",
+          "from": "오다와라",
+          "to": "하코네유모토",
+          "line": "로망스카 직통 · 하코네유모토"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 14,
+        "SaturdayHoliday": 22
+      }
+    },
+    {
+      "key": "tokyo27-30d16a47fb4d94",
+      "from": "하코네유모토",
+      "to": "고라",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 54,
+        "SaturdayHoliday": 54
+      }
+    },
+    {
+      "key": "tokyo27-a54fa4b468505c",
+      "from": "고라",
+      "to": "하코네유모토",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 54,
+        "SaturdayHoliday": 54
+      }
+    },
+    {
+      "key": "tokyo27-240da63a7a6209",
+      "from": "하코네유모토",
+      "to": "신주쿠",
+      "throughParts": [
+        {
+          "lineId": "OdakyuHakone.HakoneTozan",
+          "from": "하코네유모토",
+          "to": "오다와라",
+          "line": "로망스카 직통"
+        },
+        {
+          "lineId": "Odakyu.Odawara",
+          "from": "오다와라",
+          "to": "신주쿠",
+          "line": "오다큐 로망스카 · 지정석"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 16,
+        "SaturdayHoliday": 23
+      }
+    },
+    {
+      "key": "tokyo27-bf6bf74047033c",
+      "from": "신주쿠",
+      "to": "아키하바라",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 230,
+        "SaturdayHoliday": 205
+      }
+    },
+    {
+      "key": "tokyo27-6365ea0e2ef708",
+      "from": "우에노",
+      "to": "하라주쿠",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 241,
+        "SaturdayHoliday": 242
+      }
+    },
+    {
+      "key": "tokyo27-fca50dbb382364",
+      "from": "하라주쿠",
+      "to": "신주쿠",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 263,
+        "SaturdayHoliday": 257
+      }
+    },
+    {
+      "key": "tokyo27-dc3c2f5c69a28b",
+      "from": "신주쿠",
+      "to": "시부야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 250,
+        "SaturdayHoliday": 250
+      }
+    },
+    {
+      "key": "tokyo27-301d7cf9718f72",
+      "from": "이리야",
+      "to": "기타센주",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 274,
+        "SaturdayHoliday": 207
+      }
+    },
+    {
+      "key": "tokyo27-48d559f9fa7803",
+      "from": "기타센주",
+      "to": "도부닛코",
+      "throughParts": [
+        {
+          "lineId": "Tobu.TobuSkytree",
+          "from": "기타센주",
+          "to": "도부도부쓰코엔",
+          "line": "도부 특급 · 직통"
+        },
+        {
+          "lineId": "Tobu.Nikko",
+          "from": "도부도부쓰코엔",
+          "to": "도부닛코",
+          "line": "게곤·리버티 게곤 · 직통"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 12,
+        "SaturdayHoliday": 15
+      }
+    },
+    {
+      "key": "tokyo27-38d9f53eced448",
+      "from": "도부닛코",
+      "to": "기타센주",
+      "throughParts": [
+        {
+          "lineId": "Tobu.Nikko",
+          "from": "도부닛코",
+          "to": "도부도부쓰코엔",
+          "line": "닛코선"
+        },
+        {
+          "lineId": "Tobu.TobuSkytree",
+          "from": "도부도부쓰코엔",
+          "to": "기타센주",
+          "line": "도부 스카이트리 라인"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 9,
+        "SaturdayHoliday": 12
+      }
+    },
+    {
+      "key": "tokyo27-ac0fce9c26f519",
+      "from": "기타센주",
+      "to": "이리야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 275,
+        "SaturdayHoliday": 206
+      }
+    },
+    {
+      "key": "tokyo27-2e1e153c273bd7",
+      "from": "진보초",
+      "to": "바쿠로요코야마",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 194,
+        "SaturdayHoliday": 177
+      }
+    },
+    {
+      "key": "tokyo27-4983e0f3f7d9c1",
+      "from": "히가시니혼바시",
+      "to": "구라마에",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 238,
+        "SaturdayHoliday": 198
+      }
+    },
+    {
+      "key": "tokyo27-3a0fecfb170484",
+      "from": "구라마에",
+      "to": "아사쿠사바시",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 242,
+        "SaturdayHoliday": 197
+      }
+    },
+    {
+      "key": "tokyo27-e0ea717bc09b21",
+      "from": "아사쿠사바시",
+      "to": "아키하바라",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 230,
+        "SaturdayHoliday": 205
+      }
+    },
+    {
+      "key": "tokyo27-01d43e95b7655c",
+      "from": "아키하바라",
+      "to": "스이도바시",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 230,
+        "SaturdayHoliday": 205
+      }
+    },
+    {
+      "key": "tokyo27-bd4cf0dc794e48",
+      "from": "고라쿠엔",
+      "to": "메구로",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 127,
+        "SaturdayHoliday": 103
+      }
+    },
+    {
+      "key": "tokyo27-6c3801ada3de1c",
+      "from": "나카메구로",
+      "to": "롯폰기",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 283,
+        "SaturdayHoliday": 206
+      }
+    },
+    {
+      "key": "tokyo27-d1a7cef9cac94b",
+      "from": "롯폰기",
+      "to": "가스가",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 182,
+        "SaturdayHoliday": 167
+      }
+    },
+    {
+      "key": "tokyo27-b69f2cb0653a47",
+      "from": "스이도바시",
+      "to": "오차노미즈",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 231,
+        "SaturdayHoliday": 206
+      }
+    },
+    {
+      "key": "tokyo27-c7a570891719a9",
+      "from": "오차노미즈",
+      "to": "도쿄",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 282,
+        "SaturdayHoliday": 248
+      }
+    },
+    {
+      "key": "tokyo27-01035691ef7656",
+      "from": "도쿄",
+      "to": "가마쿠라",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 86,
+        "SaturdayHoliday": 84
+      }
+    },
+    {
+      "key": "tokyo27-b3bf47170590bd",
+      "from": "하세",
+      "to": "가마쿠라",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 76,
+        "SaturdayHoliday": 76
+      }
+    },
+    {
+      "key": "tokyo27-595247f7bf2803",
+      "from": "가마쿠라",
+      "to": "도쿄",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 90,
+        "SaturdayHoliday": 85
+      }
+    },
+    {
+      "key": "tokyo27-2f832b4f0ec0c5",
+      "from": "도쿄",
+      "to": "오차노미즈",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 282,
+        "SaturdayHoliday": 248
+      }
+    },
+    {
+      "key": "tokyo27-f29664de051fac",
+      "from": "오차노미즈",
+      "to": "스이도바시",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 231,
+        "SaturdayHoliday": 206
+      }
+    },
+    {
+      "key": "tokyo27-148e663828e14b",
+      "from": "아타미",
+      "to": "기노미야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 33,
+        "SaturdayHoliday": 33
+      }
+    },
+    {
+      "key": "tokyo27-cde53f8d8088de",
+      "from": "기노미야",
+      "to": "아타미",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 33,
+        "SaturdayHoliday": 33
+      }
+    },
+    {
+      "key": "tokyo27-hakone-cable-outbound",
+      "from": "고라",
+      "to": "소운잔",
+      "sourceClass": "official-current",
+      "counts": {
+        "Weekday": 30,
+        "SaturdayHoliday": 30
+      }
+    },
+    {
+      "key": "tokyo27-hakone-cable-inbound",
+      "from": "소운잔",
+      "to": "고라",
+      "sourceClass": "official-current",
+      "counts": {
+        "Weekday": 30,
+        "SaturdayHoliday": 30
+      }
+    }
+  ],
+  "unavailable": [
+    {
+      "lines": [
+        "Hakone.Ropeway"
+      ],
+      "from": "소운잔",
+      "to": "오와쿠다니"
+    },
+    {
+      "lines": [
+        "Hakone.Ropeway"
+      ],
+      "from": "오와쿠다니",
+      "to": "소운잔"
+    },
+    {
+      "lines": [
+        "JR-Central.TokaidoShinkansen"
+      ],
+      "from": "도쿄",
+      "to": "아타미"
+    },
+    {
+      "lines": [
+        "JR-Central.TokaidoShinkansen"
+      ],
+      "from": "아타미",
+      "to": "도쿄"
+    }
+  ]
+}

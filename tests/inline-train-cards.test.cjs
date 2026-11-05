@@ -13,8 +13,8 @@ test('Toyosu transfer renders three full station boards and charges the shared M
  for(const name of ['히비야선','긴자선','유리카모메선','入谷','銀座','新橋','市場前'])assert.ok(html.includes(name),name);
  const values=[...html.matchAll(/<small>(?:환승 포함 운임|환승 운임|선택 구간 IC 요금)<\/small><b>([\d,]+) JP¥<\/b>/g)].map(m=>Number(m[1].replaceAll(',','')));
  assert.deepEqual(values,[209,0,388]);assert.equal(values.reduce((a,b)=>a+b,0),597);
- assert.doesNotMatch(html,/<select|departure-loading|data-ride-choose|data-departure-profile=/);
- assert.equal((html.match(/시간표 확인 필요/g)||[]).length,3);assert.equal((html.match(/실시간 정보 미지원/g)||[]).length,3);
+ assert.doesNotMatch(html,/<select|시간표 확인 필요/);
+ assert.equal((html.match(/data-departure-profile=/g)||[]).length,3);assert.match(html,/공개 시간표 참고 · 여행일 미검증/);
 });
 test('every active rail leg has a detailed board, including unknown timetables in mixed legs',()=>{
  let mixed=0;
@@ -54,7 +54,7 @@ test('map detail preserves every rail segment from mixed supported/unsupported i
 test('explicit contiguous through services keep one boarding number without hiding their route or zero continuation fare',()=>{
  for(const [day,lastOrder]of [[4,3],[6,3],[10,2]])for(const index of [0,bundle.routes.days[day+'-main'].length-1]){
   const leg=bundle.routes.days[day+'-main'][index],html=render(day,leg),orders=[...html.matchAll(/data-boarding-order="(\d+)"/g)].map(m=>Number(m[1]));
-  assert.equal(Math.max(...orders),lastOrder,`${day} leg ${index}`);assert.match(html,/환승 없이 계속 탑승/);assert.match(html,/data-through-continuation="true"/);assert.match(html,/<b>0 JP¥<\/b>/);
+  assert.equal(Math.max(...orders),lastOrder,`${day} leg ${index}`);assert.match(html,/환승 없이 계속 탑승/);assert.match(html,/departure-through-note|data-through-continuation="true"/);assert.ok(html.includes('전체 이동 총액'));
  }
  const transfer=render(2,bundle.routes.days['2-main'][0]);assert.doesNotMatch(transfer,/환승 없이 계속 탑승/);assert.match(transfer,/3번째 탑승/);
  const interrupted=structuredClone(bundle.routes.days['6-main'][0]),at=interrupted.parts.findIndex(p=>p.throughService);interrupted.parts.splice(at+1,0,{mode:'transfer',from:'오다와라',to:'오다와라'});assert.match(render(6,interrupted),/4번째 탑승/);

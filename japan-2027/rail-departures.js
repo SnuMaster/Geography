@@ -32,7 +32,8 @@ const RailDepartures = (() => {
   if(part.throughService){const original=leg.parts.find(p=>p.lineId==='Special.Direct'&&p.line===part.throughService);if(original)return match(original);}
   const through=entries.find(([,p])=>{
    if(!p.throughParts?.length||!p.throughParts.some(m=>samePart(m,part)))return false;
-   const sequence=(leg.parts||[]).filter(railPart);
+   // Walking or transferring between parts never counts as staying on board.
+   const sequence=leg.parts||[];
    return sequence.some((_,i)=>p.throughParts.every((m,j)=>samePart(m,sequence[i+j])));
   });
   return through?.[0]||match(part);
@@ -125,17 +126,19 @@ const RailDepartures = (() => {
   const tojo=p.lineId==='Tobu.Tojo',badge=tojo?railBadge({mode:'rail',lineId:p.lineId,line:p.line},'departure-line-mark'):`<span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span>`;
   return `<div class="compact-line">${badge}<strong>${esc(p.line)}${tojo&&p.fromCode?`<small class="departure-station-number">출발역 ${esc(p.fromCode)}</small>`:''}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
    <div class="departure-stations departure-stations-aligned${long?' has-long-names':''}">${stationName(from,'origin')}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination')}</div>
+   ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
    <div class="compact-metrics"><span><small>${esc(selected.distanceLabel||'거리')}</small><b>${esc(selected.distance||'—')}</b></span><span><small>${esc(selected.fareLabel||'요금')}</small><b>${selected.displayBlank?'':esc(selected.fare||'요금 미확인')}</b></span></div>
    ${selected.basis?`<p class="departure-fare-basis">${esc(selected.basis)}</p>`:''}${selected.components?.length?`<dl class="departure-fare-components">${selected.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}${selected.sources?.length?`<div class="departure-fare-sources">${selected.sources.map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
    <div class="departure-date-basis"><span>여행 계획 날짜 <b>${esc(itineraryDate||'확인 필요')}</b> · 아래 열차는 현재 날짜 기준</span><span data-departure-query-date>현재 날짜 기준 저장 시간표 조회 · 실시간 지연 미반영</span></div>
+   ${p.metadata?.itineraryExpansion?`<p class="departure-schedule-source">${p.sourceClass==='public-reference'?'공개 시간표 참고 · 여행일 미검증':'공식 시간표 참고 · 여행 전 재확인'}<br>자료 확인 ${esc(p.sourceDate)} · 실시간 지연 미반영<br><a href="${esc(safeUrl(p.metadata.sourceUrl))}" target="_blank" rel="noopener noreferrer">시간표 자료 ↗</a> · <a href="${esc(u.timetable)}" target="_blank" rel="noopener noreferrer">운영사 안내 ↗</a></p>`:''}
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
    <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
  }
  function sectionHtml(key,metrics,day){const p=profiles[key],date=travelDate(day);return `<section class="station-departures compact-station" data-itinerary-date="${esc(date)}" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,date,metrics)}</section>`;}
  function unscheduledSection(part,metrics,day){
   const country=part.lineId?.startsWith('KORAIL.')?'KR':'JP',p={...part,country},u=links(p),from=stationParts(p.from,p.fromJa,country),to=stationParts(p.to,p.toJa,country);
-  const badge=typeof railBadge==='function'?railBadge(part):'';
+  const badge=typeof railBadge==='function'?railBadge(part):'',info=manifest.serviceInfo?.[part.lineId];
   return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
    <div class="departure-stations departure-stations-aligned has-long-names">${stationName(from,'origin')}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination')}</div>
@@ -143,9 +146,9 @@ const RailDepartures = (() => {
    ${metrics.basis?`<p class="departure-fare-basis">${esc(metrics.basis)}</p>`:''}
    ${metrics.components?.length?`<dl class="departure-fare-components">${metrics.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}
    ${metrics.sources?.length?`<div class="departure-fare-sources">${metrics.sources.map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}
-   <div class="departure-heading"><strong>다음 열차</strong></div>
+   <div class="departure-heading"><strong>${info?.kind==='continuous'?'운행 안내':'다음 열차'}</strong></div>
    <p class="departure-date-basis">여행 계획 날짜 ${esc(travelDate(day))}</p>
-   <div class="departure-unavailable"><strong>시간표 확인 필요</strong><p>저장된 시간표가 없는 구간입니다. 출발 시각·막차는 출발역 안내에서 확인하세요.</p><small>실시간 정보 미지원</small></div>
+   <div class="departure-unavailable"><strong>${esc(info?.label||'시간표 확인 필요')}</strong><p>${esc(info?.description||'저장된 시간표가 없는 구간입니다. 출발 시각·막차는 출발역 안내에서 확인하세요.')}</p>${info?.hours?`<p>${esc(info.hours)}</p>`:''}${info?.notice?`<p>${esc(info.notice)}</p>`:''}<small>실시간 정보 미지원${info?' · 자료 확인 '+esc(info.checkedAt):''}</small>${info&&safeUrl(info.source)?`<p><a href="${esc(safeUrl(info.source))}" target="_blank" rel="noopener noreferrer">공식 운행·시간표 확인 ↗</a></p>`:''}</div>
    <div class="compact-actions"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}
   </section>`;
  }
@@ -189,6 +192,7 @@ const RailDepartures = (() => {
  const calendarNames={Weekday:'평일',SaturdayHoliday:'토·일·공휴일',Saturday:'토요일',SundayHoliday:'일·공휴일',Daily:'운행 요일·날짜별'};
  const trainTypes={Local:'보통',Rapid:'쾌속',Express:'급행',LimitedExpress:'특급',SemiExpress:'준급',RapidExpress:'쾌속급행',SpecialRapid:'신쾌속',CommuterRapid:'통근쾌속',CommuterExpress:'통근급행',AirportRapid:'공항쾌속',HanedaExpress:'공항쾌속',SectionRapid:'구간쾌속',SectionExpress:'구간급행',CommuterSemiExpress:'통근준급',CommuterLimitedExpress:'통근특급',SpecialRapidService:'신쾌속',ChuoSpecialRapid:'주오특쾌',OmeSpecialRapid:'오메특쾌',Skyliner:'스카이라이너',FujiExcursion:'후지회유'};
  Object.assign(trainTypes,{RapidLimitedExpress:'쾌특',AirportRapidLimitedExpress:'에어포트쾌특',AccessExpress:'액세스특급',KawagoeLimitedExpress:'가와고에특급',CommuterSpecialRapid:'통근특쾌','普通':'보통','快速':'쾌속','新快速':'신쾌속','急行':'급행','準急':'준급','区間準急':'구간준급','快速急行':'쾌속급행','快速特急':'쾌속특급','準特急':'준특급','特急':'특급','通勤快急':'통근쾌속급행','通勤準急':'통근준급','通勤特急':'통근특급','新快速（Aシート連結）':'신쾌속 · A시트 연결','新快速（一部区間Aシート連結）':'신쾌속 · 일부 A시트 연결','新快速（京都から快速）':'신쾌속 · 교토부터 쾌속','Ａ新快速（うれしート連結）':'신쾌속 · 우레시트 연결','A快速（うれしート連結）':'쾌속 · 우레시트 연결','Dみやこ路快速（うれしート連結）':'미야코지쾌속 · 우레시트 연결','D区間快速（うれしート連結）':'구간쾌속 · 우레시트 연결','E快速（うれしート連結）':'쾌속 · 우레시트 연결','普通A快速（うれしート連結）':'보통·쾌속 · 우레시트 연결','快速（島本・山崎・向日町・桂川・西大路通過）':'쾌속 · 일부 역 통과'});
+ trainTypes.Cable='케이블카';
  function stateMessage(body,state,message,retry=false){
   setServiceEnded(body.closest?.('[data-departure-profile]'),false);
   if(body.dataset.signature===state)return;
