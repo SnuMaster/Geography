@@ -67,3 +67,24 @@ test('empty fare components and empty activities disappear while meaningful supp
  const blank=bundle.routes.days['1-main'].find(l=>l.fare?.displayBlank);assert.doesNotMatch(render(1,blank),/departure-fare-components/);
 });
 
+
+
+test('every active train board has a line emblem and two separate station-number circles',()=>{
+ for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs){
+  if(!leg.parts.some(p=>['rail','metro'].includes(p.mode)))continue;
+  const html=render(Number(id.split('-')[0]),leg),sections=(html.match(/<section class="station-departures/g)||[]).length;
+  assert.ok(sections>0);assert.equal((html.match(/class="departure-endpoint-code/g)||[]).length,sections*2,id);
+  assert.equal((html.match(/departure-stations-numbered/g)||[]).length,sections,id);
+ }
+ const g=ctx.railLineBadge({lineId:'TokyoMetro.Ginza',line:'긴자선',from:'시부야',fromCode:'G01'});assert.match(g,/>G<\/span>/);assert.doesNotMatch(g,/>G01<\/span>/);
+});
+
+test('station numbers respect both ends of through services and never borrow conventional numbers for Shinkansen',()=>{
+ const profiles=Object.values(ctx.RailDepartureProfiles.profiles);
+ for(const [line,from,to,expected]of [['JR 우에노도쿄라인 · 도카이도선 직통','우에노','요코하마',['JU02','JT05']],['JR 우에노도쿄라인 · 도카이도선 직통','요코하마','우에노',['JT05','JU02']],['로망스카 · 하코네 직통','신주쿠','하코네유모토',['OH01','OH51']],['게곤·리버티 게곤 · 닛코 직통','기타센주','도부닛코',['TS09','TN25']]]){
+  const p=profiles.find(p=>p.line===line&&p.from===from&&p.to===to);assert.ok(p);assert.deepEqual(['from','to'].map(side=>ctx.railStationNumber(p,side).code),expected);
+ }
+ let missing=0;for(const leg of Object.values(bundle.routes.days).flat())for(const p of leg.parts.filter(p=>['rail','metro'].includes(p.mode)))for(const side of ['from','to']){const n=ctx.railStationNumber(p,side);if(!n.code){missing++;assert.equal(p.lineId,'JR-Central.TokaidoShinkansen');}else assert.match(n.code,/^[A-Z]{1,3}\d{2}$/);}
+ assert.equal(missing,4);
+ const unknown={lineId:'JR-Central.TokaidoShinkansen',from:'도쿄',to:'아타미'};assert.equal(ctx.railStationNumber(unknown).code,null);assert.equal(ctx.railStationNumber(unknown,'to').code,null);
+});

@@ -169,3 +169,17 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .itinerary-train-card .compact-line>.operator-logo.operator-skyliner{width:91px;height:42px}
 .rail-map-symbol .operator-logo.operator-skyliner{width:74px;max-width:74px;height:34px;max-height:34px;box-shadow:0 0 0 3px #fffffff2,0 2px 8px #183b3545}
 .daily-rail-logos .operator-logo.operator-skyliner,.day-line-key .operator-logo.operator-skyliner{width:56px;max-width:56px;height:26px;max-height:26px}
+
+/* Station pair layout: a line emblem in the header, one number above each endpoint. */
+.command-center .station-departures .departure-stations.departure-stations-numbered{display:grid;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);grid-template-rows:auto;gap:8px;margin:24px 0;align-items:start}
+.command-center .station-departures .departure-stations-numbered .departure-station-name{display:flex;flex-direction:column;align-items:center;gap:5px;grid-row:1;min-width:0;text-align:center;align-self:start}
+.command-center .station-departures .departure-stations-numbered .departure-origin{grid-column:1}
+.command-center .station-departures .departure-stations-numbered .departure-destination{grid-column:3}
+.command-center .station-departures .departure-stations-numbered .departure-arrow{grid-column:2;grid-row:1;align-self:center;transform:none;margin:0;width:auto;text-align:center}
+.command-center .station-departures .departure-stations-numbered .departure-station-korean{font-size:17px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.4px}
+.command-center .station-departures .departure-stations-numbered .departure-station-japanese{font-size:11px;line-height:1.5;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;margin:0}
+.departure-endpoint-code{display:inline-flex;justify-content:center;align-items:center;box-sizing:border-box;width:64px;height:64px;flex:none;margin:0 0 7px;border:5px solid var(--station-color);border-radius:50%;background:#fff;color:#152c37;font:700 17px/1 Arial,sans-serif;letter-spacing:-.6px;white-space:nowrap}
+.departure-endpoint-code.is-unknown{border-color:#c7cec3;color:#7e897d}
+.command-center .station-departures .compact-line{align-items:center;gap:10px}
+.command-center .station-departures .compact-line>strong{min-width:0;font-size:15px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
+.command-center .station-departures .compact-line>.departure-line-mark{font-size:17px}

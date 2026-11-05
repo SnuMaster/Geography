@@ -85,6 +85,43 @@ function metroStationCode(part){
  const candidates=[part.fromCode,...Object.values(profiles).flatMap(p=>p.lineId===part.lineId?[p.from===part.from?p.fromCode:null,p.to===part.from?p.toCode:null]:[])];
  return candidates.find(code=>typeof code==='string'&&code.startsWith(prefix)&&/^[A-Z]\d{2}$/.test(code))||null;
 }
+// Additional active rail endpoints, checked 2026-11-06 against operator station lists.
+// JR: https://www.jreast.co.jp/estation/ and https://www.jreast.co.jp/press/2018/yokohama/181122_y02.pdf
+// https://www.toshiseibi.metro.tokyo.lg.jp/bunyabetsu/machizukuri/bfree/pdf/tetsudo_bf_hd_jr06.pdf
+// https://www.yurikamome.co.jp/ ; https://www.hakonenavi.jp/transportation/station/
+// https://www.mm21railway.co.jp/global/english/info/pdf/map.pdf ; https://www.tobu.co.jp/kr/service/station/
+// https://www.keio.co.jp/assets/pdf/global/routes/stations/shibuya/k55_shibuya.pdf
+const RAIL_STATION_NUMBERS={...METRO_STATION_NUMBERS,
+ 'Yurikamome.Yurikamome':[['U01','신바시','新橋'],['U14','시조마에','市場前'],['U07','다이바','台場']],
+ 'Minatomirai.Minatomirai':[['MM01','요코하마','横浜'],['MM06','모토마치·주카가이','元町・中華街']],
+ 'JR-East.Yamanote':[['JY19','하라주쿠','原宿']],
+ 'JR-East.Tokaido':[['JT05','요코하마','横浜']],
+ 'JR-East.KeihinTohokuNegishi':[['JK11','사쿠라기초','桜木町'],['JK12','요코하마','横浜']],
+ 'JR-East.ChuoSobuLocal':[['JB02','기치조지','吉祥寺'],['JB10','신주쿠','新宿'],['JB17','스이도바시','水道橋']],
+ 'JR-East.ChuoRapid':[['JC01','도쿄','東京']],
+ 'JR-East.Yokosuka':[['JO19','도쿄','東京']],
+ 'JR-East.Ito':[['JT21','아타미','熱海'],['JT22','기노미야','来宮']],
+ 'Keio.Inokashira':[['IN01','시부야','渋谷']],
+ 'Odakyu.Odawara':[['OH47','오다와라','小田原']],
+ 'OdakyuHakone.HakoneTozan':[['OH47','오다와라','小田原'],['OH51','하코네유모토','箱根湯本'],['OH57','고라','強羅']],
+ 'Hakone.Ropeway':[['OH62','소운잔','早雲山'],['OH63','오와쿠다니','大涌谷']],
+ 'Tobu.TobuSkytree':[['TS09','기타센주','北千住'],['TS30','도부도부쓰코엔','東武動物公園']],
+ 'Tobu.Nikko':[['TS30','도부도부쓰코엔','東武動物公園'],['TN25','도부닛코','東武日光']]
+};
+function railStationNumber(part,side='from'){
+ const endpoint=side==='to'?'to':'from',edge=endpoint==='to'?part.throughParts?.at(-1):part.throughParts?.[0],lineId=edge?.lineId||part.lineId;
+ const name=String(part[endpoint]||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim(),ja=String(part[endpoint+'Ja']||'').replace(/駅$/,'').trim();
+ const verified=RAIL_STATION_NUMBERS[lineId]?.find(row=>row[1]===name||ja&&row[2]===ja);
+ if(verified)return {code:verified[0],lineId};
+ const profiles=Object.values(globalThis.RailDepartureProfiles?.profiles||{}),same=n=>String(n||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim()===name;
+ const candidates=[part[endpoint+'Code'],...profiles.flatMap(p=>p.lineId===lineId?[same(p.from)?p.fromCode:null,same(p.to)?p.toCode:null]:[])];
+ const code=candidates.find(code=>typeof code==='string'&&/^[A-Z]{1,3}\d{2}$/.test(code))||null;
+ const numberedLine=lineId==='Special.Direct'?({KS:'Keisei.Main',JC:'JR-East.ChuoRapid',FJ:'Fujikyu.Fujikyu'}[code?.replace(/\d+$/,'')]||lineId):lineId;
+ return {code,lineId:numberedLine};
+}
+function railLineBadge(part,extra=''){
+ return railBadge({...part,from:'',fromJa:'',fromCode:undefined,mapSymbolCode:part.throughParts?.length&&part.line?.startsWith('JR ')?'JR':undefined},extra);
+}
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||(skylinerLogo(part)?{code:'Skyliner',color:MODE.rail.color,shape:'rounded',logo:true}:part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
