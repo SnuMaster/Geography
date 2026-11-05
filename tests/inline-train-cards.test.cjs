@@ -36,3 +36,34 @@ test('untrusted station names remain escaped and unsupported lines have no fabri
  const html=render(2,leg);assert.doesNotMatch(html,/<script>|<img onerror|data-ride-choose|data-departure-clock/);assert.match(html,/&lt;入口&gt;/);assert.match(html,/확인 필요/);
 });
 
+// Execute the application's real popup and place renderers, so inline-only
+// coverage cannot hide a different renderer dropping unsupported connections.
+const appSource=fs.readFileSync(require.resolve('../japan-2027/app.js'),'utf8');
+Object.assign(ctx,{state:{day:6},stationLabel:station,fareOptions:()=>({}),fareText:F.format,distanceText:n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'확인 필요',TripData:{geometry:()=>({label:'저장된 경로'})},cleanDesc:s=>s.description||'',costText:()=> '비용 미확인'});
+ctx.MODE.walk={icon:'walk'};ctx.MODE.transfer={icon:'walk'};
+vm.runInContext(appSource.slice(appSource.indexOf('function legHtml('),appSource.indexOf('function applyTokyoData('))+'\n'+appSource.slice(appSource.indexOf('function detailHtml('),appSource.indexOf('function legDirectionsUrl(')),ctx);
+test('map detail preserves every rail segment from mixed supported/unsupported itineraries',()=>{
+ for(const day of [3,4,5,6,7,10,12]){
+  const leg=bundle.routes.days[day+'-main'][0],html=ctx.legHtml(leg);
+  for(const part of leg.parts.filter(p=>['rail','metro'].includes(p.mode))){
+   const key=ctx.api.keyFor(leg,part),shown=key?ctx.RailDepartureProfiles.profiles[key]:part,label=h(shown.line+' '+shown.from);
+   assert.ok(html.includes('aria-label="'+label+' 출발역 열차 정보"')||html.includes('aria-label="'+label+' 구간 정보"'),day+': '+label);
+  }
+ }
+});
+test('explicit contiguous through services keep one boarding number without hiding their route or zero continuation fare',()=>{
+ for(const [day,lastOrder]of [[4,3],[6,3],[10,2]])for(const index of [0,bundle.routes.days[day+'-main'].length-1]){
+  const leg=bundle.routes.days[day+'-main'][index],html=render(day,leg),orders=[...html.matchAll(/data-boarding-order="(\d+)"/g)].map(m=>Number(m[1]));
+  assert.equal(Math.max(...orders),lastOrder,`${day} leg ${index}`);assert.match(html,/환승 없이 계속 탑승/);assert.match(html,/data-through-continuation="true"/);assert.match(html,/<b>0 JP¥<\/b>/);
+ }
+ const transfer=render(2,bundle.routes.days['2-main'][0]);assert.doesNotMatch(transfer,/환승 없이 계속 탑승/);assert.match(transfer,/3번째 탑승/);
+ const interrupted=structuredClone(bundle.routes.days['6-main'][0]),at=interrupted.parts.findIndex(p=>p.throughService);interrupted.parts.splice(at+1,0,{mode:'transfer',from:'오다와라',to:'오다와라'});assert.match(render(6,interrupted),/4번째 탑승/);
+});
+test('empty fare components and empty activities disappear while meaningful supplements and activities remain',()=>{
+ const ordinary=render(3,bundle.routes.days['3-main'][0]);assert.doesNotMatch(ordinary,/<dl class="departure-fare-components">\s*<\/dl>/);
+ const romance=render(6,bundle.routes.days['6-main'][0]);assert.match(romance,/IC 기본운임/);assert.match(romance,/특급·지정석권 별도 구매/);
+ const place={kind:'sight',description:'특징',details:{feature:'특징',thingsToDo:['','   ']}};assert.doesNotMatch(ctx.detailHtml(place),/<b>할 것<\/b>|<ul>\s*<\/ul>/);
+ place.details.thingsToDo=['정원 산책'];assert.match(ctx.detailHtml(place),/<b>할 것<\/b><ul><li>정원 산책<\/li>/);
+ const blank=bundle.routes.days['1-main'].find(l=>l.fare?.displayBlank);assert.doesNotMatch(render(1,blank),/departure-fare-components/);
+});
+
