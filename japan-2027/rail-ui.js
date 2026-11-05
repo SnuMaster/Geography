@@ -59,6 +59,27 @@ const RAIL_LINES={
  'Keisei.Main':{code:'KS',color:'#005aaa',shape:'rounded'}
 };
 Object.assign(RAIL_LINES,{"West.M": {"code": "M", "color": "#e5171f", "shape": "circle"}, "West.T": {"code": "T", "color": "#522886", "shape": "circle"}, "West.K": {"code": "K", "color": "#814721", "shape": "circle"}, "West.O": {"code": "O", "color": "#e80000", "shape": "square"}, "West.A": {"code": "A", "color": "#0072bc", "shape": "square"}, "West.D": {"code": "D", "color": "#a56750", "shape": "square"}, "West.E": {"code": "E", "color": "#878ddc", "shape": "square"}, "West.KH": {"code": "KH", "color": "#1d7b3b", "shape": "rounded"}, "West.HS": {"code": "HS", "color": "#1f64aa", "shape": "rounded"}, "West.KN-Namba": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Osaka": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Nara": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.HK-Arashi": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Kyoto": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Takara": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.FK": {"code": "K", "color": "#ee7d00", "shape": "circle"}, "West.FN": {"code": "N", "color": "#008b5a", "shape": "circle"}});
+// Station numbers checked against the operators' station lists on 2026-11-05.
+// https://www.tokyometro.jp/station/line_hibiya/index.html (also line_ginza, line_namboku)
+// https://www.kotsu.metro.tokyo.jp/subway/timetable/index.html
+// A number belongs to a station on a specific line, never to the whole station complex.
+const METRO_STATION_NUMBERS={
+ 'TokyoMetro.Hibiya':[['H18','우에노','上野'],['H19','이리야','入谷'],['H09','긴자','銀座'],['H16','아키하바라','秋葉原'],['H17','나카오카치마치','仲御徒町'],['H22','기타센주','北千住'],['H01','나카메구로','中目黒'],['H04','롯폰기','六本木']],
+ 'TokyoMetro.Ginza':[['G09','긴자','銀座'],['G08','신바시','新橋'],['G01','시부야','渋谷'],['G16','우에노','上野']],
+ 'TokyoMetro.Namboku':[['N11','고라쿠엔','後楽園'],['N01','메구로','目黒']],
+ 'Toei.Shinjuku':[['S06','진보초','神保町'],['S09','바쿠로요코야마','馬喰横山'],['S11','모리시타','森下'],['S21','모토야와타','本八幡']],
+ 'Toei.Asakusa':[['A15','히가시니혼바시','東日本橋'],['A17','구라마에','蔵前'],['A16','아사쿠사바시','浅草橋']],
+ 'Toei.Oedo':[['E11','구라마에','蔵前'],['E13','모리시타','森下'],['E23','롯폰기','六本木'],['E07','가스가','春日']]
+};
+function metroStationCode(part){
+ if(!/^(TokyoMetro|Toei)\./.test(part?.lineId||''))return null;
+ const name=String(part.from||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim(),ja=String(part.fromJa||'').replace(/駅$/,'').trim();
+ const verified=METRO_STATION_NUMBERS[part.lineId]?.find(row=>row[1]===name||ja&&row[2]===ja);if(verified)return verified[0];
+ // Reuse existing exact station codes for older itinerary variants, without guessing numbers.
+ const prefix=railInfo(part)?.code,profiles=globalThis.RailDepartureProfiles?.profiles||{};
+ const candidates=[part.fromCode,...Object.values(profiles).flatMap(p=>p.lineId===part.lineId?[p.from===part.from?p.fromCode:null,p.to===part.from?p.toCode:null]:[])];
+ return candidates.find(code=>typeof code==='string'&&code.startsWith(prefix)&&/^[A-Z]\d{2}$/.test(code))||null;
+}
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||(part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
@@ -76,7 +97,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
 function railBadge(part,extra=''){
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
  if(info.vehicle)return transitVehicleBadge(part,info,extra);
- if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
+ if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);const stationCode=metroStationCode(part),code=stationCode||info.code;return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${stationCode?'metro-station-symbol':''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}" title="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}">${esc(code)}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
 function splitRailService(part){

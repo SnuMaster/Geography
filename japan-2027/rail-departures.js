@@ -123,7 +123,7 @@ const RailDepartures = (() => {
   const reverse=p.reverseKey&&profiles[p.reverseKey]?p.reverseKey:null,code=p.country==='KR'?'KTX':p.fromCode||info?.code||'철도';
   const from=stationParts(p.from,p.fromJa,p.country),to=stationParts(p.to,p.toJa,p.country),length=s=>[...s].length;
   const long=Math.max(length(from.korean),length(to.korean))>9||Math.max(length(from.japanese),length(to.japanese))>10||length(from.korean)+length(to.korean)>(reverse?10:12);
-  const tojo=p.lineId==='Tobu.Tojo',badge=tojo?railBadge({mode:'rail',lineId:p.lineId,line:p.line},'departure-line-mark'):`<span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span>`;
+  const tojo=p.lineId==='Tobu.Tojo',metro=/^(TokyoMetro|Toei)\./.test(p.lineId),badge=tojo||metro?railBadge({...p,mode:metro?'metro':'rail'},'departure-line-mark'):`<span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span>`;
   return `<div class="compact-line">${badge}<strong>${esc(p.line)}${tojo&&p.fromCode?`<small class="departure-station-number">출발역 ${esc(p.fromCode)}</small>`:''}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
    <div class="departure-stations departure-stations-aligned${long?' has-long-names':''}">${stationName(from,'origin')}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination')}</div>
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}

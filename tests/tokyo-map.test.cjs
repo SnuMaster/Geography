@@ -50,3 +50,18 @@ test('Fuua shuttle uses a road-shaped reference and never claims a verified bus 
  const shuttle=parts.filter(p=>p.lineId==='Atami.FuuaShuttle');assert.equal(shuttle.length,2);
  for(const p of shuttle){assert.ok(p.coords.length>100);assert.equal(p.geometryAccuracy,'schematic');assert.match(p.geometrySource,/실제 셔틀 경유로 미확인/);assert.ok(p.distanceM>2500);assert.equal(ui.railInfo(p).vehicle,'bus');}
 });
+
+
+test('metro badges include the exact departure station number on every active route in either direction',()=>{
+ let checked=0;
+ for(const p of parts.filter(p=>/^(TokyoMetro|Toei)\./.test(p.lineId)))for(const q of [p,{...p,from:p.to,fromJa:p.toJa,to:p.from,toJa:p.fromJa}]){
+  const code=ui.metroStationCode(q);assert.match(code,/^[A-Z]\d{2}$/);assert.ok(ui.railBadge(q).includes('>'+code+'</span>'));checked++;
+ }
+ assert.ok(checked>40);
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'긴자'}),'H09');
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Ginza',from:'긴자'}),'G09');
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'우에노'}),'H18');
+ assert.equal(ui.metroStationCode({lineId:'Toei.Oedo',from:'롯폰기'}),'E23');
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'미확인 역'}),null);
+ assert.equal(ui.metroStationCode({lineId:'JR-East.Yamanote',from:'우에노'}),null);
+});
