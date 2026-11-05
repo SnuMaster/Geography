@@ -154,3 +154,6 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .daily-rail-logos .rail-symbol.transit-vehicle{height:27px;width:25px;min-width:25px;flex-basis:25px}
 .command-center.original-sidebar .leg-route-button .leg-line-badges{display:flex;align-items:center;gap:5px;margin:7px 0}
 .command-center.original-sidebar .leg-line-badges .rail-symbol.transit-vehicle{height:29px;width:26px;min-width:26px;flex-basis:26px}
+.rail-symbol.tobu-tojo{border-radius:28%;color:#111;background:#fff;font-family:Arial,sans-serif;font-weight:800;letter-spacing:-.6px}
+.compact-line>.departure-line-mark{flex:0 0 42px;width:42px;height:42px;font-size:19px;border-width:4px}
+.compact-line .departure-station-number{display:block;margin-top:3px;font:400 11px/1.5 RouteSans,sans-serif;color:#6b7469}

@@ -52,7 +52,7 @@ const RAIL_LINES={
  'JR-East.Yokosuka':{code:'JO',color:'#007ac1',shape:'square'},
  'Keio.Inokashira':{code:'IN',color:'#000088',shape:'rounded'},
  'Odakyu.Odawara':{code:'OH',color:'#2288cc',shape:'rounded'},
- 'Tobu.Tojo':{code:'TJ',color:'#004098',shape:'rounded'},
+ 'Tobu.Tojo':{code:'TJ',color:'#2d438c',shape:'rounded',markClass:'tobu-tojo',source:'https://www.tobu.co.jp/railway/guide/line/tojo_line.html'},
  'Enoden.Enoden':{code:'EN',color:'#009b6b',shape:'rounded'},
  'Fujikyu.Fujikyu':{code:'FJ',color:'#0068b7',shape:'rounded'},
  'Keisei.NaritaSkyAccess':{code:'KS',color:'#ff8620',shape:'rounded'},
@@ -76,7 +76,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
 function railBadge(part,extra=''){
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
  if(info.vehicle)return transitVehicleBadge(part,info,extra);
- if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
+ if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(info.code+' · '+part.line)}" title="${esc(info.code+' · '+part.line)}">${info.code}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
 function splitRailService(part){
