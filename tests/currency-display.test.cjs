@@ -1,0 +1,3 @@
+'use strict';
+const test=require('node:test'),assert=require('node:assert/strict'),C=require('../japan-2027/currency-display');
+test('yen presentation is consistent and idempotent without changing Japanese place names or won',()=>{for(const [input,expected]of [['3천엔 · 0.5만엔','3천 JP¥ · 0.5만 JP¥'],['2,567엔','2,567 JP¥'],['0~500엔 / 6,000원','0~500 JP¥ / 6,000원'],['¥100 = ₩849.13','JP¥100 = ₩849.13'],['엔 (JPY)','JP¥'],['엔 (¥)','JP¥'],['엔화 예산 · JPY / KRW','JP¥ 예산 · JP¥ / KRW'],['엔 기준','JP¥ 기준'],['1,000円です','1,000 JP¥です'],['신주쿠교엔 · 도부쓰엔마에 · 엔도','신주쿠교엔 · 도부쓰엔마에 · 엔도'],['JP¥','JP¥']]){assert.equal(C.text(input),expected);assert.equal(C.text(C.text(input)),expected);}});

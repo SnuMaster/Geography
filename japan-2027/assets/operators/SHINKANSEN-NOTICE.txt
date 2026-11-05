@@ -1,0 +1,8 @@
+Shinkansen jrc.svg — Tokaido / Sanyo Shinkansen pictogram
+Author: KANAO22; optimized SVG revision by 鐵の時代 (2019-07-09).
+Source: https://commons.wikimedia.org/wiki/File:Shinkansen_jrc.svg
+Original file: https://upload.wikimedia.org/wikipedia/commons/2/25/Shinkansen_jrc.svg
+License: Creative Commons Attribution-ShareAlike 4.0 International
+https://creativecommons.org/licenses/by-sa/4.0/
+Asset copied without modification; CSS controls its displayed size and rounded corners.
+Used to identify the railway service. No endorsement or assigned rolling stock is implied.

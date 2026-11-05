@@ -21,7 +21,7 @@
     await record(label+' · 1 패스/전체 여정 + 항공 재생',async()=>{
      const w=await load(1),d=w.document;d.querySelector('.day-tools').open=true;const box=d.querySelector('#passToggle');box.checked=true;box.dispatchEvent(new w.Event('change',{bubbles:true}));
      check(d.querySelector('[data-leg="2"]').textContent.includes('311,300원'),'항공료 0 또는 통화 오류');click(w,'[data-leg="2"]');await until(()=>d.querySelector('[data-flight-replay]'));check(d.querySelector('.travel-fare').textContent.includes('311,300원'),'팝업 항공료 오류');click(w,'[data-flight-replay]');await until(()=>d.querySelector('[data-flight-state]')?.textContent.includes('재생 중'));click(w,'[data-flight-pause]');check(d.querySelector('[data-flight-state]').textContent.includes('멈춤'),'항공 일시정지 실패');click(w,'[data-flight-pause]');check(d.querySelector('[data-flight-state]').textContent.includes('재생 중'),'항공 재개 실패');click(w,'[data-flight-restart]');check(d.querySelector('[data-flight-percent]').textContent==='0%','항공 처음부터 실패');click(w,'[data-flight-stop]');click(w,'#overviewView');
-     const expected=[['TW251','311,300원'],['JAL','12,090엔'],['ANA','9,120엔'],['뉴 카멜리아','19,900엔']];
+     const expected=[['TW251','311,300원'],['JAL','12,090 JP¥'],['ANA','9,120 JP¥'],['뉴 카멜리아','19,900 JP¥']];
      for(const [title,amount] of expected){const control=[...d.querySelectorAll('.rail-map-symbol')].find(el=>(el.getAttribute('aria-label')||'').includes(title));check(control,'전체 여정 항로 버튼 없음 '+title);control.click();await until(()=>d.querySelector('.travel-fare')?.textContent.includes(amount));check(d.querySelector('.travel-fare').textContent.includes(amount),'전체 여정 금액 오류 '+title);}
      return 'KRW/JPY 원액 유지 · 재생/일시정지/종료 정상';
     });
@@ -32,7 +32,7 @@
     await record(label+' · 3 팝업 유지 중 JST 자정 재렌더',async()=>{
      const w=await load(1),d=w.document;let now=Date.parse('2027-01-08T23:59:00+09:00');w.Date.now=()=>now;const original=w.fetch.bind(w),key='metro-ueno-iriya';
      w.fetch=(url,options)=>String(url).startsWith('timetables/'+key+'.json')?Promise.resolve(new w.Response(JSON.stringify({schemaVersion:2,profiles:{[key]:{Weekday:[{id:'midnight-fixture',departure:'07:30',destinationArrival:'07:40'}],SaturdayHoliday:[{id:'midnight-fixture',departure:'07:30',destinationArrival:'07:40'}]}}}),{status:200,headers:{'Content-Type':'application/json'}})):original(url,options);
-     click(w,'[data-leg="6"]');await until(()=>d.querySelector('.departure-next-time strong'));const before=d.querySelector('.departure-next-time strong').textContent;check(before==='내일 07:30','자정 전 재현 실패 '+before);now=Date.parse('2027-01-09T07:00:00+09:00');await until(()=>d.querySelector('.departure-next-time strong')?.textContent==='07:30');check(d.querySelector('[data-ride-next]'),'탑승 선택 누락');$('#popupProof').textContent=label+' · '+before+' → '+d.querySelector('.departure-next-time strong').textContent;return '같은 열차·팝업 유지 · 출발/도착/탑승 버튼 재렌더';
+     click(w,'[data-leg="6"]');await until(()=>d.querySelector('.leaflet-popup-content .departure-next-time strong'));const before=d.querySelector('.leaflet-popup-content .departure-next-time strong').textContent;check(before==='내일 07:30','자정 전 재현 실패 '+before);now=Date.parse('2027-01-09T07:00:00+09:00');await until(()=>d.querySelector('.leaflet-popup-content .departure-next-time strong')?.textContent==='07:30');check(d.querySelector('.leaflet-popup-content [data-ride-next]'),'탑승 선택 누락');$('#popupProof').textContent=label+' · '+before+' → '+d.querySelector('.leaflet-popup-content .departure-next-time strong').textContent;return '같은 열차·팝업 유지 · 출발/도착/탑승 버튼 재렌더';
     });
     await record(label+' · 4 선택 열차 운행일 지도 연결',async()=>{
      const w=await load(1),d=w.document;click(w,'#rideToggle');await until(()=>d.querySelector('#rideProfile'));change(w,'#rideProfile','metro-iriya-ueno');change(w,'#rideDate','2027-01-14');await until(()=>d.querySelector('[data-ride-board]'));click(w,'[data-ride-board="0"]');await until(()=>d.querySelector('[data-ride-map]'));click(w,'[data-ride-map]');check(new URL(w.location.href).searchParams.get('day')==='7','선택 운행일과 다른 날짜 지도');return '1/14 열차 → DAY 07 (1/14)';
@@ -40,9 +40,9 @@
     await record(label+' · 5 아사쿠사 카드·팝업·열차 선택 차단',async()=>{
      const w=await load(2),d=w.document,b=w.__routebook;w.Date.now=()=>Date.parse('2026-11-21T10:00:00+09:00');
      const index=b.state.routeData.days['2-main'].findIndex(leg=>leg&&b.rail.keysFor(leg).some(key=>!b.rail.validityFor(key,'2027-01-09').usable));check(index>=0,'아사쿠사 구간 없음');
-     check(!d.querySelector('#stopList [data-warning-leg]'),'일정 경고 중복');click(w,'[data-leg="'+(index+1)+'"]');await until(()=>d.querySelector('.departure-error')?.textContent.includes('열차 시각 없음'));
-     check(!d.querySelector('[data-ride-next]'),'유효하지 않은 열차 탑승 노출');check(!d.querySelector('.station-departures .timetable-warning'),'팝업 경고 중복');
-     click(w,'[data-ride-open]');await until(()=>d.querySelector('#rideTrainList')?.textContent.includes('열차 시각 없음'));check(!d.querySelector('[data-ride-board]'),'만료된 열차 선택 노출');
+     check(!d.querySelector('#stopList [data-warning-leg]'),'일정 경고 중복');click(w,'[data-leg="'+(index+1)+'"]');await until(()=>d.querySelector('.leaflet-popup-content .departure-error')?.textContent.includes('열차 시각 없음'));
+     check(!d.querySelector('.leaflet-popup-content [data-ride-next]'),'유효하지 않은 열차 탑승 노출');check(!d.querySelector('.leaflet-popup-content .station-departures .timetable-warning'),'팝업 경고 중복');
+     click(w,'.leaflet-popup-content [data-ride-open]');await until(()=>d.querySelector('#rideTrainList')?.textContent.includes('열차 시각 없음'));check(!d.querySelector('[data-ride-board]'),'만료된 열차 선택 노출');
      click(w,'[data-show-notices]');check(d.querySelector('#noticeDialog').open&&d.querySelector('#noticeList').textContent.includes('아사쿠사'),'별도 공지 누락');return '공지에서 갱신 확인 · 만료된 열차 시각과 탑승 선택 차단';
     });
     await record(label+' · 6 GPS 중복 경로 보류·수동 선택',async()=>{
