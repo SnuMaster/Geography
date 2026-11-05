@@ -89,6 +89,9 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=tru
 .itinerary-train-card .compact-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px}
 .itinerary-train-card .compact-actions>*{min-height:44px;min-width:0;padding:9px 6px;white-space:normal;font-size:12px;text-align:center;display:flex;align-items:center;justify-content:center;line-height:1.5}
 .itinerary-train-card .departure-reverse{min-height:44px;min-width:44px}
+.itinerary-train-card .compact-line>.rail-symbol{flex:0 0 42px;width:42px;height:42px;box-sizing:border-box;font-size:15px}
+.itinerary-train-card .departure-unavailable{padding:16px;border:1px solid #d4ddc7;border-radius:10px;background:#f7efda;line-height:1.7;font-size:12px;color:#665b43}
+.itinerary-train-card .departure-unavailable p{margin:6px 0}.itinerary-train-card .departure-unavailable small{color:#68715f}
 .itinerary-train-card .rail-disruption-links summary{min-height:44px;display:flex;align-items:center}
 .itinerary-train-basis{font-size:11px;line-height:1.6;margin:0 16px 10px;color:#65745f}
 .itinerary-train-detail{display:block;width:100%;min-height:44px;border:0;border-top:1px solid #d6dfcd;background:#eaf0e3;color:#284b3e;text-align:left;padding:11px 16px;font:600 12px RouteSans,sans-serif;cursor:pointer}

@@ -25,11 +25,11 @@
  }
  function sidebar(open){document.body.classList.toggle('cc-sidebar-closed',!open);$('#ccSidebarToggle').setAttribute('aria-expanded',String(open));api.app.map.invalidateSize();}
  function railCard(leg,index){
-  if(!RailDepartures.supported(leg.dayNumber||api?.app.state.day,leg))return '';
+  if(!leg.parts.some(p=>['rail','metro'].includes(p.mode)))return '';
   const paid=leg.parts.filter(p=>['rail','metro','bus','taxi'].includes(p.mode)),quote=FareCore.quote(leg.fare,leg,fareOptions()),fareLabel=(paid.length>1?'전체 ':'')+(quote.passApplied?'패스 적용 요금':leg.fare?.currency==='JPY'&&leg.fare?.icYen!=null?'IC 요금':'요금');
-  let board=RailDepartures.html(leg.dayNumber||api?.app.state.day,leg,null,{distanceLabel:'전체 거리',distance:distanceText(leg.distanceM),fareLabel,fare:fareText(leg.fare,leg),displayBlank:leg.fare?.displayBlank===true});
+  let board=RailDepartures.html(leg.dayNumber||api?.app.state.day,leg,null,{distanceLabel:'전체 거리',distance:distanceText(leg.distanceM),fareLabel,fare:fareText(leg.fare,leg),displayBlank:leg.fare?.displayBlank===true},true);
   const ktx=leg.parts.find(part=>part.lineId==='KORAIL.GyeongbuHSR');if(ktx)board=board.replace(/<span class="departure-station-code[^"]*"[^>]*>KTX<\/span>/,operatorLogo(ktx));
-  return '<article class="itinerary-train-card" data-itinerary-train-leg="'+index+'" aria-label="'+esc(shortRoute(leg)+' 열차 정보')+'">'+board+'<p class="itinerary-train-basis">저장된 시간표 기준 · 실시간 지연 미반영</p><button type="button" class="itinerary-train-detail" data-leg="'+index+'">지도·열차 정보 보기 →</button></article>';
+  return '<article class="itinerary-train-card" data-itinerary-train-leg="'+index+'" aria-label="'+esc(shortRoute(leg)+' 열차 정보')+'">'+board+'<p class="itinerary-train-basis">저장된 여행 계획 · 실시간 지연 미반영</p><button type="button" class="itinerary-train-detail" data-leg="'+index+'">지도·열차 정보 보기 →</button></article>';
  }
  function refresh(){if(!api)return;const c=api.context(),p=api.personal();
   if(api.app.state.view==='daily')for(const card of document.querySelectorAll('#stopList .stop-card[data-stop]')){const stop=c.stops[Number(card.dataset.stop)];if(!stop)continue;card.dataset.originalPlace=stop.uid;const row=card.closest('.stop-row');let input=row.querySelector('[data-original-visit]');if(!input){const label=document.createElement('label');label.className='original-visit';input=document.createElement('input');input.type='checkbox';input.dataset.originalVisit=stop.uid;const text=document.createElement('span');text.className='cc-sr';text.textContent=api.name(stop)+' 방문 완료';input.setAttribute('aria-label',text.textContent);label.append(input,text);row.prepend(label);}const checked=!!p.visits[TravelAssistantCore.visitKey(c.day.n,c.variant.id,stop.uid)];input.checked=checked;row.classList.toggle('is-visited',checked);}

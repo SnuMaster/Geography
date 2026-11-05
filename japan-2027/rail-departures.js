@@ -132,20 +132,39 @@ const RailDepartures = (() => {
    <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
  }
  function sectionHtml(key,metrics,day){const p=profiles[key],date=travelDate(day);return `<section class="station-departures compact-station" data-itinerary-date="${esc(date)}" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,date,metrics)}</section>`;}
- function html(day,leg,part,metrics){
-  if(!supported(day,leg,part))return '';
-  const keys=keysFor(leg,part);
+ function unscheduledSection(part,metrics,day){
+  const country=part.lineId?.startsWith('KORAIL.')?'KR':'JP',p={...part,country},u=links(p),from=stationParts(p.from,p.fromJa,country),to=stationParts(p.to,p.toJa,country);
+  const badge=typeof railBadge==='function'?railBadge(part):'';
+  return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
+   <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
+   <div class="departure-stations departure-stations-aligned has-long-names">${stationName(from,'origin')}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination')}</div>
+   <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel)}</small><b>${esc(metrics.distance)}</b></span><span><small>${esc(metrics.fareLabel)}</small><b>${metrics.displayBlank?'':esc(metrics.fare)}</b></span></div>
+   ${metrics.basis?`<p class="departure-fare-basis">${esc(metrics.basis)}</p>`:''}
+   ${metrics.components?.length?`<dl class="departure-fare-components">${metrics.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}
+   ${metrics.sources?.length?`<div class="departure-fare-sources">${metrics.sources.map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}
+   <div class="departure-heading"><strong>다음 열차</strong></div>
+   <p class="departure-date-basis">여행 계획 날짜 ${esc(travelDate(day))}</p>
+   <div class="departure-unavailable"><strong>시간표 확인 필요</strong><p>저장된 시간표가 없는 구간입니다. 출발 시각·막차는 출발역 안내에서 확인하세요.</p><small>실시간 정보 미지원</small></div>
+   <div class="compact-actions"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}
+  </section>`;
+ }
+ function html(day,leg,part,metrics={},complete=false){
+  if(!(Number(day)>=1&&Number(day)<=22)||(!complete&&!supported(day,leg,part)))return '';
+  const seen=new Set(),items=(part?[part]:leg?.parts||[]).filter(railPart).flatMap((p,index)=>{const key=keyFor(leg,p);if(key&&seen.has(key))return [];if(key)seen.add(key);return key?[{key,profile:profiles[key]}]:complete?[{key:'unscheduled-'+index,profile:p,unscheduled:true}]:[];});
+  if(!items.length)return '';
+  const keys=items.map(item=>item.key),profileByKey=Object.fromEntries(items.map(item=>[item.key,item.profile]));
   const money=n=>n.toLocaleString('ko-KR')+' JP¥',formatDistance=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'확인 필요',byProfile={};
-  for(const key of new Set(keys.flatMap(k=>[k,profiles[k].reverseKey]).filter(Boolean))){const p=profiles[key],q=FareCore.boardingFare(leg,p);let selected={distanceLabel:'선택 구간 거리',distance:q?formatDistance(q.distanceM):'확인 필요',fareLabel:'선택 구간 요금',fare:'확인 필요',basis:'저장된 계획에 이 방향의 개별 운임이 없습니다.'};
+  for(const key of new Set(keys.flatMap(k=>[k,profileByKey[k].reverseKey]).filter(Boolean))){const p=profileByKey[key]||profiles[key],q=FareCore.boardingFare(leg,p);let selected={distanceLabel:'선택 구간 거리',distance:formatDistance(q?.distanceM??p.distanceM),fareLabel:'선택 구간 요금',fare:'확인 필요',basis:'저장된 계획에 이 방향의 개별 운임이 없습니다.'};
    if(q){const reserved=q.rows.some(r=>r.reservedSurchargeYen>0),ticket=q.rows.some(r=>r.ticketRequired);selected={...selected,fare:money(q.amount),fareLabel:q.joined?'환승 포함 운임':ticket?'승차권·별도 티켓 기준':reserved?'기본 + 특급·지정석':'선택 구간 IC 요금',basis:'저장된 계획 운임 · 확인 '+[...new Set(q.rows.map(r=>r.checkedAt||'날짜 미확인'))].join(' / ')+(q.joined?' · '+q.rows.map(r=>TripPersonal.station(r.from,r.fromJa)+' → '+TripPersonal.station(r.to,r.toJa)).join(' / '):'')+(ticket?' · '+q.rows.filter(r=>r.ticketRequired).map(r=>r.ticketLabel||'별도 티켓 필요').join(' / '):''),sources:[...new Set(q.rows.flatMap(r=>r.sources))].slice(0,2),components:q.rows.filter(r=>r.reservedSurchargeYen!=null).flatMap(r=>[{label:r.baseTicketYen!=null?'일반 승차권':'IC 기본운임',value:money(r.baseTicketYen??r.baseIcYen)},{label:r.baseTicketYen!=null?'자유석 특급권 별도 구매':'특급·지정석권 별도 구매',value:money(r.reservedSurchargeYen)}])};}
    if(p.country==='KR'&&leg.parts.some(s=>s.lineId===p.lineId&&s.from===p.from&&s.to===p.to))selected={...metrics,fareLabel:'저장된 계획 운임',basis:'한국 철도 · IC 운임 아님 · 확인 '+(leg.fare?.checkedAt||'필요')};byProfile[key]=selected;
   }
   if(leg.fare?.displayBlank){for(const key of Object.keys(byProfile))byProfile[key]={...byProfile[key],displayBlank:true,fare:'',basis:'',components:[],sources:[]};metrics={...metrics,displayBlank:true,fare:'',basis:'',components:[],sources:[]};}
   metrics={...metrics,byProfile,planFare:leg.fare?.displayBlank?null:metrics?.fare||'확인 필요',planDistance:formatDistance(leg.distanceM)};
-  if(keys.length===1)return `<div class="departure-panel">${sectionHtml(keys[0],metrics,day)}</div>`;
+  const section=(item,scope)=>item.unscheduled?unscheduledSection(item.profile,byProfile[item.key],day):sectionHtml(item.key,scope,day);
+  if(keys.length===1)return `<div class="departure-panel">${section(items[0],metrics)}</div>`;
   // A shared operator OD fare belongs to the whole ride, not to each displayed timetable.
-  const shownFares=new Set();for(const key of keys){const quote=FareCore.boardingFare(leg,profiles[key]);if(!quote)continue;const id=r=>JSON.stringify([r.from,r.to,r.lineIds,r.icYen]),remaining=quote.rows.filter(r=>!shownFares.has(id(r)));if(remaining.length<quote.rows.length)byProfile[key]={...byProfile[key],fare:remaining.length?money(remaining.reduce((n,r)=>n+r.icYen,0)):money(0),fareLabel:remaining.length?'추가 구간 운임':'환승 운임',components:[],basis:byProfile[key].basis+' · 같은 합산 운임은 한 번만 표시합니다.'};for(const row of quote.rows)shownFares.add(id(row));}
-  return `<div class="departure-panel departure-sequence" aria-label="타는 순서대로 열차 정보">${keys.map((key,index)=>{const pair=[key,profiles[key].reverseKey].filter(k=>byProfile[k]),scope={...metrics,planFare:null,byProfile:Object.fromEntries(pair.map(k=>[k,byProfile[k]]))};return `<div class="departure-sequence-step" data-boarding-order="${index+1}"><p class="departure-sequence-title">${index+1}번째 탑승</p>${sectionHtml(key,scope,day)}</div>`;}).join('')}<p class="departure-plan-total departure-sequence-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준<br>환승 포함 운임은 중복 합산하지 않습니다.</p></div>`;
+  const shownFares=new Set();for(const key of keys){const quote=FareCore.boardingFare(leg,profileByKey[key]);if(!quote)continue;const id=r=>JSON.stringify([r.from,r.to,r.lineIds,r.icYen]),remaining=quote.rows.filter(r=>!shownFares.has(id(r)));if(remaining.length<quote.rows.length)byProfile[key]={...byProfile[key],fare:remaining.length?money(remaining.reduce((n,r)=>n+r.icYen,0)):money(0),fareLabel:remaining.length?'추가 구간 운임':'환승 운임',components:[],basis:byProfile[key].basis+' · 같은 합산 운임은 한 번만 표시합니다.'};for(const row of quote.rows)shownFares.add(id(row));}
+  return `<div class="departure-panel departure-sequence" aria-label="타는 순서대로 열차 정보">${items.map((item,index)=>{const key=item.key,pair=[key,profileByKey[key].reverseKey].filter(k=>byProfile[k]),scope={...metrics,planFare:null,byProfile:Object.fromEntries(pair.map(k=>[k,byProfile[k]]))};return `<div class="departure-sequence-step" data-boarding-order="${index+1}"><p class="departure-sequence-title">${index+1}번째 탑승</p>${section(item,scope)}</div>`;}).join('')}<p class="departure-plan-total departure-sequence-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준<br>환승 포함 운임은 중복 합산하지 않습니다.</p></div>`;
  }
  async function loadData(key,force=false){
   const file=profiles[key]?.file;if(!file)return null;
