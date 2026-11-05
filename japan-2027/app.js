@@ -212,7 +212,7 @@ function renderMap(fit=true){
   const a=stops[i-1],b=stops[i],m=MODE[b.modeFromPrevious]||MODE.walk;
   const detailed=getLeg(i);
   if(detailed){
-   (window.TripPersonal?.displayParts(detailed)||railParts(detailed)).forEach(part=>{
+   railMapParts(detailed).forEach(part=>{
     if(!mapPartVisible(part)||part.coords.length<2||part.distanceM<8)return;
     const strokes=routeLineStyles(part,{night:state.night}),style=strokes.line,color=style.color;
     routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),detailed,i,part.mode);
@@ -358,7 +358,7 @@ function renderOverviewMap(fit=true){
    const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0}).addTo(routeLayer),leg);hit.bindPopup(()=>overviewLegHtml(leg,part),symbolOptions(leg));
    hit.on('mouseover',e=>showRailHover(e,leg,part));hit.on('mousemove',positionRailHover);hit.on('mouseout',hideRailHover);if(local||!detailed)addRailMapSymbol(part,leg);
   };
-  for(const leg of legs)for(const part of (window.TripPersonal?.displayParts(leg)||railParts(leg)))draw(leg,part);
+  for(const leg of legs)for(const part of railMapParts(leg))draw(leg,part);
   if(!detailed){
    renderOverviewPreview(null);
    $('#mapTitle').innerHTML='<div class="map-kicker">전체 여정</div><p class="overview-map-instruction">지도를 확대하면 해당 지역의 상세 일정이 나와요.</p>';

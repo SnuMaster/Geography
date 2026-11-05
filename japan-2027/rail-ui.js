@@ -103,7 +103,7 @@ function railBadge(part,extra=''){
  const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
  if(info.vehicle)return transitVehicleBadge(part,info,extra);
- if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);const stationCode=metroStationCode(part),code=stationCode||info.code;return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${stationCode?'metro-station-symbol':''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}" title="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}">${esc(code)}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
+ if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);const stationCode=metroStationCode(part),code=part.mapSymbolCode||stationCode||info.code;return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${stationCode?'metro-station-symbol':''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}" title="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}">${esc(code)}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
 function splitRailService(part){
@@ -126,6 +126,21 @@ function splitRailService(part){
  railSectionCache.set(part,result);return result;
 }
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
+// Map symbols describe one boarding, while each surveyed path retains its line color.
+function railMapParts(leg){
+ const original=window.TripPersonal?.displayParts(leg)||leg?.parts||[],parts=original.slice();
+ const profiles=Object.values(globalThis.RailDepartureProfiles?.profiles||{}).filter(p=>p.throughParts?.length>1);
+ for(let i=0;i<parts.length;i++){
+  const profile=profiles.find(p=>p.throughParts.every((m,j)=>{const q=original[i+j];return q&&m.lineId===q.lineId&&m.from===q.from&&m.to===q.to&&(!m.line||m.line===q.line);}));if(!profile)continue;
+  const run=original.slice(i,i+profile.throughParts.length);
+  if(run.some(p=>!['rail','metro'].includes(p.mode)||!p.coords?.length||p.geometryAccuracy==='schematic'))continue;
+  if(run.slice(1).some((p,j)=>{const end=run[j].coords.at(-1);return end[0]!==p.coords[0][0]||end[1]!==p.coords[0][1];}))continue;
+  const coords=run.flatMap((p,j)=>j?p.coords.slice(1):p.coords),first=run[0];
+  parts[i]={...first,mapSymbol:{...first,from:profile.from,to:profile.to,fromJa:profile.fromJa,toJa:profile.toJa,line:profile.line,coords,distanceM:run.reduce((n,p)=>n+p.distanceM,0),throughService:profile.line,mapSymbolCode:profile.line.startsWith('JR ')?'JR':null,mapSymbolKey:profile.throughParts.map(p=>p.lineId).sort().join('+')+'|'+[profile.from,profile.to].sort().join('~')}};
+  for(let j=1;j<run.length;j++)parts[i+j]={...run[j],suppressSymbol:true};i+=run.length-1;
+ }
+ return parts;
+}
 function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
@@ -161,7 +176,7 @@ function positionRailHover(event){
 }
 function showRailHover(event,leg,part){
  if(event.originalEvent?.pointerType==='touch')return;
- railHoverCard.innerHTML=railHoverHtml(leg,part);railHoverCard.hidden=false;positionRailHover(event);
+ railHoverCard.innerHTML=railHoverHtml(leg,part.mapSymbol||part);railHoverCard.hidden=false;positionRailHover(event);
 }
 function railMidpoint(coords,fraction=.5){
  const target=railPathLength(coords)*fraction;let travelled=0;
@@ -170,14 +185,15 @@ function railMidpoint(coords,fraction=.5){
 }
 function symbolOptions(leg){return DetailView.options('route-info-popup',{routeLegIndex:leg.legIndex,routeDay:leg.dayNumber,routeVariant:leg.variant});}
 function visibleDirectionEntries(group){if(typeof routeAll==='boolean'&&!routeAll){const c=focusedContext(),i=focusedIndex(c),entries=group.entries.filter(e=>focusedMatch(e.leg,c,i));if(entries.length)return entries;}return group.entries;}
-function directionHtml(group,entry){const entries=visibleDirectionEntries(group);return (entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${entries.map(e=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${group.entries.indexOf(e)}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc(e.part.from)} → ${esc(e.part.to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
+function directionHtml(group,entry){const entries=visibleDirectionEntries(group);return (entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${entries.map(e=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${group.entries.indexOf(e)}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc((e.part.mapSymbol||e.part).from)} → ${esc((e.part.mapSymbol||e.part).to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
 function addRailMapSymbol(part,leg){
  if(part.suppressSymbol)return;
+ const sourcePart=part;part=part.mapSymbol||part;
  const info=railInfo(part)||(['flight','ferry','taxi'].includes(part.mode)?{code:part.mode==='flight'?'항공':part.mode==='ferry'?'선박':'Uber',color:MODE[part.mode].color}:null);if(!info||part.distanceM<350)return;
- const point=railMidpoint(part.coords),groupKey=part.lineId+'|'+point.map(n=>n.toFixed(4)).join(','),entryKey=leg.legId+'|'+part.lineId+'|'+part.from+'|'+part.to;
+ const point=railMidpoint(part.coords),groupKey=(part.mapSymbolKey||part.lineId)+'|'+point.map(n=>n.toFixed(4)).join(','),entryKey=leg.legId+'|'+part.lineId+'|'+part.from+'|'+part.to;
  if(railSymbolKeys.has(entryKey))return;railSymbolKeys.add(entryKey);
- const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
- const group={key:groupKey,point,entries:[{part,leg}]};railSymbolGroups.set(groupKey,group);
+ const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part:sourcePart,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
+ const group={key:groupKey,point,entries:[{part:sourcePart,leg}]};railSymbolGroups.set(groupKey,group);
  const compact=part.mode==='flight'?'항공':part.mode==='taxi'?'택시':part.mode==='ferry'?'배':info.code;
  const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol',html:railInfo(part)?railBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:[44,44],iconAnchor:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
  marker.on('click',()=>{hideRailHover();const entry=visibleDirectionEntries(group)[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});

@@ -65,3 +65,18 @@ test('metro badges include the exact departure station number on every active ro
  assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'미확인 역'}),null);
  assert.equal(ui.metroStationCode({lineId:'JR-East.Yamanote',from:'우에노'}),null);
 });
+
+
+test('verified through rides use one complete map symbol without changing tracks or hiding actual transfers',()=>{
+ vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ui);ui.window={TripPersonal:{displayParts:leg=>leg.parts}};
+ for(const [day,index]of [[4,0],[4,5],[6,0],[6,4],[10,0],[10,5]]){
+  const leg=bundle.routes.days[day+'-main'][index],snapshot=JSON.stringify(leg),shown=ui.railMapParts(leg),symbol=shown.find(p=>p.mapSymbol);assert.ok(symbol,leg.legId);assert.equal(shown.filter(p=>p.mapSymbol).length,1);assert.equal(shown.filter(p=>p.suppressSymbol).length,1);
+  assert.equal(JSON.stringify(leg),snapshot);for(let i=0;i<shown.length;i++)assert.equal(shown[i].coords,leg.parts[i].coords);
+  assert.equal(symbol.mapSymbol.from,day===4?(index===0?'우에노':'요코하마'):symbol.from);assert.ok(symbol.mapSymbol.coords.length>symbol.coords.length);assert.match(symbol.mapSymbol.line,/직통/);
+  if(day===4)assert.match(ui.railBadge(symbol.mapSymbol),/>JR<\/span>/);
+ }
+ const leg=bundle.routes.days['4-main'][0],i=leg.parts.findIndex(p=>p.lineId==='JR-East.Takasaki'),transfer={mode:'transfer',from:'도쿄',to:'도쿄',coords:[leg.parts[i].coords.at(-1)],distanceM:0};
+ const interrupted={...leg,parts:[...leg.parts.slice(0,i+1),transfer,...leg.parts.slice(i+1)]};assert.ok(!ui.railMapParts(interrupted).some(p=>p.mapSymbol));
+ const broken=structuredClone(leg);broken.parts[i+1].coords[0][0]+=.001;assert.ok(!ui.railMapParts(broken).some(p=>p.mapSymbol));
+ const out=ui.railMapParts(leg).find(p=>p.mapSymbol).mapSymbol,back=ui.railMapParts(bundle.routes.days['4-main'][5]).find(p=>p.mapSymbol).mapSymbol;assert.equal(out.mapSymbolKey,back.mapSymbolKey);assert.ok(G.distance(ui.railMidpoint(out.coords),ui.railMidpoint(back.coords))<.1);
+});

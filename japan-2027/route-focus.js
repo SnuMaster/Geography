@@ -46,7 +46,7 @@ function applyRouteFocus(){
  for(const group of railSymbolGroups.values()){
   const chosen=group.entries.some(e=>focusedMatch(e.leg,c,index));
   const permitted=group.entries.some(e=>window.CommandCenter?.routeVisible({day:e.leg.dayNumber,variant:e.leg.variant,modes:[e.part.mode]})??true);if((routeAll||chosen)&&permitted){if(!routeLayer.hasLayer(group.marker))routeLayer.addLayer(group.marker);}else routeLayer.removeLayer(group.marker);
-  const element=group.marker.getElement(),entry=visibleDirectionEntries(group)[0];if(element&&entry){element.setAttribute('aria-label',entry.part.line+' '+stationLabel(entry.part.from)+' → '+stationLabel(entry.part.to)+' 이동 상세');}if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
+  const element=group.marker.getElement(),entry=visibleDirectionEntries(group)[0];if(element&&entry){const symbol=entry.part.mapSymbol||entry.part;element.setAttribute('aria-label',symbol.line+' '+stationLabel(symbol.from)+' → '+stationLabel(symbol.to)+' 이동 상세');}if(element&&group.entries.length>1){let count=element.querySelector('.route-direction-count');if(!count){count=document.createElement('b');count.className='route-direction-count';count.textContent='↔';element.append(count);}count.hidden=!routeAll;}
  }
  const groups=state.view==='overview'?overviewPlaceGroups:stopGroups,stops=c?.variant.stops||[];
  for(const group of groups){
