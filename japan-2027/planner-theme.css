@@ -132,6 +132,16 @@ body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):
 .departure-fare-sources{font-size:11px;line-height:1.8}
 
 /* A readable, shared Shinkansen pictogram in the map, fare list and itinerary. */
-.operator-logo.operator-shinkansen{width:48px;max-width:48px;height:36px;max-height:36px;padding:0;background:transparent;object-fit:contain}
-.rail-map-symbol .operator-shinkansen{width:42px;max-width:42px;height:34px;max-height:34px;filter:drop-shadow(0 1px 3px #17253235)}
-.itinerary-train-card .compact-line>.operator-shinkansen{width:42px;height:32px}
+.operator-logo.operator-shinkansen{width:34px;max-width:34px;height:34px;max-height:34px;padding:0;background:transparent;object-fit:contain;border-radius:7px}
+.rail-map-symbol .operator-shinkansen{width:34px;max-width:34px;height:34px;max-height:34px;filter:drop-shadow(0 1px 3px #17253235)}
+.itinerary-train-card .compact-line>.operator-shinkansen{width:34px;height:34px}
+
+/* Selected details replace the left itinerary on desktop and tablet. */
+body.command-center.travel-shell #detailSheet[data-docked=sidebar]{position:absolute;inset:0;margin:0;width:100%;max-width:none;height:100%;max-height:none!important;box-sizing:border-box;border:0;border-radius:0;box-shadow:none;z-index:20}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet-body{flex:1 1 0;min-height:0;max-height:none!important;padding-inline:16px}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .leaflet-popup-content{min-width:0!important;overflow-wrap:anywhere}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet-header{min-height:58px;padding:8px 12px;box-sizing:border-box}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet-header strong{font-size:13px;line-height:1.6}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actions{flex-wrap:wrap;gap:8px;padding:10px 12px}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actions button{flex:1;min-width:0;font-size:11px}
+.map-asset-credit{font-size:10px;line-height:1.7;padding:10px 14px;order:10}.map-asset-credit a{text-decoration:underline}

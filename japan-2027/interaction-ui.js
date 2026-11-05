@@ -18,9 +18,23 @@
  window.RouteUI={open,release,ensureFocus,showDialog,userExplore,hasLayer:()=>stack.some(entry=>entry.el.id!=='itineraryPanel'),isTop:el=>top()?.el===el,mobile};
  document.addEventListener('DOMContentLoaded',()=>{document.querySelectorAll('dialog').forEach(el=>{el.addEventListener('close',()=>{if(!el.open)release(el);});el.addEventListener('cancel',event=>{event.preventDefault();if(top()?.el===el)top().close?.();});});});
 
- let map,active=null,sheet,body,footer,closing=false,playbackState={active:false,running:false};
+ let map,active=null,sheet,body,footer,closing=false,sidebarDock=null,playbackState={active:false,running:false};
+ const sidebarMode=()=>document.body.classList.contains('command-center')&&matchMedia('(min-width:700px)').matches&&!!$('#ccSidebar');
  const sheetMode=()=>mobile()||document.body.classList.contains('command-center');
- const sheetModal=()=>mobile()&&!window.RouteViewport?.isDual();
+ const sheetModal=()=>!sidebarMode()&&mobile()&&!window.RouteViewport?.isDual();
+ function setSidebarOpen(open){document.body.classList.toggle('cc-sidebar-closed',!open);$('#ccSidebarToggle')?.setAttribute('aria-expanded',String(open));}
+ function dockSidebar(){
+  if(!sidebarMode()||sidebarDock)return;
+  const side=$('#ccSidebar');sidebarDock={wasClosed:document.body.classList.contains('cc-sidebar-closed'),siblings:[...side.children].map(node=>({node,inert:node.inert}))};
+  setSidebarOpen(true);for(const {node}of sidebarDock.siblings)node.inert=true;
+  side.append(sheet);sheet.dataset.docked='sidebar';document.body.classList.add('detail-sidebar-open');requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+ }
+ function undockSidebar(){
+  if(!sidebarDock)return;const previous=sidebarDock;sidebarDock=null;
+  for(const {node,inert}of previous.siblings)node.inert=inert;
+  document.body.append(sheet);delete sheet.dataset.docked;document.body.classList.remove('detail-sidebar-open');
+  if(sidebarMode())setSidebarOpen(!previous.wasClosed);window.dispatchEvent(new Event('resize'));
+ }
  function options(className,extra={}){return {maxWidth:340,maxHeight:map?RouteUICore.popupMaxHeight(map.getContainer().clientHeight,innerHeight):300,className,autoPan:!sheetMode(),autoPanPaddingTopLeft:[12,20],autoPanPaddingBottomRight:[12,105],...extra};}
  function closeDetail(){if(!active)return;closing=true;map.closePopup(active.popup);closing=false;}
  function actions(popup){if(popup.getElement()?.querySelector('.compact-station'))return playbackState.active?`<button type="button" data-detail-play>${playbackState.running?'일시정지':'계속 재생'}</button>`:'';const index=popup.options.routeStopIndex??popup.options.routeLegIndex;return `<button type="button" data-detail-itinerary${!Number.isInteger(index)?' hidden':''}>일정에서 보기</button><button type="button" data-detail-map>지도에서 보기</button><button type="button" data-detail-play ${playbackState.active?'':'hidden'}>${playbackState.running?'일시정지':'계속 재생'}</button>`;}
@@ -37,6 +51,7 @@
   const originalUpdate=popup.update;active={popup,element,opener:document.activeElement,originalUpdate};popup.update=function(){const result=originalUpdate.call(this);fitPopup(this);return result;};map.getContainer().closest('.map-panel').classList.add('detail-open');
   element.querySelectorAll('.detail-actions').forEach(el=>el.remove());
   if(sheetMode()){
+   dockSidebar();
    body.replaceChildren(element);element.classList.add('sheet-popup');footer.innerHTML=actions(popup);
    sheet.querySelector('[data-sheet-title]').textContent=element.querySelector('.compact-station')?'열차 정보':element.querySelector('.popup-title')?.textContent||element.querySelector('.departure-stations')?.textContent||'이동 상세';
    active.sheetModal=sheetModal();RouteUI.open(sheet,{opener:active.opener,modal:active.sheetModal,close:closeDetail,fallback:()=>$('#fitBtn')});body.scrollTop=0;
@@ -49,13 +64,14 @@
  function popupClosed(event){
   if(!active||active.popup!==event.popup)return;
   const wasSheet=sheet.open;active.popup.update=active.originalUpdate;if(active.toggle)active.element.removeEventListener('toggle',active.toggle,true);active=null;map.getContainer().closest('.map-panel').classList.remove('detail-open');
-  if(wasSheet){sheet.close();RouteUI.release(sheet);body.replaceChildren();}
+  if(wasSheet){sheet.close();undockSidebar();RouteUI.release(sheet);body.replaceChildren();}
  }
  function detailClick(event){const button=event.target.closest('[data-detail-map],[data-detail-itinerary],[data-detail-play]');if(!button||!active)return;if(button.hasAttribute('data-detail-play')){$('#playBtn').click();return;}const index=active.popup.options.routeStopIndex??active.popup.options.routeLegIndex;const itinerary=button.hasAttribute('data-detail-itinerary'),meta=active.popup.options,kind=meta.routeStopIndex!==undefined?'stop':'leg';closeDetail();window.dispatchEvent(new CustomEvent('routebook:detail-jump',{detail:{itinerary,index,kind,day:meta.routeDay,variant:meta.routeVariant}}));}
  function attach(value){map=value;sheet=document.createElement('dialog');sheet.id='detailSheet';sheet.setAttribute('aria-label','장소 및 이동 상세');sheet.innerHTML='<header class="detail-sheet-header"><strong data-sheet-title>이동 상세</strong><button type="button" data-sheet-close aria-label="상세 닫기">×</button></header><div class="detail-sheet-body"></div><footer class="detail-actions"></footer>';document.body.appendChild(sheet);body=sheet.querySelector('.detail-sheet-body');footer=sheet.querySelector('footer');sheet.querySelector('[data-sheet-close]').addEventListener('click',closeDetail);sheet.addEventListener('cancel',event=>{event.preventDefault();closeDetail();});sheet.addEventListener('close',()=>{if(sheet.open)return;RouteUI.release(sheet);if(active&&!closing)closeDetail();});
   map.on('popupopen',popupOpened);map.on('popupclose',popupClosed);document.addEventListener('click',detailClick);
-  const refresh=()=>{if(!active)return;if(sheetMode()!==sheet.open||(sheet.open&&active.sheetModal!==sheetModal())){const popup=active.popup,latlng=popup.getLatLng(),content=popup.getContent(),opts={...popup.options};closeDetail();L.popup(opts).setLatLng(latlng).setContent(content).openOn(map);return;}if(!sheetMode()){active.popup.options.maxHeight=RouteUICore.popupMaxHeight(map.getContainer().clientHeight,innerHeight);active.popup.update();}};
+  const refresh=()=>{if(!active||closing)return;if(sheetMode()!==sheet.open||(sheet.open&&(active.sheetModal!==sheetModal()||!!sidebarDock!==sidebarMode()))){const popup=active.popup,latlng=popup.getLatLng(),content=popup.getContent(),opts={...popup.options};closeDetail();L.popup(opts).setLatLng(latlng).setContent(content).openOn(map);return;}if(!sheetMode()){active.popup.options.maxHeight=RouteUICore.popupMaxHeight(map.getContainer().clientHeight,innerHeight);active.popup.update();}};
   window.addEventListener('resize',refresh);window.visualViewport?.addEventListener('resize',refresh);
+  document.addEventListener('click',event=>{if(!sidebarDock||!event.target.closest('#ccSidebarToggle'))return;event.preventDefault();event.stopImmediatePropagation();closeDetail();setSidebarOpen(true);window.dispatchEvent(new Event('resize'));},true);
  }
  window.addEventListener('routebook:playback',event=>{playbackState=event.detail;document.querySelectorAll('[data-detail-play]').forEach(button=>{button.hidden=!event.detail.active;button.textContent=event.detail.running?'일시정지':'계속 재생';});});
  function refreshContent(content){
