@@ -3,7 +3,7 @@
 (function(){
  const $=s=>document.querySelector(s),h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let api;const drafts=new Map(),editing=new Set();
  function expenseTarget(c,type,uid){
-  if(type==='stop'){const stop=c.stops.find(s=>s.uid===uid);if(!stop||['home','station'].includes(stop.kind))return null;return {name:api.name(stop),currency:stop.lng<130&&stop.lat>34?'KRW':'JPY',category:stop.kind==='hotel'?'숙박비':stop.kind==='food'||stop.foodKey?'식비':stop.kind==='sight'?'입장료':'기타'};}
+  if(type==='stop'){const stop=c.stops.find(s=>s.uid===uid);if(!stop||['home','station','hotel'].includes(stop.kind))return null;return {name:api.name(stop),currency:stop.lng<130&&stop.lat>34?'KRW':'JPY',category:stop.kind==='hotel'?'숙박비':stop.kind==='food'||stop.foodKey?'식비':stop.kind==='sight'?'입장료':'기타'};}
   const leg=c.legs.find(l=>l?.legId===uid);if(!leg||leg.parts.some(p=>['rail','metro'].includes(p.mode))||!leg.parts.some(p=>['bus','taxi','flight','ferry'].includes(p.mode))||CommandCore.privateLeg(leg,api.app.state.data.days))return null;
   return {name:leg.from+' → '+leg.to,currency:leg.fare?.currency==='KRW'?'KRW':'JPY',category:leg.parts.some(p=>p.mode==='flight')?'항공료':leg.parts.some(p=>p.mode==='ferry')?'선박료':'교통비'};
  }
