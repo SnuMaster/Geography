@@ -5,7 +5,12 @@ const AIRLINE_BRANDS={
  ana:{name:'ANA 전일본공수',src:'assets/airlines/ana.svg'}
 };
 function airlineFor(part){if(part?.mode!=='flight')return null;const line=part.line||'';return /TW251|트리니티|Trinity/i.test(line)?'trinity':/\bJAL\b/.test(line)?'jal':/\bANA\b/.test(line)?'ana':null;}
+function skylinerLogo(part,extra=''){
+ const service=part?.line||part?.throughService||'';if(!['Special.Direct','Keisei.NaritaSkyAccess','Keisei.Main'].includes(part?.lineId)||!/스카이라이너|Skyliner|スカイライナー/i.test(service))return '';
+ return '<img class="operator-logo operator-skyliner '+extra+'" src="assets/operators/skyliner.png" alt="스카이라이너 로고" width="91" height="42" decoding="async">';
+}
 function operatorLogo(part,extra=''){
+ const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
  const isUber=part?.mode==='taxi',isKtx=part?.lineId==='KORAIL.GyeongbuHSR'||/KTX/.test(part?.line||''),isShinkansen=part?.lineId==='JR-Central.TokaidoShinkansen';
  if(!isUber&&!isKtx&&!isShinkansen)return '';
  const type=isUber?'uber':isKtx?'ktx':'shinkansen',name=isUber?'Uber':isKtx?'KTX':'신칸센';
@@ -82,7 +87,7 @@ function metroStationCode(part){
 }
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
-function railInfo(part){return RAIL_LINES[part.lineId]||(part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
+function railInfo(part){return RAIL_LINES[part.lineId]||(skylinerLogo(part)?{code:'Skyliner',color:MODE.rail.color,shape:'rounded',logo:true}:part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
 const TRANSIT_VEHICLES={bus:'<rect x="4" y="4" width="16" height="14" rx="3"/><path d="M4 10h16M8 18v3m8-3v3M8 14h.01M16 14h.01"/>',cable:'<path d="m3 20 18-8M5 14V5h11l4 3v8M5 10h14M10 5v11M3 23l18-8"/>',ropeway:'<path d="M2 3h20M12 3v5M5 11l3-3h8l3 3v10H5zM5 15h14M12 8v13"/>'};
 function transitVehicleBadge(part,info,extra=''){return `<span class="rail-symbol transit-vehicle ${info.shape} vehicle-${info.vehicle} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc((info.vehicle==='bus'?'버스':info.vehicle==='cable'?'케이블카':'로프웨이')+' · '+part.line)}" title="${esc(part.line)}"><svg viewBox="0 0 24 24" aria-hidden="true">${TRANSIT_VEHICLES[info.vehicle]}</svg><small>${esc(info.code)}</small></span>`;}
 function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAccuracy==='schematic'||/개략|대표.*연결|미확인/.test(part.geometrySource||'')));}
@@ -95,6 +100,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
  return {line:{color,weight,opacity,lineCap:'round',lineJoin:'round',dashArray},casing:{color:'#fffdf8',weight:weight+3,opacity:schematic?.45:.9,dashArray,lineCap:'round',lineJoin:'round',interactive:false}};
 }
 function railBadge(part,extra=''){
+ const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
  if(info.vehicle)return transitVehicleBadge(part,info,extra);
  if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);const stationCode=metroStationCode(part),code=stationCode||info.code;return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${stationCode?'metro-station-symbol':''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}" title="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}">${esc(code)}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
@@ -120,14 +126,14 @@ function splitRailService(part){
  railSectionCache.set(part,result);return result;
 }
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
-function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
+function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
  return `<div class="day-line-key" aria-label="오늘 이용하는 교통 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
 }
 function dailyRailFareLogos(row,legs){
  const leg=legs[row.legIndex-1];if(!leg)return '';
- const seen=new Set(),services=railParts({...leg,parts:leg.parts.filter(p=>['rail','metro'].includes(p.mode)&&(row.lineIds.length?row.lineIds.includes(p.lineId):row.lines.includes(p.line)))}).filter(p=>{const key=p.lineId||p.line;if(seen.has(key))return false;seen.add(key);return true;});
+ const seen=new Set(),services=railParts({...leg,parts:leg.parts.filter(p=>['rail','metro'].includes(p.mode)&&(row.lineIds.length?row.lineIds.includes(p.lineId):row.lines.includes(p.line)))}).filter(p=>{const key=skylinerLogo(p)?'service:skyliner':p.lineId||p.line;if(seen.has(key))return false;seen.add(key);return true;});
  return '<span class="daily-rail-logos">'+services.map(p=>railBadge(p)).join('')+'</span>';
 }
 function dailyRailFareHtml(){
