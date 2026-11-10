@@ -69,7 +69,7 @@ test('empty fare components and empty activities disappear while meaningful supp
 
 
 
-test('every active train board has a line emblem and two separate station-number circles',()=>{
+test('every active train board has a line emblem and two separate station-number badges',()=>{
  for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs){
   if(!leg.parts.some(p=>['rail','metro'].includes(p.mode)))continue;
   const html=render(Number(id.split('-')[0]),leg),sections=(html.match(/<section class="station-departures/g)||[]).length;
@@ -87,4 +87,12 @@ test('station numbers respect both ends of through services and never borrow con
  let missing=0;for(const leg of Object.values(bundle.routes.days).flat())for(const p of leg.parts.filter(p=>['rail','metro'].includes(p.mode)))for(const side of ['from','to']){const n=ctx.railStationNumber(p,side);if(!n.code){missing++;assert.equal(p.lineId,'JR-Central.TokaidoShinkansen');}else assert.match(n.code,/^[A-Z]{1,3}\d{2}$/);}
  assert.equal(missing,4);
  const unknown={lineId:'JR-Central.TokaidoShinkansen',from:'도쿄',to:'아타미'};assert.equal(ctx.railStationNumber(unknown).code,null);assert.equal(ctx.railStationNumber(unknown,'to').code,null);
+});
+
+
+test('JR endpoint numbers stay square while Metro numbers stay circular and private railways retain rounded marks',()=>{
+ const y=render(3,bundle.routes.days['3-main'][0]);for(const code of ['JY05','JY13'])assert.ok(y.includes('endpoint-square')&&new RegExp('class="departure-endpoint-code endpoint-square"[^>]*>'+code+'<').test(y),code);
+ const m=render(2,bundle.routes.days['2-main'][0]);for(const code of ['H19','H09','G09','G08'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-circle"[^>]*>'+code+'<').test(m),code);
+ for(const code of ['U01','U14'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-rounded"[^>]*>'+code+'<').test(m),code);
+ const through=render(4,bundle.routes.days['4-main'][0]);for(const code of ['JU02','JT05'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-square"[^>]*>'+code+'<').test(through),code);
 });

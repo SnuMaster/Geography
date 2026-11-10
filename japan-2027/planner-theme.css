@@ -170,7 +170,7 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .rail-map-symbol .operator-logo.operator-skyliner{width:74px;max-width:74px;height:34px;max-height:34px;box-shadow:0 0 0 3px #fffffff2,0 2px 8px #183b3545}
 .daily-rail-logos .operator-logo.operator-skyliner,.day-line-key .operator-logo.operator-skyliner{width:56px;max-width:56px;height:26px;max-height:26px}
 
-/* Station pair layout: a line emblem in the header, one number above each endpoint. */
+/* Station pair layout: line emblem in the header; endpoint numbers retain their line shape. */
 .command-center .station-departures .departure-stations.departure-stations-numbered{display:grid;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);grid-template-rows:auto;gap:8px;margin:24px 0;align-items:start}
 .command-center .station-departures .departure-stations-numbered .departure-station-name{display:flex;flex-direction:column;align-items:center;gap:5px;grid-row:1;min-width:0;text-align:center;align-self:start}
 .command-center .station-departures .departure-stations-numbered .departure-origin{grid-column:1}
@@ -183,3 +183,7 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .command-center .station-departures .compact-line{align-items:center;gap:10px}
 .command-center .station-departures .compact-line>strong{min-width:0;font-size:15px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
 .command-center .station-departures .compact-line>.departure-line-mark{font-size:17px}
+
+.departure-endpoint-code.endpoint-circle{border-radius:50%}
+.departure-endpoint-code.endpoint-square{border-radius:3px}
+.departure-endpoint-code.endpoint-rounded{border-radius:14px}
