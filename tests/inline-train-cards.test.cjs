@@ -90,9 +90,14 @@ test('station numbers respect both ends of through services and never borrow con
 });
 
 
-test('JR endpoint numbers stay square while Metro numbers stay circular and private railways retain rounded marks',()=>{
- const y=render(3,bundle.routes.days['3-main'][0]);for(const code of ['JY05','JY13'])assert.ok(y.includes('endpoint-square')&&new RegExp('class="departure-endpoint-code endpoint-square"[^>]*>'+code+'<').test(y),code);
+test('JR numbers use the official stacked frame and station abbreviations while other railway shapes stay distinct',()=>{
+ const assertJr=(html,code,abbreviation)=>{
+  assert.match(html,new RegExp('class="departure-endpoint-code endpoint-square jr-station-number has-station-abbreviation"[^>]*aria-label="역 번호 '+code+' · '+abbreviation+'"[^>]*><span class="jr-station-tab" aria-hidden="true">'+abbreviation+'</span><span class="jr-station-frame" aria-hidden="true"><span class="jr-station-line">'+code.slice(0,2)+'</span><span class="jr-station-digits">'+code.slice(2)+'</span>'));
+ };
+ const y=render(3,bundle.routes.days['3-main'][0]);assertJr(y,'JY05','UEN');assertJr(y,'JY13','IKB');assert.doesNotMatch(y,/>IBK</);
  const m=render(2,bundle.routes.days['2-main'][0]);for(const code of ['H19','H09','G09','G08'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-circle"[^>]*>'+code+'<').test(m),code);
  for(const code of ['U01','U14'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-rounded"[^>]*>'+code+'<').test(m),code);
- const through=render(4,bundle.routes.days['4-main'][0]);for(const code of ['JU02','JT05'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-square"[^>]*>'+code+'<').test(through),code);
+ const through=render(4,bundle.routes.days['4-main'][0]);assertJr(through,'JU02','UEN');assertJr(through,'JT05','YHM');
+ assert.equal(ctx.jrStationAbbreviation({from:'우구이스다니',fromJa:'鶯谷'}),null);
+ assert.equal(ctx.jrStationAbbreviation({from:'이케부쿠로',to:'우에노'},'to'),'UEN');
 });

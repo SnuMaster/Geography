@@ -108,6 +108,13 @@ const RAIL_STATION_NUMBERS={...METRO_STATION_NUMBERS,
  'Tobu.TobuSkytree':[['TS09','기타센주','北千住'],['TS30','도부도부쓰코엔','東武動物公園']],
  'Tobu.Nikko':[['TS30','도부도부쓰코엔','東武動物公園'],['TN25','도부닛코','東武日光']]
 };
+// JR East official station-number layout and major-station abbreviations:
+// https://www.jreast.co.jp/press/2016/20160402.pdf (pages 1 and 3), checked 2026-11-10.
+const JR_STATION_SHORT_CODES=[['TYO','도쿄','東京'],['KND','간다','神田'],['AKB','아키하바라','秋葉原'],['UEN','우에노','上野'],['NPR','닛포리','日暮里'],['IKB','이케부쿠로','池袋'],['SJK','신주쿠','新宿'],['SBY','시부야','渋谷'],['EBS','에비스','恵比寿'],['OSK','오사키','大崎'],['SGW','시나가와','品川'],['HMC','하마마쓰초','浜松町'],['SMB','신바시','新橋'],['ABN','아카바네','赤羽'],['URW','우라와','浦和'],['OMY','오미야','大宮'],['OFN','오후나','大船'],['TTK','도쓰카','戸塚'],['YHM','요코하마','横浜'],['MKG','무사시코스기','武蔵小杉']];
+function jrStationAbbreviation(part,side='from'){
+ const name=String(part[side]||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim(),ja=String(part[side+'Ja']||'').replace(/駅$/,'').trim();
+ return JR_STATION_SHORT_CODES.find(row=>row[1]===name||ja&&row[2]===ja)?.[0]||null;
+}
 function railStationNumber(part,side='from'){
  const endpoint=side==='to'?'to':'from',edge=endpoint==='to'?part.throughParts?.at(-1):part.throughParts?.[0],lineId=edge?.lineId||part.lineId;
  const name=String(part[endpoint]||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim(),ja=String(part[endpoint+'Ja']||'').replace(/駅$/,'').trim();

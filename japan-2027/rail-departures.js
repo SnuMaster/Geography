@@ -119,7 +119,9 @@ const RailDepartures = (() => {
  function stationName(parts,side,p){
   const endpoint=side==='destination'?'to':'from',number=typeof railStationNumber==='function'?railStationNumber(p,endpoint):{code:p[endpoint+'Code'],lineId:p.lineId};
   const info=typeof railInfo==='function'?railInfo({lineId:number.lineId}):null,code=number.code||'—';
-  const badge=`<span class="departure-endpoint-code endpoint-${info?.shape||'circle'}${number.code?'':' is-unknown'}" style="--station-color:${esc(info?.color||'#9ca59a')}" aria-label="${esc(number.code?'역 번호 '+code:'공식 역 번호 미확인')}" title="${esc(number.code?'역 번호 '+code:'공식 역 번호 미확인')}">${esc(code)}</span>`;
+  const jr=number.lineId?.startsWith('JR-East.')&&/^([A-Z]{2})(\d{2})$/.exec(code),shortCode=jr&&typeof jrStationAbbreviation==='function'?jrStationAbbreviation(p,endpoint):null;
+  const content=jr?`<span class="jr-station-tab" aria-hidden="true">${esc(shortCode||'')}</span><span class="jr-station-frame" aria-hidden="true"><span class="jr-station-line">${esc(jr[1])}</span><span class="jr-station-digits">${esc(jr[2])}</span></span>`:esc(code);
+  const badge=`<span class="departure-endpoint-code endpoint-${info?.shape||'circle'}${number.code?'':' is-unknown'}${jr?' jr-station-number':''}${shortCode?' has-station-abbreviation':''}" style="--station-color:${esc(info?.color||'#9ca59a')}" aria-label="${esc(number.code?'역 번호 '+code+(shortCode?' · '+shortCode:''):'공식 역 번호 미확인')}" title="${esc(number.code?'역 번호 '+code+(shortCode?' · '+shortCode:''):'공식 역 번호 미확인')}">${content}</span>`;
   return `<strong class="departure-station-name departure-${side}">${badge}<span class="departure-station-korean">${esc(parts.korean)}</span>${parts.japanese?`<small class="departure-station-japanese" lang="ja">${esc(parts.japanese)}</small>`:''}</strong>`;}
  function shell(key,itineraryDate,metrics={}){
   const p=profiles[key],u=links(p);
