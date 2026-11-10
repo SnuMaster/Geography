@@ -101,3 +101,25 @@ test('JR numbers use the official stacked frame and station abbreviations while 
  assert.equal(ctx.jrStationAbbreviation({from:'우구이스다니',fromJa:'鶯谷'}),null);
  assert.equal(ctx.jrStationAbbreviation({from:'이케부쿠로',to:'우에노'},'to'),'UEN');
 });
+
+test('collapsed train cards retain visible limitations and move controls and sources into separate disclosures',()=>{
+ for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs){
+  const html=render(Number(id.split('-')[0]),leg);
+  for(const section of html.match(/<section class="station-departures[\s\S]*?<\/section>/g)||[]){
+   assert.match(section,/<details class="departure-timetable"><summary>(?:시간표·탑승 선택|운행 안내)<\/summary>/,id);
+   assert.doesNotMatch(section,/<details[^>]*\bopen(?:[ =>]|$)/,id);
+   const status=section.match(/<p class="departure-data-status">([^<]+)<\/p>/);
+   assert.ok(status&&/실시간 (지연 미반영|정보 미지원)/.test(status[1]),id);
+   assert.ok(section.indexOf(status[0])<section.indexOf('<details'),id);
+   if(section.includes('data-departure-profile=')){
+    assert.match(section,/<details class="departure-timetable">[\s\S]*data-departure-body[\s\S]*data-ride-choose=[\s\S]*<\/details>/,id);
+    assert.match(section,/<details class="departure-reference"><summary>자료 정보<\/summary>[\s\S]*자료 확인/,id);
+   }
+   for(const cls of ['departure-fare-basis','departure-fare-components','departure-fare-sources','departure-schedule-source'])if(section.includes('class="'+cls+'"')){
+    const start=section.indexOf('<details class="departure-reference">'),end=section.indexOf('</details>',start);
+    assert.ok(start>=0&&section.indexOf('class="'+cls+'"')>start&&section.indexOf('class="'+cls+'"')<end,id+': '+cls);
+   }
+   assert.match(section,/<div class="departure-quick-links"><a[^>]+>길찾기 ↗<\/a>/,id);
+  }
+ }
+});

@@ -195,3 +195,27 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .jr-station-number .jr-station-frame{display:flex;flex-direction:column;justify-content:center;align-items:center;box-sizing:border-box;width:66px;height:66px;flex:0 0 66px;border:6px solid var(--station-color);border-radius:6px;background:#fff}
 .jr-station-number .jr-station-line{display:block;font:700 18px/19px Arial,sans-serif;letter-spacing:-.8px}
 .jr-station-number .jr-station-digits{display:block;font:700 31px/31px Arial,sans-serif;letter-spacing:-1px}
+
+/* Keep the route and fare readable; open timetable and references only when needed. */
+.station-departures .departure-data-status{font-size:10px;line-height:1.6;color:#655b50;margin:10px 0;overflow-wrap:anywhere}
+.station-departures :is(.departure-timetable,.departure-reference){border-top:1px solid #d8cbbb;margin:0;padding:0}
+.station-departures :is(.departure-timetable,.departure-reference)>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:8px 0;box-sizing:border-box;font:500 12px/1.5 RouteSans,sans-serif;color:#34434a;cursor:pointer;list-style:none}
+.station-departures :is(.departure-timetable,.departure-reference)>summary::-webkit-details-marker{display:none}
+.station-departures :is(.departure-timetable,.departure-reference)>summary:after{content:'＋';font-size:16px;color:#94613f;flex:none}
+.station-departures :is(.departure-timetable,.departure-reference)[open]>summary:after{content:'−'}
+.station-departures :is(.departure-timetable-body,.departure-reference-body){padding:0 0 12px;overflow-wrap:anywhere}
+.station-departures .departure-timetable-body .departure-heading{margin-top:4px}
+.station-departures .departure-timetable-body .compact-actions{grid-template-columns:minmax(0,1fr)}
+.station-departures .departure-quick-links{display:flex;align-items:center;flex-wrap:wrap;gap:0 16px;padding:0}
+.station-departures .departure-quick-links>a,.station-departures .departure-quick-links .rail-disruption-links>a{display:inline-flex;align-items:center;min-height:44px;font:500 11px/1.5 RouteSans,sans-serif;color:#805334;padding:4px 0;box-sizing:border-box}
+.station-departures .departure-quick-links .rail-disruption-links{margin:0;padding:0;border:0}
+.station-departures .departure-service-notice{font-size:11px;line-height:1.7;color:#805334}
+
+/* One compact destination bar at every screen width; the rest is opt-in. */
+body.command-center.travel-shell[data-viewport] #shellContextCard .fold-card-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#faf8f2;border:0}
+body.command-center.travel-shell[data-viewport] .fold-card-bar #foldNext{display:grid;flex:1;min-width:0;min-height:44px;text-align:left;gap:3px;padding:3px 4px}
+body.command-center.travel-shell[data-viewport] .fold-card-bar #foldNext strong{font-size:12px;line-height:1.5;color:#253440}
+body.command-center.travel-shell[data-viewport] .fold-card-bar #foldCardToggle{display:inline-grid;place-items:center;min-width:44px;width:44px;min-height:44px;padding:0;background:#eee7db;border-radius:4px;color:#805334}
+body.command-center.travel-shell[data-viewport] #shellContextCard .cc-next{display:none}
+body.command-center.travel-shell[data-viewport].cc-card-collapsed #shellContextCard #routeFocusPanel{display:none}
+body.command-center.travel-shell[data-viewport]:not(.cc-card-collapsed) #shellContextCard #routeFocusPanel{border-top:1px solid #d8cbbb;border-radius:0;box-shadow:none}

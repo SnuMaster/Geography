@@ -123,6 +123,11 @@ const RailDepartures = (() => {
   const content=jr?`<span class="jr-station-tab" aria-hidden="true">${esc(shortCode||'')}</span><span class="jr-station-frame" aria-hidden="true"><span class="jr-station-line">${esc(jr[1])}</span><span class="jr-station-digits">${esc(jr[2])}</span></span>`:esc(code);
   const badge=`<span class="departure-endpoint-code endpoint-${info?.shape||'circle'}${number.code?'':' is-unknown'}${jr?' jr-station-number':''}${shortCode?' has-station-abbreviation':''}" style="--station-color:${esc(info?.color||'#9ca59a')}" aria-label="${esc(number.code?'역 번호 '+code+(shortCode?' · '+shortCode:''):'공식 역 번호 미확인')}" title="${esc(number.code?'역 번호 '+code+(shortCode?' · '+shortCode:''):'공식 역 번호 미확인')}">${content}</span>`;
   return `<strong class="departure-station-name departure-${side}">${badge}<span class="departure-station-korean">${esc(parts.korean)}</span>${parts.japanese?`<small class="departure-station-japanese" lang="ja">${esc(parts.japanese)}</small>`:''}</strong>`;}
+ function referenceDetails(metrics,p,info){
+  const fare=`${metrics.basis?`<p class="departure-fare-basis">${esc(metrics.basis)}</p>`:''}${metrics.components?.length?`<dl class="departure-fare-components">${metrics.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}${metrics.sources?.length?`<div class="departure-fare-sources">${metrics.sources.filter(safeUrl).map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}`;
+  const timetable=p?`<p class="departure-schedule-source">자료 확인 ${esc(p.sourceDate||'확인 필요')}<br>${sourceHtml(p)}${safeUrl(p.officialTimetableUrl)?`<br><a href="${esc(safeUrl(p.officialTimetableUrl))}" target="_blank" rel="noopener noreferrer">운영사 안내 ↗</a>`:''}</p>`:info?`<p class="departure-schedule-source">자료 확인 ${esc(info.checkedAt)}${safeUrl(info.source)?`<br><a href="${esc(safeUrl(info.source))}" target="_blank" rel="noopener noreferrer">공식 운행·시간표 확인 ↗</a>`:''}</p>`:'';
+  return fare||timetable?`<details class="departure-reference"><summary>자료 정보</summary><div class="departure-reference-body">${fare}${timetable}</div></details>`:'';
+ }
  function shell(key,itineraryDate,metrics={}){
   const p=profiles[key],u=links(p);
   const selected=metrics.byProfile?.[key]||metrics;
@@ -134,12 +139,14 @@ const RailDepartures = (() => {
    <div class="departure-stations departure-stations-aligned departure-stations-numbered${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
    <div class="compact-metrics"><span><small>${esc(selected.distanceLabel||'거리')}</small><b>${esc(selected.distance||'—')}</b></span><span><small>${esc(selected.fareLabel||'요금')}</small><b>${selected.displayBlank?'':esc(selected.fare||'요금 미확인')}</b></span></div>
-   ${selected.basis?`<p class="departure-fare-basis">${esc(selected.basis)}</p>`:''}${selected.components?.length?`<dl class="departure-fare-components">${selected.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}${selected.sources?.length?`<div class="departure-fare-sources">${selected.sources.map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
+   ${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
+   <p class="departure-data-status">${p.sourceClass==='public-reference'?'공개 시간표 참고 · 여행일 미검증':'저장 시간표 기준'} · 실시간 지연 미반영</p>
+   <details class="departure-timetable"><summary>시간표·탑승 선택</summary><div class="departure-timetable-body">
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
    <div class="departure-date-basis"><span>여행 계획 날짜 <b>${esc(itineraryDate||'확인 필요')}</b> · 아래 열차는 현재 날짜 기준</span><span data-departure-query-date>현재 날짜 기준 저장 시간표 조회 · 실시간 지연 미반영</span></div>
-   ${p.metadata?.itineraryExpansion?`<p class="departure-schedule-source">${p.sourceClass==='public-reference'?'공개 시간표 참고 · 여행일 미검증':'공식 시간표 참고 · 여행 전 재확인'}<br>자료 확인 ${esc(p.sourceDate)} · 실시간 지연 미반영<br><a href="${esc(safeUrl(p.metadata.sourceUrl))}" target="_blank" rel="noopener noreferrer">시간표 자료 ↗</a> · <a href="${esc(u.timetable)}" target="_blank" rel="noopener noreferrer">운영사 안내 ↗</a></p>`:''}
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
-   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}`;
+   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button></div></div></details>
+   <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>${referenceDetails(selected,p)}`;
  }
  function sectionHtml(key,metrics,day){const p=profiles[key],date=travelDate(day);return `<section class="station-departures compact-station" data-itinerary-date="${esc(date)}" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,date,metrics)}</section>`;}
  function unscheduledSection(part,metrics,day){
@@ -149,13 +156,12 @@ const RailDepartures = (() => {
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
    <div class="departure-stations departure-stations-aligned departure-stations-numbered has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel)}</small><b>${esc(metrics.distance)}</b></span><span><small>${esc(metrics.fareLabel)}</small><b>${metrics.displayBlank?'':esc(metrics.fare)}</b></span></div>
-   ${metrics.basis?`<p class="departure-fare-basis">${esc(metrics.basis)}</p>`:''}
-   ${metrics.components?.length?`<dl class="departure-fare-components">${metrics.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}
-   ${metrics.sources?.length?`<div class="departure-fare-sources">${metrics.sources.map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}
-   <div class="departure-heading"><strong>${info?.kind==='continuous'?'운행 안내':'다음 열차'}</strong></div>
+   <p class="departure-data-status">${esc(info?.label||'저장 시간표 없음')} · 실시간 정보 미지원</p>
+   ${info?.notice?`<p class="departure-service-notice">${esc(info.notice)}</p>`:''}
+   <details class="departure-timetable"><summary>운행 안내</summary><div class="departure-timetable-body">
    <p class="departure-date-basis">여행 계획 날짜 ${esc(travelDate(day))}</p>
-   <div class="departure-unavailable"><strong>${esc(info?.label||'시간표 확인 필요')}</strong><p>${esc(info?.description||'저장된 시간표가 없는 구간입니다. 출발 시각·막차는 출발역 안내에서 확인하세요.')}</p>${info?.hours?`<p>${esc(info.hours)}</p>`:''}${info?.notice?`<p>${esc(info.notice)}</p>`:''}<small>실시간 정보 미지원${info?' · 자료 확인 '+esc(info.checkedAt):''}</small>${info&&safeUrl(info.source)?`<p><a href="${esc(safeUrl(info.source))}" target="_blank" rel="noopener noreferrer">공식 운행·시간표 확인 ↗</a></p>`:''}</div>
-   <div class="compact-actions"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>${disruptionHtml(p)}
+   <div class="departure-unavailable"><strong>${esc(info?.label||'시간표 확인 필요')}</strong><p>${esc(info?.description||'저장된 시간표가 없는 구간입니다. 출발 시각·막차는 출발역 안내에서 확인하세요.')}</p>${info?.hours?`<p>${esc(info.hours)}</p>`:''}</div></div></details>
+   <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>${referenceDetails(metrics,null,info)}
   </section>`;
  }
  function html(day,leg,part,metrics={},complete=false){
@@ -236,7 +242,7 @@ const RailDepartures = (() => {
  }
  function paint(){if(document.hidden)return;const now=Date.now();for(const view of [active,...inlineViews.values()]){if(!view?.element.isConnected)continue;const sections=view.visible||view.element.querySelectorAll('[data-departure-profile]');for(const section of sections)if(section.isConnected&&view.element.contains(section))renderTrains(section,now);}}
  function resumeTimer(){clearInterval(interval);interval=null;if((active||inlineViews.size)&&!document.hidden){paint();interval=setInterval(paint,1000);}}
- function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active=null;resumeTimer();}
+ function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active.element.removeEventListener('toggle',active.toggle,true);active=null;resumeTimer();}
  function mount(popup,inline=false){
   const element=popup.getElement();if(inline&&inlineViews.has(element)){inlineViews.get(element).sync();return;}if(!inline)unmount();if(!element?.querySelector('[data-departure-profile]'))return;
   // Retain live DOM when Leaflet remeasures the popup after async data loads.
@@ -244,8 +250,9 @@ const RailDepartures = (() => {
   const refresh=async(key,force=false)=>{await loadData(key,force);if((inline?inlineViews.get(element)?.popup:active?.popup)===popup){paint();popup.update();}};
   const selectProfile=(section,key)=>{
    if(!profiles[key]||!section)return;
+   const expanded=[...section.querySelectorAll('details[open]')].map(el=>el.className);
    const content=shell(key,section.dataset.itineraryDate,JSON.parse(section.dataset.compactMetrics||'{}'));
-   section.dataset.departureProfile=key;section.setAttribute('aria-label',`${profiles[key].line} ${profiles[key].from} 출발역 열차 정보`);section.innerHTML=content;paint();popup.update();refresh(key);
+   section.dataset.departureProfile=key;section.setAttribute('aria-label',`${profiles[key].line} ${profiles[key].from} 출발역 열차 정보`);section.innerHTML=content;for(const el of section.querySelectorAll('details'))if(expanded.includes(el.className))el.open=true;paint();popup.update();refresh(key);
   };
   const click=event=>{
    const ride=event.target.closest('[data-ride-open],[data-ride-next],[data-ride-choose]');
@@ -255,7 +262,8 @@ const RailDepartures = (() => {
    const retry=event.target.closest('[data-departure-retry]');
    if(retry){event.stopPropagation();retry.disabled=true;retry.textContent='불러오는 중…';const body=retry.closest('[data-departure-body]');body.dataset.signature='retrying';body.setAttribute('aria-busy','true');refresh(retry.closest('[data-departure-profile]').dataset.departureProfile,true);}
   };
-  const view={popup,element,click};element.addEventListener('click',click);
+  const toggle=event=>{if(event.target.matches?.('.departure-timetable,.departure-reference')){paint();popup.update();}};
+  const view={popup,element,click,toggle};element.addEventListener('click',click);element.addEventListener('toggle',toggle,true);
   if(inline){
    view.visible=new Set();let sections=[];
    view.observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const entry of entries){if(!element.contains(entry.target))continue;if(entry.isIntersecting){view.visible.add(entry.target);refresh(entry.target.dataset.departureProfile);}else view.visible.delete(entry.target);}paint();},{rootMargin:'160px 0px'}):null;
@@ -265,7 +273,7 @@ const RailDepartures = (() => {
   resumeTimer();
  }
  function mountInline(element){if(element)mount({getElement:()=>element,getContent:()=>element,update:()=>{}},true);}
- function unmountInline(){for(const view of inlineViews.values()){view.observer?.disconnect();view.element.removeEventListener('click',view.click);}inlineViews.clear();resumeTimer();}
+ function unmountInline(){for(const view of inlineViews.values()){view.observer?.disconnect();view.element.removeEventListener('click',view.click);view.element.removeEventListener('toggle',view.toggle,true);}inlineViews.clear();resumeTimer();}
  function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else{unmount();unmountInline();}});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
  function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
