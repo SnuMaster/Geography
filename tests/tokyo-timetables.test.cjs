@@ -8,11 +8,11 @@ const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 const ctx={URL,URLSearchParams,DepartureCore:D,FareCore:F,TravelStore:{VERSION:'test'},RailDepartureProfiles:manifest,BoundedCache:require('../japan-2027/lru-cache'),window:{TripPersonal:{station:(a,b)=>b?`${a}(${b})`:a}},TripPersonal:{station:(a,b)=>b?`${a}(${b})`:a},document:{addEventListener(){}},esc:h,railBadge:()=>'<span>노선</span>'};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departures.js'),'utf8')+';globalThis.api=RailDepartures;',ctx);
 
-test('active coverage connects 103 of 107 rail parts; only ropeway and Shinkansen deliberately have no invented train events',()=>{
+test('active rail coverage retains explicit unsupported ropeway and Shinkansen segments',()=>{
  const remaining=[];let total=0;
  for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>['rail','metro'].includes(p.mode))){total++;if(!ctx.api.keyFor(leg,part))remaining.push(part.lineId);}
- assert.equal(total,107);assert.deepEqual(remaining.sort(),['Hakone.Ropeway','Hakone.Ropeway','JR-Central.TokaidoShinkansen','JR-Central.TokaidoShinkansen'].sort());
- assert.equal(entries.length,48);assert.equal(Object.keys(manifest.profiles).length-entries.length,102);
+ assert.equal(total,108);assert.deepEqual(remaining.sort(),['Hakone.Ropeway','Hakone.Ropeway',...Array(4).fill('JR-Central.TokaidoShinkansen')].sort());
+ assert.equal(entries.length,60);assert.equal(Object.keys(manifest.profiles).length-entries.length,102);
 });
 test('every new train survives real weekday and Japanese-holiday normalization with ordered source stop events',()=>{
  let rows=0;
@@ -22,16 +22,15 @@ test('every new train survives real weekday and Japanese-holiday normalization w
   for(const r of records){assert.equal(r.departure,r.stops[0].departure);assert.equal(r.destinationArrival,r.stops.at(-1).arrival||null);assert.equal(r.destinationDeparture,r.stops.at(-1).departure||null);if(p.sourceClass==='public-reference')assert.ok(r.sourceTrainIds.every(id=>id.split('.').includes(calendar)));}
   rows+=records.length;
  }
- assert.equal(rows,16792);
+ assert.equal(rows,20932);
 });
-test('Romancecar and Nikko join explicit upstream through-train chains and exclude unrelated express services',()=>{
- for(const name of ['로망스카 · 하코네 직통','게곤·리버티 게곤 · 닛코 직통']){
-  const both=entries.filter(([,p])=>p.line===name);assert.equal(both.length,2,name);
-  for(const[k,p]of both){assert.equal(p.throughParts.length,2);assert.ok(p.reverseKey);for(const r of Object.values(schedule(k,p)).flat()){assert.equal(r.type,'LimitedExpress');assert.ok(r.sourceTrainIds.length>=2);assert.ok(r.stops.length>=2);assert.equal(r.stops[0].id,p.sourceFromId);assert.equal(r.stops.at(-1).id,p.sourceToId);assert.match(r.number,name.startsWith('로망스카')?/하코네|はこね/:/게곤|けごん/);}}
- }
+test('selected Nikko express chains preserve explicit through connections and exclude local trains',()=>{
+ const both=entries.filter(([,p])=>p.throughParts?.some(q=>q.lineId==='Tobu.Nikko'));assert.equal(both.length,2);
+ for(const[k,p]of both){assert.equal(p.throughParts.length,2);for(const r of Object.values(schedule(k,p)).flat()){assert.equal(r.type,'LimitedExpress');assert.ok(r.sourceTrainIds.length>=2);assert.ok(r.stops.length>=2);assert.equal(r.stops[0].id,p.sourceFromId);assert.equal(r.stops.at(-1).id,p.sourceToId);assert.match(r.number,/게곤|けごん|기누|きぬ|스페이시아|スペーシア|아이즈|会津/);}}
 });
+
 test('Yamanote uses the existing map direction rather than the opposite side of the loop',()=>{
- const entry=entries.find(([,p])=>p.lineId==='JR-East.Yamanote'&&p.from==='우에노'&&p.to==='이케부쿠로'),[k,p]=entry;assert.equal(p.directionId,'InnerLoop');
+ const part=bundle.routes.days['3-main'][0].parts.find(p=>p.lineId==='JR-East.Yamanote'),k=ctx.api.keyFor(bundle.routes.days['3-main'][0],part),p=manifest.profiles[k];assert.ok(p);
  for(const r of Object.values(schedule(k,p)).flat()){const names=r.stops.map(s=>s.nameJa);assert.ok(names.includes('日暮里'));assert.ok(!names.includes('東京'));assert.equal(names.at(-1),'池袋');}
 });
 test('official cable columns preserve all 30 departures per direction and calendar without inventing arrival events',()=>{

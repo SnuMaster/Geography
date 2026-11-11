@@ -55,7 +55,12 @@ const RAIL_LINES={
  'JR-East.Takasaki':{code:'JU',color:'#f68b1e',shape:'square'},
  'JR-East.Tokaido':{code:'JT',color:'#f68b1e',shape:'square'},
  'JR-East.Yokosuka':{code:'JO',color:'#007ac1',shape:'square'},
- 'Keio.Inokashira':{code:'IN',color:'#000088',shape:'rounded'},
+ 'JR-East.SaikyoKawagoe':{code:'JA',color:'#00ac9a',shape:'square',source:'https://www.jreast.co.jp/map/'},
+ 'JR-East.ShonanShinjuku':{code:'JS',color:'#e21f26',shape:'square',source:'https://www.jreast.co.jp/map/'},
+ 'JR-East.SobuRapid':{code:'JO',color:'#007ac1',shape:'square',source:'https://www.jreast.co.jp/map/'},
+ 'JR-East.Keiyo':{code:'JE',color:'#c9252f',shape:'square',source:'https://www.jreast.co.jp/map/'},
+ 'Seibu.Shinjuku':{code:'SS',color:'#00a6bf',shape:'rounded',source:'https://www.seiburailway.jp/railway/railwaymap/'},
+ 'Keio.Inokashira':{code:'IN',color:'#000088',shape:'circle',markClass:'keio-inokashira',source:'https://www.keio.co.jp/global/howto/railwaymap/'},
  'Odakyu.Odawara':{code:'OH',color:'#2288cc',shape:'rounded'},
  'Tobu.Tojo':{code:'TJ',color:'#2d438c',shape:'rounded',markClass:'tobu-tojo',source:'https://www.tobu.co.jp/railway/guide/line/tojo_line.html'},
  'Enoden.Enoden':{code:'EN',color:'#009b6b',shape:'rounded'},
@@ -79,7 +84,7 @@ const METRO_STATION_NUMBERS={
 function metroStationCode(part){
  if(!/^(TokyoMetro|Toei)\./.test(part?.lineId||''))return null;
  const name=String(part.from||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim(),ja=String(part.fromJa||'').replace(/駅$/,'').trim();
- const verified=METRO_STATION_NUMBERS[part.lineId]?.find(row=>row[1]===name||ja&&row[2]===ja);if(verified)return verified[0];
+ const verified=RAIL_STATION_NUMBERS[part.lineId]?.find(row=>row[1]===name||ja&&row[2]===ja);if(verified)return verified[0];
  // Reuse existing exact station codes for older itinerary variants, without guessing numbers.
  const prefix=railInfo(part)?.code,profiles=globalThis.RailDepartureProfiles?.profiles||{};
  const candidates=[part.fromCode,...Object.values(profiles).flatMap(p=>p.lineId===part.lineId?[p.from===part.from?p.fromCode:null,p.to===part.from?p.toCode:null]:[])];
@@ -108,6 +113,31 @@ const RAIL_STATION_NUMBERS={...METRO_STATION_NUMBERS,
  'Tobu.TobuSkytree':[['TS09','기타센주','北千住'],['TS30','도부도부쓰코엔','東武動物公園']],
  'Tobu.Nikko':[['TS30','도부도부쓰코엔','東武動物公園'],['TN25','도부닛코','東武日光']]
 };
+// Reviewed additional endpoints for time-priority routes, 2026-11-10.
+// Metro line/station lists; Toei route map; JR East Tokyo-area numbering map.
+for(const [id,rows]of Object.entries({
+ 'TokyoMetro.Hibiya':[['H08','히비야','日比谷'],['H10','히가시긴자','東銀座'],['H11','쓰키지','築地'],['H14','닌교초','人形町']],
+ 'TokyoMetro.Ginza':[['G15','우에노히로코지','上野広小路'],['G19','아사쿠사','浅草']],
+ 'TokyoMetro.Marunouchi':[['M22','고라쿠엔','後楽園'],['M17','도쿄','東京']],
+ 'TokyoMetro.Yurakucho':[['Y20','신토미초','新富町'],['Y22','도요스','豊洲']],
+ 'Toei.Mita':[['I01','메구로','目黒'],['I08','히비야','日比谷'],['I10','진보초','神保町'],['I11','스이도바시','水道橋'],['I12','가스가','春日']],
+ 'Toei.Shinjuku':[['S01','신주쿠','新宿'],['S08','이와모토초','岩本町']],
+ 'Toei.Asakusa':[['A14','닌교초','人形町']],
+ 'Yurikamome.Yurikamome':[['U16','도요스','豊洲']],
+ 'Tobu.Tojo':[['TJ22','가와고에시','川越市']],
+ 'Tobu.TobuSkytree':[['TS01','아사쿠사','浅草'],['TS27','가스카베','春日部']],
+ 'Tobu.Nikko':[['TS27','가스카베','春日部'],['TN23','시모이마이치','下今市']],
+ 'Odakyu.Odawara':[['OH07','시모키타자와','下北沢'],['OH01','신주쿠','新宿']],
+ 'JR-East.Yamanote':[['JY06','우구이스다니','鶯谷'],['JY18','요요기','代々木']],
+ 'JR-East.KeihinTohokuNegishi':[['JK30','우에노','上野'],['JK31','우구이스다니','鶯谷'],['JK26','도쿄','東京'],['JK28','아키하바라','秋葉原'],['JK24','신바시','新橋'],['JK27','간다','神田']],
+ 'JR-East.ChuoRapid':[['JC02','간다','神田'],['JC04','요쓰야','四ツ谷']],
+ 'JR-East.ChuoSobuLocal':[['JB14','요쓰야','四ツ谷'],['JB28','모토야와타','本八幡']],
+ 'JR-East.SobuRapid':[['JO21','바쿠로초','馬喰町'],['JO19','도쿄','東京']],
+ 'JR-East.Yokosuka':[['JO09','오후나','大船']],
+ 'JR-East.Tokaido':[['JT07','오후나','大船']],
+ 'JR-East.Ome':[['JC55','하이지마','拝島'],['JC56','우시하마','牛浜']],
+ 'Enoden.Enoden':[['EN13','유이가하마','由比ヶ浜']]
+}))RAIL_STATION_NUMBERS[id]=[...(RAIL_STATION_NUMBERS[id]||[]),...rows];
 // JR East official station-number layout and major-station abbreviations:
 // https://www.jreast.co.jp/press/2016/20160402.pdf (pages 1 and 3), checked 2026-11-10.
 const JR_STATION_SHORT_CODES=[['TYO','도쿄','東京'],['KND','간다','神田'],['AKB','아키하바라','秋葉原'],['UEN','우에노','上野'],['NPR','닛포리','日暮里'],['IKB','이케부쿠로','池袋'],['SJK','신주쿠','新宿'],['SBY','시부야','渋谷'],['EBS','에비스','恵比寿'],['OSK','오사키','大崎'],['SGW','시나가와','品川'],['HMC','하마마쓰초','浜松町'],['SMB','신바시','新橋'],['ABN','아카바네','赤羽'],['URW','우라와','浦和'],['OMY','오미야','大宮'],['OFN','오후나','大船'],['TTK','도쓰카','戸塚'],['YHM','요코하마','横浜'],['MKG','무사시코스기','武蔵小杉']];
@@ -131,7 +161,7 @@ function railLineBadge(part,extra=''){
 }
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
-function railInfo(part){return RAIL_LINES[part.lineId]||(skylinerLogo(part)?{code:'Skyliner',color:MODE.rail.color,shape:'rounded',logo:true}:part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
+function railInfo(part){return RAIL_LINES[part.lineId]||(skylinerLogo(part)?{code:'Skyliner',color:MODE.rail.color,shape:'rounded',logo:true}:part.lineId==='Special.Direct'&&/후지/.test(part.line||'')?{code:'富士回遊',color:'#276bad',shape:'rounded',markClass:'fuji-service',source:'https://www.jreast.co.jp/multi/traininformation/fuji_excursion/'}:part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
 const TRANSIT_VEHICLES={bus:'<rect x="4" y="4" width="16" height="14" rx="3"/><path d="M4 10h16M8 18v3m8-3v3M8 14h.01M16 14h.01"/>',cable:'<path d="m3 20 18-8M5 14V5h11l4 3v8M5 10h14M10 5v11M3 23l18-8"/>',ropeway:'<path d="M2 3h20M12 3v5M5 11l3-3h8l3 3v10H5zM5 15h14M12 8v13"/>'};
 function transitVehicleBadge(part,info,extra=''){return `<span class="rail-symbol transit-vehicle ${info.shape} vehicle-${info.vehicle} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc((info.vehicle==='bus'?'버스':info.vehicle==='cable'?'케이블카':'로프웨이')+' · '+part.line)}" title="${esc(part.line)}"><svg viewBox="0 0 24 24" aria-hidden="true">${TRANSIT_VEHICLES[info.vehicle]}</svg><small>${esc(info.code)}</small></span>`;}
 function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAccuracy==='schematic'||/개략|대표.*연결|미확인/.test(part.geometrySource||'')));}

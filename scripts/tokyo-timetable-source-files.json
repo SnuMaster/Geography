@@ -138,6 +138,96 @@
       "path": "data/stations.json",
       "gitBlob": "77e300b473307a6627b7ae768c67515bdd8a71f1",
       "sha256": "1a571e32e90bb4f64cc46b038a0907046b1eaed214ebd825e3d8d0929e6c81d6"
+    },
+    {
+      "name": "station-groups.json",
+      "path": "data/station-groups.json",
+      "gitBlob": "c162d588ed31a00c2c4cf7b413f755499c3f2d35",
+      "sha256": "cbd58fe77ca87bcbf3c00c05c2ed79c47a5ae548ff828610f7717a342dc122c6"
+    },
+    {
+      "name": "tokyometro-chiyoda.json",
+      "path": "data/train-timetables/tokyometro-chiyoda.json",
+      "gitBlob": "e4800cca57cac0d1ce358dba0bd39888454f3800",
+      "sha256": "dc89434477a399e07cb88ffc69fe1f3d07dddee89827f0eeea3dd5159f85015e"
+    },
+    {
+      "name": "tokyometro-yurakucho.json",
+      "path": "data/train-timetables/tokyometro-yurakucho.json",
+      "gitBlob": "204dad61ee1653ef2eb8b0c1210974199d9e6085",
+      "sha256": "2db3322b45a2aaa580b5ec9332798a9f58fa351e3c55b4d207757ee4741249ec"
+    },
+    {
+      "name": "tokyometro-hanzomon.json",
+      "path": "data/train-timetables/tokyometro-hanzomon.json",
+      "gitBlob": "993c2c340d2d1840b2842e80bbd874c15063fc38",
+      "sha256": "696d01be3d332a688220dab027833e03ad25a8eb36f7fd49ad9ec0e16043dea0"
+    },
+    {
+      "name": "tokyometro-marunouchi.json",
+      "path": "data/train-timetables/tokyometro-marunouchi.json",
+      "gitBlob": "f878c08e7a060acb3f125cdd5314517bdf9c9ee8",
+      "sha256": "5a829564f75d8920d34bc29e461c4fd7079db64287969ccb1f9b73e07e14ba20"
+    },
+    {
+      "name": "tokyometro-tozai.json",
+      "path": "data/train-timetables/tokyometro-tozai.json",
+      "gitBlob": "ec25a86f18141207c82ba95fde9818a319dee81d",
+      "sha256": "58ace9029c9e4070b8e98c9d418b36de7610d9de61561ececb2dc652ce5cdf25"
+    },
+    {
+      "name": "tokyometro-fukutoshin.json",
+      "path": "data/train-timetables/tokyometro-fukutoshin.json",
+      "gitBlob": "88ea3720da8a84769da8ad2924571f8707c42a64",
+      "sha256": "2e80d0d96ebda8a00ccd20b458c22e1c6f5abcd7ae38a3f840619eb30341cb4f"
+    },
+    {
+      "name": "toei-mita.json",
+      "path": "data/train-timetables/toei-mita.json",
+      "gitBlob": "132fe1017218413e9a1eb62d67c3471a1d59dd84",
+      "sha256": "4206ba7d7db90d41cb4faebbfd02f04a11f776943408304cea161d27c26c3dd6"
+    },
+    {
+      "name": "jreast-shonanshinjuku.json",
+      "path": "data/train-timetables/jreast-shonanshinjuku.json",
+      "gitBlob": "594efadfaa3d28a664fdd85430367c8ab7df3135",
+      "sha256": "d31b0c7e8ce2e302ae02f87aabb914241dcb4a40a81d210091c0fa33835111a2"
+    },
+    {
+      "name": "jreast-saikyokawagoe.json",
+      "path": "data/train-timetables/jreast-saikyokawagoe.json",
+      "gitBlob": "bf6ac976d1cc7f804b21a3300f83efdda2a0727c",
+      "sha256": "067a6c87ba9addc26ab3cc68aef2127634a831b0c2e659f0a5eec015cf3744fa"
+    },
+    {
+      "name": "jreast-keiyo.json",
+      "path": "data/train-timetables/jreast-keiyo.json",
+      "gitBlob": "5502b541f31587dc1ef834e95459d3c1da8f71b4",
+      "sha256": "fc3f998798d1242e2cbcae6aab7caa79e5b7017a33de0b6d02d468365b91c3cd"
+    },
+    {
+      "name": "jreast-soburapid.json",
+      "path": "data/train-timetables/jreast-soburapid.json",
+      "gitBlob": "def67d8b460b4d4fad46fcfdb4af4e8a7ef978c1",
+      "sha256": "195cc51ed50a1acb17892c8f77bf5e5767f0681bc206e6520c91c2df1ee67298"
+    },
+    {
+      "name": "tobu-tojo.json",
+      "path": "data/train-timetables/tobu-tojo.json",
+      "gitBlob": "b79a70a99fa65750baf6c4767faa73a60176107d",
+      "sha256": "847360bc3d0030b059fc48417409a31aaf149540f1c5e032c850517ad51d15bc"
+    },
+    {
+      "name": "jreast-ome.json",
+      "path": "data/train-timetables/jreast-ome.json",
+      "gitBlob": "9e32252c492349e39ebfbfa2fea4a3318919706d",
+      "sha256": "5b3d4260d6874240a8b6431cc1172ab73ba1d56ce1883828480ffbc54fe14bee"
+    },
+    {
+      "name": "seibu-shinjuku.json",
+      "path": "data/train-timetables/seibu-shinjuku.json",
+      "gitBlob": "bc5a4177cebd71171437c142a8e2cc7573c68f48",
+      "sha256": "b50ce1c9584daf2946075e2d08ab233a1b6a302ac3dd6b2f81896ec91d362867"
     }
   ]
 }

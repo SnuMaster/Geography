@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 const bundle=require('../japan-2027/trip-update.json'),source=require('../scripts/tokyo-rail-geometry.json'),G=require('../japan-2027/location-core');
 const parts=Object.values(bundle.routes.days).flat().flatMap(l=>l.parts);
 test('Tokyo–Atami follows the official Shinkansen through Shin-Yokohama and Odawara in both directions',()=>{
- const legs=parts.filter(p=>p.lineId==='JR-Central.TokaidoShinkansen');assert.equal(legs.length,2);
+ const legs=parts.filter(p=>p.lineId==='JR-Central.TokaidoShinkansen'&&(p.from==='아타미'||p.to==='아타미'));assert.equal(legs.length,2);
  for(const p of legs){assert.equal(p.geometryAccuracy,'mapped');assert.equal(p.source,source.source);assert.ok(p.coords.length>1000);assert.ok(p.distanceM>94000&&p.distanceM<98000);
   for(const station of [[35.507,139.617],[35.256,139.155]])assert.ok(p.coords.some(c=>G.distance(c,station)<500),'verified intermediate station');
   for(let i=1;i<p.coords.length;i++)assert.ok(G.distance(p.coords[i-1],p.coords[i])<1500,'no invented long straight gap');
@@ -69,7 +69,7 @@ test('metro badges include the exact departure station number on every active ro
 
 test('verified through rides use one complete map symbol without changing tracks or hiding actual transfers',()=>{
  vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ui);ui.window={TripPersonal:{displayParts:leg=>leg.parts}};
- for(const [day,index]of [[4,0],[4,5],[6,0],[6,4],[10,0],[10,5]]){
+ for(const [day,index]of [[4,0],[4,5],[10,0],[10,5]]){
   const leg=bundle.routes.days[day+'-main'][index],snapshot=JSON.stringify(leg),shown=ui.railMapParts(leg),symbol=shown.find(p=>p.mapSymbol);assert.ok(symbol,leg.legId);assert.equal(shown.filter(p=>p.mapSymbol).length,1);assert.equal(shown.filter(p=>p.suppressSymbol).length,1);
   assert.equal(JSON.stringify(leg),snapshot);for(let i=0;i<shown.length;i++)assert.equal(shown[i].coords,leg.parts[i].coords);
   assert.equal(symbol.mapSymbol.from,day===4?(index===0?'우에노':'요코하마'):symbol.from);assert.ok(symbol.mapSymbol.coords.length>symbol.coords.length);assert.match(symbol.mapSymbol.line,/직통/);

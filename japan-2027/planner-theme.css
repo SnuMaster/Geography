@@ -195,6 +195,17 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .jr-station-number .jr-station-frame{display:flex;flex-direction:column;justify-content:center;align-items:center;box-sizing:border-box;width:66px;height:66px;flex:0 0 66px;border:6px solid var(--station-color);border-radius:6px;background:#fff}
 .jr-station-number .jr-station-line{display:block;font:700 18px/19px Arial,sans-serif;letter-spacing:-.8px}
 .jr-station-number .jr-station-digits{display:block;font:700 31px/31px Arial,sans-serif;letter-spacing:-1px}
+.rail-symbol.keio-inokashira{background:var(--rail-color);color:#fff}
+.rail-symbol.fuji-service{width:70px;font-size:12px;letter-spacing:0}
+.departure-endpoint-code.keio-station-number{display:flex;flex-direction:column;justify-content:center;gap:1px;border:5px solid var(--station-color);background:var(--station-color);color:#fff;overflow:hidden}
+.keio-station-number .keio-station-line{font:700 20px/23px Arial,sans-serif}
+.keio-station-number .keio-station-digits{display:block;width:100%;border-radius:0 0 30px 30px;background:#fff;color:#111;text-align:center;font:700 23px/27px Arial,sans-serif}
+.departure-route-choice{padding:12px 14px;border:1px solid #d3c1aa;border-radius:9px;background:#f1ede4;color:#26343c;margin:10px 0}
+.departure-route-choice>b{display:block;font:600 13px/1.5 RouteSans,sans-serif}
+.departure-route-choice>small{display:block;font:400 10px/1.7 RouteSans,sans-serif;color:#6e6355}
+.departure-route-choice details{margin-top:6px;font:400 11px/1.7 RouteSans,sans-serif}
+.departure-route-choice summary{cursor:pointer;min-height:32px;display:flex;align-items:center;color:#805a3f}
+.departure-route-choice p{margin:6px 0;font:inherit}
 
 /* Keep the route and fare readable; open timetable and references only when needed. */
 .station-departures .departure-data-status{font-size:10px;line-height:1.6;color:#655b50;margin:10px 0;overflow-wrap:anywhere}

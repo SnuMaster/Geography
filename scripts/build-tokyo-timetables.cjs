@@ -4,12 +4,26 @@
 // interpolated arrivals, guessed transfers or private coordinates are permitted.
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
 const root=path.resolve(__dirname,'../japan-2027'),cache=path.resolve(process.env.TOKYO_TIMETABLE_CACHE||path.join(__dirname,'../../tokyo-timetable-cache'));
-const pin='c708abea8bf05ab56137a50e52c032112b6f9beb',checkedAt='2026-11-05',prefix='tokyo27-';
+const pin='c708abea8bf05ab56137a50e52c032112b6f9beb',checkedAt='2026-11-10',prefix='tokyo27-';
 const upstream='https://github.com/nagix/mini-tokyo-3d/blob/'+pin+'/data/train-timetables/';
 const sourceInputs=require('./tokyo-timetable-source-files.json');
 if(sourceInputs.pin!==pin)throw Error('Mismatched source pin');
 function readInput(name){const ref=sourceInputs.files.find(f=>f.name===name),bytes=fs.readFileSync(path.join(cache,name));if(!ref||crypto.createHash('sha256').update(bytes).digest('hex')!==ref.sha256||crypto.createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex')!==ref.gitBlob)throw Error('Unverified source snapshot '+name);return bytes;}
 const configs={
+ 'TokyoMetro.Chiyoda':['tokyometro-chiyoda','https://www.tokyometro.jp/station/'],
+ 'TokyoMetro.Yurakucho':['tokyometro-yurakucho','https://www.tokyometro.jp/station/'],
+ 'TokyoMetro.Marunouchi':['tokyometro-marunouchi','https://www.tokyometro.jp/station/'],
+ 'TokyoMetro.Hanzomon':['tokyometro-hanzomon','https://www.tokyometro.jp/station/'],
+ 'TokyoMetro.Tozai':['tokyometro-tozai','https://www.tokyometro.jp/station/'],
+ 'TokyoMetro.Fukutoshin':['tokyometro-fukutoshin','https://www.tokyometro.jp/station/'],
+ 'Toei.Mita':['toei-mita','https://www.kotsu.metro.tokyo.jp/subway/timetable/'],
+ 'Tobu.Tojo':['tobu-tojo','https://www.tobu.co.jp/railway/guide/line/tojo_line.html'],
+ 'Seibu.Shinjuku':['seibu-shinjuku','https://www.seiburailway.jp/railway/'],
+ 'JR-East.Ome':['jreast-ome','https://www.jreast.co.jp/estation/'],
+ 'JR-East.SaikyoKawagoe':['jreast-saikyokawagoe','https://www.jreast.co.jp/estation/'],
+ 'JR-East.ShonanShinjuku':['jreast-shonanshinjuku','https://www.jreast.co.jp/estation/'],
+ 'JR-East.SobuRapid':['jreast-soburapid','https://www.jreast.co.jp/estation/'],
+ 'JR-East.Keiyo':['jreast-keiyo','https://www.jreast.co.jp/estation/'],
  'TokyoMetro.Hibiya':['tokyometro-hibiya','https://www.tokyometro.jp/station/','https://www.tokyometro.jp/unkou/history/hibiya.html'],
  'TokyoMetro.Ginza':['tokyometro-ginza','https://www.tokyometro.jp/station/','https://www.tokyometro.jp/unkou/history/ginza.html'],
  'TokyoMetro.Namboku':['tokyometro-namboku','https://www.tokyometro.jp/station/','https://www.tokyometro.jp/unkou/history/namboku.html'],
@@ -73,7 +87,9 @@ function collect(parts){
   if(!train.tt.some(s=>s.s===from&&s.d))continue;
   if(direction&&train.d!==direction)continue;
   if(isRomance&&(!/LimitedExpress$/.test(train.y)||!(train.nm||[]).some(n=>/Hakone/i.test(n.en||''))))continue;
-  if(isNikko&&(!/LimitedExpress$/.test(train.y)||!(train.nm||[]).some(n=>/Kegon/i.test(n.en||''))))continue;
+  if(/TH-LINER|HomeLiner|TJ_Liner|S-TRAIN/i.test(train.y))continue;
+  if(parts.some(p=>p.fareClass==='reserved')&&!/LimitedExpress$/.test(train.y))continue;
+  if(parts.every(p=>p.fareClass==='ordinary')&&/^(Tobu\.(?!Tojo)|Odakyu\.|OdakyuHakone\.)/.test(first.lineId)&&/LimitedExpress$/.test(train.y))continue;
   const cal=calendar(train);if(!cal)continue;
   const walk=(current,stops,chain)=>{
    if(chain.length>16||chain.includes(current.id)||calendar(current)!==cal)return;
@@ -104,7 +120,7 @@ for(const [identity,parts]of groups){const projection=collect(parts);if(!project
  const first=parts[0],last=parts.at(-1),key=prefix+crypto.createHash('sha256').update(identity).digest('hex').slice(0,14),file='timetables/'+key+'.json';
  const sourceUrls=projection.files.map(f=>upstream+f+'.json'),sourceHashes=Object.fromEntries(projection.files.map(f=>[f,hashes[f]]));
  const metadata={sourceUrl:sourceUrls[0],sourceUrls,sourceSha256:sourceHashes,upstreamCommit:pin,retrievedAt:checkedAt,scheduleRevision:null,itineraryExpansion:true,note:'Mini Tokyo 3D 공개 시간표의 정확한 정차역·직통 연결을 사용합니다. 운영사 전수 대조 미실시. 여행일 운행·임시열차·좌석 및 실시간 지연은 확인되지 않았습니다.'};
- const line=parts.some(p=>/로망스카/.test(p.line))?'로망스카 · 하코네 직통':parts.some(p=>p.lineId==='Tobu.Nikko')?'게곤·리버티 게곤 · 닛코 직통':parts.length>1?'JR 우에노도쿄라인 · 도카이도선 직통':first.line;
+ const line=parts.some(p=>/로망스카/.test(p.line))?'로망스카 · 하코네 직통':parts.length>1?(parts.every(p=>p.lineId.startsWith('JR-East.'))?'JR ':'')+parts.map(p=>p.line).filter((s,i,a)=>a.indexOf(s)===i).join(' · ')+' 직통':first.line;
  const stationCode=(id,side)=>Object.values(legacy).find(p=>p['source'+side+'Id']===id)?.[side.toLowerCase()+'Code'];
  const profile={lineId:first.lineId,line,from:first.from,to:last.to,fromJa:first.fromJa||stationMap.get(projection.from).title.ja,toJa:last.toJa||stationMap.get(projection.to).title.ja,sourceLineId:first.lineId,sourceFromId:projection.from,sourceToId:projection.to,fromCode:stationCode(projection.from,'From'),toCode:stationCode(projection.to,'To'),country:'JP',file,officialTimetableUrl:(first.lineId.startsWith('TokyoMetro.')?projection.config[1]:Object.values(legacy).find(p=>p.sourceFromId===projection.from)?.officialTimetableUrl)||projection.config[1],statusUrl:projection.config[2],metadata,validFrom:null,validUntil:null,sourceDate:checkedAt,sourceClass:'public-reference',calendarFrom:'2026-11-05',calendarThrough:'2027-02-28',notice:'공개 시간표 참고 · 여행 전 재확인 · 실시간 정보 미지원',...(parts.length>1?{throughParts:parts.map(p=>({lineId:p.lineId,from:p.from,to:p.to,line:p.line}))}:{matches:[{lineId:first.lineId,from:first.from,to:first.to,line:first.line}]})};
  if(projection.direction)profile.directionId=projection.direction;
