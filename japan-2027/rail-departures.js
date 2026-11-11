@@ -116,8 +116,13 @@ const RailDepartures = (() => {
   const label=window.TripPersonal.station(name,japanese,country),match=country==='KR'?null:/^(.*?)[(（]([^()（）]+)[)）]$/.exec(label);
   return {korean:match?match[1]:label,japanese:match?'('+match[2]+')':''};
  }
+ // UI sign adaptation, not a station-number system. Names/romanization:
+ // https://railway.jr-central.co.jp/station-guide/shinkansen/{tokyo,odawara,atami}/
+ const shinkansenSigns={'東京':{reading:'とうきょう',roman:'Tokyo'},'小田原':{reading:'おだわら',roman:'Odawara'},'熱海':{reading:'あたみ',roman:'Atami'}};
  function stationName(parts,side,p){
   const endpoint=side==='destination'?'to':'from',number=typeof railStationNumber==='function'?railStationNumber(p,endpoint):{code:p[endpoint+'Code'],lineId:p.lineId};
+  const japanese=p[endpoint+'Ja']||parts.japanese.replace(/^[（(]|[）)]$/g,''),sign=p.lineId==='JR-Central.TokaidoShinkansen'&&shinkansenSigns[japanese];
+  if(sign)return `<strong class="departure-station-name departure-${side} shinkansen-station"><span class="shinkansen-station-sign"><span class="shinkansen-station-reading" lang="ja">${esc(sign.reading)}</span><span class="shinkansen-station-kanji" lang="ja">${esc(japanese)}</span><span class="shinkansen-station-roman" lang="en">${esc(sign.roman)}</span></span><span class="departure-station-korean">${esc(parts.korean)}</span></strong>`;
   const info=typeof railInfo==='function'?railInfo({lineId:number.lineId}):null,code=number.code||'';
   const jr=number.lineId?.startsWith('JR-East.')&&/^([A-Z]{2})(\d{2})$/.exec(code),shortCode=jr&&typeof jrStationAbbreviation==='function'?jrStationAbbreviation(p,endpoint):null;
   const keio=number.lineId==='Keio.Inokashira'&&/^IN(\d{2})$/.exec(code);
@@ -138,7 +143,7 @@ const RailDepartures = (() => {
   const long=Math.max(length(from.korean),length(to.korean))>9||Math.max(length(from.japanese),length(to.japanese))>10||length(from.korean)+length(to.korean)>(reverse?10:12);
   const badge=typeof railLineBadge==='function'?railLineBadge({...p,mode:'rail'},'departure-line-mark'):typeof railBadge==='function'?railBadge(p):'';
   return `<div class="compact-line">${badge}<strong>${esc(p.line)}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
-   <div class="departure-stations departure-stations-aligned departure-stations-numbered${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
+   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
    <div class="compact-metrics"><span><small>${esc(selected.distanceLabel||'거리')}</small><b>${esc(selected.distance||'—')}</b></span><span><small>${esc(selected.fareLabel||'요금')}</small><b>${selected.displayBlank?'':esc(selected.fare||'요금 미확인')}</b></span></div>
    ${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
@@ -156,7 +161,7 @@ const RailDepartures = (() => {
   const badge=typeof railLineBadge==='function'?railLineBadge(part,'departure-line-mark'):typeof railBadge==='function'?railBadge(part):'',info=manifest.serviceInfo?.[part.lineId];
   return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
-   <div class="departure-stations departure-stations-aligned departure-stations-numbered has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
+   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel)}</small><b>${esc(metrics.distance)}</b></span><span><small>${esc(metrics.fareLabel)}</small><b>${metrics.displayBlank?'':esc(metrics.fare)}</b></span></div>
    <p class="departure-data-status">${esc(info?.label||'저장 시간표 없음')} · 실시간 정보 미지원</p>
    ${info?.notice?`<p class="departure-service-notice">${esc(info.notice)}</p>`:''}

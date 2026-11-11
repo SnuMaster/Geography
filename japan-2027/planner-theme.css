@@ -186,6 +186,13 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .command-center .station-departures .departure-stations-numbered .departure-arrow{grid-column:2;grid-row:1;align-self:center;transform:none;margin:0;width:auto;text-align:center}
 .command-center .station-departures .departure-stations-numbered .departure-station-korean{font-size:17px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.4px}
 .command-center .station-departures .departure-stations-numbered .departure-station-japanese{font-size:11px;line-height:1.5;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;margin:0}
+/* Compact station-sign adaptation using the site's existing type family. */
+.command-center .station-departures .shinkansen-station-sign{display:flex;flex-direction:column;align-items:center;box-sizing:border-box;width:100%;max-width:170px;min-height:90px;overflow:hidden;border:1px solid #d5d9d5;border-radius:6px;background:#fff;font-family:inherit;font-weight:400;box-shadow:0 1px 2px #183b3510}
+.shinkansen-station-reading{display:block;padding:7px 4px 2px;color:#65716a;font-family:inherit;font-size:10px;font-weight:400;line-height:1.4;letter-spacing:0;white-space:nowrap}
+.shinkansen-station-kanji{display:block;padding:0 4px 5px;color:#253440;font-size:24px;font-weight:400;line-height:1.5;letter-spacing:.03em;white-space:nowrap}
+.shinkansen-station-roman{display:block;box-sizing:border-box;width:100%;margin-top:auto;padding:3px 4px;background:#4775a4;color:#fff;font-size:11px;font-weight:400;line-height:1.5;letter-spacing:.02em;text-align:center}
+.command-center .station-departures .shinkansen-stations .departure-station-korean{font-size:14px;font-weight:500;line-height:1.5}
+.command-center .station-departures .shinkansen-stations .departure-arrow{align-self:start;margin-top:34px;font-weight:400}
 .departure-endpoint-code{display:inline-flex;justify-content:center;align-items:center;box-sizing:border-box;width:64px;height:64px;flex:none;margin:0 0 7px;border:5px solid var(--station-color);border-radius:50%;background:#fff;color:#152c37;font:700 17px/1 Arial,sans-serif;letter-spacing:-.6px;white-space:nowrap}
 .command-center .station-departures .compact-line{align-items:center;gap:10px}
 .command-center .station-departures .compact-line>strong{min-width:0;font-size:15px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}

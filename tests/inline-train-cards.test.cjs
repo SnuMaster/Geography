@@ -79,13 +79,24 @@ test('every active train board has a line emblem and only verified station-numbe
  const g=ctx.railLineBadge({lineId:'TokyoMetro.Ginza',line:'긴자선',from:'시부야',fromCode:'G01'});assert.match(g,/>G<\/span>/);assert.doesNotMatch(g,/>G01<\/span>/);
 });
 
-test('Shinkansen boards show the train logo and station names without empty number boxes',()=>{
+test('Shinkansen boards use compact station signs in both directions without invented numbers',()=>{
+ const labels={'東京':['とうきょう','Tokyo'],'小田原':['おだわら','Odawara'],'熱海':['あたみ','Atami']};
  let checked=0;for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs)for(const p of leg.parts.filter(p=>p.lineId==='JR-Central.TokaidoShinkansen')){
   const html=ctx.api.html(Number(id.split('-')[0]),leg,p,{fare:F.format(leg.fare,leg)},true);assert.match(html,/assets\/operators\/shinkansen.svg/);
   assert.doesNotMatch(html,/departure-endpoint-code|is-unknown|공식 역 번호 미확인/);
-  assert.ok(html.includes(p.from));assert.ok(html.includes(p.to));assert.match(html,/departure-arrow/);checked++;
+  assert.ok(html.includes(p.from));assert.ok(html.includes(p.to));assert.match(html,/departure-arrow/);
+  assert.equal((html.match(/class="shinkansen-station-sign"/g)||[]).length,2);
+  for(const name of [p.fromJa,p.toJa])for(const label of [name,...labels[name]])assert.ok(html.includes('>'+label+'</span>'),label);
+  checked++;
  }
  assert.equal(checked,4);
+});
+
+test('unmapped Shinkansen stations fall back to escaped names without invented sign readings',()=>{
+ const source=bundle.routes.days['14-main'].find(l=>l.parts.some(p=>p.lineId==='JR-Central.TokaidoShinkansen')),leg=structuredClone(source),part=leg.parts.find(p=>p.lineId==='JR-Central.TokaidoShinkansen');
+ part.from='<script>';part.fromJa='<未知>';const html=ctx.api.html(14,leg,part,{},true);
+ assert.doesNotMatch(html,/<script>|departure-endpoint-code/);assert.match(html,/&lt;script&gt;/);assert.match(html,/&lt;未知&gt;/);assert.equal((html.match(/class="shinkansen-station-sign"/g)||[]).length,1);
+ const ordinary=render(2,bundle.routes.days['2-main'][0]);assert.doesNotMatch(ordinary,/shinkansen-station-sign/);assert.match(ordinary,/역 번호 H19/);
 });
 
 test('station numbers respect both ends of through services and never borrow conventional numbers for Shinkansen',()=>{
