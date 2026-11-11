@@ -187,7 +187,6 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .command-center .station-departures .departure-stations-numbered .departure-station-korean{font-size:17px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.4px}
 .command-center .station-departures .departure-stations-numbered .departure-station-japanese{font-size:11px;line-height:1.5;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;margin:0}
 .departure-endpoint-code{display:inline-flex;justify-content:center;align-items:center;box-sizing:border-box;width:64px;height:64px;flex:none;margin:0 0 7px;border:5px solid var(--station-color);border-radius:50%;background:#fff;color:#152c37;font:700 17px/1 Arial,sans-serif;letter-spacing:-.6px;white-space:nowrap}
-.departure-endpoint-code.is-unknown{border-color:#c7cec3;color:#7e897d}
 .command-center .station-departures .compact-line{align-items:center;gap:10px}
 .command-center .station-departures .compact-line>strong{min-width:0;font-size:15px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
 .command-center .station-departures .compact-line>.departure-line-mark{font-size:17px}

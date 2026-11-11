@@ -69,14 +69,23 @@ test('empty fare components and empty activities disappear while meaningful supp
 
 
 
-test('every active train board has a line emblem and two separate station-number badges',()=>{
+test('every active train board has a line emblem and only verified station-number badges',()=>{
  for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs){
   if(!leg.parts.some(p=>['rail','metro'].includes(p.mode)))continue;
   const html=render(Number(id.split('-')[0]),leg),sections=(html.match(/<section class="station-departures/g)||[]).length;
-  assert.ok(sections>0);assert.equal((html.match(/class="departure-endpoint-code/g)||[]).length,sections*2,id);
+  assert.ok(sections>0);for(const section of html.match(/<section class="station-departures[\s\S]*?<\/section>/g)||[])assert.equal((section.match(/class="departure-endpoint-code/g)||[]).length,section.includes('도카이도 신칸센')?0:2,id);
   assert.equal((html.match(/departure-stations-numbered/g)||[]).length,sections,id);
  }
  const g=ctx.railLineBadge({lineId:'TokyoMetro.Ginza',line:'긴자선',from:'시부야',fromCode:'G01'});assert.match(g,/>G<\/span>/);assert.doesNotMatch(g,/>G01<\/span>/);
+});
+
+test('Shinkansen boards show the train logo and station names without empty number boxes',()=>{
+ let checked=0;for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs)for(const p of leg.parts.filter(p=>p.lineId==='JR-Central.TokaidoShinkansen')){
+  const html=ctx.api.html(Number(id.split('-')[0]),leg,p,{fare:F.format(leg.fare,leg)},true);assert.match(html,/assets\/operators\/shinkansen.svg/);
+  assert.doesNotMatch(html,/departure-endpoint-code|is-unknown|공식 역 번호 미확인/);
+  assert.ok(html.includes(p.from));assert.ok(html.includes(p.to));assert.match(html,/departure-arrow/);checked++;
+ }
+ assert.equal(checked,4);
 });
 
 test('station numbers respect both ends of through services and never borrow conventional numbers for Shinkansen',()=>{
