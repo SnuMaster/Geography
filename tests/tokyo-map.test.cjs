@@ -52,7 +52,7 @@ test('Fuua shuttle uses a road-shaped reference and never claims a verified bus 
 });
 
 
-test('metro badges include the exact departure station number on every active route in either direction',()=>{
+test('station detail badges retain the exact departure station number in either direction',()=>{
  let checked=0;
  for(const p of parts.filter(p=>/^(TokyoMetro|Toei)\./.test(p.lineId)))for(const q of [p,{...p,from:p.to,fromJa:p.toJa,to:p.from,toJa:p.fromJa}]){
   const code=ui.metroStationCode(q);assert.match(code,/^[A-Z]\d{2}$/);assert.ok(ui.railBadge(q).includes('>'+code+'</span>'));checked++;
@@ -64,6 +64,15 @@ test('metro badges include the exact departure station number on every active ro
  assert.equal(ui.metroStationCode({lineId:'Toei.Oedo',from:'롯폰기'}),'E23');
  assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'미확인 역'}),null);
  assert.equal(ui.metroStationCode({lineId:'JR-East.Yamanote',from:'우에노'}),null);
+});
+
+test('map markers show line letters without station numbers and preserve JR through-service marks',()=>{
+ const marks=[],ctx={MODE:{...ui.MODE,taxi:{color:'#111'},ferry:{color:'#123'}},esc:String,icon:x=>x,window:{TripPersonal:{displayParts:l=>l.parts}},routeLayer:{},L:{latLng:p=>({point:p,distanceTo:q=>G.distance(p,q.point)}),divIcon:o=>o,marker:(point,o)=>{marks.push(o.icon.html);const m={addTo:()=>m,getElement:()=>null,on:()=>m,setTooltipContent:()=>m};return m;}}};
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ctx);
+ for(const leg of Object.values(bundle.routes.days).flat())for(const p of ctx.railMapParts(leg))ctx.addRailMapSymbol(p,leg);
+ assert.ok(marks.length>50);assert.ok(marks.some(h=>/>H<\/span>/.test(h)));assert.ok(marks.some(h=>/>Y<\/span>/.test(h)));assert.ok(marks.some(h=>/>JR<\/span>/.test(h)));
+ for(const h of marks)assert.doesNotMatch(h,/>[A-Z]{1,3}\d{2}<\/span>/,'station number leaked into map marker');
+ const detail=ctx.railBadge({lineId:'TokyoMetro.Hibiya',line:'히비야선',from:'이리야'});assert.match(detail,/>H19<\/span>/);
 });
 
 

@@ -157,7 +157,7 @@ function railStationNumber(part,side='from'){
  return {code,lineId:numberedLine};
 }
 function railLineBadge(part,extra=''){
- return railBadge({...part,from:'',fromJa:'',fromCode:undefined,mapSymbolCode:part.throughParts?.length&&part.line?.startsWith('JR ')?'JR':undefined},extra);
+ return railBadge({...part,from:'',fromJa:'',fromCode:undefined,mapSymbolCode:part.mapSymbolCode||(part.throughParts?.length&&part.line?.startsWith('JR ')?'JR':undefined)},extra);
 }
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
@@ -269,7 +269,7 @@ function addRailMapSymbol(part,leg){
  const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part:sourcePart,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
  const group={key:groupKey,point,entries:[{part:sourcePart,leg}]};railSymbolGroups.set(groupKey,group);
  const compact=part.mode==='flight'?'항공':part.mode==='taxi'?'택시':part.mode==='ferry'?'배':info.code;
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol',html:railInfo(part)?railBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:[44,44],iconAnchor:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
+ const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol',html:railInfo(part)?railLineBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:[44,44],iconAnchor:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
  marker.on('click',()=>{hideRailHover();const entry=visibleDirectionEntries(group)[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
  marker.on('mouseover',e=>{const entry=visibleDirectionEntries(group)[0];showRailHover(e,entry.leg,entry.part);});marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
 }
