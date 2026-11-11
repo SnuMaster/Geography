@@ -135,6 +135,10 @@ body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):
 .operator-logo.operator-shinkansen{width:34px;max-width:34px;height:34px;max-height:34px;padding:0;background:transparent;object-fit:contain;border-radius:7px}
 .rail-map-symbol .operator-shinkansen{width:34px;max-width:34px;height:34px;max-height:34px;filter:drop-shadow(0 1px 3px #17253235)}
 .itinerary-train-card .compact-line>.operator-shinkansen{width:34px;height:34px}
+.operator-logo.operator-fuji-excursion{width:42px;max-width:42px;height:32px;max-height:32px;padding:2px;background:#fffdf8;border-radius:5px;object-fit:contain}
+.itinerary-train-card .compact-line>.operator-logo.operator-fuji-excursion{width:42px;height:32px}
+.leaflet-container .rail-map-symbol img.operator-fuji-excursion{width:42px!important;max-width:42px!important;height:32px!important;max-height:32px!important;box-sizing:border-box;box-shadow:0 0 0 2px #fffdf8,0 2px 6px #183b3530}
+.compact-line .departure-service-name{display:block;margin-top:2px;color:#71677f;font-family:inherit;font-size:9px;font-weight:400;line-height:1.5;letter-spacing:.07em}
 
 /* Selected details replace the left itinerary on desktop and tablet. */
 body.command-center.travel-shell #detailSheet[data-docked=sidebar]{position:absolute;inset:0;margin:0;width:100%;max-width:none;height:100%;max-height:none!important;box-sizing:border-box;border:0;border-radius:0;box-shadow:none;z-index:20}

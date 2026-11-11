@@ -1,0 +1,22 @@
+Fuji Excursion identification artwork — checked 2026-11-11
+
+Source: JR East official Fuji Excursion launch leaflet, page 1.
+https://www.jreast.co.jp/hachioji/aas/2019021_01.pdf
+
+fuji-excursion.svg contains only the small purple Mount Fuji vector
+illustration shown near the bottom of the right-hand title panel.
+The original outer mountain and snow-cap outline paths are retained;
+the viewBox isolates that artwork and its print color is rendered in RGB.
+This is an excerpt of official promotional artwork used to identify the
+service, not a claim of a separately registered or permanent train logo.
+The original artwork belongs to its respective rights holder; no endorsement
+of this independent planner is implied.
+
+The source leaflet is historical (launch in 2019). None of its fares,
+timetables, journey-time claims or campaign dates are copied into the app.
+Current service reference:
+https://www.fujikyu-railway.jp/fujikaiyuu/
+https://www.jreast.co.jp/multi/traininformation/azusa_kaiji/index.html
+
+The English service name is displayed as ordinary text in the site's own
+font. JR Chuo Line and Fujikyu endpoint station numbers remain separate.

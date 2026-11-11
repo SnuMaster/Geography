@@ -44,6 +44,13 @@ test('every active rail, metro and bus service has a visible mark, including spl
  for(const leg of Object.values(bundle.routes.days).flat())for(const p of ui.railParts(leg).filter(p=>['rail','metro','bus'].includes(p.mode))){assert.ok(ui.railInfo(p),p.lineId+' '+p.line);assert.match(ui.railBadge(p),/role="img"|operator-logo/,p.line);}
  for(const id of ['Yurikamome.Yurikamome','Minatomirai.Minatomirai','JR-East.KeihinTohokuNegishi','JR-East.Ito','Tobu.TobuSkytree','Tobu.Nikko','OdakyuHakone.HakoneTozan','Hakone.Cable','Hakone.Ropeway'])assert.ok(ui.railInfo({lineId:id}).source,id);
 });
+
+test('Fuji service artwork is deduplicated across operators without branding ordinary trains',()=>{
+ const leg=bundle.routes.days['8-main'].find(l=>l.parts.some(p=>p.lineId==='Special.Direct'&&/후지회유/.test(p.line))),before=JSON.stringify(leg);
+ const shown=ui.railLegBadges(leg);assert.equal((shown.match(/fuji-excursion.svg/g)||[]).length,1);assert.equal(JSON.stringify(leg),before);
+ for(const p of [{mode:'rail',lineId:'JR-East.ChuoRapid',line:'주오선 쾌속'},{mode:'rail',lineId:'Fujikyu.Fujikyu',line:'후지급행선'},{mode:'bus',lineId:'Special.Direct',line:'후지회유'}])assert.equal(ui.fujiExcursionLogo(p),'');
+ const sw=fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8');assert.match(sw,/assets\/operators\/fuji-excursion.svg/);assert.match(sw,/FUJI-EXCURSION-NOTICE.txt/);
+});
 test('all formerly long straight walking gaps now follow a walking graph; internal shortcuts are not painted',()=>{
  assert.deepEqual(parts.filter(p=>p.mode==='walk'&&p.geometryAccuracy==='schematic'&&p.distanceM>80),[]);
  const corrected=parts.filter(p=>p.mode==='walk'&&p.responseSha256&&/OSRM foot/.test(p.geometrySource));assert.equal(corrected.length,20);

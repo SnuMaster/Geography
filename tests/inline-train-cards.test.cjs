@@ -31,6 +31,14 @@ test('existing supported Skyliner board is preserved and its fare stays blank',(
  assert.equal(ctx.api.html(1,leg,null,metrics,true),ctx.api.html(1,leg,null,metrics));
  const html=render(1,leg);assert.match(html,/data-departure-profile=/);assert.match(html,/data-ride-choose=/);assert.doesNotMatch(html,/2,567|2,580|<b>0 JP¥<\/b>/);
 });
+
+test('Fuji Excursion keeps its JR and Fujikyu endpoint numbers alongside the service mark',()=>{
+ let count=0;for(const leg of bundle.routes.days['8-main'])if(leg.parts.some(p=>p.lineId==='Special.Direct'&&/후지회유/.test(p.line))){
+  const html=render(8,leg);assert.equal((html.match(/src="assets\/operators\/fuji-excursion.svg"/g)||[]).length,1);
+  assert.match(html,/FUJI EXCURSION/);assert.match(html,/역 번호 JC05/);assert.match(html,/역 번호 FJ18/);assert.doesNotMatch(html,/shinkansen-station-sign|operator-shinkansen/);count++;
+ }
+ assert.equal(count,2);
+});
 test('untrusted station names remain escaped and unsupported lines have no fabricated train controls',()=>{
  const leg={parts:[{mode:'rail',line:'<img onerror=bad()>',lineId:'unknown',from:'<script>',fromJa:'<入口>',to:'도착',toJa:'終点',distanceM:1000}],distanceM:1000,fare:{currency:'JPY'}};
  const html=render(2,leg);assert.doesNotMatch(html,/<script>|<img onerror|data-ride-choose|data-departure-clock/);assert.match(html,/&lt;入口&gt;/);assert.match(html,/확인 필요/);

@@ -9,8 +9,14 @@ function skylinerLogo(part,extra=''){
  const service=part?.line||part?.throughService||'';if(!['Special.Direct','Keisei.NaritaSkyAccess','Keisei.Main'].includes(part?.lineId)||!/스카이라이너|Skyliner|スカイライナー/i.test(service))return '';
  return '<img class="operator-logo operator-skyliner '+extra+'" src="assets/operators/skyliner.png" alt="스카이라이너 로고" width="91" height="42" decoding="async">';
 }
+function fujiExcursionLogo(part,extra=''){
+ const service=part?.line||part?.throughService||'';
+ if((part?.mode&&!['rail','metro'].includes(part.mode))||!['Special.Direct','JR-East.ChuoRapid','Fujikyu.Fujikyu'].includes(part?.lineId)||!/후지회유|富士回遊|FUJI\s*EXCURSION/i.test(service))return '';
+ return '<img class="operator-logo operator-fuji-excursion '+extra+'" src="assets/operators/fuji-excursion.svg" alt="후지회유 안내 표식" width="42" height="32" decoding="async">';
+}
 function operatorLogo(part,extra=''){
  const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
+ const fuji=fujiExcursionLogo(part,extra);if(fuji)return fuji;
  const isUber=part?.mode==='taxi',isKtx=part?.lineId==='KORAIL.GyeongbuHSR'||/KTX/.test(part?.line||''),isShinkansen=part?.lineId==='JR-Central.TokaidoShinkansen';
  if(!isUber&&!isKtx&&!isShinkansen)return '';
  const type=isUber?'uber':isKtx?'ktx':'shinkansen',name=isUber?'Uber':isKtx?'KTX':'신칸센';
@@ -188,6 +194,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
 }
 function railBadge(part,extra=''){
  const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
+ const fuji=fujiExcursionLogo(part,extra);if(fuji)return fuji;
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
  if(info.vehicle){const vehicle=transitVehicleBadge(part,info,extra),brand=busCompanyLogo(part);return brand?`<span class="bus-company-badge">${brand}${vehicle}</span>`:vehicle;}
  if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);const stationCode=metroStationCode(part),code=part.mapSymbolCode||stationCode||info.code;return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${stationCode?'metro-station-symbol':''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}" title="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}">${esc(code)}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
@@ -239,14 +246,14 @@ function railMapDrawParts(leg){
   return {...joined,mapColor:railInfo({lineId:mainId})?.color,mapSourcePart:part};
  });
 }
-function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
+function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
  return `<div class="day-line-key" aria-label="오늘 이용하는 교통 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
 }
 function dailyRailFareLogos(row,legs){
  const leg=legs[row.legIndex-1];if(!leg)return '';
- const seen=new Set(),services=railParts({...leg,parts:leg.parts.filter(p=>['rail','metro'].includes(p.mode)&&(row.lineIds.length?row.lineIds.includes(p.lineId):row.lines.includes(p.line)))}).filter(p=>{const key=skylinerLogo(p)?'service:skyliner':p.lineId||p.line;if(seen.has(key))return false;seen.add(key);return true;});
+ const seen=new Set(),services=railParts({...leg,parts:leg.parts.filter(p=>['rail','metro'].includes(p.mode)&&(row.lineIds.length?row.lineIds.includes(p.lineId):row.lines.includes(p.line)))}).filter(p=>{const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':p.lineId||p.line;if(seen.has(key))return false;seen.add(key);return true;});
  return '<span class="daily-rail-logos">'+services.map(p=>railBadge(p)).join('')+'</span>';
 }
 function dailyRailFareHtml(){
