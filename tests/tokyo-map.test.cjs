@@ -89,3 +89,42 @@ test('verified through rides use one complete map symbol without changing tracks
  const broken=structuredClone(leg);broken.parts[i+1].coords[0][0]+=.001;assert.ok(!ui.railMapParts(broken).some(p=>p.mapSymbol));
  const out=ui.railMapParts(leg).find(p=>p.mapSymbol).mapSymbol,back=ui.railMapParts(bundle.routes.days['4-main'][5]).find(p=>p.mapSymbol).mapSymbol;assert.equal(out.mapSymbolKey,back.mapSymbolKey);assert.ok(G.distance(ui.railMidpoint(out.coords),ui.railMidpoint(back.coords))<.1);
 });
+
+test('a through ride draws one complete selectable path in one color in either direction',()=>{
+ for(const [day,index,reverse]of [[4,0,5],[10,0,5]]){
+  const leg=bundle.routes.days[day+'-main'][index],before=JSON.stringify(leg),mapped=ui.railMapDrawParts(leg),ride=mapped.find(p=>p.mapSourcePart);
+  assert.ok(ride);assert.equal(mapped.length,leg.parts.length-1,'two line pieces become one map hit target');
+  assert.equal(mapped.filter(p=>p.mapSourcePart).length,1);assert.ok(!mapped.some(p=>p.suppressSymbol));
+  const profile=Object.values(ui.RailDepartureProfiles.profiles).find(p=>p.throughParts?.length&&p.line===ride.line&&p.from===ride.from&&p.to===ride.to);assert.ok(profile);
+  const first=profile.throughParts[0],start=leg.parts.findIndex(p=>p.lineId===first.lineId&&p.from===first.from&&p.to===first.to);
+  assert.ok(start>=0);const run=leg.parts.slice(start,start+profile.throughParts.length);
+  assert.equal(JSON.stringify(ride.coords),JSON.stringify(run.flatMap((p,i)=>i?p.coords.slice(1):p.coords)),'every surveyed point remains in order');
+  assert.equal(ride.distanceM,run.reduce((n,p)=>n+p.distanceM,0));
+  assert.equal(ride.from,profile.from);assert.equal(ride.to,profile.to);
+  const back=ui.railMapDrawParts(bundle.routes.days[day+'-main'][reverse]).find(p=>p.mapSourcePart);
+  assert.equal(ui.routeLineStyles(ride).line.color,ui.routeLineStyles(back).line.color,'one service color in both directions');
+  assert.equal(JSON.stringify(leg),before,'drawing projection cannot mutate itinerary, fare or source tracks');
+ }
+ const tobu=ui.railMapDrawParts(bundle.routes.days['10-main'][0]).find(p=>p.mapSourcePart);assert.equal(ui.routeLineStyles(tobu).line.color,ui.railInfo({lineId:'Tobu.TobuSkytree'}).color);
+});
+
+test('map grouping never joins a transfer, an unknown boundary or a schematic track',()=>{
+ const leg=bundle.routes.days['10-main'][0],at=leg.parts.findIndex(p=>p.lineId==='Tobu.TobuSkytree');
+ for(const mutate of [l=>l.parts.splice(at+1,0,{mode:'transfer',coords:[l.parts[at].coords.at(-1)],distanceM:0}),l=>l.parts[at+1].coords[0][0]+=.001,l=>l.parts[at+1].geometryAccuracy='schematic']){
+  const changed=structuredClone(leg);mutate(changed);assert.equal(ui.railMapDrawParts(changed).length,changed.parts.length);assert.ok(!ui.railMapDrawParts(changed).some(p=>p.mapSourcePart));
+ }
+ const ordinary=bundle.routes.days['2-main'][0];assert.equal(ui.railMapDrawParts(ordinary).length,ordinary.parts.length,'separate Metro and Yurikamome boardings stay separate');
+});
+
+test('daily renderer highlights and opens the full through ride from a single hit path',()=>{
+ const leg=bundle.routes.days['10-main'][0],layers=[],hover=[],selected=[];
+ const node={classList:{toggle(){}},innerHTML:'',textContent:''};
+ const ctx={...ui,window:{TripPersonal:{displayParts:l=>l.parts}},state:{view:'daily',day:10,night:false,data:{days:[]},routeData:{days:{'10-main':[leg]}}},routeLayer:{clearLayers(){}},map:{closePopup(){}},getStops:()=>[{kind:'home'},{kind:'home',modeFromPrevious:'rail'}],getLeg:()=>leg,getVariant:()=>({id:'main'}),hasDetailedRoutes:()=>true,MODE:ui.MODE,$:()=>node,setTiles(){},routeVisual:layer=>layer,applyRouteFocus(){},requestAnimationFrame(){},updateArrowAngles(){},DetailView:{options:()=>({})},setFocusedLeg:i=>selected.push(i),legHtml:(l,p)=>p,L:{polyline:(coords,style)=>{const layer={coords,options:{...style},events:{},addTo(){return this;},bindPopup(fn){this.popup=fn;return this;},on(name,fn){this.events[name]=fn;return this;},setStyle(s){Object.assign(this.options,s);return this;}};layers.push(layer);return layer;}}};
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ctx);
+ Object.assign(ctx,{hideRailHover(){},showRailHover:(e,l,p)=>hover.push(p),positionRailHover(){},addRailMapSymbol(){}});
+ const source=fs.readFileSync(require.resolve('../japan-2027/app.js'),'utf8');vm.runInContext(source.slice(source.indexOf('function renderMap('),source.indexOf('function markerIcon(')),ctx);ctx.renderMap(false);
+ const hits=layers.filter(l=>l.options.weight===18),ride=ctx.railMapDrawParts(leg).find(p=>p.mapSourcePart),hit=hits.find(l=>l.coords===ride.coords||JSON.stringify(l.coords)===JSON.stringify(ride.coords));assert.ok(hit);
+ assert.equal(hits.length,ctx.railMapDrawParts(leg).filter(p=>ctx.mapPartVisible(p)&&p.coords.length>=2&&p.distanceM>=8).length,'one hit path per visible ride/walk');
+ const stroke=layers[layers.indexOf(hit)-1],base={...stroke.options};hit.events.mouseover({});assert.equal(stroke.options.weight,7);assert.equal(hover.at(-1).from,ride.from);assert.equal(hover.at(-1).to,ride.to);assert.equal(hover.at(-1).coords.length,ride.coords.length);
+ hit.events.mouseout();assert.deepEqual(stroke.options,base);hit.events.click();assert.deepEqual(selected,[1]);assert.equal(hit.popup().mapSymbol.from,ride.from);assert.equal(hit.popup().mapSymbol.to,ride.to);
+});

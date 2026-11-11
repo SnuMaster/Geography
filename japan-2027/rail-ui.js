@@ -174,7 +174,7 @@ function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAcc
 // Both strokes must share the same dash pattern: a solid casing turns a
 // schematic connection into an apparently confirmed railway on the map.
 function routeLineStyles(part,{overview=false,local=false,night=false}={}){
- const schematic=part.geometryAccuracy==='schematic',color=railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
+ const schematic=part.geometryAccuracy==='schematic',color=part.mapColor||railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
  const dashArray=schematic?'2 6':part.mode==='flight'?'9 7':part.mode==='transfer'?'3 5':null;
  const weight=schematic?2:overview?(local?4:3):4.5,opacity=schematic?.6:night?.6:1;
  return {line:{color,weight,opacity,lineCap:'round',lineJoin:'round',dashArray},casing:{color:'#fffdf8',weight:weight+3,opacity:schematic?.45:.9,dashArray,lineCap:'round',lineJoin:'round',interactive:false}};
@@ -206,7 +206,8 @@ function splitRailService(part){
  railSectionCache.set(part,result);return result;
 }
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
-// Map symbols describe one boarding, while each surveyed path retains its line color.
+// Keep the original route pieces for timetable matching and source attribution.
+// The drawing projection below combines only verified, contiguous through rides.
 function railMapParts(leg){
  const original=window.TripPersonal?.displayParts(leg)||leg?.parts||[],parts=original.slice();
  const profiles=Object.values(globalThis.RailDepartureProfiles?.profiles||{}).filter(p=>p.throughParts?.length>1);
@@ -220,6 +221,16 @@ function railMapParts(leg){
   for(let j=1;j<run.length;j++)parts[i+j]={...run[j],suppressSymbol:true};i+=run.length-1;
  }
  return parts;
+}
+function railMapDrawParts(leg){
+ return railMapParts(leg).filter(p=>!p.suppressSymbol).map(part=>{
+  if(!part.mapSymbol)return part;
+  const joined=part.mapSymbol,ids=joined.mapSymbolKey.split('|')[0].split('+');
+  // A through ride keeps one map color in both directions. Station badges and
+  // detail lists continue to use each operator's actual line identity/color.
+  const mainId=ids.includes('Tobu.TobuSkytree')?'Tobu.TobuSkytree':ids[0];
+  return {...joined,mapColor:railInfo({lineId:mainId})?.color,mapSourcePart:part};
+ });
 }
 function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}

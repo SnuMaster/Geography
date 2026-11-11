@@ -13,6 +13,8 @@ Scope: active January 8–22 Tokyo itinerary and its alternatives (15 days, 17 d
 
 Coordinates, route paths, itinerary UIDs, saved reservations, personal records and fare amounts are unchanged. Skyliner's fare remains blank.
 
+Map interaction follow-up: verified contiguous through rides are now drawn as one complete selectable path in one color, including the direction arrow. The same service keeps the same map color on the return journey. Daily and overview maps share this projection. Timetable matching and the detail station badges still use the original line pieces and operator identities. An actual transfer, schematic segment or disconnected endpoint prevents merging; original surveyed coordinates are only concatenated in order, never replaced by a straight connector.
+
 ## Sources and audit results
 
 | Operator | Official sources inspected | Result |

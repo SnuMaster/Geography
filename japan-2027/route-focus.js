@@ -65,7 +65,7 @@ function applyRouteFocus(){
  $('#routeFocusCount').textContent=c?`${c.day.date} · 이동 ${index} / ${stops.length-1} · 방문 ${index} → ${index+1}`:'전체 여정 · 도시를 누르거나 지도를 확대하세요';
  $('#routeFocusTitle').textContent=c?stopLabel(stops[index-1])+' → '+stopLabel(stops[index]):'지역을 고르면 한 구간씩 볼 수 있어요';
  const leg=c?.legs[index-1];$('#routeFocusMode').textContent=leg?`${leg.summary||''} · ${leg.durationLabel||distanceText(leg.distanceM)}`:'';
- // A single arrow belongs to the active movement; intermediate path pieces keep their true line colors.
+ // A single arrow follows the selected ride; verified through rides share one map color.
  highlightDirection(leg);window.RouteNavigation?.refresh();window.OfflineMap?.refresh();
  window.dispatchEvent(new CustomEvent('routebook:route-focus'));
 }
