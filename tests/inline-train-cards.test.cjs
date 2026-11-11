@@ -39,6 +39,16 @@ test('Fuji Excursion keeps its JR and Fujikyu endpoint numbers alongside the ser
  }
  assert.equal(count,2);
 });
+test('Nikko Revaty boards keep separate station codes and identify the logo as a planning candidate',()=>{
+ for(const index of [0,5]){
+  const leg=bundle.routes.days['10-main'][index],html=render(10,leg);
+  assert.equal((html.match(/assets\/operators\/revaty.png/g)||[]).length,1);
+  assert.match(html,/Revaty · 계획 후보/);
+  for(const code of index===0?['TS09','TN23','TN25']:['TN25','TS09'])assert.ok(html.includes('역 번호 '+code));
+  assert.match(html,/공개 시간표 참고 · 여행일 미검증/);
+ }
+});
+
 test('untrusted station names remain escaped and unsupported lines have no fabricated train controls',()=>{
  const leg={parts:[{mode:'rail',line:'<img onerror=bad()>',lineId:'unknown',from:'<script>',fromJa:'<入口>',to:'도착',toJa:'終点',distanceM:1000}],distanceM:1000,fare:{currency:'JPY'}};
  const html=render(2,leg);assert.doesNotMatch(html,/<script>|<img onerror|data-ride-choose|data-departure-clock/);assert.match(html,/&lt;入口&gt;/);assert.match(html,/확인 필요/);

@@ -256,3 +256,9 @@ body.command-center.travel-shell[data-viewport] .fold-card-bar #foldCardToggle{d
 body.command-center.travel-shell[data-viewport] #shellContextCard .cc-next{display:none}
 body.command-center.travel-shell[data-viewport].cc-card-collapsed #shellContextCard #routeFocusPanel{display:none}
 body.command-center.travel-shell[data-viewport]:not(.cc-card-collapsed) #shellContextCard #routeFocusPanel{border-top:1px solid #d8cbbb;border-radius:0;box-shadow:none}
+
+/* Official Revaty wordmark; preserve the original proportions. */
+.operator-logo.operator-revaty{width:84px;max-width:84px;height:30px;max-height:30px;object-fit:contain;padding:2px;background:#fff;border-radius:4px}
+.itinerary-train-card .compact-line>.operator-logo.operator-revaty{width:84px;height:30px}
+.leaflet-container .rail-map-symbol img.operator-revaty{width:72px!important;max-width:72px!important;height:26px!important;max-height:26px!important;box-sizing:border-box;object-fit:contain;box-shadow:0 0 0 3px #fffdf8,0 2px 6px #183b3530}
+.daily-rail-logos .operator-logo.operator-revaty,.day-line-key .operator-logo.operator-revaty{width:64px;max-width:64px;height:24px;max-height:24px}
