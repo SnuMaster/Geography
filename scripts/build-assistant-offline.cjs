@@ -1,6 +1,9 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const root=path.join(__dirname,'../japan-2027'),revision='20261111-fastest-reference-1';
+const root=path.join(__dirname,'../japan-2027'),revision='20261111-fastest-reference-2';
+// Git and Pages checkouts use LF for these files. Hash the same bytes on
+// Windows, otherwise a clean checkout can invalidate the offline manifest.
+for(const name of ['index.html','sw.js']){const f=path.join(root,name),text=fs.readFileSync(f,'utf8');fs.writeFileSync(f,text.replaceAll('\r\n','\n'));}
 const shell=JSON.parse(fs.readFileSync(path.join(root,'sw.js'),'utf8').match(/const FILES=(\[.*?\]);/)[1].replaceAll("'",'"'));
 require(path.join(root,'rail-departure-profiles.js'));
 const previous=JSON.parse(fs.readFileSync(path.join(root,'offline-manifest.json'),'utf8'));

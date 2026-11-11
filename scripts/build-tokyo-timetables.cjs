@@ -147,7 +147,7 @@ for(const file of previousFiles)if(!packs.has(file)&&/^timetables\/tokyo27-[a-z0
 const remaining=unavailable.filter(p=>p.lines[0]!=='Hakone.Cable');
 manifest.serviceInfo={
  'Hakone.Ropeway':{kind:'continuous',label:'연속 순환운행',description:'통상 약 1분 간격 운행 · 개별 열차 출발 시각을 표시하지 않습니다.',hours:'12–1월 09:00–16:15 · 2–11월 09:00–17:00',notice:'기상·점검에 따라 운휴될 수 있습니다. 실제 운행은 공식 안내를 확인하세요.',source:'https://www.hakonenavi.jp/transportation/station/sounzan/',checkedAt},
- 'JR-Central.TokaidoShinkansen':{kind:'official-lookup',label:'공식 시간표 확인',description:'공식 조회는 조회일로부터 1개월 앞까지입니다. 여행일 조회 가능 여부는 공식 화면에서 확인하세요.',notice:'아타미 정차편을 확인하세요. 저장된 운행편 시각은 제공하지 않습니다.',source:'https://railway.jr-central.co.jp/time-schedule/search/',checkedAt}
+ 'JR-Central.TokaidoShinkansen':{kind:'official-lookup',label:'공식 시간표 확인',description:'공식 조회는 조회일로부터 1개월 앞까지입니다. 여행일 조회 가능 여부는 공식 화면에서 확인하세요.',notice:'선택한 출발·도착역에 정차하는 열차를 확인하세요. 저장된 운행편 시각은 제공하지 않습니다.',source:'https://railway.jr-central.co.jp/time-schedule/search/',checkedAt}
 };
 manifest.expansion={checkedAt,upstreamCommit:pin,profiles:created.length,unavailable:remaining,policy:'stored-public-reference-no-invented-times'};
 fs.writeFileSync(path.join(root,'rail-departure-profiles.js'),"'use strict';\nglobalThis.RailDepartureProfiles="+JSON.stringify(manifest)+';\n');
