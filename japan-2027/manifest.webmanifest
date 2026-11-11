@@ -1,0 +1,32 @@
+{
+  "id": "./",
+  "name": "KISEKI · 日本旅行プランナー",
+  "short_name": "KISEKI",
+  "lang": "ko",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#faf8f2",
+  "theme_color": "#10202e",
+  "description": "KISEKI · 22일 일본 여행 일정, 지도, 예약, 교통편과 AI 여행비서",
+  "icons": [
+    {
+      "src": "assets/kiseki-crest.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/kiseki-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/kiseki-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-11-10",
+  "note": "Operators confirm the interchange. Minutes are a conservative walking/boarding allowance, not a measured passage time.",
+  "links": [
+    {"from":"TokyoMetro.Hibiya.Tsukiji","to":"TokyoMetro.Yurakucho.Shintomicho","minutes":6,"source":"https://www.tokyometro.jp/info/tsukiji.pdf"},
+    {"from":"TokyoMetro.Chiyoda.MeijiJingumae","to":"JR-East.Yamanote.Harajuku","minutes":6,"source":"https://www.tokyometro.jp/station/meiji-jingumae/index.html"},
+    {"from":"Toei.Shinjuku.Iwamotocho","to":"TokyoMetro.Hibiya.Akihabara","minutes":6,"source":"https://www.kotsu.metro.tokyo.jp/subway/stations/iwamotocho.html"},
+    {"from":"Toei.Shinjuku.Iwamotocho","to":"JR-East.ChuoSobuLocal.Akihabara","minutes":7,"source":"https://www.kotsu.metro.tokyo.jp/subway/stations/iwamotocho.html"}
+  ]
+}
