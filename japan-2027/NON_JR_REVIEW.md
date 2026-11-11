@@ -15,6 +15,8 @@ Coordinates, route paths, itinerary UIDs, saved reservations, personal records a
 
 Map interaction follow-up: verified contiguous through rides are now drawn as one complete selectable path in one color, including the direction arrow. The same service keeps the same map color on the return journey. Daily and overview maps share this projection. Timetable matching and the detail station badges still use the original line pieces and operator identities. An actual transfer, schematic segment or disconnected endpoint prevents merging; original surveyed coordinates are only concatenated in order, never replaced by a straight connector.
 
+Bus company marks: unmodified Tobu Bus and Fujikyu Bus wordmarks from their official websites are displayed alongside the vehicle/route symbol on maps, itinerary cards and details. Source URLs are recorded in `assets/operators/BUS-LOGOS-NOTICE.txt`; both images and the notice are in the offline shell. FUUA retains its facility-shuttle identification because the access page does not confirm a separate bus operator. The existing C route label is separate from the Tobu company wordmark.
+
 ## Sources and audit results
 
 | Operator | Official sources inspected | Result |

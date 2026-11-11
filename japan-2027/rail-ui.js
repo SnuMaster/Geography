@@ -168,6 +168,13 @@ function railLineBadge(part,extra=''){
 const railSectionCache=new WeakMap();
 let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||(skylinerLogo(part)?{code:'Skyliner',color:MODE.rail.color,shape:'rounded',logo:true}:part.lineId==='Special.Direct'&&/후지/.test(part.line||'')?{code:'富士回遊',color:'#276bad',shape:'rounded',markClass:'fuji-service',source:'https://www.jreast.co.jp/multi/traininformation/fuji_excursion/'}:part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
+function busCompanyFor(part){
+ if(part?.mode!=='bus')return null;
+ if(part.lineId==='TobuBus.Nikko.C')return {id:'tobu-bus',name:'도부 버스',src:'assets/operators/tobu-bus.svg'};
+ if(part.lineId==='FujikyuBus.KawaguchikoRed'||part.line==='가와구치코 관광버스 레드라인')return {id:'fujikyu-bus',name:'후지큐 버스',src:'assets/operators/fujikyu-bus.png'};
+ return null;
+}
+function busCompanyLogo(part){const b=busCompanyFor(part);return b?`<img class="bus-company-logo operator-${b.id}" src="${b.src}" alt="${b.name} 로고" width="88" height="22" decoding="async">`:'';}
 const TRANSIT_VEHICLES={bus:'<rect x="4" y="4" width="16" height="14" rx="3"/><path d="M4 10h16M8 18v3m8-3v3M8 14h.01M16 14h.01"/>',cable:'<path d="m3 20 18-8M5 14V5h11l4 3v8M5 10h14M10 5v11M3 23l18-8"/>',ropeway:'<path d="M2 3h20M12 3v5M5 11l3-3h8l3 3v10H5zM5 15h14M12 8v13"/>'};
 function transitVehicleBadge(part,info,extra=''){return `<span class="rail-symbol transit-vehicle ${info.shape} vehicle-${info.vehicle} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc((info.vehicle==='bus'?'버스':info.vehicle==='cable'?'케이블카':'로프웨이')+' · '+part.line)}" title="${esc(part.line)}"><svg viewBox="0 0 24 24" aria-hidden="true">${TRANSIT_VEHICLES[info.vehicle]}</svg><small>${esc(info.code)}</small></span>`;}
 function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAccuracy==='schematic'||/개략|대표.*연결|미확인/.test(part.geometrySource||'')));}
@@ -182,7 +189,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
 function railBadge(part,extra=''){
  const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
- if(info.vehicle)return transitVehicleBadge(part,info,extra);
+ if(info.vehicle){const vehicle=transitVehicleBadge(part,info,extra),brand=busCompanyLogo(part);return brand?`<span class="bus-company-badge">${brand}${vehicle}</span>`:vehicle;}
  if(info.code==='KTX'||info.logo)return operatorLogo(part,extra);const stationCode=metroStationCode(part),code=part.mapSymbolCode||stationCode||info.code;return `<span class="rail-symbol ${info.shape} ${info.markClass||''} ${stationCode?'metro-station-symbol':''} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}" title="${esc(code+' · '+part.line+(stationCode?' · 출발역 '+part.from:''))}">${esc(code)}${info.colorUnknown?'<small class="line-color-unknown">노선색 미확인</small>':''}</span>`;
 }
 function railPathLength(coords){let total=0;for(let i=1;i<coords.length;i++)total+=L.latLng(coords[i-1]).distanceTo(L.latLng(coords[i]));return Math.round(total);}
@@ -286,7 +293,8 @@ function addRailMapSymbol(part,leg){
  const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part:sourcePart,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
  const group={key:groupKey,point,entries:[{part:sourcePart,leg}]};railSymbolGroups.set(groupKey,group);
  const compact=part.mode==='flight'?'항공':part.mode==='taxi'?'택시':part.mode==='ferry'?'배':info.code;
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol',html:railInfo(part)?railLineBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:[44,44],iconAnchor:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
+ const brandedBus=!!busCompanyFor(part);
+ const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol'+(brandedBus?' bus-company-symbol':''),html:railInfo(part)?railLineBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:brandedBus?[104,66]:[44,44],iconAnchor:brandedBus?[52,42]:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
  marker.on('click',()=>{hideRailHover();const entry=visibleDirectionEntries(group)[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
  marker.on('mouseover',e=>{const entry=visibleDirectionEntries(group)[0];showRailHover(e,entry.leg,entry.part);});marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
 }

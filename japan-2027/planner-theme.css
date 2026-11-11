@@ -151,6 +151,12 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .transit-vehicle>svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .transit-vehicle>small{display:block;font:700 6px/1 Arial,sans-serif;letter-spacing:0;white-space:nowrap}
 .rail-map-symbol .rail-symbol.transit-vehicle{width:33px;height:35px}
+.bus-company-badge{display:inline-flex;align-items:center;gap:5px;max-width:100%;flex-shrink:0}
+.bus-company-logo{display:block;width:88px;height:22px;max-width:88px;object-fit:contain;box-sizing:border-box;flex:none}
+.bus-company-logo.operator-tobu-bus{background:#173b71;border-radius:3px;padding:4px 5px}
+.rail-map-symbol.bus-company-symbol>.bus-company-badge{flex-direction:column;gap:3px;background:#fffdf8;border-radius:8px;padding:4px;box-shadow:0 0 0 2px #fffffff2,0 2px 8px #183b3545}
+.rail-map-symbol.bus-company-symbol .rail-symbol.vehicle-bus{width:28px;height:30px;box-shadow:none}
+.rail-hover-heading>.bus-company-badge{flex-direction:column;gap:3px}
 .daily-rail-logos .rail-symbol.transit-vehicle{height:27px;width:25px;min-width:25px;flex-basis:25px}
 .command-center.original-sidebar .leg-route-button .leg-line-badges{display:flex;align-items:center;gap:5px;margin:7px 0}
 .command-center.original-sidebar .leg-line-badges .rail-symbol.transit-vehicle{height:29px;width:26px;min-width:26px;flex-basis:26px}

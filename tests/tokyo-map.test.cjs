@@ -29,6 +29,16 @@ test('Shinkansen badge is available consistently and its static asset is in the 
  assert.doesNotMatch(ui.operatorLogo({mode:'rail',lineId:'JR-East.Yamanote'}),/shinkansen/);
  assert.match(fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8'),/assets\/operators\/shinkansen.svg/);
 });
+
+test('bus company marks identify only verified bus operators and remain available offline',()=>{
+ const services=parts.filter(p=>p.mode==='bus'),sw=fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8');
+ for(const [match,brand]of [[p=>p.lineId==='TobuBus.Nikko.C','tobu-bus.svg'],[p=>p.line==='가와구치코 관광버스 레드라인','fujikyu-bus.png']]){
+  const buses=services.filter(match);assert.ok(buses.length);for(const p of buses){assert.ok(ui.busCompanyFor(p));for(const html of [ui.railBadge(p),ui.railLineBadge(p)]){assert.ok(html.includes('assets/operators/'+brand));assert.match(html,/vehicle-bus/);}}
+  assert.ok(sw.includes('assets/operators/'+brand));assert.ok(fs.statSync(require.resolve('../japan-2027/assets/operators/'+brand)).size>1000);
+ }
+ for(const p of [{mode:'bus',line:'Unknown red bus'},{mode:'rail',lineId:'TobuBus.Nikko.C'},{mode:'bus',lineId:'Atami.FuuaShuttle',line:'Fuua 무료 셔틀'}]){assert.equal(ui.busCompanyFor(p),null);assert.equal(ui.busCompanyLogo(p),'');}
+ const unknown={mode:'bus',line:'Unknown bus'};assert.match(ui.railBadge(unknown),/vehicle-bus/);assert.doesNotMatch(ui.railBadge(unknown),/bus-company-logo/);
+});
 test('every active rail, metro and bus service has a visible mark, including split through services',()=>{
  ui.L={latLng:p=>({point:p,distanceTo:q=>G.distance(p,q.point)})};
  for(const leg of Object.values(bundle.routes.days).flat())for(const p of ui.railParts(leg).filter(p=>['rail','metro','bus'].includes(p.mode))){assert.ok(ui.railInfo(p),p.lineId+' '+p.line);assert.match(ui.railBadge(p),/role="img"|operator-logo/,p.line);}
