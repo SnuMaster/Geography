@@ -205,6 +205,7 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .departure-endpoint-code.endpoint-circle{border-radius:50%}
 .departure-endpoint-code.endpoint-square{border-radius:3px}
 .departure-endpoint-code.endpoint-rounded{border-radius:14px}
+.command-center .station-departures .fuji-excursion-stations .departure-endpoint-code:not(.jr-station-number){margin-bottom:33px}
 
 /* Match JR East's stacked line/number frame and major-station black header. */
 .departure-endpoint-code.jr-station-number{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:0;width:72px;height:90px;padding:3px;border:0;border-radius:9px;background:transparent;letter-spacing:0;color:#111}

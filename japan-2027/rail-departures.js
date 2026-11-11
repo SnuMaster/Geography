@@ -143,7 +143,7 @@ const RailDepartures = (() => {
   const long=Math.max(length(from.korean),length(to.korean))>9||Math.max(length(from.japanese),length(to.japanese))>10||length(from.korean)+length(to.korean)>(reverse?10:12);
   const badge=typeof railLineBadge==='function'?railLineBadge({...p,mode:'rail'},'departure-line-mark'):typeof railBadge==='function'?railBadge(p):'';
   return `<div class="compact-line">${badge}<strong>${esc(p.line)}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?'<small class="departure-service-name" lang="en">FUJI EXCURSION</small>':''}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
-   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
+   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''}${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
    <div class="compact-metrics"><span><small>${esc(selected.distanceLabel||'거리')}</small><b>${esc(selected.distance||'—')}</b></span><span><small>${esc(selected.fareLabel||'요금')}</small><b>${selected.displayBlank?'':esc(selected.fare||'요금 미확인')}</b></span></div>
    ${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
@@ -161,7 +161,7 @@ const RailDepartures = (() => {
   const badge=typeof railLineBadge==='function'?railLineBadge(part,'departure-line-mark'):typeof railBadge==='function'?railBadge(part):'',info=manifest.serviceInfo?.[part.lineId];
   return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
-   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
+   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel)}</small><b>${esc(metrics.distance)}</b></span><span><small>${esc(metrics.fareLabel)}</small><b>${metrics.displayBlank?'':esc(metrics.fare)}</b></span></div>
    <p class="departure-data-status">${esc(info?.label||'저장 시간표 없음')} · 실시간 정보 미지원</p>
    ${info?.notice?`<p class="departure-service-notice">${esc(info.notice)}</p>`:''}
