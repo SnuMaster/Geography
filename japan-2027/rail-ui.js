@@ -20,15 +20,15 @@ function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return ''
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
- 'Yurikamome.Yurikamome':{code:'U',color:'#27404e',shape:'rounded',source:'https://www.yurikamome.co.jp/'},
- 'Minatomirai.Minatomirai':{code:'MM',color:'#09357f',shape:'rounded',source:'https://www.mm21railway.co.jp/global/english/info/pdf/map.pdf'},
+ 'Yurikamome.Yurikamome':{code:'U',color:'#0065a6',shape:'circle',markClass:'yurikamome',stationLayout:'filled',source:'https://www.yurikamome.co.jp/station-timetable/u-01.html',sourceCheckedAt:'2026-11-11'},
+ 'Minatomirai.Minatomirai':{code:'MM',color:'#09357f',shape:'square',markClass:'minatomirai',stationLayout:'filled',source:'https://www.mm21railway.co.jp/global/english/info/pdf/map.pdf',sourceCheckedAt:'2026-11-11'},
  'JR-East.KeihinTohokuNegishi':{code:'JK',color:'#00b2e5',shape:'square',source:'https://www.jreast.co.jp/map/'},
  'JR-East.Ito':{code:'JT',color:'#f68b1e',shape:'square',source:'https://www.jreast.co.jp/map/'},
- 'Tobu.TobuSkytree':{code:'TS',color:'#0f6cc3',shape:'rounded',source:'https://www.tobu.co.jp/railway/guide/route/'},
- 'Tobu.Nikko':{code:'TN',color:'#ffa500',shape:'rounded',source:'https://www.tobu.co.jp/railway/guide/route/'},
- 'OdakyuHakone.HakoneTozan':{code:'OH',color:'#f15a22',shape:'rounded',source:'https://www.hakonenavi.jp/transportation/routemap/'},
- 'Hakone.Cable':{code:'OH',color:'#f15a22',shape:'rounded',vehicle:'cable',source:'https://www.hakonenavi.jp/transportation/routemap/'},
- 'Hakone.Ropeway':{code:'OH',color:'#ec6d82',shape:'rounded',vehicle:'ropeway',source:'https://www.hakonenavi.jp/transportation/routemap/'},
+ 'Tobu.TobuSkytree':{code:'TS',color:'#0f6cc3',shape:'rounded',source:'https://www.tobu.co.jp/railway/guide/route_map/',sourceCheckedAt:'2026-11-11'},
+ 'Tobu.Nikko':{code:'TN',color:'#ffa500',shape:'rounded',source:'https://www.tobu.co.jp/railway/guide/route_map/',sourceCheckedAt:'2026-11-11'},
+ 'OdakyuHakone.HakoneTozan':{code:'OH',color:'#f15a22',shape:'circle',stationLayout:'outline',source:'https://www.hakonenavi.jp/assets/file/rosen_202603.pdf',sourceCheckedAt:'2026-11-11'},
+ 'Hakone.Cable':{code:'OH',color:'#f15a22',shape:'rounded',stationShape:'circle',stationLayout:'outline',vehicle:'cable',source:'https://www.hakonenavi.jp/assets/file/rosen_202603.pdf',sourceCheckedAt:'2026-11-11'},
+ 'Hakone.Ropeway':{code:'OH',color:'#ec6d82',shape:'rounded',stationShape:'circle',stationLayout:'outline',vehicle:'ropeway',source:'https://www.hakonenavi.jp/assets/file/rosen_202603.pdf',sourceCheckedAt:'2026-11-11'},
  'TobuBus.Nikko.C':{code:'C',color:'#d96a24',shape:'rounded',vehicle:'bus',source:'https://www.tobu-bus.com/pc/area/nikko/'},
  'Atami.FuuaShuttle':{code:'FUUA',color:'#226b8e',shape:'rounded',vehicle:'bus',source:'https://www.atamibayresort.com/access/'},
  'JR-Central.TokaidoShinkansen':{code:'新幹線',color:'#0068b7',shape:'rounded',logo:true},
@@ -61,12 +61,12 @@ const RAIL_LINES={
  'JR-East.Keiyo':{code:'JE',color:'#c9252f',shape:'square',source:'https://www.jreast.co.jp/map/'},
  'Seibu.Shinjuku':{code:'SS',color:'#00a6bf',shape:'rounded',source:'https://www.seiburailway.jp/railway/railwaymap/'},
  'Keio.Inokashira':{code:'IN',color:'#000088',shape:'circle',markClass:'keio-inokashira',source:'https://www.keio.co.jp/global/howto/railwaymap/'},
- 'Odakyu.Odawara':{code:'OH',color:'#2288cc',shape:'rounded'},
+ 'Odakyu.Odawara':{code:'OH',color:'#2288cc',shape:'circle',stationLayout:'outline',source:'https://odakyu-global.com/assets/file/routemap.pdf',sourceCheckedAt:'2026-11-11'},
  'Tobu.Tojo':{code:'TJ',color:'#2d438c',shape:'rounded',markClass:'tobu-tojo',source:'https://www.tobu.co.jp/railway/guide/line/tojo_line.html'},
- 'Enoden.Enoden':{code:'EN',color:'#009b6b',shape:'rounded'},
- 'Fujikyu.Fujikyu':{code:'FJ',color:'#0068b7',shape:'rounded'},
- 'Keisei.NaritaSkyAccess':{code:'KS',color:'#ff8620',shape:'rounded'},
- 'Keisei.Main':{code:'KS',color:'#005aaa',shape:'rounded'}
+ 'Enoden.Enoden':{code:'EN',color:'#009b6b',shape:'rounded',source:'https://www.enoden.co.jp/train/station/'},
+ 'Fujikyu.Fujikyu':{code:'FJ',color:'#0068b7',shape:'rounded',source:'https://www.fujikyu-railway.jp/station/'},
+ 'Keisei.NaritaSkyAccess':{code:'KS',color:'#ff8620',shape:'rounded',source:'https://www.keisei.co.jp/keisei/tetudou/skyliner/jp/traffic/index.php'},
+ 'Keisei.Main':{code:'KS',color:'#005aaa',shape:'rounded',source:'https://www.keisei.co.jp/keisei/tetudou/skyliner/jp/traffic/index.php'}
 };
 Object.assign(RAIL_LINES,{"West.M": {"code": "M", "color": "#e5171f", "shape": "circle"}, "West.T": {"code": "T", "color": "#522886", "shape": "circle"}, "West.K": {"code": "K", "color": "#814721", "shape": "circle"}, "West.O": {"code": "O", "color": "#e80000", "shape": "square"}, "West.A": {"code": "A", "color": "#0072bc", "shape": "square"}, "West.D": {"code": "D", "color": "#a56750", "shape": "square"}, "West.E": {"code": "E", "color": "#878ddc", "shape": "square"}, "West.KH": {"code": "KH", "color": "#1d7b3b", "shape": "rounded"}, "West.HS": {"code": "HS", "color": "#1f64aa", "shape": "rounded"}, "West.KN-Namba": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Osaka": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.KN-Nara": {"code": "A", "color": "#d51c2f", "shape": "rounded"}, "West.HK-Arashi": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Kyoto": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.HK-Takara": {"code": "HK", "color": "#009944", "shape": "rounded"}, "West.FK": {"code": "K", "color": "#ee7d00", "shape": "circle"}, "West.FN": {"code": "N", "color": "#008b5a", "shape": "circle"}});
 // Station numbers checked against the operators' station lists on 2026-11-05.
@@ -106,10 +106,13 @@ const RAIL_STATION_NUMBERS={...METRO_STATION_NUMBERS,
  'JR-East.ChuoRapid':[['JC01','도쿄','東京']],
  'JR-East.Yokosuka':[['JO19','도쿄','東京']],
  'JR-East.Ito':[['JT21','아타미','熱海'],['JT22','기노미야','来宮']],
- 'Keio.Inokashira':[['IN01','시부야','渋谷']],
+ 'Keio.Inokashira':[['IN01','시부야','渋谷'],['IN05','시모키타자와','下北沢'],['IN17','기치조지','吉祥寺']],
+ 'Tobu.Tojo':[['TJ01','이케부쿠로','池袋'],['TJ21','가와고에','川越']],
  'Odakyu.Odawara':[['OH47','오다와라','小田原']],
  'OdakyuHakone.HakoneTozan':[['OH47','오다와라','小田原'],['OH51','하코네유모토','箱根湯本'],['OH57','고라','強羅']],
  'Hakone.Ropeway':[['OH62','소운잔','早雲山'],['OH63','오와쿠다니','大涌谷']],
+ 'Hakone.Cable':[['OH57','고라','強羅'],['OH62','소운잔','早雲山']],
+ 'Enoden.Enoden':[['EN12','하세','長谷'],['EN15','가마쿠라','鎌倉']],
  'Tobu.TobuSkytree':[['TS09','기타센주','北千住'],['TS30','도부도부쓰코엔','東武動物公園']],
  'Tobu.Nikko':[['TS30','도부도부쓰코엔','東武動物公園'],['TN25','도부닛코','東武日光']]
 };
@@ -149,11 +152,14 @@ function railStationNumber(part,side='from'){
  const endpoint=side==='to'?'to':'from',edge=endpoint==='to'?part.throughParts?.at(-1):part.throughParts?.[0],lineId=edge?.lineId||part.lineId;
  const name=String(part[endpoint]||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim(),ja=String(part[endpoint+'Ja']||'').replace(/駅$/,'').trim();
  const verified=RAIL_STATION_NUMBERS[lineId]?.find(row=>row[1]===name||ja&&row[2]===ja);
- if(verified)return {code:verified[0],lineId};
+ // Tobu Nikko through services can start on the blue TS section. The
+ // endpoint keeps the station's actual TS/TN identity and its matching color.
+ const stationLine=code=>lineId?.startsWith('Tobu.')?code?.startsWith('TS')?'Tobu.TobuSkytree':code?.startsWith('TN')?'Tobu.Nikko':lineId:lineId;
+ if(verified)return {code:verified[0],lineId:stationLine(verified[0])};
  const profiles=Object.values(globalThis.RailDepartureProfiles?.profiles||{}),same=n=>String(n||'').replace(/\([^)]*\)|（[^）]*）/g,'').trim()===name;
  const candidates=[part[endpoint+'Code'],...profiles.flatMap(p=>p.lineId===lineId?[same(p.from)?p.fromCode:null,same(p.to)?p.toCode:null]:[])];
  const code=candidates.find(code=>typeof code==='string'&&/^[A-Z]{1,3}\d{2}$/.test(code))||null;
- const numberedLine=lineId==='Special.Direct'?({KS:'Keisei.Main',JC:'JR-East.ChuoRapid',FJ:'Fujikyu.Fujikyu'}[code?.replace(/\d+$/,'')]||lineId):lineId;
+ const numberedLine=lineId==='Special.Direct'?({KS:'Keisei.Main',JC:'JR-East.ChuoRapid',FJ:'Fujikyu.Fujikyu'}[code?.replace(/\d+$/,'')]||lineId):stationLine(code);
  return {code,lineId:numberedLine};
 }
 function railLineBadge(part,extra=''){

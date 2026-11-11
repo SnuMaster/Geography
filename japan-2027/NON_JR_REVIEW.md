@@ -1,0 +1,39 @@
+# Non-JR operator review — 2026-11-11
+
+Scope: active January 8–22 Tokyo itinerary and its alternatives (15 days, 17 day/variant combinations). JR review from the previous changes remains separate. This is a source audit of saved planning data, not a live routing service or a guarantee of January 2027 fares, departures or shortest travel time.
+
+## Corrections
+
+- Odakyu OH and Hakone numbered station badges: circular outlines, with line letters above the station number. Cable-car/ropeway map markers retain their vehicle pictograms.
+- Minatomirai MM: blue filled square with white letters; detailed station badges stack MM above the number.
+- Yurikamome U: blue filled circle with white letters and stacked station numbers. The operator's station header CSS specifies `#0065A6` and a circular shape.
+- Tobu through-service station identities: Kasukabe TS27 uses the blue Skytree TS identity even when the train part is assigned to the Nikko line; TN stations retain their orange identity.
+- Added explicit verified endpoint mappings for IN05/IN17, TJ01/TJ21, EN12/EN15 and OH57/OH62. They no longer depend solely on the timetable profile fallback.
+- Map markers still display line letters without station numbers, as requested. Detailed departure/arrival badges retain their respective station numbers.
+
+Coordinates, route paths, itinerary UIDs, saved reservations, personal records and fare amounts are unchanged. Skyliner's fare remains blank.
+
+## Sources and audit results
+
+| Operator | Official sources inspected | Result |
+| --- | --- | --- |
+| Tokyo Metro | [Line/station lists](https://www.tokyometro.jp/station/index.html), [CI guideline](https://www.tokyometro.jp/support/trademark/pdf/guideline.pdf), [2026 fare table](https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.pdf), [Tsukiji/Shintomicho transfer](https://www.tokyometro.jp/info/tsukiji.pdf) | Active station codes match. Saved IC tiers 178/209/252 are consistent; Iriya–Toyosu via the designated Tsukiji/Shintomicho transfer is charged once at 209. Existing circle symbols retained. Screen colors remain approximations, not a claim of exact CI reproduction. |
+| Toei | [Station list](https://www.kotsu.metro.tokyo.jp/subway/stations/), [regular fares](https://www.kotsu.metro.tokyo.jp/subway/fare/regular.html), [transfer discounts](https://www.kotsu.metro.tokyo.jp/subway/fare/discount.html) | Active A/I/S/E station numbering checked. Iwamotocho–Shinjuku 220 and Suidobashi–Meguro 272 IC fit the published tiers; designated Metro/Toei transfer discount is 70. No fare change. A map download returned a WAF HTML response and was excluded from the PDF evidence. |
+| Yurikamome | [Official U01 station header and complete station sidebar](https://www.yurikamome.co.jp/station-timetable/u-01.html), [fare guidance](https://www.yurikamome.co.jp/ride-guidance/fare.html), [published fare table](https://www.yurikamome.co.jp/company/news/b405570a69e5124744dcf7b90db48d69.pdf) | U01/U07/U14/U16 checked; changed badge shape/color. IC fares 189/325/388 match the current published table. Day-2 U legs total 839 individually; the existing 820 one-day-pass comparison remains valid. |
+| Tobu Tojo / Skytree / Nikko | [Route maps](https://www.tobu.co.jp/railway/guide/route_map/), [Tojo station numbering](https://www.tobu.co.jp/pdf/guide/tobuTJstation.pdf?20230320), [fare and barrier-free charge table](https://www.toburailway.cn/cms-pdf/news/20230308173821gOeil5pz8zABtXdhXxcI8g.pdf), [limited-express supplement](https://www.tobu.co.jp/pdf/transit_fare/spacia_nikko.pdf?20260326=) | TJ01/TJ21/TJ22, TS09/TS27 and TN23/TN25 checked. Corrected TS/TN identity. Ikebukuro–Kawagoe is 30.5 km rounded to 31: base 471 + barrier-free 10 = **481 IC**, paper 490; keep existing fare. Nikko limited-express amounts depend on train/seat/season; do not treat the saved ordinary-service supplement as a Spacia X quote or verified future availability. |
+| Keio Inokashira | [Official stations](https://www.keio.co.jp/global/routes/stations/), [numbering guide](https://www.keio.co.jp/global/howto/railwaymap/), [fare table](https://www.keio.co.jp/company/corporate/summary/corporate_manual/pdf/2023/2023_p021_p024.pdf) | IN01/IN05/IN17 checked. Existing split circle badge retained. Kichijoji–Shimokitazawa 9.7 km rounds to 10; IC 209 remains consistent. |
+| Odakyu | [Official route map](https://odakyu-global.com/assets/file/routemap.pdf) | OH01 Shinjuku / OH07 Shimokitazawa checked; changed rectangular badge to circle. Exact OD fare calculator was unavailable during this review: existing 167 IC is retained with its existing fare provenance, not promoted to newly verified. |
+| Hakone Tozan / cable / ropeway | [March 2026 route map](https://www.hakonenavi.jp/assets/file/rosen_202603.pdf), [rail/cable fare table](https://www.hakonenavi.jp/assets/file/hakone-tozan_fee_221001.pdf), [ticket guidance](https://www.hakonenavi.jp/transportation/ticket_info/fee/) | OH47/OH51/OH57/OH62/OH63 checked. Rail/cable amounts 360/460/430 match published tables. Ropeway 2,000 single / 3,000 return from October 2025; keep the existing once-only return-ticket charge. January 2027 maintenance and actual operation still require a pre-trip check. |
+| Minatomirai | [Official map](https://www.mm21railway.co.jp/global/english/info/pdf/map.pdf), [tickets/fares](https://www.mm21railway.co.jp/info/ticket.html) | MM01 Yokohama / MM06 Motomachi-Chukagai; blue square corrected. End-to-end 224 IC / 230 paper retained. |
+| Enoden | [Kamakura EN15](https://www.enoden.co.jp/train/station/kamakura/), [Yuigahama EN13](https://www.enoden.co.jp/train/station/yuigahama/), [Hase EN12](https://www.enoden.co.jp/train/station/hase/), [fares](https://www.enoden.co.jp/train/fare/) | Station numbers and 1–2 km fare 200 checked. Existing green badge retained; its exact graphic geometry has not been independently certified as an official logo. |
+| Fujikyu / Fuji Excursion | [Stations](https://www.fujikyu-railway.jp/station/), [Fuji Excursion](https://www.fujikyu-railway.jp/fujikaiyuu/) | Official page supports paper total 4,200 (2,580 + 1,620 supplement). Existing 4,189 IC reference is not newly confirmed by that page. Do not relabel the existing IC quote or generic badge as newly verified official artwork. |
+| Keisei Skyliner | [Official route/traffic guide](https://www.keisei.co.jp/keisei/tetudou/skyliner/jp/traffic/index.php) | Existing route and supplied Skyliner logo retained. Fare deliberately blank; no price filled in. |
+| Tobu Nikko bus | [Operator's Nikko guide](https://www.tobu-bus.com/pc/area/nikko/) | Nishisando-Iriguchi 350 confirmed. The app's C badge is a route label, not an official corporate logo. |
+| Atami FUUA shuttle | [Official access/shuttle table](https://www.atamibayresort.com/access/) | Free shuttle exists; timetable/capacity constraints apply. Saved travel durations remain planning estimates and do not promise an immediately available departure. |
+| Kawaguchiko sightseeing bus | [Current official map](https://www.fujikyubus.co.jp/pdf/shuyu/omni_map_2026.pdf), [boarding/tickets](https://www.fujikyubus.co.jp/regular/ticket) | Older `/shuyu/` landing page is unavailable. Existing 570 fare was not independently reconfirmed in a current fare matrix during this review; retain its previous provenance and flag for another fare check. |
+
+## Verification
+
+Automated regression coverage checks every active train board, separate endpoint station identities, through-service TS/TN colors, OH/MM/U layouts, and map markers without station digits. The service-worker shell revision and offline manifest must be regenerated together before deployment. Raw downloaded source PDFs/HTML are research artifacts outside the repository and are not deployed.
+
+No live operator API was added. This review does not claim that every January 2027 departure, limited-express supplement, bus wait or globally fastest route is confirmed.

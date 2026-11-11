@@ -96,7 +96,7 @@ test('JR numbers use the official stacked frame and station abbreviations while 
  };
  const y=render(3,bundle.routes.days['3-main'][0]);assert.match(y,/역 번호 JY06/);assert.match(y,/jr-station-line\"[^>]*>JY/);assertJr(y,'JY13','IKB');assert.doesNotMatch(y,/>IBK</);
  const m=render(2,bundle.routes.days['2-main'][0]);for(const code of ['H19','H11','Y20','Y22'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-circle"[^>]*>'+code+'<').test(m),code);
- for(const code of ['U16','U14'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-rounded"[^>]*>'+code+'<').test(m),code);
+ for(const code of ['16','14'])assert.match(m,new RegExp('endpoint-circle operator-station-number operator-filled[^>]*[\\s\\S]*?<span class="operator-station-line">U</span><span class="operator-station-digits">'+code+'</span>'));
  const through=render(4,bundle.routes.days['4-main'][0]);assertJr(through,'JU02','UEN');assertJr(through,'JT05','YHM');
  assert.equal(ctx.jrStationAbbreviation({from:'우구이스다니',fromJa:'鶯谷'}),null);
  assert.equal(ctx.jrStationAbbreviation({from:'이케부쿠로',to:'우에노'},'to'),'UEN');
@@ -122,4 +122,23 @@ test('collapsed train cards retain visible limitations and move controls and sou
    assert.match(section,/<div class="departure-quick-links"><a[^>]+>길찾기 ↗<\/a>/,id);
   }
  }
+});
+
+test('official Odakyu and Minatomirai station layouts remain distinct from map line emblems',()=>{
+ const odakyuLeg=bundle.routes.days['5-main'].find(l=>l.parts.some(p=>p.lineId==='Odakyu.Odawara'));
+ const oh=render(5,odakyuLeg);for(const code of ['07','01'])assert.match(oh,new RegExp('endpoint-circle operator-station-number operator-outline[^>]*[\\s\\S]*?<span class="operator-station-line">OH</span><span class="operator-station-digits">'+code+'</span>'));
+ const minatoLeg=bundle.routes.days['4-main'].find(l=>l.parts.some(p=>p.lineId==='Minatomirai.Minatomirai'));
+ const mm=render(4,minatoLeg);assert.match(mm,/endpoint-square operator-station-number operator-filled/);for(const code of ['01','06'])assert.match(mm,new RegExp('<span class="operator-station-line">MM</span><span class="operator-station-digits">'+code+'</span>'));
+ for(const id of ['Odakyu.Odawara','OdakyuHakone.HakoneTozan','Hakone.Cable','Hakone.Ropeway'])assert.equal(ctx.railInfo({lineId:id}).stationShape||ctx.railInfo({lineId:id}).shape,'circle');
+ assert.match(ctx.railLineBadge({lineId:'Odakyu.Odawara',line:'오다큐',from:'시모키타자와'}),/>OH<\/span>/);
+ assert.match(ctx.railLineBadge({lineId:'Minatomirai.Minatomirai',line:'미나토미라이',from:'요코하마'}),/>MM<\/span>/);
+});
+
+test('Tobu Nikko through-service endpoints keep the blue TS and orange TN station identities',()=>{
+ const part={lineId:'Tobu.Nikko',line:'도부 특급',from:'가스카베',fromJa:'春日部',to:'시모이마이치',toJa:'下今市'};
+ const from=ctx.railStationNumber(part),to=ctx.railStationNumber(part,'to');assert.equal(from.code,'TS27');assert.equal(from.lineId,'Tobu.TobuSkytree');assert.equal(to.code,'TN23');assert.equal(to.lineId,'Tobu.Nikko');assert.notEqual(ctx.railInfo(from).color,ctx.railInfo(to).color);
+});
+
+test('reviewed private-railway endpoints keep their official numbers without timetable pack fallback',()=>{
+ for(const [lineId,from,code]of [['Tobu.Tojo','이케부쿠로','TJ01'],['Keio.Inokashira','기치조지','IN17'],['Keio.Inokashira','시모키타자와','IN05'],['Enoden.Enoden','가마쿠라','EN15'],['Enoden.Enoden','하세','EN12'],['Hakone.Cable','소운잔','OH62']])assert.equal(ctx.railStationNumber({lineId,from}).code,code);
 });

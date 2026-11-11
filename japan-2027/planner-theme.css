@@ -196,6 +196,13 @@ body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actio
 .jr-station-number .jr-station-line{display:block;font:700 18px/19px Arial,sans-serif;letter-spacing:-.8px}
 .jr-station-number .jr-station-digits{display:block;font:700 31px/31px Arial,sans-serif;letter-spacing:-1px}
 .rail-symbol.keio-inokashira{background:var(--rail-color);color:#fff}
+.rail-symbol.minatomirai{background:var(--rail-color);color:#fff;border-radius:5px}
+.rail-symbol.yurikamome{background:var(--rail-color);color:#fff}
+.departure-endpoint-code.operator-station-number{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;letter-spacing:0}
+.operator-station-number .operator-station-line{font:700 18px/20px Arial,sans-serif}
+.operator-station-number .operator-station-digits{font:700 27px/29px Arial,sans-serif}
+.departure-endpoint-code.operator-filled{background:var(--station-color);color:#fff}
+.departure-endpoint-code.operator-filled.endpoint-square{border-radius:5px}
 .rail-symbol.fuji-service{width:70px;font-size:12px;letter-spacing:0}
 .departure-endpoint-code.keio-station-number{display:flex;flex-direction:column;justify-content:center;gap:1px;border:5px solid var(--station-color);background:var(--station-color);color:#fff;overflow:hidden}
 .keio-station-number .keio-station-line{font:700 20px/23px Arial,sans-serif}
