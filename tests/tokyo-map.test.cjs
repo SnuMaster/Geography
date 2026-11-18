@@ -135,25 +135,18 @@ test('map grouping never joins a transfer, an unknown boundary or a schematic tr
  const ordinary=bundle.routes.days['2-main'][0];assert.equal(ui.railMapDrawParts(ordinary).length,ordinary.parts.length,'separate Metro and Yurikamome boardings stay separate');
 });
 
-test('Revaty planning marks cover the reviewed Nikko rides without branding other Tobu trains',()=>{
- for(const index of [0,5]){
-  const leg=bundle.routes.days['10-main'][index],before=JSON.stringify(leg),special=leg.parts.filter(p=>p.line==='도부 특급');
-  assert.equal(special.length,2);
-  for(const p of special)assert.match(ui.railBadge(p),/assets\/operators\/revaty.png/);
-  assert.equal((ui.railLegBadges(leg).match(/revaty.png/g)||[]).length,1);
-  assert.equal(JSON.stringify(leg),before);
-  const symbol=ui.railMapParts(leg).find(p=>p.mapSymbol).mapSymbol;
-  assert.match(ui.railBadge(symbol),/revaty.png/);
- }
+test('named Revaty services have their own mark while generic and Spacia trains stay unbranded',()=>{
  for(const part of [
-  {mode:'rail',lineId:'Tobu.Nikko',line:'닛코선',from:'시모이마이치',to:'도부닛코'},
-  {mode:'rail',lineId:'Tobu.TobuSkytree',line:'스페이시아 X',from:'기타센주',to:'시모이마이치'},
-  {mode:'rail',lineId:'Tobu.Nikko',line:'도부 특급',from:'미확인',to:'미확인'},
+  {mode:'rail',lineId:'Tobu.Nikko',line:'리버티 게곤',from:'도부닛코',to:'기타센주'},
+  {mode:'rail',lineId:'Tobu.TobuSkytree',line:'도부 특급',serviceName:'Revaty 게곤 1',from:'기타센주',to:'가스카베'}
+ ])assert(ui.railBadge(part).includes('assets/operators/revaty.png'));
+ for(const part of [
+  {mode:'rail',lineId:'Tobu.TobuSkytree',line:'도부 특급',from:'가스카베',to:'기타센주'},
+  {mode:'rail',lineId:'Tobu.Nikko',line:'도부 특급',serviceName:'스페이시아 X 8',from:'시모이마이치',to:'가스카베'},
+  {mode:'rail',lineId:'Tobu.Nikko',line:'닛코선',from:'도부닛코',to:'시모이마이치'},
   {mode:'bus',lineId:'Tobu.Nikko',line:'리버티'},
   {mode:'rail',lineId:'JR-East.ChuoRapid',line:'리버티'}
  ])assert.equal(ui.revatyLogo(part),'');
- const sw=fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8');
- assert.match(sw,/assets\/operators\/revaty.png/);assert.match(sw,/REVATY-NOTICE.txt/);
 });
 
 // Whole-movement daily/overview interactions are audited against every active

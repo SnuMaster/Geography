@@ -17,18 +17,23 @@ function fujiExcursionLogo(part,extra=''){
 // Reviewed Revaty planning candidates: Kinu 105 outbound, Kegon 42 inbound.
 // The generic Tobu limited-express label is branded only on these exact legs;
 // an ordinary train or a named Spacia service must keep its own identity.
+function spaciaXLogo(part,extra=''){
+ if((part?.mode&&!['rail','metro'].includes(part.mode))||!['Tobu.TobuSkytree','Tobu.Nikko'].includes(part?.lineId))return '';
+ const service=[part.line,part.serviceName,part.throughService,...(part.throughParts||[]).map(p=>p.serviceName)].filter(Boolean).join(' ');
+ if(!/Spacia\s*X|스페이시아\s*X|スペーシア\s*[XＸ]/i.test(service))return '';
+ return '<img class="operator-logo operator-spacia-x '+extra+'" src="assets/operators/spacia-x.svg" alt="스페이시아 X SPACIA X 로고" title="스페이시아 X · 별도 특급권·좌석 확인" width="128" height="38" style="background:#fffdf8;padding:4px;border-radius:4px;object-fit:contain" decoding="async">';
+}
+
 function revatyLogo(part,extra=''){
  if((part?.mode&&!['rail','metro'].includes(part.mode))||!['Tobu.TobuSkytree','Tobu.Nikko'].includes(part?.lineId))return '';
- const line=part.line||'',named=/리버티|リバティ|Revaty/i.test(line),planned=/^도부 특급(?: 직통)?$/.test(line)&&[
-  '기타센주|가스카베','가스카베|시모이마이치','기타센주|시모이마이치',
-  '도부닛코|가스카베','가스카베|기타센주','도부닛코|기타센주'
- ].includes(part.from+'|'+part.to);
- if(!named&&!planned)return '';
- return '<img class="operator-logo operator-revaty '+extra+'" src="assets/operators/revaty.png" alt="리버티 Revaty 로고" title="리버티 계획 후보 · 여행일 운행·좌석 미확정" width="84" height="30" decoding="async">';
+ const service=[part.line,part.serviceName,part.throughService].filter(Boolean).join(' ');
+ if(/Spacia|스페이시아|スペーシア/i.test(service)||!/리버티|リバティ|Revaty/i.test(service))return '';
+ return '<img class="operator-logo operator-revaty '+extra+'" src="assets/operators/revaty.png" alt="리버티 Revaty 로고" title="리버티 · 여행일 운행·좌석 확인" width="84" height="30" decoding="async">';
 }
 function operatorLogo(part,extra=''){
  const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
  const fuji=fujiExcursionLogo(part,extra);if(fuji)return fuji;
+ const spacia=spaciaXLogo(part,extra);if(spacia)return spacia;
  const revaty=revatyLogo(part,extra);if(revaty)return revaty;
  const isUber=part?.mode==='taxi',isKtx=part?.lineId==='KORAIL.GyeongbuHSR'||/KTX/.test(part?.line||''),isShinkansen=part?.lineId==='JR-Central.TokaidoShinkansen';
  if(!isUber&&!isKtx&&!isShinkansen)return '';
@@ -182,6 +187,7 @@ function railStationNumber(part,side='from'){
  return {code,lineId:numberedLine};
 }
 function railLineBadge(part,extra=''){
+ const spacia=spaciaXLogo(part,extra);if(spacia)return spacia;
  const revaty=revatyLogo(part,extra);if(revaty)return revaty;
  return railBadge({...part,from:'',fromJa:'',fromCode:undefined,mapSymbolCode:part.mapSymbolCode||(part.throughParts?.length&&part.line?.startsWith('JR ')?'JR':undefined)},extra);
 }
@@ -209,6 +215,7 @@ function routeLineStyles(part,{overview=false,local=false,night=false}={}){
 function railBadge(part,extra=''){
  const skyliner=skylinerLogo(part,extra);if(skyliner)return skyliner;
  const fuji=fujiExcursionLogo(part,extra);if(fuji)return fuji;
+ const spacia=spaciaXLogo(part,extra);if(spacia)return spacia;
  const revaty=revatyLogo(part,extra);if(revaty)return revaty;
  const info=railInfo(part);if(!info)return operatorLogo(part)||icon((MODE[part.mode]||MODE.rail).icon);
  if(info.vehicle){const vehicle=transitVehicleBadge(part,info,extra),brand=busCompanyLogo(part);return brand?`<span class="bus-company-badge">${brand}${vehicle}</span>`:vehicle;}
@@ -302,14 +309,14 @@ function drawMapMovement(leg,{overview=false,local=false,symbols=true,index=leg.
  return lines;
 }
 
-function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':revatyLogo(p)?'service:revaty':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
+function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':spaciaXLogo(p)?'service:spacia-x':revatyLogo(p)?'service:revaty':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
  return `<div class="day-line-key" aria-label="오늘 이용하는 교통 노선">${uniqueRailParts(legs).map(p=>`<span>${railBadge(p)}<span>${esc(p.line.replace(/ · .*/,''))}</span></span>`).join('')}</div>`;
 }
 function dailyRailFareLogos(row,legs){
  const leg=legs[row.legIndex-1];if(!leg)return '';
- const seen=new Set(),services=railParts({...leg,parts:leg.parts.filter(p=>['rail','metro'].includes(p.mode)&&(row.lineIds.length?row.lineIds.includes(p.lineId):row.lines.includes(p.line)))}).filter(p=>{const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':revatyLogo(p)?'service:revaty':p.lineId||p.line;if(seen.has(key))return false;seen.add(key);return true;});
+ const seen=new Set(),services=railParts({...leg,parts:leg.parts.filter(p=>['rail','metro'].includes(p.mode)&&(row.lineIds.length?row.lineIds.includes(p.lineId):row.lines.includes(p.line)))}).filter(p=>{const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':spaciaXLogo(p)?'service:spacia-x':revatyLogo(p)?'service:revaty':p.lineId||p.line;if(seen.has(key))return false;seen.add(key);return true;});
  return '<span class="daily-rail-logos">'+services.map(p=>railBadge(p)).join('')+'</span>';
 }
 function dailyRailFareHtml(){
