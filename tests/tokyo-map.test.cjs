@@ -156,15 +156,5 @@ test('Revaty planning marks cover the reviewed Nikko rides without branding othe
  assert.match(sw,/assets\/operators\/revaty.png/);assert.match(sw,/REVATY-NOTICE.txt/);
 });
 
-test('daily renderer highlights and opens the full through ride from a single hit path',()=>{
- const leg=bundle.routes.days['10-main'][0],layers=[],hover=[],selected=[];
- const node={classList:{toggle(){}},innerHTML:'',textContent:''};
- const ctx={...ui,window:{TripPersonal:{displayParts:l=>l.parts}},state:{view:'daily',day:10,night:false,data:{days:[]},routeData:{days:{'10-main':[leg]}}},routeLayer:{clearLayers(){}},map:{closePopup(){}},getStops:()=>[{kind:'home'},{kind:'home',modeFromPrevious:'rail'}],getLeg:()=>leg,getVariant:()=>({id:'main'}),hasDetailedRoutes:()=>true,MODE:ui.MODE,$:()=>node,setTiles(){},routeVisual:layer=>layer,applyRouteFocus(){},requestAnimationFrame(){},updateArrowAngles(){},DetailView:{options:()=>({})},setFocusedLeg:i=>selected.push(i),legHtml:(l,p)=>p,L:{polyline:(coords,style)=>{const layer={coords,options:{...style},events:{},addTo(){return this;},bindPopup(fn){this.popup=fn;return this;},on(name,fn){this.events[name]=fn;return this;},setStyle(s){Object.assign(this.options,s);return this;}};layers.push(layer);return layer;}}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('./fixtures/rail-departure-profiles-20261111.js'),'utf8'),ctx);
- Object.assign(ctx,{hideRailHover(){},showRailHover:(e,l,p)=>hover.push(p),positionRailHover(){},addRailMapSymbol(){}});
- const source=fs.readFileSync(require.resolve('../japan-2027/app.js'),'utf8');vm.runInContext(source.slice(source.indexOf('function renderMap('),source.indexOf('function markerIcon(')),ctx);ctx.renderMap(false);
- const hits=layers.filter(l=>l.options.weight===18),ride=ctx.railMapDrawParts(leg).find(p=>p.mapSourcePart),hit=hits.find(l=>l.coords===ride.coords||JSON.stringify(l.coords)===JSON.stringify(ride.coords));assert.ok(hit);
- assert.equal(hits.length,ctx.railMapDrawParts(leg).filter(p=>ctx.mapPartVisible(p)&&p.coords.length>=2&&p.distanceM>=8).length,'one hit path per visible ride/walk');
- const stroke=layers[layers.indexOf(hit)-1],base={...stroke.options};hit.events.mouseover({});assert.equal(stroke.options.weight,7);assert.equal(hover.at(-1).from,ride.from);assert.equal(hover.at(-1).to,ride.to);assert.equal(hover.at(-1).coords.length,ride.coords.length);
- hit.events.mouseout();assert.deepEqual(stroke.options,base);hit.events.click();assert.deepEqual(selected,[1]);assert.equal(hit.popup().mapSymbol.from,ride.from);assert.equal(hit.popup().mapSymbol.to,ride.to);
-});
+// Whole-movement daily/overview interactions are audited against every active
+// itinerary leg in unified-movement-map.test.cjs. Legacy geometry checks above remain.
