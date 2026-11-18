@@ -1,0 +1,31 @@
+name: Verify detailed Tokyo map
+on:
+  push:
+    branches: [codex/tokyo-detailed-plan-20261118]
+    paths:
+      - 'japan-2027/app.js'
+      - 'japan-2027/tests/detailed-plan-browser.cjs'
+      - 'tests/**'
+      - '.github/workflows/verify-tokyo-detailed-plan.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: All core and current-plan regressions
+        run: node --test tests/*.test.cjs
+      - name: Mobile and desktop map interaction
+        run: |
+          npm ci --prefix japan-2027/tests
+          node japan-2027/tests/detailed-plan-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detailed-plan-screen-check
+          path: qa-detailed-plan-*.png
