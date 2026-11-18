@@ -1,6 +1,6 @@
 import io,zipfile,csv,json,urllib.request,hashlib
 url='https://gtfs-jp.buskita.com/fjb/gtfs.zip'
-raw=urllib.request.urlopen(url,timeout=60).read()
+raw=urllib.request.urlopen(urllib.request.Request(url,headers={'User-Agent':'KISEKI-Fare-Verification/1.0 (github.com/SnuMaster/Geography)','Referer':'https://bus.fujikyu.co.jp/rosen/gtfs/'}),timeout=60).read()
 print('GTFS_SOURCE',url,'sha256',hashlib.sha256(raw).hexdigest(),flush=True)
 z=zipfile.ZipFile(io.BytesIO(raw))
 print('GTFS_FILES',z.namelist(),flush=True)

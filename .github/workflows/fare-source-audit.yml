@@ -2,7 +2,7 @@ name: Audit remaining fare sources
 on:
   push:
     branches: [codex/tokyo-complete-fares-20261118]
-    paths: ['scripts/audit-remaining-fare-sources.cjs', '.github/workflows/fare-source-audit.yml']
+    paths: ['scripts/audit-fuji-gtfs.py', 'scripts/audit-remaining-fare-sources.cjs', '.github/workflows/fare-source-audit.yml']
 permissions:
   contents: read
 jobs:
@@ -14,6 +14,4 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: sudo apt-get update -qq && sudo apt-get install -y -qq poppler-utils
-      - run: node scripts/audit-remaining-fare-sources.cjs
       - run: python3 scripts/audit-fuji-gtfs.py
