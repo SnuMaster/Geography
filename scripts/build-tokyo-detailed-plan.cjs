@@ -79,7 +79,7 @@ function addDay(p,ss,ls,id='main',label='기본 일정'){
  const unique=[...new Map(prepared.flatMap(d=>d.ss).filter(s=>s.lat&&s.lng).map(s=>[point(s).join(','),s])).values()];
  // Reuse reviewed street geometry first. Only missing short public paths query
  // the pedestrian router; request pacing follows the public server policy.
- for(const s of unique){const byName=new Map();for(const st of stations.filter(st=>dist(s,[st.coord[1],st.coord[0]])<1500).sort((a,b)=>dist(s,[a.coord[1],a.coord[0]])-dist(s,[b.coord[1],b.coord[0]]))){if(!byName.has(st.title.ja))byName.set(st.title.ja,st);}
+ for(const s of unique){const byName=new Map();for(const st of stations.filter(st=>st.coord&&dist(s,[st.coord[1],st.coord[0]])<1500).sort((a,b)=>dist(s,[a.coord[1],a.coord[0]])-dist(s,[b.coord[1],b.coord[0]]))){if(!byName.has(st.title.ja))byName.set(st.title.ja,st);}
   for(const st of [...byName.values()].slice(0,3)){const at=station(st.id),p=walk(s,at);if(p.geometryAccuracy==='schematic'&&p.distanceM>30){const result=await road('foot',s,at);if(result)roads[roadKey('foot',at,s)]={...clone(result),from:at.name,to:s.name,coords:result.coords.slice().reverse()};}}
  }
  for(const {ss}of prepared)for(let i=1;i<ss.length;i++){const a=ss[i-1],b=ss[i],m=dist(a,b);if(m>20&&m<=3000&&walk(a,b).geometryAccuracy==='schematic')await road('foot',a,b);}
