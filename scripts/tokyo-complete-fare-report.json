@@ -1,0 +1,487 @@
+{
+  "revision": "20261118-complete-fares-2",
+  "checkedAt": "2026-11-18",
+  "updated": [
+    {
+      "key": "2-main",
+      "index": 9,
+      "from": "오토야 미나토미라이점",
+      "to": "STAY&GO 이리야키타",
+      "icYen": 987,
+      "components": [
+        {
+          "operator": "Minatomirai",
+          "from": "미나토미라이",
+          "to": "요코하마",
+          "icYen": 193,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "JR-East",
+          "from": "요코하마",
+          "to": "우에노",
+          "icYen": 616,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "TokyoMetro",
+          "from": "우에노",
+          "to": "이리야",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "3-main",
+      "index": 3,
+      "from": "기치조지 선로드·다이쇼도리",
+      "to": "시모키타자와 북쪽 빈티지·레코드 거리",
+      "icYen": 209,
+      "components": [
+        {
+          "operator": "Keio",
+          "from": "기치조지",
+          "to": "시모키타자와",
+          "icYen": 209,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "4-main",
+      "index": 0,
+      "from": "STAY&GO 이리야키타",
+      "to": "신주쿠교엔",
+      "icYen": 328,
+      "components": [
+        {
+          "operator": "TokyoMetro",
+          "from": "이리야",
+          "to": "아키하바라",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "Toei",
+          "from": "이와모토초",
+          "to": "신주쿠 3초메",
+          "icYen": 150,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 70
+        }
+      ]
+    },
+    {
+      "key": "4-main",
+      "index": 7,
+      "from": "스시노미도리 시부야점",
+      "to": "STAY&GO 이리야키타",
+      "icYen": 253,
+      "components": [
+        {
+          "operator": "JR-East",
+          "from": "시부야",
+          "to": "우구이스다니",
+          "icYen": 253,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "5-main",
+      "index": 0,
+      "from": "STAY&GO 이리야키타",
+      "to": "JR 신주쿠역",
+      "icYen": 431,
+      "components": [
+        {
+          "operator": "TokyoMetro",
+          "from": "이리야",
+          "to": "우에노",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "JR-East",
+          "from": "우에노",
+          "to": "신주쿠",
+          "icYen": 253,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "5-main",
+      "index": 2,
+      "from": "가와구치코역",
+      "to": "오이시공원",
+      "icYen": 570,
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "from": "가와구치코역",
+          "to": "가와구치코 자연생활관",
+          "icYen": 570,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "5-main",
+      "index": 3,
+      "from": "오이시공원",
+      "to": "호토 후도 가와구치코 북본점",
+      "icYen": 280,
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "from": "가와구치코 자연생활관",
+          "to": "가와구치코 미술관",
+          "icYen": 280,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "5-main",
+      "index": 5,
+      "from": "가와구치코 북쪽 호숫가",
+      "to": "가와구치코 파노라마 로프웨이",
+      "icYen": 230,
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "from": "가와구치코 미술관",
+          "to": "유람선·로프웨이 입구",
+          "icYen": 230,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "7-main",
+      "index": 3,
+      "from": "도요스 센캬쿠반라이",
+      "to": "다이버시티·유니콘 건담",
+      "icYen": 325,
+      "components": [
+        {
+          "operator": "Yurikamome",
+          "from": "시조마에",
+          "to": "도쿄국제크루즈터미널",
+          "icYen": 325,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "8-main",
+      "index": 1,
+      "from": "도부닛코",
+      "to": "게곤폭포",
+      "icYen": 1250,
+      "components": [
+        {
+          "operator": "TobuBus",
+          "from": "도부닛코역",
+          "to": "주젠지온천",
+          "icYen": 1250,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "8-main",
+      "index": 3,
+      "from": "주젠지호 동쪽 호숫가",
+      "to": "산본마쓰 찻집·설경 전망",
+      "icYen": 650,
+      "components": [
+        {
+          "operator": "TobuBus",
+          "from": "후타라산 신사 주구시",
+          "to": "산본마쓰",
+          "icYen": 650,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "8-main",
+      "index": 4,
+      "from": "산본마쓰 찻집·설경 전망",
+      "to": "도부닛코",
+      "icYen": 1750,
+      "components": [
+        {
+          "operator": "TobuBus",
+          "from": "산본마쓰",
+          "to": "도부닛코역",
+          "icYen": 1750,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "8-main",
+      "index": 5,
+      "from": "도부닛코",
+      "to": "STAY&GO 이리야키타",
+      "icYen": 3511,
+      "components": [
+        {
+          "operator": "TobuNikko",
+          "from": "도부닛코",
+          "to": "기타센주",
+          "icYen": 3333,
+          "reservedSurchargeYen": 1940,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "TokyoMetro",
+          "from": "기타센주",
+          "to": "이리야",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "9-main",
+      "index": 1,
+      "from": "하마리큐 은사정원",
+      "to": "긴자 이토야",
+      "icYen": 178,
+      "components": [
+        {
+          "operator": "TokyoMetro",
+          "from": "신바시",
+          "to": "긴자",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "10-main",
+      "index": 0,
+      "from": "STAY&GO 이리야키타",
+      "to": "쓰루가오카하치만구",
+      "icYen": 1212,
+      "components": [
+        {
+          "operator": "TokyoMetro",
+          "from": "이리야",
+          "to": "우에노",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "JR-East",
+          "from": "우에노",
+          "to": "가마쿠라",
+          "icYen": 1034,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "10-main",
+      "index": 5,
+      "from": "유이가하마 해변",
+      "to": "가마쿠라코코마에 해안",
+      "icYen": 260,
+      "components": [
+        {
+          "operator": "Enoden",
+          "from": "와다즈카",
+          "to": "가마쿠라고교앞",
+          "icYen": 260,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "10-main",
+      "index": 6,
+      "from": "가마쿠라코코마에 해안",
+      "to": "에노시마 섬 입구·해안 전망",
+      "icYen": 200,
+      "components": [
+        {
+          "operator": "Enoden",
+          "from": "가마쿠라고교앞",
+          "to": "에노시마",
+          "icYen": 200,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "10-main",
+      "index": 8,
+      "from": "시라스야 고시고에 본점",
+      "to": "STAY&GO 이리야키타",
+      "icYen": 1432,
+      "components": [
+        {
+          "operator": "Enoden",
+          "from": "고시고에",
+          "to": "후지사와",
+          "icYen": 220,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "JR-East",
+          "from": "후지사와",
+          "to": "아키하바라",
+          "icYen": 1034,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "TokyoMetro",
+          "from": "아키하바라",
+          "to": "이리야",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "12-main",
+      "index": 4,
+      "from": "효고요코초·가쿠렌보요코초",
+      "to": "도쿄 돔 호텔 · 체크인·휴식",
+      "icYen": 155,
+      "components": [
+        {
+          "operator": "JR-East",
+          "from": "이다바시",
+          "to": "스이도바시",
+          "icYen": 155,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "12-main",
+      "index": 5,
+      "from": "도쿄 돔 호텔 · 체크인·휴식",
+      "to": "도쿄 미드타운·히노키초공원",
+      "icYen": 286,
+      "components": [
+        {
+          "operator": "Toei",
+          "from": "스이도바시",
+          "to": "히비야",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        },
+        {
+          "operator": "TokyoMetro",
+          "from": "히비야",
+          "to": "노기자카",
+          "icYen": 108,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 70
+        }
+      ]
+    },
+    {
+      "key": "12-main",
+      "index": 8,
+      "from": "도쿄타워 외관·시바공원",
+      "to": "도쿄 돔 호텔",
+      "icYen": 220,
+      "components": [
+        {
+          "operator": "Toei",
+          "from": "오나리몬",
+          "to": "스이도바시",
+          "icYen": 220,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "14-main",
+      "index": 1,
+      "from": "고이시카와 고라쿠엔",
+      "to": "황거 동쪽 정원 · 오테몬 입구",
+      "icYen": 178,
+      "components": [
+        {
+          "operator": "Toei",
+          "from": "스이도바시",
+          "to": "오테마치",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "14-main",
+      "index": 2,
+      "from": "황거 동쪽 정원 · 오테몬 입구",
+      "to": "소바요시 니혼바시 본점",
+      "icYen": 178,
+      "components": [
+        {
+          "operator": "TokyoMetro",
+          "from": "오테마치",
+          "to": "미쓰코시마에",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    },
+    {
+      "key": "14-main",
+      "index": 8,
+      "from": "와코 야에스 지하상가점",
+      "to": "도쿄 돔 호텔",
+      "icYen": 178,
+      "components": [
+        {
+          "operator": "Toei",
+          "from": "오테마치",
+          "to": "스이도바시",
+          "icYen": 178,
+          "reservedSurchargeYen": 0,
+          "transferDiscountYen": 0
+        }
+      ]
+    }
+  ],
+  "missing": []
+}
