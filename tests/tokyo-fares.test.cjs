@@ -1,5 +1,7 @@
+// Frozen Nov 11 scenario: retain legacy fare/geometry regressions after the
+// active schedule changes. Current Nov 18 plan contracts are tested separately.
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict'),F=require('../japan-2027/fare-core'),T=require('../japan-2027/data-model'),refs=require('../scripts/tokyo-fare-references.cjs'),bundle=require('../japan-2027/trip-update.json');
+const {test}=require('node:test'),assert=require('node:assert/strict'),F=require('../japan-2027/fare-core'),T=require('../japan-2027/data-model'),refs=require('../scripts/tokyo-fare-references.cjs'),bundle=require('./fixtures/tokyo-plan-20261111.json');
 const {data,routes}=T.prepare(structuredClone(bundle.data),structuredClone(bundle.routes));
 test('all active Japanese rail fares are sourced; only the explicitly blank Skyliner remains unknown',()=>{
  const unknown=[];for(const [key,legs]of Object.entries(routes.days))for(const leg of legs){const rows=F.railItems([leg]);if(!rows.length)continue;if(leg.fare.icYen===null)unknown.push(leg);else{assert.equal(leg.fare.icYen,rows.reduce((n,r)=>n+r.icYen,0),key);assert.equal(leg.fare.min,leg.fare.icYen);assert.ok(rows.every(r=>r.checkedAt&&r.sources.length));assert.ok(rows.every(r=>r.sources.every(url=>new URL(url).protocol==='https:')));}}

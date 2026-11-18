@@ -1,5 +1,7 @@
+// Frozen Nov 11 scenario: retain legacy fare/geometry regressions after the
+// active schedule changes. Current Nov 18 plan contracts are tested separately.
 'use strict';
-const {test}=require('node:test'),assert=require('node:assert/strict'),bundle=require('../japan-2027/trip-update.json'),F=require('../japan-2027/fare-core');
+const {test}=require('node:test'),assert=require('node:assert/strict'),bundle=require('./fixtures/tokyo-plan-20261111.json'),F=require('../japan-2027/fare-core');
 test('all timed, covered railway journeys carry a dated, explicitly non-live time comparison',()=>{
  const optimized=Object.values(bundle.routes.days).flat().filter(l=>l.timeComparison);assert.equal(optimized.length,43);
  for(const leg of optimized){const t=leg.timeComparison;assert.equal(t.policy,'earliest-arrival');assert.equal(t.live,false);assert.equal(t.travelDateVerified,false);assert.match(t.departureDate,/^2027-01-/);assert.equal(t.referenceArrivalMinutes-t.departureMinutes,leg.durationMinutes);assert.equal(t.totalMinutes,leg.durationMinutes);assert.ok(t.sources.length);assert.ok(t.walkingMinutes+t.transferMinutes+t.waitingMinutes<=t.totalMinutes);assert.match(t.scope,/전 노선.*보장 아님/);for(const p of leg.parts.filter(p=>p.referenceTrainIds)){assert.ok(p.referenceTrainIds.length);assert.equal(p.durationBasis,'stored-timetable-reference');assert.ok(p.referenceTimetable.startsWith('https://'));}}

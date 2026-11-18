@@ -1,6 +1,8 @@
+// Frozen Nov 11 scenario: retain legacy fare/geometry regressions after the
+// active schedule changes. Current Nov 18 plan contracts are tested separately.
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict');
-const bundle=require('../japan-2027/trip-update.json'),T=require('../japan-2027/data-model'),J=require('../japan-2027/journey-state'),F=require('../japan-2027/fare-core'),P=require('../japan-2027/personal-trip'),G=require('../japan-2027/location-core'),A=require('../japan-2027/assistant-core'),C=require('../japan-2027/command-core');
+const bundle=require('./fixtures/tokyo-plan-20261111.json'),T=require('../japan-2027/data-model'),J=require('../japan-2027/journey-state'),F=require('../japan-2027/fare-core'),P=require('../japan-2027/personal-trip'),G=require('../japan-2027/location-core'),A=require('../japan-2027/assistant-core'),C=require('../japan-2027/command-core');
 const {data,routes}=T.prepare(structuredClone(bundle.data),structuredClone(bundle.routes));
 test('active trip is an atomic 15-day Jan8-Jan22 revision, not mixed with old west dates',()=>{
  assert.equal(data.metadata.id,'tokyo-20270108-22');assert.equal(data.metadata.nights,14);assert.equal(bundle.revision,data.version);assert.equal(bundle.revision,routes.version);assert.equal(data.days.length,15);

@@ -1,7 +1,8 @@
+// Frozen legacy route scenarios; new active-plan rendering is covered by detailed-plan-browser.cjs.
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-require('../japan-2027/rail-departure-profiles');
-const bundle=require('../japan-2027/trip-update.json'),F=require('../japan-2027/fare-core');
+require('./fixtures/rail-departure-profiles-20261111.js');
+const bundle=require('./fixtures/tokyo-plan-20261111.json'),F=require('../japan-2027/fare-core');
 const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const station=(a,b)=>b?`${a}(${b})`:a;
 const ctx={URL,URLSearchParams,DepartureCore:require('../japan-2027/departure-core'),TravelStore:{VERSION:'test'},BoundedCache:require('../japan-2027/lru-cache'),RailDepartureProfiles:globalThis.RailDepartureProfiles,FareCore:F,TripPersonal:{station},document:{addEventListener(){}},window:{TripPersonal:{station}},esc:h,icon:h,MODE:{rail:{icon:"train"}}};

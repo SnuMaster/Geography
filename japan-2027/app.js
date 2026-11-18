@@ -122,7 +122,7 @@ const kindLabel=k=>({hotel:'숙소',sight:'관광',food:'식사',cafe:'카페',s
 function mapUrl(s){return window.TripPersonal?.placeMapUrl(s)||null;}
 function directionsUrl(a,b){let mode=b.modeFromPrevious==='walk'?'walking':b.modeFromPrevious==='taxi'?'driving':'transit';return `https://www.google.com/maps/dir/?api=1&origin=${a.lat},${a.lng}&destination=${b.lat},${b.lng}&travelmode=${mode}`;}
 function announce(t){const el=$('#toast');el.textContent=t;el.classList.add('visible');clearTimeout(announce.timer);announce.timer=setTimeout(()=>el.classList.remove('visible'),2500);}
-function cleanDesc(s){if(s.kind==='home')return '비공개 출발·도착지 · 정확한 주소는 화면에 표시하지 않습니다.';return s.description.replace(/지도상 대표 지점\. 실제 출입구는 현장 안내를 확인한다\.?/g,'').replace(/지도점은 주소 기준점으로 실제 출입구와 다를 수 있다\.?/g,'').replace(/주소의 블록 대표 좌표이며 실제 매장 입구와 다를 수 있음\.?/g,'').trim();}
+function cleanDesc(s){if(s.kind==='home')return '비공개 출발·도착지 · 정확한 주소는 화면에 표시하지 않습니다.';return String(s.description??s.details?.feature??'').replace(/지도상 대표 지점\. 실제 출입구는 현장 안내를 확인한다\.?/g,'').replace(/지도점은 주소 기준점으로 실제 출입구와 다를 수 있다\.?/g,'').replace(/주소의 블록 대표 좌표이며 실제 매장 입구와 다를 수 있음\.?/g,'').trim();}
 
 function renderDays(){
  const results=JourneyState.search(state.data.days,state.search,state.selectedVariantByDay,state.filter,state.routeData.days);
