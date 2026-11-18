@@ -8,8 +8,8 @@ function context(){
  Object.assign(ctx,{addRailMapSymbol:(p,l)=>symbols.push({p,l}),showRailHover:(e,l,p)=>ctx.hover={l,p},positionRailHover(){},hideRailHover(){ctx.hover=null;}});
  return {ctx,layers,symbols,selected};
 }
-test('all 118 active movements retain every geometry, fare, timetable and transfer while choosing one map color',()=>{
- const {ctx}=context();assert.equal(all.length,118);
+test('all 120 active movements retain every geometry, fare, timetable and transfer while choosing one map color',()=>{
+ const {ctx}=context();assert.equal(all.length,120);
  for(const leg of all){const before=JSON.stringify(leg),plan=ctx.movementMapPlan(leg),old=ctx.railMapDrawParts(leg).filter(p=>ctx.mapPartVisible(p)&&p.coords?.length>=2&&p.distanceM>=8);
   assert.equal(JSON.stringify(plan.parts.map(p=>p.coords)),JSON.stringify(old.map(p=>p.coords)),leg.legId);
   assert.equal(JSON.stringify(leg),before);assert.match(plan.color,/^#[0-9a-f]{3,6}$/i);
