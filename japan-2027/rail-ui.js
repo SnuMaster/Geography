@@ -261,6 +261,47 @@ function railMapDrawParts(leg){
   return {...joined,mapColor:railInfo({lineId:mainId})?.color,mapSourcePart:part};
  });
 }
+
+// A movement is the itinerary's complete stop-to-stop selection. Line/operator
+// boundaries still belong to the real timetable and transfer list, not to hit targets.
+function movementMapPlan(leg){
+ const parts=railMapDrawParts(leg).filter(p=>mapPartVisible(p)&&p.coords?.length>=2&&p.distanceM>=8);
+ const motor=parts.filter(p=>['rail','metro','bus','taxi','flight','ferry'].includes(p.mode));
+ const dominant=motor.slice().sort((a,b)=>(b.distanceM||0)-(a.distanceM||0)||String(a.lineId||a.mode).localeCompare(String(b.lineId||b.mode)))[0]||parts[0];
+ const color=dominant?routeLineStyles(dominant).line.color:MODE.walk.color;
+ return {parts,color,boardings:motor.length,hover:{...(dominant||{}),movement:true,line:leg.summary,from:leg.from,to:leg.to,distanceM:leg.distanceM,boardings:motor.length}};
+}
+function highlightMapMovement(leg,active){
+ for(const visual of routeVisuals){
+  if(visual.role!=='movement-line'||visual.day!==leg.dayNumber||visual.variant!==leg.variant||visual.index!==leg.legIndex)continue;
+  visual.layer.setStyle(active?{weight:7,opacity:1}:visual.baseStyle);
+ }
+}
+function drawMapMovement(leg,{overview=false,local=false,symbols=true,index=leg.legIndex}={}){
+ const plan=movementMapPlan(leg),lines=[];
+ for(const part of plan.parts){
+  const strokes=routeLineStyles({...part,mapColor:plan.color},{overview,local,night:!overview&&state.night});
+  routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),leg,index,part.mode);
+  const style={...strokes.line,interactive:false},line=routeVisual(L.polyline(part.coords,style).addTo(routeLayer),leg,index,part.mode);
+  const visual=routeVisuals.at(-1);Object.assign(visual,{role:'movement-line',baseStyle:{...style}});
+  line.getElement?.()?.setAttribute('data-movement-color',plan.color);
+  lines.push({line,index,color:plan.color});
+  if(symbols)addRailMapSymbol(part.mapSourcePart||part,leg);
+ }
+ if(!plan.parts.length)return lines;
+ // MultiPolyline retains every geometry and gap: never draw a straight bridge
+ // across a real transfer or an unknown connector just to make one hit target.
+ const hit=routeVisual(L.polyline(plan.parts.map(p=>p.coords),{color:plan.color,weight:18,opacity:0,interactive:true,bubblingMouseEvents:false}).addTo(routeLayer),leg,index);
+ const visual=routeVisuals.at(-1);visual.role='movement-hit';
+ hit.getElement?.()?.setAttribute('data-movement-hit','true');
+ hit.bindPopup(()=>overviewLegHtml(leg,null),symbolOptions(leg));
+ hit.on('mouseover',e=>{highlightMapMovement(leg,true);showRailHover(e,leg,plan.hover);});
+ hit.on('mousemove',positionRailHover);
+ hit.on('mouseout',()=>{hideRailHover();highlightMapMovement(leg,false);});
+ hit.on('click',()=>{hideRailHover();if(state.view==='overview'){overviewFocus=leg.dayNumber;focusedLegs.set(leg.dayNumber+'-'+leg.variant,index);renderOverviewPreview({day:state.data.days.find(d=>d.n===leg.dayNumber),variant:state.data.days.find(d=>d.n===leg.dayNumber).variants.find(v=>v.id===leg.variant)});applyRouteFocus();}else setFocusedLeg(index);});
+ return lines;
+}
+
 function uniqueRailParts(legs){const seen=new Set();return legs.filter(Boolean).flatMap(railParts).filter(p=>{const info=railInfo(p);if(!info)return false;const key=skylinerLogo(p)?'service:skyliner':fujiExcursionLogo(p)?'service:fuji-excursion':revatyLogo(p)?'service:revaty':info.code+'|'+info.color+'|'+(info.vehicle||'');if(seen.has(key))return false;seen.add(key);return true;});}
 function railLegBadges(leg){return uniqueRailParts([leg]).map(p=>railBadge(p)).join('');}
 function railDayKey(legs=state.routeData?.days?.[`${state.day}-${getVariant().id}`]||[]){
@@ -281,8 +322,10 @@ function initRailHover(){
  railHoverCard=document.createElement('div');railHoverCard.id='railHoverCard';railHoverCard.className='rail-hover-card';railHoverCard.setAttribute('role','tooltip');railHoverCard.hidden=true;map.getContainer().appendChild(railHoverCard);
  map.on('movestart zoomstart click',hideRailHover);document.addEventListener('click',event=>{const b=event.target.closest('[data-route-direction]');if(!b)return;const group=railSymbolGroups.get(b.dataset.routeGroup),entry=group?.entries[Number(b.dataset.routeDirection)];if(!entry)return;map.closePopup();L.popup(symbolOptions(entry.leg)).setLatLng(group.point).setContent(directionHtml(group,entry)).openOn(map);});
 }
-function hideRailHover(){if(railHoverCard)railHoverCard.hidden=true;}
-function railHoverHtml(leg,part){if(leg.travel)return `${airlineLogo(part,'airline-hover-logo')}<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(leg.travel.depart)} <span>→</span> ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>${esc(part.mode==='flight'?(window.FlightPlayback?.geometryLabel(leg)||'개략 항로'):part.geometryAccuracy==='schematic'?'항만 연결 개략선':'해상 참고선')} · 클릭하면 상세</span></div>`;
+let hoveredMapMovement=null;
+function hideRailHover(){if(hoveredMapMovement){highlightMapMovement(hoveredMapMovement,false);hoveredMapMovement=null;}if(railHoverCard)railHoverCard.hidden=true;}
+function railHoverHtml(leg,part){if(leg.travel)return `${airlineLogo(part,'airline-hover-logo')}<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(stationLabel(leg.from))} <span>→</span> ${esc(stationLabel(leg.to))}</div><div class="rail-hover-footer">${esc(leg.travel.depart)} → ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>${esc(part.mode==='flight'?(window.FlightPlayback?.geometryLabel(leg)||'개략 항로'):part.geometryAccuracy==='schematic'?'항만 연결 개략선':'해상 참고선')} · 클릭하면 상세</span></div>`;
+ if(part.movement)return `<div class="rail-hover-heading"><strong>이동 전체</strong><span>${railLegBadges(leg)}</span></div><div class="rail-hover-stations">${esc(stationLabel(leg.from))} <span>→</span> ${esc(stationLabel(leg.to))}</div><div class="rail-hover-metrics"><div><small>전체 이동 거리</small><b>${distanceText(leg.distanceM)}</b></div><div><small>전체 구간 운임</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-through">${part.boardings>1?'환승 '+(part.boardings-1)+'회 · 상세에서 갈아타는 역 확인':part.boardings===1?'한 번 탑승 · 전체 경로 함께 선택':'도보 이동'}</div><div class="rail-hover-footer">${esc(leg.durationLabel)}<br><span>클릭하면 전체 노선·환승 상세</span></div>`;
  const walk=['walk','transfer'].includes(part.mode),fare=walk?'추가 0엔':fareText(leg.fare,leg);
  return `<div class="rail-hover-heading">${railBadge(part)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(stationLabel(part.from))} <span>→</span> ${esc(stationLabel(part.to))}</div><div class="rail-hover-metrics"><div><small>이동 거리</small><b>${distanceText(part.distanceM)}</b></div><div><small>${walk?'이 선의 요금':'전체 구간 운임'}</small><b>${esc(fare)}</b></div></div>${part.throughService?'<div class="rail-hover-through">직통 열차 · 환승 없이 계속 탑승</div>':''}<div class="rail-hover-footer">전체 이동 ${esc(leg.durationLabel)}<br><span>클릭하면 노선·환승 상세</span></div>`;
 }
@@ -296,7 +339,8 @@ function positionRailHover(event){
 }
 function showRailHover(event,leg,part){
  if(event.originalEvent?.pointerType==='touch')return;
- railHoverCard.innerHTML=railHoverHtml(leg,part.mapSymbol||part);railHoverCard.hidden=false;positionRailHover(event);
+ if(hoveredMapMovement&&hoveredMapMovement!==leg)highlightMapMovement(hoveredMapMovement,false);hoveredMapMovement=leg;highlightMapMovement(leg,true);
+ railHoverCard.innerHTML=railHoverHtml(leg,part.movement?part:movementMapPlan(leg).hover);railHoverCard.hidden=false;positionRailHover(event);
 }
 function railMidpoint(coords,fraction=.5){
  const target=railPathLength(coords)*fraction;let travelled=0;
@@ -305,7 +349,7 @@ function railMidpoint(coords,fraction=.5){
 }
 function symbolOptions(leg){return DetailView.options('route-info-popup',{routeLegIndex:leg.legIndex,routeDay:leg.dayNumber,routeVariant:leg.variant});}
 function visibleDirectionEntries(group){if(typeof routeAll==='boolean'&&!routeAll){const c=focusedContext(),i=focusedIndex(c),entries=group.entries.filter(e=>focusedMatch(e.leg,c,i));if(entries.length)return entries;}return group.entries;}
-function directionHtml(group,entry){const entries=visibleDirectionEntries(group);return (entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${entries.map(e=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${group.entries.indexOf(e)}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc((e.part.mapSymbol||e.part).from)} → ${esc((e.part.mapSymbol||e.part).to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,entry.part):legHtml(entry.leg,entry.part));}
+function directionHtml(group,entry){const entries=visibleDirectionEntries(group);return (entries.length>1?`<fieldset class="direction-options"><legend>겹친 경로 · 이동 방향 선택</legend>${entries.map(e=>`<button type="button" data-route-group="${esc(group.key)}" data-route-direction="${group.entries.indexOf(e)}" aria-pressed="${e===entry}">${e.leg.dayNumber}일차 · ${esc((e.part.mapSymbol||e.part).from)} → ${esc((e.part.mapSymbol||e.part).to)}</button>`).join('')}</fieldset>`:'')+(typeof overviewLegHtml==='function'?overviewLegHtml(entry.leg,null):legHtml(entry.leg,null));}
 function addRailMapSymbol(part,leg){
  if(part.suppressSymbol)return;
  const sourcePart=part;part=part.mapSymbol||part;

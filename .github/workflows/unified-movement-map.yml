@@ -1,0 +1,43 @@
+name: Verify whole movement selection
+on:
+  push:
+    branches: [codex/unified-route-selection-20261118]
+    paths:
+      - 'japan-2027/app.js'
+      - 'japan-2027/rail-ui.js'
+      - 'japan-2027/tests/unified-movement-browser.cjs'
+      - 'tests/unified-movement-map.test.cjs'
+      - 'tests/tokyo-map.test.cjs'
+      - '.github/workflows/unified-movement-map.yml'
+permissions:
+  contents: write
+jobs:
+  movement-map:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Refresh offline hashes
+        run: node scripts/build-assistant-offline.cjs
+      - name: All regressions and 118-movement audit
+        run: node --test tests/*.test.cjs
+      - name: Mobile and desktop interactions across every daily and overview movement
+        run: |
+          npm ci --prefix japan-2027/tests
+          node japan-2027/tests/unified-movement-browser.cjs
+          node japan-2027/tests/detailed-plan-browser.cjs
+      - name: Commit verified offline hashes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add japan-2027/offline-manifest.json
+          git diff --cached --quiet || git commit -m "Refresh offline package for whole movement selection"
+          git push origin HEAD:codex/unified-route-selection-20261118
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unified-movement-map-checks
+          path: qa-*.png

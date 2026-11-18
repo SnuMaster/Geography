@@ -199,7 +199,7 @@ function arrowFor(points,color){
  const marker=L.marker(pos,{interactive:false,keyboard:false,zIndexOffset:-500,icon:L.divIcon({className:'route-arrow-icon',html:`<svg viewBox="0 0 18 18" aria-hidden="true"><path d="m5 4 7 5-7 5" fill="none" stroke="${color}" stroke-width="3.3" stroke-linejoin="round" stroke-linecap="round"/></svg>`,iconSize:[18,18],iconAnchor:[9,9]})}).addTo(routeLayer);arrows.push({marker,a,b});
 }
 function updateArrowAngles(){if(!map)return;arrows.forEach(x=>{const a=map.latLngToLayerPoint(x.a),b=map.latLngToLayerPoint(x.b),el=x.marker.getElement();if(el){const svg=el.querySelector('svg');svg.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI}deg)`;svg.style.opacity=map.distance(x.a,x.b)<20?'0':'1';}});}
-function highlightDirection(leg){if(window.CommandCore?.privateLeg(leg,state.data.days))leg=null;for(const a of arrows)routeLayer.removeLayer(a.marker);arrows=[];if(!leg)return;const part=railMapDrawParts(leg).filter(p=>p.geometryAccuracy!=='schematic').sort((a,b)=>b.distanceM-a.distanceM)[0];if(part?.coords?.length>1){arrowFor(part.coords,routeLineStyles(part).line.color);updateArrowAngles();}}
+function highlightDirection(leg){if(window.CommandCore?.privateLeg(leg,state.data.days))leg=null;for(const a of arrows)routeLayer.removeLayer(a.marker);arrows=[];if(!leg)return;const part=railMapDrawParts(leg).filter(p=>p.geometryAccuracy!=='schematic').sort((a,b)=>b.distanceM-a.distanceM)[0];if(part?.coords?.length>1){arrowFor(part.coords,movementMapPlan(leg).color);updateArrowAngles();}}
 function renderMap(fit=true){
  if(window.FlightPlayback?.isActive())stopPlay();
  window.RouteLocation?.refresh();
@@ -212,19 +212,7 @@ function renderMap(fit=true){
   const a=stops[i-1],b=stops[i],m=MODE[b.modeFromPrevious]||MODE.walk;
   const detailed=getLeg(i);
   if(detailed){
-   railMapDrawParts(detailed).forEach(part=>{
-    if(!mapPartVisible(part)||part.coords.length<2||part.distanceM<8)return;
-    const strokes=routeLineStyles(part,{night:state.night}),style=strokes.line,color=style.color;
-    routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),detailed,i,part.mode);
-    const line=routeVisual(L.polyline(part.coords,style).addTo(routeLayer),detailed,i,part.mode);
-    const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0,color,interactive:true}).addTo(routeLayer),detailed,i,part.mode);
-    hit.bindPopup(()=>legHtml(detailed,part.mapSourcePart||part),DetailView.options('route-info-popup',{routeLegIndex:i,routeDay:detailed.dayNumber,routeVariant:detailed.variant}));
-    hit.on('mouseover',e=>{line.setStyle({weight:7,opacity:1});showRailHover(e,detailed,part);});
-    hit.on('mousemove',positionRailHover);
-    hit.on('mouseout',()=>{hideRailHover();line.setStyle(style);});
-    hit.on('click',()=>{hideRailHover();setFocusedLeg(i);});
-    legLines.push({line,index:i,color});addRailMapSymbol(part.mapSourcePart||part,detailed);
-   });continue;
+   legLines.push(...drawMapMovement(detailed,{index:i}));continue;
   }
   if(map.distance([a.lat,a.lng],[b.lat,b.lng])<15)continue;
   const points=pathPoints(a,b),style={color:m.color,weight:3.1,opacity:state.night?.45:.88,lineCap:'round',lineJoin:'round',dashArray:b.modeFromPrevious==='walk'?null:'7 7'};
@@ -352,13 +340,7 @@ function renderOverviewMap(fit=true){
  try{
   hideRailHover();routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];railSymbolKeys.clear();railSymbolGroups.clear();arrows=[];
   const detailed=!fit&&map.getZoom()>=10,stops=overviewCities(),legs=overviewLegs();
-  const draw=(leg,part,local=false)=>{if(!mapPartVisible(part)||part.coords?.length<2)return;const strokes=routeLineStyles(part,{overview:true,local});
-   routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),leg,leg.legIndex,part.mode);
-   const line=routeVisual(L.polyline(part.coords,{...strokes.line,interactive:false}).addTo(routeLayer),leg,leg.legIndex,part.mode);
-   const hit=routeVisual(L.polyline(part.coords,{weight:18,opacity:0}).addTo(routeLayer),leg);hit.bindPopup(()=>overviewLegHtml(leg,part.mapSourcePart||part),symbolOptions(leg));
-   hit.on('mouseover',e=>{line.setStyle({weight:7,opacity:1});showRailHover(e,leg,part);});hit.on('mousemove',positionRailHover);hit.on('mouseout',()=>{hideRailHover();line.setStyle(strokes.line);});if(local||!detailed)addRailMapSymbol(part.mapSourcePart||part,leg);
-  };
-  for(const leg of legs)for(const part of railMapDrawParts(leg))draw(leg,part);
+  for(const leg of legs)drawMapMovement(leg,{overview:true,symbols:!detailed});
   if(!detailed){
    renderOverviewPreview(null);
    $('#mapTitle').innerHTML='<div class="map-kicker">전체 여정</div><p class="overview-map-instruction">지도를 확대하면 해당 지역의 상세 일정이 나와요.</p>';
