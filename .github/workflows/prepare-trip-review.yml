@@ -1,0 +1,23 @@
+name: Prepare reviewed meals and operator assets
+on:
+  push:
+    branches: [codex/trip-review-fixes-20261118]
+    paths: ['scripts/prepare-trip-review.cjs', '.github/workflows/prepare-trip-review.yml']
+permissions:
+  contents: write
+jobs:
+  sources:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node scripts/prepare-trip-review.cjs
+      - name: Save source evidence and exact operator asset
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/tokyo-review-meals.json japan-2027/assets/operators/spacia-x.svg
+          git diff --cached --quiet || git commit -m "Save verified dinner walking paths and official Spacia X mark"
+          git push origin HEAD:codex/trip-review-fixes-20261118
