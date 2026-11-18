@@ -387,7 +387,8 @@
       "kind": "sight",
       "costMin": 0,
       "costMax": 0,
-      "note": "제설된 동쪽 호숫가만 짧게. 얼음 위·미제설 탐방로 진입 금지."
+      "note": "제설된 동쪽 호숫가만 짧게. 얼음 위·미제설 탐방로 진입 금지.",
+      "official": "https://www.nikko-kankou.org/spot/16"
     },
     "sanbon": {
       "name": "산본마쓰 찻집·설경 전망",
@@ -396,7 +397,8 @@
       "kind": "food",
       "costMin": 1200,
       "costMax": 1800,
-      "note": "버스·영업·제설 상태가 좋을 때만. 접근 가능한 전망만 보고 센조가하라 장거리 트레킹 제외."
+      "note": "버스·영업·제설 상태가 좋을 때만. 접근 가능한 전망만 보고 센조가하라 장거리 트레킹 제외.",
+      "official": "https://www.nikko-kankou.org/spot/388"
     },
     "hamarikyu": {
       "name": "하마리큐 은사정원",
@@ -481,7 +483,7 @@
     },
     "aratama": {
       "name": "아라타마",
-      "jp": "鎌倉 新荘園 あら珠",
+      "jp": "あら珠 総本店",
       "address": "神奈川県鎌倉市小町2丁目12-30",
       "kind": "food",
       "costMin": 1500,
@@ -543,13 +545,14 @@
       "note": ""
     },
     "torijaya": {
-      "name": "도리자야 본점",
-      "jp": "鳥茶屋 本店",
-      "address": "東京都新宿区神楽坂4丁目2",
+      "name": "도리자야 별관",
+      "jp": "別亭 鳥茶屋",
+      "address": "東京都新宿区神楽坂3丁目10-1",
       "kind": "food",
       "costMin": 1500,
       "costMax": 2000,
-      "note": "런치 영업·현재 메뉴 확인. 혼잡하면 가구라자카 정식집."
+      "note": "운영 중인 별관으로 방문. 공식 안내상 주소 검색 오표시 주의 · 공식 전용 지도와 현장 간판 확인. 1인 런치 1,500~2,000 JP¥ 목표.",
+      "official": "https://www.torijaya.com/access"
     },
     "alleys": {
       "name": "효고요코초·가쿠렌보요코초",
@@ -678,13 +681,14 @@
       "note": ""
     },
     "east": {
-      "name": "황거 동쪽 정원",
+      "name": "황거 동쪽 정원 · 오테몬 입구",
       "jp": "皇居東御苑",
       "address": "東京都千代田区千代田1-1",
       "kind": "sight",
       "costMin": 0,
       "costMax": 0,
-      "note": "월·금 휴원 및 특별 휴원 공지 확인. 1/21 목요일 계획."
+      "note": "월·금 휴원 및 특별 휴원 공지 확인. 1/21 목요일 계획.",
+      "official": "https://www.kunaicho.go.jp/visit/higashigyoen/index.html"
     },
     "sobayoshi": {
       "name": "소바요시 니혼바시 본점",

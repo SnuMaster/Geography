@@ -1,6 +1,8 @@
+// Frozen Nov 11 scenario: retain legacy fare/geometry regressions after the
+// active schedule changes. Current Nov 18 plan contracts are tested separately.
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
-const bundle=require('../japan-2027/trip-update.json'),source=require('../scripts/tokyo-rail-geometry.json'),G=require('../japan-2027/location-core');
+const bundle=require('./fixtures/tokyo-plan-20261111.json'),source=require('../scripts/tokyo-rail-geometry.json'),G=require('../japan-2027/location-core');
 const parts=Object.values(bundle.routes.days).flat().flatMap(l=>l.parts);
 test('Tokyo–Atami follows the official Shinkansen through Shin-Yokohama and Odawara in both directions',()=>{
  const legs=parts.filter(p=>p.lineId==='JR-Central.TokaidoShinkansen'&&(p.from==='아타미'||p.to==='아타미'));assert.equal(legs.length,2);
@@ -85,7 +87,7 @@ test('station detail badges retain the exact departure station number in either 
 
 test('map markers show line letters without station numbers and preserve JR through-service marks',()=>{
  const marks=[],ctx={MODE:{...ui.MODE,taxi:{color:'#111'},ferry:{color:'#123'}},esc:String,icon:x=>x,window:{TripPersonal:{displayParts:l=>l.parts}},routeLayer:{},L:{latLng:p=>({point:p,distanceTo:q=>G.distance(p,q.point)}),divIcon:o=>o,marker:(point,o)=>{marks.push(o.icon.html);const m={addTo:()=>m,getElement:()=>null,on:()=>m,setTooltipContent:()=>m};return m;}}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ctx);
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('./fixtures/rail-departure-profiles-20261111.js'),'utf8'),ctx);
  for(const leg of Object.values(bundle.routes.days).flat())for(const p of ctx.railMapParts(leg))ctx.addRailMapSymbol(p,leg);
  assert.ok(marks.length>50);assert.ok(marks.some(h=>/>H<\/span>/.test(h)));assert.ok(marks.some(h=>/>Y<\/span>/.test(h)));assert.ok(marks.some(h=>/>JR<\/span>/.test(h)));
  for(const h of marks)assert.doesNotMatch(h,/>[A-Z]{1,3}\d{2}<\/span>/,'station number leaked into map marker');
@@ -94,7 +96,7 @@ test('map markers show line letters without station numbers and preserve JR thro
 
 
 test('verified through rides use one complete map symbol without changing tracks or hiding actual transfers',()=>{
- vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ui);ui.window={TripPersonal:{displayParts:leg=>leg.parts}};
+ vm.runInContext(fs.readFileSync(require.resolve('./fixtures/rail-departure-profiles-20261111.js'),'utf8'),ui);ui.window={TripPersonal:{displayParts:leg=>leg.parts}};
  for(const [day,index]of [[4,0],[4,5],[10,0],[10,5]]){
   const leg=bundle.routes.days[day+'-main'][index],snapshot=JSON.stringify(leg),shown=ui.railMapParts(leg),symbol=shown.find(p=>p.mapSymbol);assert.ok(symbol,leg.legId);assert.equal(shown.filter(p=>p.mapSymbol).length,1);assert.equal(shown.filter(p=>p.suppressSymbol).length,1);
   assert.equal(JSON.stringify(leg),snapshot);for(let i=0;i<shown.length;i++)assert.equal(shown[i].coords,leg.parts[i].coords);
@@ -158,7 +160,7 @@ test('daily renderer highlights and opens the full through ride from a single hi
  const leg=bundle.routes.days['10-main'][0],layers=[],hover=[],selected=[];
  const node={classList:{toggle(){}},innerHTML:'',textContent:''};
  const ctx={...ui,window:{TripPersonal:{displayParts:l=>l.parts}},state:{view:'daily',day:10,night:false,data:{days:[]},routeData:{days:{'10-main':[leg]}}},routeLayer:{clearLayers(){}},map:{closePopup(){}},getStops:()=>[{kind:'home'},{kind:'home',modeFromPrevious:'rail'}],getLeg:()=>leg,getVariant:()=>({id:'main'}),hasDetailedRoutes:()=>true,MODE:ui.MODE,$:()=>node,setTiles(){},routeVisual:layer=>layer,applyRouteFocus(){},requestAnimationFrame(){},updateArrowAngles(){},DetailView:{options:()=>({})},setFocusedLeg:i=>selected.push(i),legHtml:(l,p)=>p,L:{polyline:(coords,style)=>{const layer={coords,options:{...style},events:{},addTo(){return this;},bindPopup(fn){this.popup=fn;return this;},on(name,fn){this.events[name]=fn;return this;},setStyle(s){Object.assign(this.options,s);return this;}};layers.push(layer);return layer;}}};
- vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departure-profiles.js'),'utf8'),ctx);
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('./fixtures/rail-departure-profiles-20261111.js'),'utf8'),ctx);
  Object.assign(ctx,{hideRailHover(){},showRailHover:(e,l,p)=>hover.push(p),positionRailHover(){},addRailMapSymbol(){}});
  const source=fs.readFileSync(require.resolve('../japan-2027/app.js'),'utf8');vm.runInContext(source.slice(source.indexOf('function renderMap('),source.indexOf('function markerIcon(')),ctx);ctx.renderMap(false);
  const hits=layers.filter(l=>l.options.weight===18),ride=ctx.railMapDrawParts(leg).find(p=>p.mapSourcePart),hit=hits.find(l=>l.coords===ride.coords||JSON.stringify(l.coords)===JSON.stringify(ride.coords));assert.ok(hit);

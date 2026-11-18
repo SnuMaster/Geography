@@ -7,11 +7,12 @@ const baseline=JSON.parse(cp.execFileSync('git',['show','14c47cdfd4a6d839d4ee24d
 const M=require('./tokyo-plan-map-tools.cjs'),{T,clone,point,dist,station,stations,HOTEL,DOME}=M;
 const routes={},days=[],registry={},resolved={},roads={};
 const revision=plan.revision,stamp='2026-11-18';
+const roadFile=path.join(M.cache,'detailed-roads.json');if(fs.existsSync(roadFile))Object.assign(roads,JSON.parse(fs.readFileSync(roadFile)));
 const oldPlaces=[...baseline.data.days.flatMap(d=>d.variants.flatMap(v=>v.stops)),...['data.json','tokyo-data.json','west-data.json'].flatMap(f=>JSON.parse(fs.readFileSync(root+'/'+f)).days.flatMap(d=>d.variants.flatMap(v=>v.stops)))];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 async function json(url){let error;for(let i=0;i<3;i++){try{const r=await fetch(url,{headers:{'User-Agent':'KISEKI-Public-Itinerary/1.0 (github.com/SnuMaster/Geography)'},signal:AbortSignal.timeout(45000)});if(!r.ok)throw Error('HTTP '+r.status);return await r.json();}catch(e){error=e;await sleep(1200*(i+1));}}throw error;}
 const cacheFile=path.join(M.cache,'detailed-points.json');
-const saved=fs.existsSync(cacheFile)?JSON.parse(fs.readFileSync(cacheFile)):{};
+const saved=fs.existsSync(cacheFile)?JSON.parse(fs.readFileSync(cacheFile)):require('./tokyo-detailed-points.json');
 async function resolve(key,entry){
  if(saved[key]?.address===entry.address)return saved[key];
  const exact=oldPlaces.find(s=>s.lat&&s.lng&&(s.name===entry.name||s.jp===entry.jp)&&s.coordinateAccuracy!=='approximate');
@@ -24,7 +25,7 @@ async function resolve(key,entry){
  const [lng,lat]=rows[0].geometry.coordinates;if(!(lat>34&&lat<38&&lng>137&&lng<141))throw Error('Outside trip area '+key);
  return {lat,lng,address:entry.address,source:url,coordinateAccuracy:'address-reference',coordinateNote:'국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인'};
 }
-function detail(s,p={}){const text=p.note||s.description||'주변 구경·산책. 운영·휴무는 방문 전 확인.';return {feature:text,thingsToDo:[text],stayLabel:'계획 시각 기준',costMin:p.costMin??null,costMax:p.costMax??null,costCurrency:'JPY',costKind:['food','cafe','shopping'].includes(s.kind)?s.kind:'admission',costConfidence:s.kind==='food'?'estimate':p.costMin===0?'free-reference':'reference',costNote:s.kind==='food'?'1인 식사 예상 예산 · 음료·추가 주문·2027 메뉴 가격 별도 확인':s.kind==='shopping'?'실제 구매 금액만 기록':'방문일 요금·유료 구역 확인',reservationNote:'계획 일정 · 예약 완료 아님. 혼잡한 식당은 예약 가능 여부 확인; 긴 현장 대기는 생략.',sources:[s.source].filter(Boolean),sourceCheckedAt:stamp};}
+function detail(s,p={}){const text=p.note||s.description||'주변 구경·산책. 운영·휴무는 방문 전 확인.';return {feature:text,thingsToDo:[text],stayLabel:'계획 시각 기준',costMin:p.costMin??null,costMax:p.costMax??null,costCurrency:'JPY',costKind:['food','cafe','shopping'].includes(s.kind)?s.kind:'admission',costConfidence:s.kind==='food'?'estimate':p.costMin===0?'free-reference':'reference',costNote:s.kind==='food'?'1인 식사 예상 예산 · 음료·추가 주문·2027 메뉴 가격 별도 확인':s.kind==='shopping'?'실제 구매 금액만 기록':'방문일 요금·유료 구역 확인',reservationNote:'계획 일정 · 예약 완료 아님. 혼잡한 식당은 예약 가능 여부 확인; 긴 현장 대기는 생략.',sources:[p.official,s.source].filter(Boolean),sourceCheckedAt:stamp};}
 function item(key,time){
  let s;
  if(key==='hotel')s={...clone(HOTEL),description:'STAY&GO 이리야키타 숙박 · 1/19 체크아웃까지. 숙박 예약·비용은 확인서 기준.'};
@@ -49,7 +50,7 @@ async function road(mode,a,b){
  try{const d=await json(url),r=d.routes?.[0];if(d.code!=='Ok'||!r?.geometry?.coordinates?.length)throw Error('No road');
  const coords=r.geometry.coordinates.map(([lng,lat])=>[lat,lng]);
  if(dist(coords[0],a)>180||dist(coords.at(-1),b)>180)throw Error('Road snap too far');
- const p={mode:mode==='foot'?'walk':'bus',line:mode==='foot'?'도보':'버스 · 도로 참고 경로',from:a.name,to:b.name,coords,distanceM:Math.round(r.distance),durationMinutes:Math.ceil(r.duration/60),geometryAccuracy:'mapped',geometrySource:'OpenStreetMap / FOSSGIS '+(mode==='foot'?'보행':'도로')+' 참고 경로 · 실제 통제·운행 확인',source:url};roads[k]=p;return clone(p);
+ const p={mode:mode==='foot'?'walk':'bus',line:mode==='foot'?'도보':'버스 · 도로 참고 경로',from:a.name,to:b.name,coords,distanceM:Math.round(r.distance),durationMinutes:Math.ceil(r.duration/60),geometryAccuracy:'mapped',geometrySource:'OpenStreetMap / FOSSGIS '+(mode==='foot'?'보행':'도로')+' 참고 경로 · 실제 통제·운행 확인',source:url};roads[k]=p;fs.writeFileSync(roadFile,JSON.stringify(roads));return clone(p);
  }catch(e){console.warn('Route unavailable',mode,a.name,b.name,e.message);return null;}finally{await sleep(1100);}
 }
 function walk(a,b){const k=roadKey('foot',a,b);if(roads[k])return {...clone(roads[k]),from:a.name,to:b.name};return M.walk(a,b);}
@@ -104,14 +105,14 @@ function addDay(p,ss,ls,id='main',label='기본 일정'){
    const out=[railway('TokyoMetro.Hibiya',a,k),railway('Tobu.TobuSkytree',station('Tobu.TobuSkytree.KitaSenju'),station('Tobu.TobuSkytree.TobuDobutsuKoen'),{line:'도부 특급 · 닛코 방면',throughService:true}),railway('Tobu.Nikko',tb,n,{line:'도부 특급 · 닛코 방면',throughService:true})];
    ls[0]=M.connection(ss[0],ss[1],{parts:out,minutes:150,fare:M.unknown()});
    ls[5]=M.connection(ss[5],ss[6],{parts:out.slice().reverse().map(p=>({...clone(p),from:p.to,to:p.from,fromJa:p.toJa,toJa:p.fromJa,coords:p.coords.slice().reverse()})),minutes:160,fare:M.unknown()});
-   for(const i of [1,3,4]){const a=ss[i],b=ss[i+1],r=await road('car',a,b);if(r){Object.assign(r,{line:'도부버스 닛코 · 주젠지호·유모토 방면',lineId:'TobuBus.Nikko.C',durationMinutes:Math.max(i===4?65:i===1?55:30,r.durationMinutes+15),geometrySource:r.geometrySource+' · 겨울 운행·정류장·시각 확인'});ls[i]=M.connection(a,b,{parts:[r],fare:M.unknown(),minutes:r.durationMinutes});}}
+   for(const i of [1,3,4]){const a=ss[i],b=ss[i+1],r=await road('car',a,b);if(r){Object.assign(r,{line:'도부버스 닛코 · 주젠지호·유모토 방면',lineId:i===1?'TobuBus.Nikko.C':'TobuBus.Nikko.Y',durationMinutes:Math.max(i===4?65:i===1?55:30,r.durationMinutes+15),geometrySource:r.geometrySource+' · 겨울 운행·정류장·시각 확인'});ls[i]=M.connection(a,b,{parts:[r],fare:M.unknown(),minutes:r.durationMinutes});}}
   }
   const d=addDay(p,ss,ls);
   if(p.n===8)d.important='겨울 설경 · 버스·결빙·제설 상태를 우선 확인. 산본마쓰는 당일 조건이 좋을 때만; 불가하면 주젠지호 주변 식사 후 일찍 귀환. 도쇼구·미제설 센조가하라 트레킹은 기본 일정 제외.';
-  if(p.n===11){d.important='1/18 공연 가능성을 위해 비운 날. 공연장·티켓·시각 미확정; 고정 관광과 식당 예약 없음.';routes['11-main'].forEach(l=>{l.durationMinutes=0;l.durationLabel='자유시간';l.summary='휴식 · 이동 없음';l.parts=[];l.fare=M.free();});}
+  if(p.n===11){d.important='1/18 공연 가능성을 위해 비운 날. 공연장·티켓·시각 미확정; 고정 관광과 식당 예약 없음.';routes['11-main'].forEach(l=>{l.durationMinutes=0;l.durationLabel='자유시간';l.summary='휴식 · 이동 없음';for(const p of l.parts)p.durationMinutes=0;l.fare=M.free();});}
   if(p.n===15){d.pendingReturn={date:'2027-01-22',period:'저녁',status:'unconfirmed',airport:null,flight:null,departure:null,arrival:null};d.important='귀국편·공항·터미널·시각 미정. 도쿄돔시티 일정은 항공편 확정 후 축소·생략 가능. 오사카 일정 없음.';}
  }
- const data={version:revision,title:'KISEKI · 도쿄 14박 15일',metadata:{...clone(baseline.data.metadata),revision,start:'2027-01-08',end:'2027-01-22',days:15,nights:14,cities:['도쿄','요코하마','가와구치코','닛코','가마쿠라·에노시마'],returnStatus:'unconfirmed',skylinerFare:'blank',planApprovedAt:stamp,mealBudget:'일반 식사 최대 2,000 JP¥ 목표 · 미도리·이부키 특별식 별도'},days,food:clone(baseline.data.food),nightRows:[]};
+ const data={version:revision,title:'KISEKI · 도쿄 14박 15일',metadata:{...clone(baseline.data.metadata),revision,start:'2027-01-08',end:'2027-01-22',days:15,nights:14,cities:['도쿄','요코하마','가와구치코','닛코','가마쿠라·에노시마'],returnStatus:'unconfirmed',skylinerFare:'blank',planApprovedAt:stamp,mealBudget:'일반 식사 최대 2,000 JP¥ 목표 · 미도리·이부키 특별식 별도'},days,food:Object.fromEntries(Object.entries(plan.catalog).filter(([,p])=>p.kind==='food').map(([key,p])=>[key,{name:p.name,jp:p.jp,area:p.address,order:'당일 메뉴 중 예산 안에서 선택',budget:p.costMin.toLocaleString('ko-KR')+'–'+p.costMax.toLocaleString('ko-KR')+' JP¥',hours:'여행일 영업·휴무 확인 필요',note:p.note||'혼잡하면 예약 가능 여부 확인 · 긴 현장 대기는 생략',url:p.official||registry[key].source}])),nightRows:[]};
  const bundle={revision,updatedAt:stamp,data,routes:{version:revision,days:routes,distanceBasis:'핀 고정 철도 선형·OpenStreetMap 보행·도로 참고 경로. 대표 지점 연결은 개략선으로 구분.',sources:[...baseline.routes.sources,'https://routing.openstreetmap.de/about.html']}};
  require(root+'/rail-departure-profiles.js');
  const report=require('./tokyo-fastest-planner.cjs').apply(bundle,{walk,connector:M.connector,rail:railway,connection,unknown:M.unknown,interval:T.interval,minutes:T.minutes,setTime:T.setTime,formatTime:T.formatTime,distance:dist,planUncovered:true,networkOptions:{includeShinkansen:false}});

@@ -27,7 +27,7 @@ jobs:
           path: |
             .tokyo-replan-cache
             .tokyo-timetable-cache
-          key: tokyo-detailed-public-inputs-v1
+          key: tokyo-detailed-public-inputs-v2
       - name: Verify source syntax
         run: |
           node --check scripts/build-tokyo-detailed-plan.cjs
@@ -55,6 +55,10 @@ jobs:
           git add japan-2027/trip-update.json japan-2027/rail-departure-profiles.js japan-2027/timetables japan-2027/offline-manifest.json scripts/tokyo-detailed-plan-report.json
           git diff --cached --quiet || git commit -m "Generate approved 15-day Tokyo map, exact-OD profiles and offline hashes"
           git push origin HEAD:codex/tokyo-detailed-plan-20261118
+      - name: Verify new map in mobile and desktop browsers
+        run: |
+          npm ci --prefix japan-2027/tests
+          node japan-2027/tests/detailed-plan-browser.cjs
       - name: Run existing regression suite
         run: node --test tests/*.test.cjs
       - uses: actions/upload-artifact@v4
@@ -65,3 +69,4 @@ jobs:
             scripts/tokyo-detailed-plan-report.json
             .tokyo-replan-cache/detailed-points.json
             japan-2027/trip-update.json
+            qa-detailed-plan-*.png

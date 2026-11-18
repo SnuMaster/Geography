@@ -12,7 +12,7 @@ test('approved 15-day allocation and four spaced excursions before the hotel mov
 });
 test('public map stops have unique new IDs, sources and one connected leg per interval',()=>{
  const ids=new Set();
- for(const d of b.data.days)for(const v of d.variants){const legs=b.routes.days[d.n+'-'+v.id];assert.equal(legs.length,v.stops.length-1);
+ for(const d of b.data.days)for(const v of d.variants){const legs=b.routes.days[d.n+'-'+v.id];assert.equal(legs.length,v.stops.length-1);assert(legs.every(l=>l.parts?.length),'App requires one explicit part per connection');
   v.stops.forEach((s,i)=>{assert(!ids.has(s.uid));ids.add(s.uid);assert(s.uid.startsWith('t27-p1118-'));if(s.kind==='home'){assert.equal(s.lat,null);assert.equal(s.lng,null);}else{assert(Number.isFinite(s.lat)&&Number.isFinite(s.lng),s.name);assert(s.source||s.coordinateSource||s.details?.sources?.length,s.name);}
    if(i){assert.equal(legs[i-1].fromUid,v.stops[i-1].uid);assert.equal(legs[i-1].toUid,s.uid);}
   });
@@ -44,4 +44,21 @@ test('mapped geometry has actual intermediate vertices and no airport route is i
   if(p.geometryAccuracy==='mapped'&&p.distanceM>1500)assert(p.coords.length>2,p.line);
   if(p.geometryAccuracy==='schematic')assert(p.geometrySource,p.line);
  }
+});
+
+test('active routes retain continuous public endpoints and explicit reference-only timing',()=>{
+ const G=require('../japan-2027/location-core'),C=require('../japan-2027/command-core');
+ let compared=0;
+ for(const d of b.data.days)for(const v of d.variants){
+  const legs=b.routes.days[d.n+'-'+v.id];
+  if(d.n!==1&&d.n!==11)assert.deepEqual(C.warnings(v.stops,legs).filter(w=>['overlap','travel'].includes(w.type)),[],d.n+' travel window');
+  for(const [i,l]of legs.entries()){
+   if(l.private||!l.parts.length)continue;
+   assert(G.distance([v.stops[i].lat,v.stops[i].lng],l.parts[0].coords[0])<=70,d.n+' start');
+   assert(G.distance([v.stops[i+1].lat,v.stops[i+1].lng],l.parts.at(-1).coords.at(-1))<=70,d.n+' finish');
+   for(let j=1;j<l.parts.length;j++)assert(G.distance(l.parts[j-1].coords.at(-1),l.parts[j].coords[0])<=70,d.n+' join');
+   if(l.timeComparison){compared++;assert.equal(l.timeComparison.live,false);assert.equal(l.timeComparison.travelDateVerified,false);assert.equal(l.timeComparison.departureDate,'2027-'+d.date.replace('/','-'));assert.equal(l.timeComparison.totalMinutes,l.durationMinutes);}
+  }
+ }
+ assert(compared>20);
 });
