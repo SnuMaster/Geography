@@ -35,7 +35,7 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
    daily.fire('click',{latlng:daily.getBounds().getCenter()});
    if(r.focusedIndex()!==1)throw Error('Daily click selection failed');
    const popup=r.map._popup;if(!popup||popup.options.routeLegIndex!==1)throw Error('Missing whole-movement popup');
-   if(typeof popup.getContent()!=='string'||!popup.getContent().includes('departure-sequence'))throw Error('Only partial boarding details opened');
+   const element=popup.getElement();if(!element?.querySelector('.departure-sequence')||element.querySelectorAll('[data-departure-profile]').length!==new Set(r.rail.keysFor(leg)).size)throw Error('Only partial boarding details opened');
    r.map.closePopup();
    return report;
   });
