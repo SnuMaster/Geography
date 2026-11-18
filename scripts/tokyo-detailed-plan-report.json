@@ -7,7 +7,9 @@
       "address": "神奈川県横浜市中区山手町114",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E5%B1%B1%E6%89%8B%E7%94%BA114",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yamate": {
       "lat": 35.439133,
@@ -15,7 +17,9 @@
       "address": "神奈川県横浜市中区山手町111",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E5%B1%B1%E6%89%8B%E7%94%BA111",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "motomachi": {
       "lat": 35.441307,
@@ -23,7 +27,9 @@
       "address": "神奈川県横浜市中区元町1丁目14",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E5%85%83%E7%94%BA1%E4%B8%81%E7%9B%AE14",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "keifuku": {
       "lat": 35.442959,
@@ -31,7 +37,9 @@
       "address": "神奈川県横浜市中区山下町190",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E5%B1%B1%E4%B8%8B%E7%94%BA190",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yamashita": {
       "lat": 35.444874,
@@ -39,7 +47,9 @@
       "address": "神奈川県横浜市中区山下町279",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E5%B1%B1%E4%B8%8B%E7%94%BA279",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "osanbashi": {
       "lat": 35.448357,
@@ -47,7 +57,9 @@
       "address": "神奈川県横浜市中区海岸通1丁目1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E6%B5%B7%E5%B2%B8%E9%80%9A1%E4%B8%81%E7%9B%AE1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "redbrick": {
       "lat": 35.451965,
@@ -55,7 +67,9 @@
       "address": "神奈川県横浜市中区新港1丁目1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E6%96%B0%E6%B8%AF1%E4%B8%81%E7%9B%AE1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "kishamichi": {
       "lat": 35.454491,
@@ -63,7 +77,9 @@
       "address": "神奈川県横浜市中区新港2丁目9",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E4%B8%AD%E5%8C%BA%E6%96%B0%E6%B8%AF2%E4%B8%81%E7%9B%AE9",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yokodinner": {
       "lat": 35.459118,
@@ -71,7 +87,9 @@
       "address": "神奈川県横浜市西区みなとみらい3丁目6-4",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E6%A8%AA%E6%B5%9C%E5%B8%82%E8%A5%BF%E5%8C%BA%E3%81%BF%E3%81%AA%E3%81%A8%E3%81%BF%E3%82%89%E3%81%843%E4%B8%81%E7%9B%AE6-4",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "inokashira": {
       "lat": 35.699921,
@@ -79,7 +97,9 @@
       "address": "東京都武蔵野市御殿山1丁目18",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%AD%A6%E8%94%B5%E9%87%8E%E5%B8%82%E5%BE%A1%E6%AE%BF%E5%B1%B11%E4%B8%81%E7%9B%AE18",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "kayashima": {
       "lat": 35.706047,
@@ -87,7 +107,9 @@
       "address": "東京都武蔵野市吉祥寺本町1丁目10-9",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%AD%A6%E8%94%B5%E9%87%8E%E5%B8%82%E5%90%89%E7%A5%A5%E5%AF%BA%E6%9C%AC%E7%94%BA1%E4%B8%81%E7%9B%AE10-9",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "kichijoji": {
       "lat": 35.70393,
@@ -95,7 +117,9 @@
       "address": "東京都武蔵野市吉祥寺本町1丁目15",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%AD%A6%E8%94%B5%E9%87%8E%E5%B8%82%E5%90%89%E7%A5%A5%E5%AF%BA%E6%9C%AC%E7%94%BA1%E4%B8%81%E7%9B%AE15",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "shimokita": {
       "lat": 35.661869,
@@ -103,7 +127,9 @@
       "address": "東京都世田谷区北沢2丁目24-2",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E5%8C%97%E6%B2%A22%E4%B8%81%E7%9B%AE24-2",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "bonus": {
       "lat": 35.658989,
@@ -111,7 +137,9 @@
       "address": "東京都世田谷区代田2丁目36-12",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E4%BB%A3%E7%94%B02%E4%B8%81%E7%9B%AE36-12",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "poni": {
       "lat": 35.662529,
@@ -119,7 +147,9 @@
       "address": "東京都世田谷区北沢2丁目8-8",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%96%E7%94%B0%E8%B0%B7%E5%8C%BA%E5%8C%97%E6%B2%A22%E4%B8%81%E7%9B%AE8-8",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "gyoen": {
       "lat": 35.688934,
@@ -127,7 +157,9 @@
       "address": "東京都新宿区内藤町11",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%B0%E5%AE%BF%E5%8C%BA%E5%86%85%E8%97%A4%E7%94%BA11",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "acacia": {
       "lat": 35.693329,
@@ -135,7 +167,9 @@
       "address": "東京都新宿区新宿3丁目22-10",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%B0%E5%AE%BF%E5%8C%BA%E6%96%B0%E5%AE%BF3%E4%B8%81%E7%9B%AE22-10",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "meiji": {
       "lat": 35.669868,
@@ -143,7 +177,9 @@
       "address": "東京都渋谷区代々木神園町1-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%8B%E8%B0%B7%E5%8C%BA%E4%BB%A3%E3%80%85%E6%9C%A8%E7%A5%9E%E5%9C%92%E7%94%BA1-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "takeshita": {
       "lat": 35.671394,
@@ -151,7 +187,9 @@
       "address": "東京都渋谷区神宮前1丁目17",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%8B%E8%B0%B7%E5%8C%BA%E7%A5%9E%E5%AE%AE%E5%89%8D1%E4%B8%81%E7%9B%AE17",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "omotesando": {
       "lat": 35.667377,
@@ -159,7 +197,9 @@
       "address": "東京都渋谷区神宮前5丁目10",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%8B%E8%B0%B7%E5%8C%BA%E7%A5%9E%E5%AE%AE%E5%89%8D5%E4%B8%81%E7%9B%AE10",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "shibuya": {
       "lat": 35.660107,
@@ -167,7 +207,9 @@
       "address": "東京都渋谷区宇田川町21",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%8B%E8%B0%B7%E5%8C%BA%E5%AE%87%E7%94%B0%E5%B7%9D%E7%94%BA21",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "midori": {
       "lat": 35.658092,
@@ -175,7 +217,9 @@
       "address": "東京都渋谷区道玄坂1丁目12-3",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%8B%E8%B0%B7%E5%8C%BA%E9%81%93%E7%8E%84%E5%9D%821%E4%B8%81%E7%9B%AE12-3",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "oishi": {
       "lat": 35.519413,
@@ -183,7 +227,9 @@
       "address": "山梨県南都留郡富士河口湖町大石2585",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E5%B1%B1%E6%A2%A8%E7%9C%8C%E5%8D%97%E9%83%BD%E7%95%99%E9%83%A1%E5%AF%8C%E5%A3%AB%E6%B2%B3%E5%8F%A3%E6%B9%96%E7%94%BA%E5%A4%A7%E7%9F%B32585",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "fudou": {
       "lat": 35.522137,
@@ -191,7 +237,9 @@
       "address": "山梨県南都留郡富士河口湖町河口707",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E5%B1%B1%E6%A2%A8%E7%9C%8C%E5%8D%97%E9%83%BD%E7%95%99%E9%83%A1%E5%AF%8C%E5%A3%AB%E6%B2%B3%E5%8F%A3%E6%B9%96%E7%94%BA%E6%B2%B3%E5%8F%A3707",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "northlake": {
       "lat": 35.519367,
@@ -199,7 +247,9 @@
       "address": "山梨県南都留郡富士河口湖町河口3170",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E5%B1%B1%E6%A2%A8%E7%9C%8C%E5%8D%97%E9%83%BD%E7%95%99%E9%83%A1%E5%AF%8C%E5%A3%AB%E6%B2%B3%E5%8F%A3%E6%B9%96%E7%94%BA%E6%B2%B3%E5%8F%A33170",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "ropeway": {
       "lat": 35.504707,
@@ -207,7 +257,9 @@
       "address": "山梨県南都留郡富士河口湖町浅川1163",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E5%B1%B1%E6%A2%A8%E7%9C%8C%E5%8D%97%E9%83%BD%E7%95%99%E9%83%A1%E5%AF%8C%E5%A3%AB%E6%B2%B3%E5%8F%A3%E6%B9%96%E7%94%BA%E6%B5%85%E5%B7%9D1163",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "nezu": {
       "lat": 35.719185,
@@ -215,7 +267,9 @@
       "address": "東京都文京区根津1丁目28-9",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%87%E4%BA%AC%E5%8C%BA%E6%A0%B9%E6%B4%A51%E4%B8%81%E7%9B%AE28-9",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "sendagi": {
       "lat": 35.724739,
@@ -223,7 +277,9 @@
       "address": "東京都文京区千駄木2丁目32",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%87%E4%BA%AC%E5%8C%BA%E5%8D%83%E9%A7%84%E6%9C%A82%E4%B8%81%E7%9B%AE32",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yanaka": {
       "lat": 35.728123,
@@ -231,7 +287,9 @@
       "address": "東京都台東区谷中3丁目13",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E8%B0%B7%E4%B8%AD3%E4%B8%81%E7%9B%AE13",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "hagi": {
       "lat": 35.726372,
@@ -239,7 +297,9 @@
       "address": "東京都台東区谷中3丁目10-25",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E8%B0%B7%E4%B8%AD3%E4%B8%81%E7%9B%AE10-25",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yanaka2": {
       "lat": 35.724129,
@@ -247,7 +307,9 @@
       "address": "東京都台東区谷中7丁目5",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E8%B0%B7%E4%B8%AD7%E4%B8%81%E7%9B%AE5",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "ueno": {
       "lat": 35.713913,
@@ -255,7 +317,9 @@
       "address": "東京都台東区上野公園5",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E4%B8%8A%E9%87%8E%E5%85%AC%E5%9C%925",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "ameyoko": {
       "lat": 35.709663,
@@ -263,7 +327,9 @@
       "address": "東京都台東区上野6丁目10",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E4%B8%8A%E9%87%8E6%E4%B8%81%E7%9B%AE10",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "ootoya": {
       "lat": 35.70956,
@@ -271,47 +337,19 @@
       "address": "東京都台東区上野2丁目12-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E4%B8%8A%E9%87%8E2%E4%B8%81%E7%9B%AE12-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "toyosu": {
-      "name": "도요스 시장",
-      "jp": "豊洲市場",
-      "time": "09:35~10:45",
-      "kind": "sight",
       "lat": 35.642284,
       "lng": 139.782837,
       "address": "東京都江東区豊洲6丁目6-1",
-      "area": "東京都江東区豊洲6丁目6",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B1%9F%E6%9D%B1%E5%8C%BA%E8%B1%8A%E6%B4%B26%E4%B8%81%E7%9B%AE6",
       "coordinateAccuracy": "address-reference",
       "coordinateNote": "국토지리원 주소 대표 좌표 · 실제 출입구는 외부 지도·현장 안내 확인",
-      "description": "일반 견학 구역·이른 식사. 참치 경매 새벽 관람 제외. 휴시장일에는 시장 내부를 방문하지 않고 센캬쿠반라이로 전환.",
-      "details": {
-        "feature": "일반 견학 구역·이른 식사. 참치 경매 새벽 관람 제외. 휴시장일에는 시장 내부를 방문하지 않고 센캬쿠반라이로 전환.",
-        "thingsToDo": [],
-        "stayLabel": "일정 시각 기준",
-        "costMin": null,
-        "costMax": null,
-        "costKind": "admission",
-        "costCurrency": "JPY",
-        "costConfidence": "unconfirmed",
-        "costNote": "실제 이용·구매 금액 확인 후 입력",
-        "reservationNote": "계획 일정 · 예약·영업일·현장 안내 확인",
-        "sources": [
-          "https://www.shijou.metro.tokyo.lg.jp/info/0/kenngaku/kenngaku1",
-          "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B1%9F%E6%9D%B1%E5%8C%BA%E8%B1%8A%E6%B4%B26%E4%B8%81%E7%9B%AE6"
-        ],
-        "sourceCheckedAt": "2026-11-05"
-      },
-      "uid": "t27-d2-main-1",
-      "id": "t27-d2-main-1",
-      "selectionId": 1,
-      "timeConfidence": "planned",
-      "modeFromPrevious": "metro",
-      "transportFromPrevious": "히비야선 → 유라쿠초선 → 유리카모메선 · 참고 시간표 기준 약 51분",
-      "start": "09:35",
-      "end": "10:45",
-      "mapQuery": "35.642284,139.782837"
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "nakaei": {
       "lat": 35.643154,
@@ -319,47 +357,19 @@
       "address": "東京都江東区豊洲6丁目5-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B1%9F%E6%9D%B1%E5%8C%BA%E8%B1%8A%E6%B4%B26%E4%B8%81%E7%9B%AE5-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "senkyaku": {
-      "name": "도요스 센캬쿠반라이",
-      "jp": "豊洲 千客万来",
-      "time": "11:00-12:30",
-      "kind": "shopping",
       "lat": 35.64561111,
       "lng": 139.78366667,
       "address": "東京都江東区豊洲6丁目5-1",
-      "area": "東京都江東区豊洲6丁目5",
       "source": "https://ja.wikipedia.org/wiki/%E8%B1%8A%E6%B4%B2%20%E5%8D%83%E5%AE%A2%E4%B8%87%E6%9D%A5",
       "coordinateAccuracy": "map-reference",
       "coordinateNote": "공개 시설 대표 좌표 · 실제 출입구는 외부 지도·현장 안내 확인",
-      "description": "상점 구경·점심. 온천 등 유료 시설은 기본 일정에 포함하지 않음.",
-      "details": {
-        "feature": "상점 구경·점심. 온천 등 유료 시설은 기본 일정에 포함하지 않음.",
-        "thingsToDo": [],
-        "stayLabel": "일정 시각 기준",
-        "costMin": null,
-        "costMax": null,
-        "costKind": "shopping",
-        "costCurrency": "JPY",
-        "costConfidence": "unconfirmed",
-        "costNote": "실제 이용·구매 금액 확인 후 입력",
-        "reservationNote": "계획 일정 · 예약·영업일·현장 안내 확인",
-        "sources": [
-          "https://www.toyosu-senkyakubanrai.jp/",
-          "https://ja.wikipedia.org/wiki/%E8%B1%8A%E6%B4%B2%20%E5%8D%83%E5%AE%A2%E4%B8%87%E6%9D%A5"
-        ],
-        "sourceCheckedAt": "2026-11-05"
-      },
-      "uid": "t27-d2-main-2",
-      "id": "t27-d2-main-2",
-      "selectionId": 2,
-      "timeConfidence": "planned",
-      "modeFromPrevious": "walk",
-      "transportFromPrevious": "도보 · 계획 약 9분",
-      "start": "11:00",
-      "end": "12:30",
-      "mapQuery": "35.64561111,139.78366667"
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "diver": {
       "lat": 35.625084,
@@ -367,7 +377,9 @@
       "address": "東京都江東区青海1丁目1-10",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B1%9F%E6%9D%B1%E5%8C%BA%E9%9D%92%E6%B5%B71%E4%B8%81%E7%9B%AE1-10",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "aqua": {
       "lat": 35.627804,
@@ -375,7 +387,9 @@
       "address": "東京都港区台場1丁目7-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%AF%E5%8C%BA%E5%8F%B0%E5%A0%B41%E4%B8%81%E7%9B%AE7-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "beach": {
       "lat": 35.626984,
@@ -383,7 +397,9 @@
       "address": "東京都港区台場1丁目4",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%AF%E5%8C%BA%E5%8F%B0%E5%A0%B41%E4%B8%81%E7%9B%AE4",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "boteya": {
       "lat": 35.627804,
@@ -391,7 +407,9 @@
       "address": "東京都港区台場1丁目7-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%AF%E5%8C%BA%E5%8F%B0%E5%A0%B41%E4%B8%81%E7%9B%AE7-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "kegon": {
       "lat": 36.738907,
@@ -399,23 +417,29 @@
       "address": "栃木県日光市中宮祠2479-2",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%A0%83%E6%9C%A8%E7%9C%8C%E6%97%A5%E5%85%89%E5%B8%82%E4%B8%AD%E5%AE%AE%E7%A5%A02479-2",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "chuzenji": {
-      "lat": 36.741398,
-      "lng": 139.494354,
+      "lat": 36.741154,
+      "lng": 139.489546,
       "address": "栃木県日光市中宮祠2478",
-      "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%A0%83%E6%9C%A8%E7%9C%8C%E6%97%A5%E5%85%89%E5%B8%82%E4%B8%AD%E5%AE%AE%E7%A5%A02478",
-      "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "source": "https://www.nikko-kankou.org/spot/16",
+      "coordinateAccuracy": "map-reference",
+      "coordinateNote": "닛코시 관광협회 주젠지온천 지도 대표 지점 · 제설된 호숫가만 산책",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "sanbon": {
-      "lat": 36.77356,
-      "lng": 139.453461,
+      "lat": 36.7774773,
+      "lng": 139.4512362,
       "address": "栃木県日光市中宮祠2493",
-      "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%A0%83%E6%9C%A8%E7%9C%8C%E6%97%A5%E5%85%89%E5%B8%82%E4%B8%AD%E5%AE%AE%E7%A5%A02493",
-      "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "source": "https://www.nikko-kankou.org/spot/388",
+      "coordinateAccuracy": "map-reference",
+      "coordinateNote": "닛코시 관광협회 시설 지도 대표 좌표 · 산본마쓰 정류장에서 도보 접근",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "hamarikyu": {
       "lat": 35.66013,
@@ -423,7 +447,9 @@
       "address": "東京都中央区浜離宮庭園1-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E6%B5%9C%E9%9B%A2%E5%AE%AE%E5%BA%AD%E5%9C%921-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "itoya": {
       "lat": 35.673069,
@@ -431,7 +457,9 @@
       "address": "東京都中央区銀座2丁目7-15",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E9%8A%80%E5%BA%A72%E4%B8%81%E7%9B%AE7-15",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "tenya": {
       "lat": 35.671715,
@@ -439,7 +467,9 @@
       "address": "東京都中央区銀座3丁目9-4",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E9%8A%80%E5%BA%A73%E4%B8%81%E7%9B%AE9-4",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "muji": {
       "lat": 35.673199,
@@ -447,7 +477,9 @@
       "address": "東京都中央区銀座3丁目3-5",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E9%8A%80%E5%BA%A73%E4%B8%81%E7%9B%AE3-5",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "six": {
       "lat": 35.669445,
@@ -455,7 +487,9 @@
       "address": "東京都中央区銀座6丁目10-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E9%8A%80%E5%BA%A76%E4%B8%81%E7%9B%AE10-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "drug": {
       "lat": 35.670292,
@@ -463,60 +497,19 @@
       "address": "東京都中央区銀座5丁目8-9",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E9%8A%80%E5%BA%A75%E4%B8%81%E7%9B%AE8-9",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "ibuki": {
-      "id": "t27-d9-main-4",
-      "name": "긴자 이부키",
-      "time": "19:00-21:00",
       "lat": 35.671341,
       "lng": 139.770447,
-      "kind": "food",
-      "area": "中央区銀座2-14-6 第2松岡ビルB1",
-      "description": "1인 좌석 예약 목표 · 예약 확정 전에는 계획 시각. 음료 포함 총액·취소 조건 확인.",
-      "foodKey": "ibuki",
       "address": "東京都中央区銀座2丁目14-6",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E9%8A%80%E5%BA%A72-14-6",
       "coordinateAccuracy": "address_geocoded",
-      "modeFromPrevious": "walk",
-      "transportFromPrevious": "도보 · 계획 약 13분",
-      "visitId": "d11-main-10",
-      "mapUrl": "https://www.google.com/maps/search/?api=1&query=35.671341,139.770447",
-      "uid": "t27-d9-main-4",
-      "poiKey": "ibuki",
-      "details": {
-        "feature": "긴자 이부키에서 식사를 한다. 1/16 토요일 19:00 목표. 1인 좌석·음료 포함 총액 29,999엔 이하를 예약 전에 확인. 페어링 정액은 미공개.",
-        "thingsToDo": [
-          "야간 15,000엔 가이세키 + 음식에 맞춘 와인 요청.",
-          "잎채소·생토마토는 제외 요청. 알레르기는 없음."
-        ],
-        "costMin": 28000,
-        "costMax": 29999,
-        "costNote": "음식 18,150엔 세금·서비스 포함 / 총 28,000엔 목표 · 식음료 예산",
-        "reservationNote": "1/16 토요일 19:00 목표. 1인 좌석·음료 포함 총액 29,999엔 이하를 예약 전에 확인. 페어링 정액은 미공개.",
-        "sources": [
-          "https://ginza-ibuki.com/menu/"
-        ],
-        "typicalStayMin": 60,
-        "stayLabel": "2시간 30분",
-        "costKind": "food",
-        "costCurrency": "JPY",
-        "costConfidence": "estimate",
-        "sourceCheckedAt": "2026-10-25"
-      },
-      "routeOverride": {
-        "operators": [
-          "TokyoMetro",
-          "Toei"
-        ],
-        "forceTransit": true
-      },
       "coordinateNote": "시설·주소 대표 좌표. 정확한 출입구는 현장·공식 안내 확인.",
-      "selectionId": 4,
-      "timeConfidence": "planned",
-      "start": "19:00",
-      "end": "21:00",
-      "mapQuery": "35.671341,139.770447"
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "hachimangu": {
       "lat": 35.324554,
@@ -524,7 +517,9 @@
       "address": "神奈川県鎌倉市雪ノ下2丁目1-31",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E9%8E%8C%E5%80%89%E5%B8%82%E9%9B%AA%E3%83%8E%E4%B8%8B2%E4%B8%81%E7%9B%AE1-31",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "komachi": {
       "lat": 35.320782,
@@ -532,7 +527,9 @@
       "address": "神奈川県鎌倉市小町2丁目1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E9%8E%8C%E5%80%89%E5%B8%82%E5%B0%8F%E7%94%BA2%E4%B8%81%E7%9B%AE1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "aratama": {
       "lat": 35.321327,
@@ -540,58 +537,19 @@
       "address": "神奈川県鎌倉市小町2丁目12-30",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E9%8E%8C%E5%80%89%E5%B8%82%E5%B0%8F%E7%94%BA2%E4%B8%81%E7%9B%AE12-30",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "hasedera": {
-      "name": "가마쿠라 하세데라",
       "lat": 35.312553,
       "lng": 139.53392,
-      "kind": "sight",
-      "area": "神奈川県鎌倉市長谷3-11-2",
       "address": "神奈川県鎌倉市長谷3丁目11-2",
       "source": "https://www.hasedera.jp/",
-      "description": "에노덴 하세역 경유·관음당과 바다 전망.",
-      "details": {
-        "feature": "산비탈에 자리한 사찰로 관음당과 바다 전망을 함께 볼 수 있다. 계단이 있어 천천히 올라가고 실내 관람을 섞는다.",
-        "thingsToDo": [
-          "관음당 관람",
-          "전망대에서 가마쿠라 바다 조망",
-          "사찰 정원과 건축 살펴보기"
-        ],
-        "typicalStayMin": 60,
-        "costMin": 400,
-        "costMax": 600,
-        "costNote": "성인 입장료 예산. 별도 전시관·식음료 추가.",
-        "reservationNote": "운영시간·해당 날짜 공지를 방문 전에 확인.",
-        "sources": [
-          "https://www.hasedera.jp/"
-        ],
-        "stayLabel": "1시간",
-        "costKind": "admission",
-        "costCurrency": "JPY",
-        "costConfidence": "estimate",
-        "sourceCheckedAt": "2026-10-25"
-      },
-      "selectionId": 4,
-      "poiKey": "hasedera",
-      "time": "14:30-15:30",
-      "modeFromPrevious": "walk",
-      "transportFromPrevious": "도보 · 계획 약 10분",
-      "routeOverride": {
-        "fareMin": 200,
-        "fareMax": 200,
-        "fareNote": "가마쿠라→하세 에노덴 성인 편도200엔",
-        "sources": [
-          "https://www.enoden.co.jp/common/images/train/pdf/passenger-business-rules_train_20260316.pdf"
-        ]
-      },
-      "uid": "t27-d13-main-4",
-      "id": "t27-d13-main-4",
+      "coordinateAccuracy": "address-reference",
       "coordinateNote": "시설·주소 대표 좌표. 정확한 출입구는 현장·공식 안내 확인.",
-      "timeConfidence": "planned",
-      "start": "14:30",
-      "end": "15:30",
-      "mapQuery": "35.312553,139.53392"
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yuigahama": {
       "lat": 35.309963,
@@ -599,7 +557,9 @@
       "address": "神奈川県鎌倉市由比ガ浜4丁目7",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E9%8E%8C%E5%80%89%E5%B8%82%E7%94%B1%E6%AF%94%E3%82%AC%E6%B5%9C4%E4%B8%81%E7%9B%AE7",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "kokomae": {
       "lat": 35.306774,
@@ -607,7 +567,9 @@
       "address": "神奈川県鎌倉市腰越1丁目1-25",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E9%8E%8C%E5%80%89%E5%B8%82%E8%85%B0%E8%B6%8A1%E4%B8%81%E7%9B%AE1-25",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "enoshima": {
       "lat": 35.307667,
@@ -615,7 +577,9 @@
       "address": "神奈川県藤沢市片瀬海岸1丁目14",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E8%97%A4%E6%B2%A2%E5%B8%82%E7%89%87%E7%80%AC%E6%B5%B7%E5%B2%B81%E4%B8%81%E7%9B%AE14",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "shirasu": {
       "lat": 35.307358,
@@ -623,7 +587,9 @@
       "address": "神奈川県鎌倉市腰越2丁目10-13",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E7%A5%9E%E5%A5%88%E5%B7%9D%E7%9C%8C%E9%8E%8C%E5%80%89%E5%B8%82%E8%85%B0%E8%B6%8A2%E4%B8%81%E7%9B%AE10-13",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "kagura": {
       "lat": 35.701012,
@@ -631,13 +597,15 @@
       "address": "東京都新宿区神楽坂3丁目6",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%B0%E5%AE%BF%E5%8C%BA%E7%A5%9E%E6%A5%BD%E5%9D%823%E4%B8%81%E7%9B%AE6",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "torijaya": {
-      "lat": 35.701813,
-      "lng": 139.739639,
-      "address": "東京都新宿区神楽坂4丁目2",
-      "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%B0%E5%AE%BF%E5%8C%BA%E7%A5%9E%E6%A5%BD%E5%9D%824%E4%B8%81%E7%9B%AE2",
+      "lat": 35.700768,
+      "lng": 139.740417,
+      "address": "東京都新宿区神楽坂3丁目10-1",
+      "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%B0%E5%AE%BF%E5%8C%BA%E7%A5%9E%E6%A5%BD%E5%9D%823%E4%B8%81%E7%9B%AE10-1",
       "coordinateAccuracy": "address-reference",
       "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
     },
@@ -647,7 +615,9 @@
       "address": "東京都新宿区神楽坂4丁目2",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%B0%E5%AE%BF%E5%8C%BA%E7%A5%9E%E6%A5%BD%E5%9D%824%E4%B8%81%E7%9B%AE2",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "midtown": {
       "lat": 35.666023,
@@ -655,7 +625,9 @@
       "address": "東京都港区赤坂9丁目7-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%AF%E5%8C%BA%E8%B5%A4%E5%9D%829%E4%B8%81%E7%9B%AE7-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "tsuru": {
       "lat": 35.662437,
@@ -663,7 +635,9 @@
       "address": "東京都港区六本木3丁目14-12",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%AF%E5%8C%BA%E5%85%AD%E6%9C%AC%E6%9C%A83%E4%B8%81%E7%9B%AE14-12",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "tower": {
       "lat": 35.658649,
@@ -671,52 +645,19 @@
       "address": "東京都港区芝公園4丁目2-8",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%B8%AF%E5%8C%BA%E8%8A%9D%E5%85%AC%E5%9C%924%E4%B8%81%E7%9B%AE2-8",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "jimbo": {
-      "name": "진보초 고서점 거리",
       "lat": 35.695671,
       "lng": 139.760635,
-      "kind": "sight",
-      "area": "東京都千代田区神田神保町1〜3丁目",
       "address": "東京都千代田区神田神保町1丁目1",
       "source": "https://visit-chiyoda.tokyo/app/spot/detail/50",
-      "description": "서점의 개점 시각에 맞춰 사진집·지도·잡지 구경.",
-      "details": {
-        "feature": "헌책과 사진집, 미술서 등을 파는 서점들이 모인 거리다. 야스쿠니도리와 스즈란도리를 중심으로 책방을 들렀다가 카페에서 쉬는 산책 코스로 좋다.",
-        "thingsToDo": [
-          "야스쿠니도리·스즈란도리 고서점 구경",
-          "사진집·미술서 등 취향에 맞는 책 찾기",
-          "오래된 분위기의 카페에서 휴식"
-        ],
-        "typicalStayMin": 90,
-        "costMin": 0,
-        "costMax": 0,
-        "costNote": "거리·서점 구경 무료. 책 구매와 카페는 별도.",
-        "reservationNote": "거리 산책·일반 서점 방문 예약 없음. 관심 서점 휴무만 개별 확인.",
-        "sources": [
-          "https://visit-chiyoda.tokyo/app/spot/detail/50",
-          "https://jimbou.info/map/"
-        ],
-        "stayLabel": "1시간",
-        "costKind": "shopping",
-        "costCurrency": "JPY",
-        "costConfidence": "source-reference",
-        "sourceCheckedAt": "2026-10-25"
-      },
-      "selectionId": 1,
-      "jp": "神田神保町 古書店街",
+      "coordinateAccuracy": "address-reference",
       "coordinateNote": "동네·산책 구간의 대표점. 국토지리원 주소 좌표를 사용했으며 산책 시작·종료 지점 또는 정확한 출입구가 아님.",
-      "poiKey": "jimbocho",
-      "time": "11:00-12:30",
-      "modeFromPrevious": "metro",
-      "transportFromPrevious": "히비야선 → 신주쿠 선 · 참고 시간표 기준 약 36분",
-      "uid": "t27-d11-main-1",
-      "id": "t27-d11-main-1",
-      "timeConfidence": "planned",
-      "start": "11:00",
-      "end": "12:30",
-      "mapQuery": "35.695671,139.760635"
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "mandara": {
       "lat": 35.69511,
@@ -724,7 +665,9 @@
       "address": "東京都千代田区神田神保町2丁目17",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E7%A5%9E%E7%94%B0%E7%A5%9E%E4%BF%9D%E7%94%BA2%E4%B8%81%E7%9B%AE17",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "hijiri": {
       "lat": 35.698803,
@@ -732,7 +675,9 @@
       "address": "東京都千代田区神田駿河台4丁目3",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E7%A5%9E%E7%94%B0%E9%A7%BF%E6%B2%B3%E5%8F%B04%E4%B8%81%E7%9B%AE3",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "myojin": {
       "lat": 35.70145,
@@ -740,7 +685,9 @@
       "address": "東京都千代田区外神田2丁目16-2",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E5%A4%96%E7%A5%9E%E7%94%B02%E4%B8%81%E7%9B%AE16-2",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "radio": {
       "lat": 35.697674,
@@ -748,7 +695,9 @@
       "address": "東京都千代田区外神田1丁目15-16",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E5%A4%96%E7%A5%9E%E7%94%B01%E4%B8%81%E7%9B%AE15-16",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "mandarake": {
       "lat": 35.70031,
@@ -756,7 +705,9 @@
       "address": "東京都千代田区外神田3丁目11-12",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E5%A4%96%E7%A5%9E%E7%94%B03%E4%B8%81%E7%9B%AE11-12",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "yodobashi": {
       "lat": 35.698639,
@@ -764,7 +715,9 @@
       "address": "東京都千代田区神田花岡町1-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E7%A5%9E%E7%94%B0%E8%8A%B1%E5%B2%A1%E7%94%BA1-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "gansen": {
       "lat": 35.700951,
@@ -772,7 +725,9 @@
       "address": "東京都千代田区外神田3丁目10-10",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E5%A4%96%E7%A5%9E%E7%94%B03%E4%B8%81%E7%9B%AE10-10",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "donkiAkiba": {
       "lat": 35.700665,
@@ -780,7 +735,9 @@
       "address": "東京都千代田区外神田4丁目3-3",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E5%A4%96%E7%A5%9E%E7%94%B04%E4%B8%81%E7%9B%AE3-3",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "korakuen": {
       "lat": 35.704834,
@@ -788,15 +745,19 @@
       "address": "東京都文京区後楽1丁目6-6",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%87%E4%BA%AC%E5%8C%BA%E5%BE%8C%E6%A5%BD1%E4%B8%81%E7%9B%AE6-6",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "east": {
-      "lat": 35.683659,
-      "lng": 139.754089,
+      "lat": 35.685824,
+      "lng": 139.760633,
       "address": "東京都千代田区千代田1-1",
-      "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E5%8D%83%E4%BB%A3%E7%94%B01-1",
-      "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "source": "https://www.djq.jp/bridge_liblary/river_imperial/tokyo_bridge_imperiala003_ohtemon.php",
+      "coordinateAccuracy": "map-reference",
+      "coordinateNote": "오테몬바시 입구 좌표 · 황거 내부의 임의 주소 지점 대신 실제 출입구로 접근",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "sobayoshi": {
       "lat": 35.685383,
@@ -804,7 +765,9 @@
       "address": "東京都中央区日本橋本町1丁目1-7",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E6%97%A5%E6%9C%AC%E6%A9%8B%E6%9C%AC%E7%94%BA1%E4%B8%81%E7%9B%AE1-7",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "nihonbashi": {
       "lat": 35.686451,
@@ -812,7 +775,9 @@
       "address": "東京都中央区日本橋室町2丁目2-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E6%97%A5%E6%9C%AC%E6%A9%8B%E5%AE%A4%E7%94%BA2%E4%B8%81%E7%9B%AE2-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "mitsukoshi": {
       "lat": 35.685177,
@@ -820,7 +785,9 @@
       "address": "東京都中央区日本橋室町1丁目4-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E6%97%A5%E6%9C%AC%E6%A9%8B%E5%AE%A4%E7%94%BA1%E4%B8%81%E7%9B%AE4-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "marunouchi": {
       "lat": 35.681252,
@@ -828,7 +795,9 @@
       "address": "東京都千代田区丸の内1丁目9-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E4%B8%B8%E3%81%AE%E5%86%851%E4%B8%81%E7%9B%AE9-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "character": {
       "lat": 35.681252,
@@ -836,7 +805,9 @@
       "address": "東京都千代田区丸の内1丁目9-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8D%83%E4%BB%A3%E7%94%B0%E5%8C%BA%E4%B8%B8%E3%81%AE%E5%86%851%E4%B8%81%E7%9B%AE9-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "wako": {
       "lat": 35.679859,
@@ -844,7 +815,9 @@
       "address": "東京都中央区八重洲2丁目1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E4%B8%AD%E5%A4%AE%E5%8C%BA%E5%85%AB%E9%87%8D%E6%B4%B22%E4%B8%81%E7%9B%AE1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "laqua": {
       "lat": 35.705814,
@@ -852,7 +825,9 @@
       "address": "東京都文京区春日1丁目1-1",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%87%E4%BA%AC%E5%8C%BA%E6%98%A5%E6%97%A51%E4%B8%81%E7%9B%AE1-1",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     },
     "marugame": {
       "lat": 35.703152,
@@ -860,7 +835,9 @@
       "address": "東京都文京区後楽1丁目3-61",
       "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E6%96%87%E4%BA%AC%E5%8C%BA%E5%BE%8C%E6%A5%BD1%E4%B8%81%E7%9B%AE3-61",
       "coordinateAccuracy": "address-reference",
-      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인"
+      "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
+      "verifiedAt": "2026-11-18",
+      "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
     }
   },
   "planning": [
@@ -1232,27 +1209,12 @@
     },
     {
       "key": "8-main",
-      "index": 3,
-      "status": "no-covered-reference-path",
-      "origins": [],
-      "destinations": [],
-      "allowed": [
-        "Weekday",
-        "Daily"
-      ]
-    },
-    {
-      "key": "8-main",
-      "index": 4,
-      "status": "no-covered-reference-path",
-      "origins": [],
-      "destinations": [
-        "Tobu.Nikko.TobuNikko"
-      ],
-      "allowed": [
-        "Weekday",
-        "Daily"
-      ]
+      "index": 2,
+      "status": "timing-rechecked",
+      "previous": "도보",
+      "selected": "도보",
+      "minutes": 17,
+      "railParts": []
     },
     {
       "key": "8-main",
@@ -1536,46 +1498,31 @@
     {
       "key": "14-main",
       "index": 1,
-      "status": "no-covered-reference-path",
-      "origins": [
-        "Toei.Oedo.Iidabashi",
-        "TokyoMetro.Tozai.Iidabashi",
-        "JR-East.ChuoSobuLocal.Iidabashi",
-        "TokyoMetro.Marunouchi.Korakuen",
-        "TokyoMetro.Namboku.Korakuen",
-        "Toei.Oedo.Kasuga",
-        "Toei.Mita.Kasuga",
-        "JR-East.ChuoSobuLocal.Suidobashi",
-        "Toei.Mita.Suidobashi",
-        "TokyoMetro.Tozai.Kudanshita",
-        "TokyoMetro.Hanzomon.Kudanshita",
-        "Toei.Shinjuku.Kudanshita"
-      ],
-      "destinations": [],
-      "allowed": [
-        "Weekday",
-        "Daily"
+      "status": "route-changed",
+      "previous": "도보",
+      "selected": "미타 선",
+      "minutes": 26,
+      "railParts": [
+        {
+          "lineId": "Toei.Mita",
+          "from": "스이도바시",
+          "to": "오테마치"
+        }
       ]
     },
     {
       "key": "14-main",
       "index": 2,
-      "status": "no-covered-reference-path",
-      "origins": [],
-      "destinations": [
-        "TokyoMetro.Hanzomon.Mitsukoshimae",
-        "TokyoMetro.Ginza.Mitsukoshimae",
-        "TokyoMetro.Tozai.Nihombashi",
-        "Toei.Asakusa.Nihombashi",
-        "TokyoMetro.Ginza.Nihombashi",
-        "JR-East.SobuRapid.ShinNihombashi",
-        "Toei.Asakusa.Ningyocho",
-        "TokyoMetro.Hibiya.Ningyocho",
-        "TokyoMetro.Hibiya.Kodemmacho"
-      ],
-      "allowed": [
-        "Weekday",
-        "Daily"
+      "status": "route-changed",
+      "previous": "도보",
+      "selected": "한조몬선",
+      "minutes": 21,
+      "railParts": [
+        {
+          "lineId": "TokyoMetro.Hanzomon",
+          "from": "오테마치",
+          "to": "미쓰코시마에"
+        }
       ]
     },
     {
@@ -1599,7 +1546,7 @@
     "variants": 15,
     "stops": 133,
     "legs": 118,
-    "railParts": 66
+    "railParts": 68
   },
   "warnings": []
 }

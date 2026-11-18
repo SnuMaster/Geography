@@ -438,6 +438,26 @@
       }
     },
     {
+      "key": "tokyo27-231c62aea3cba1",
+      "from": "스이도바시",
+      "to": "오테마치",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 202,
+        "SaturdayHoliday": 175
+      }
+    },
+    {
+      "key": "tokyo27-2d4892421465f0",
+      "from": "오테마치",
+      "to": "미쓰코시마에",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 289,
+        "SaturdayHoliday": 208
+      }
+    },
+    {
       "key": "tokyo27-8aaf479d80a637",
       "from": "오테마치",
       "to": "스이도바시",
