@@ -10,9 +10,9 @@ function read(name){const f=inputs.files.find(f=>f.name===name);if(!f)throw Erro
 const minutes=s=>{if(!/^\d{1,2}:[0-5]\d$/.test(s||''))return null;let n=Number(s.split(':')[0])*60+Number(s.split(':')[1]);return n<180?n+1440:n;};
 const distance=(a,b)=>{const rad=Math.PI/180,x=(a.coord[0]-b.coord[0])*Math.cos((a.coord[1]+b.coord[1])/2*rad),y=a.coord[1]-b.coord[1];return Math.hypot(x,y)*111195;};
 const calendar=t=>['Weekday','SaturdayHoliday','Saturday','SundayHoliday','Daily'].find(c=>t.id.split('.').includes(c));
-function network(){
- const bytes=fs.readFileSync(path.join(cache,'official-shinkansen.json'));if(crypto.createHash('sha256').update(bytes).digest('hex')!==require('./shinkansen-reference-inputs.json').compiledSha256)throw Error('Unverified official train reference. Run the checked extractor.');
- const central=JSON.parse(bytes),stations=[...read('stations.json'),...central.stations],stationMap=new Map(stations.map(s=>[s.id,s])),trains=central.trains.map(t=>({...t,file:'official-shinkansen'}));
+function network(options={}){
+ const bytes=options.includeShinkansen===false?null:fs.readFileSync(path.join(cache,'official-shinkansen.json'));if(bytes&&crypto.createHash('sha256').update(bytes).digest('hex')!==require('./shinkansen-reference-inputs.json').compiledSha256)throw Error('Unverified official train reference. Run the checked extractor.');
+ const central=bytes?JSON.parse(bytes):{stations:[],trains:[]},stations=[...read('stations.json'),...central.stations],stationMap=new Map(stations.map(s=>[s.id,s])),trains=central.trains.map(t=>({...t,file:'official-shinkansen'}));
  for(const f of inputs.files.filter(f=>f.path.startsWith('data/train-timetables/')))for(const t of read(f.name)){
   if(!t.tt?.length||/TH-LINER|HomeLiner|Liner|S-TRAIN/i.test(t.y||''))continue;
   trains.push({...t,file:f.name});
@@ -50,7 +50,7 @@ function network(){
  return {stations:stations.filter(s=>stationIds.has(s.id)),stationMap,all,transfers};
 }
 function apply(bundle,api){
- const net=network(),report=[],memo=new Map(),rail=p=>['rail','metro'].includes(p.mode);
+ const net=network(api.networkOptions),report=[],memo=new Map(),rail=p=>['rail','metro'].includes(p.mode);
  const point=s=>({name:s.title.ko||s.title.ja,jp:s.title.ja,lat:s.coord[1],lng:s.coord[0],stationId:s.id});
  function access(stop,inbound,old){const at={coord:[stop.lng,stop.lat]},near=net.stations.filter(s=>distance(s,at)<=1500).sort((a,b)=>distance(a,at)-distance(b,at));
   const unique=new Map();for(const s of near){const group=s.title.ja;if(!unique.has(group))unique.set(group,[]);unique.get(group).push(s);}
@@ -76,7 +76,7 @@ function apply(bundle,api){
  }
  for(const day of bundle.data.days)for(const variant of day.variants){const key=day.n+'-'+variant.id,legs=bundle.routes.days[key];
   for(let index=0;index<legs.length;index++){
-   const old=legs[index],from=variant.stops[index],to=variant.stops[index+1];try{if(!old.parts.some(rail))continue;
+   const old=legs[index],from=variant.stops[index],to=variant.stops[index+1];try{if(!old.parts.some(rail)&&!(api.planUncovered&&api.distance(from,to)>1200&&old.planningRequired))continue;
    const protectedTrip=old.private||old.travel||old.fare?.displayBlank||old.parts.some(p=>p.lineId==='Special.Direct'||/^Hakone\./.test(p.lineId||''));
    if(protectedTrip){old.routePreference='retained-special-service';old.routePreferenceNotice='지정 직통·관광 교통 유지 · 최단시간 비교 미지원';report.push({key,index,status:'retained-special-service',reason:old.routePreferenceNotice});continue;}
    const end=api.interval(from).end,departure=minutes(end);if(departure===null){report.push({key,index,status:'departure-time-unavailable'});continue;}

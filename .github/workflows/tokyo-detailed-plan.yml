@@ -1,0 +1,67 @@
+name: Build approved Tokyo plan
+on:
+  push:
+    branches: [codex/tokyo-detailed-plan-20261118]
+    paths:
+      - 'scripts/**'
+      - 'tests/tokyo-detailed-plan.test.cjs'
+      - '.github/workflows/tokyo-detailed-plan.yml'
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    env:
+      TOKYO_REPLAN_CACHE: .tokyo-replan-cache
+      TOKYO_TIMETABLE_CACHE: .tokyo-timetable-cache
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .tokyo-replan-cache
+            .tokyo-timetable-cache
+          key: tokyo-detailed-public-inputs-v1
+      - name: Verify source syntax
+        run: |
+          node --check scripts/build-tokyo-detailed-plan.cjs
+          node --check scripts/tokyo-plan-map-tools.cjs
+          node --check scripts/tokyo-fastest-planner.cjs
+          node --check scripts/tokyo-fare-references.cjs
+      - name: Fetch pinned public rail references
+        run: |
+          node scripts/fetch-tokyo-replan-sources.cjs
+          node scripts/fetch-tokyo-timetable-sources.cjs
+      - name: Build public markers and road/rail connections
+        run: node scripts/build-tokyo-detailed-plan.cjs
+      - name: Rebuild exact-OD departure packs and offline hashes
+        run: |
+          node scripts/build-tokyo-timetables.cjs
+          node scripts/build-assistant-offline.cjs
+      - name: Verify approved itinerary contracts
+        run: |
+          node --test tests/tokyo-detailed-plan.test.cjs
+          node scripts/japan-qa.cjs
+      - name: Commit verified generated map data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add japan-2027/trip-update.json japan-2027/rail-departure-profiles.js japan-2027/timetables japan-2027/offline-manifest.json scripts/tokyo-detailed-plan-report.json
+          git diff --cached --quiet || git commit -m "Generate approved 15-day Tokyo map, exact-OD profiles and offline hashes"
+          git push origin HEAD:codex/tokyo-detailed-plan-20261118
+      - name: Run existing regression suite
+        run: node --test tests/*.test.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: detailed-plan-report
+          path: |
+            scripts/tokyo-detailed-plan-report.json
+            .tokyo-replan-cache/detailed-points.json
+            japan-2027/trip-update.json

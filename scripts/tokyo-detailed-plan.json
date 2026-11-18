@@ -1,0 +1,1356 @@
+{
+  "revision": "20261118-detailed-plan-1",
+  "approvedAt": "2026-11-18",
+  "catalog": {
+    "harbor": {
+      "name": "항구가 보이는 언덕공원",
+      "jp": "港の見える丘公園",
+      "address": "神奈川県横浜市中区山手町114",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "yamate": {
+      "name": "야마테 서양관 거리",
+      "jp": "山手本通り",
+      "address": "神奈川県横浜市中区山手町111",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "motomachi": {
+      "name": "요코하마 모토마치 상점거리",
+      "jp": "横浜元町商店街",
+      "address": "神奈川県横浜市中区元町1丁目14",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "keifuku": {
+      "name": "게이후쿠로",
+      "jp": "慶福楼 本店",
+      "address": "神奈川県横浜市中区山下町190",
+      "kind": "food",
+      "costMin": 1000,
+      "costMax": 1500,
+      "note": "차이나타운 중식 점심. 혼잡하면 대기 대신 가까운 정식집으로 변경."
+    },
+    "yamashita": {
+      "name": "야마시타공원",
+      "jp": "山下公園",
+      "address": "神奈川県横浜市中区山下町279",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "osanbashi": {
+      "name": "오산바시 옥상 데크",
+      "jp": "横浜港大さん橋国際客船ターミナル",
+      "address": "神奈川県横浜市中区海岸通1丁目1",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "redbrick": {
+      "name": "요코하마 붉은 벽돌 창고",
+      "jp": "横浜赤レンガ倉庫",
+      "address": "神奈川県横浜市中区新港1丁目1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "외관·상점 구경. 특별 행사·유료 시설 별도."
+    },
+    "kishamichi": {
+      "name": "기샤미치·미나토미라이 야경",
+      "jp": "汽車道",
+      "address": "神奈川県横浜市中区新港2丁目9",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "yokodinner": {
+      "name": "오토야 미나토미라이점",
+      "jp": "大戸屋 みなとみらいビジネススクエア店",
+      "address": "神奈川県横浜市西区みなとみらい3丁目6-4",
+      "kind": "food",
+      "costMin": 1000,
+      "costMax": 1500,
+      "note": ""
+    },
+    "inokashira": {
+      "name": "이노카시라공원",
+      "jp": "井の頭恩賜公園",
+      "address": "東京都武蔵野市御殿山1丁目18",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "kayashima": {
+      "name": "가야시마",
+      "jp": "カヤシマ",
+      "address": "東京都武蔵野市吉祥寺本町1丁目10-9",
+      "kind": "food",
+      "costMin": 1100,
+      "costMax": 1500,
+      "note": ""
+    },
+    "kichijoji": {
+      "name": "기치조지 선로드·다이쇼도리",
+      "jp": "吉祥寺サンロード商店街",
+      "address": "東京都武蔵野市吉祥寺本町1丁目15",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "shimokita": {
+      "name": "시모키타자와 북쪽 빈티지·레코드 거리",
+      "jp": "下北沢駅",
+      "address": "東京都世田谷区北沢2丁目24-2",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "마음에 드는 가게를 천천히. 상품 구매비 별도."
+    },
+    "bonus": {
+      "name": "시모키타 센로가이·BONUS TRACK",
+      "jp": "BONUS TRACK",
+      "address": "東京都世田谷区代田2丁目36-12",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "poni": {
+      "name": "포니피리카",
+      "jp": "ポニピリカ",
+      "address": "東京都世田谷区北沢2丁目8-8",
+      "kind": "food",
+      "costMin": 1600,
+      "costMax": 2000,
+      "note": "토핑 추가 전 메뉴 가격 확인. 오래 줄 서지 않기."
+    },
+    "gyoen": {
+      "name": "신주쿠교엔",
+      "jp": "新宿御苑",
+      "address": "東京都新宿区内藤町11",
+      "kind": "sight",
+      "costMin": 500,
+      "costMax": 500,
+      "note": "오전 정원 산책. 동절기 운영·입장료는 방문 전 공식 안내 재확인."
+    },
+    "acacia": {
+      "name": "아카시아 신주쿠 본점",
+      "jp": "アカシア 新宿本店",
+      "address": "東京都新宿区新宿3丁目22-10",
+      "kind": "food",
+      "costMin": 1200,
+      "costMax": 1800,
+      "note": ""
+    },
+    "meiji": {
+      "name": "메이지신궁",
+      "jp": "明治神宮",
+      "address": "東京都渋谷区代々木神園町1-1",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "경내 산책. 유료 정원·박물관 제외. 겨울 폐문 전 방문."
+    },
+    "takeshita": {
+      "name": "하라주쿠 다케시타도리",
+      "jp": "竹下通り",
+      "address": "東京都渋谷区神宮前1丁目17",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "omotesando": {
+      "name": "오모테산도·캣스트리트",
+      "jp": "キャットストリート",
+      "address": "東京都渋谷区神宮前5丁目10",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "shibuya": {
+      "name": "시부야 스크램블·센터가이",
+      "jp": "渋谷センター街",
+      "address": "東京都渋谷区宇田川町21",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "거리·쇼핑. 시부야 스카이는 넣지 않음."
+    },
+    "midori": {
+      "name": "스시노미도리 시부야점",
+      "jp": "梅丘寿司の美登利 渋谷店",
+      "address": "東京都渋谷区道玄坂1丁目12-3",
+      "kind": "food",
+      "costMin": 4400,
+      "costMax": 4400,
+      "note": "특별식 예산. 예약·정리권 가능 여부 확인; 장시간 현장 대기는 생략."
+    },
+    "oishi": {
+      "name": "오이시공원",
+      "jp": "大石公園",
+      "address": "山梨県南都留郡富士河口湖町大石2585",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "fudou": {
+      "name": "호토 후도 가와구치코 북본점",
+      "jp": "ほうとう不動 河口湖北本店",
+      "address": "山梨県南都留郡富士河口湖町河口707",
+      "kind": "food",
+      "costMin": 1200,
+      "costMax": 1800,
+      "note": ""
+    },
+    "northlake": {
+      "name": "가와구치코 북쪽 호숫가",
+      "jp": "河口湖美術館",
+      "address": "山梨県南都留郡富士河口湖町河口3170",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "미술관 입장 없이 호숫가 산책. 제설된 길만 걷고 결빙 시 중단."
+    },
+    "ropeway": {
+      "name": "가와구치코 파노라마 로프웨이",
+      "jp": "河口湖天上山公園カチカチ山ロープウェイ",
+      "address": "山梨県南都留郡富士河口湖町浅川1163",
+      "kind": "experience",
+      "costMin": null,
+      "costMax": null,
+      "note": "선택 방문. 강풍·대기·운휴 시 생략. 2026년 요금 개정 후 개인 왕복권 확인."
+    },
+    "nezu": {
+      "name": "네즈신사",
+      "jp": "根津神社",
+      "address": "東京都文京区根津1丁目28-9",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "sendagi": {
+      "name": "네즈·센다기 골목",
+      "jp": "千駄木駅",
+      "address": "東京都文京区千駄木2丁目32",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "주택가 촬영·소음 배려. 언덕·골목을 천천히 산책."
+    },
+    "yanaka": {
+      "name": "야나카긴자",
+      "jp": "谷中銀座",
+      "address": "東京都台東区谷中3丁目13",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "hagi": {
+      "name": "HAGI CAFE",
+      "jp": "HAGI CAFE",
+      "address": "東京都台東区谷中3丁目10-25",
+      "kind": "food",
+      "costMin": 1500,
+      "costMax": 2000,
+      "note": "런치 운영·휴무 확인. 혼잡하면 야나카 인근 정식집."
+    },
+    "yanaka2": {
+      "name": "야나카 절 골목",
+      "jp": "谷中霊園",
+      "address": "東京都台東区谷中7丁目5",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "ueno": {
+      "name": "우에노공원·시노바즈 연못",
+      "jp": "上野恩賜公園",
+      "address": "東京都台東区上野公園5",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "ameyoko": {
+      "name": "아메요코",
+      "jp": "アメヤ横丁",
+      "address": "東京都台東区上野6丁目10",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "ootoya": {
+      "name": "오토야 우에노공원점",
+      "jp": "大戸屋 上野公園店",
+      "address": "東京都台東区上野2丁目12-1",
+      "kind": "food",
+      "costMin": 1000,
+      "costMax": 1500,
+      "note": ""
+    },
+    "toyosu": {
+      "name": "도요스 시장 일반 견학",
+      "jp": "豊洲市場",
+      "address": "東京都江東区豊洲6丁目6-1",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "일반 견학 통로만 방문. 새벽 참치경매 제외; 휴시장일은 센캬쿠반라이로 전환."
+    },
+    "nakaei": {
+      "name": "나카에이 도요스점",
+      "jp": "中栄",
+      "address": "東京都江東区豊洲6丁目5-1",
+      "kind": "food",
+      "costMin": 1000,
+      "costMax": 1500,
+      "note": "시장식당 운영·휴시장일 확인. 기다림이 길면 인근 식당으로 변경."
+    },
+    "senkyaku": {
+      "name": "도요스 센캬쿠반라이",
+      "jp": "豊洲 千客万来",
+      "address": "東京都江東区豊洲6丁目5-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "상점 구경·8층 무료 족욕. 유료 온천·호텔 시설은 별도."
+    },
+    "diver": {
+      "name": "다이버시티·유니콘 건담",
+      "jp": "ダイバーシティ東京プラザ",
+      "address": "東京都江東区青海1丁目1-10",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "aqua": {
+      "name": "아쿠아시티·덱스",
+      "jp": "アクアシティお台場",
+      "address": "東京都港区台場1丁目7-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "beach": {
+      "name": "오다이바 해변공원",
+      "jp": "お台場海浜公園",
+      "address": "東京都港区台場1丁目4",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "해 질 무렵 레인보브리지. 강풍이면 실내 휴식."
+    },
+    "boteya": {
+      "name": "보테쥬 오다이바점",
+      "jp": "ぼてぢゅう アクアシティお台場店",
+      "address": "東京都港区台場1丁目7-1",
+      "kind": "food",
+      "costMin": 1300,
+      "costMax": 2000,
+      "note": ""
+    },
+    "kegon": {
+      "name": "게곤폭포",
+      "jp": "華厳滝",
+      "address": "栃木県日光市中宮祠2479-2",
+      "kind": "sight",
+      "costMin": 600,
+      "costMax": 600,
+      "note": "유료 엘리베이터 이용 시 예산. 결빙·강풍 및 동절기 운영 확인."
+    },
+    "chuzenji": {
+      "name": "주젠지호 동쪽 호숫가",
+      "jp": "中禅寺湖",
+      "address": "栃木県日光市中宮祠2478",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "제설된 동쪽 호숫가만 짧게. 얼음 위·미제설 탐방로 진입 금지."
+    },
+    "sanbon": {
+      "name": "산본마쓰 찻집·설경 전망",
+      "jp": "三本松茶屋",
+      "address": "栃木県日光市中宮祠2493",
+      "kind": "food",
+      "costMin": 1200,
+      "costMax": 1800,
+      "note": "버스·영업·제설 상태가 좋을 때만. 접근 가능한 전망만 보고 센조가하라 장거리 트레킹 제외."
+    },
+    "hamarikyu": {
+      "name": "하마리큐 은사정원",
+      "jp": "浜離宮恩賜庭園",
+      "address": "東京都中央区浜離宮庭園1-1",
+      "kind": "sight",
+      "costMin": 300,
+      "costMax": 300,
+      "note": ""
+    },
+    "itoya": {
+      "name": "긴자 이토야",
+      "jp": "銀座伊東屋",
+      "address": "東京都中央区銀座2丁目7-15",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "tenya": {
+      "name": "덴야 긴자점",
+      "jp": "天丼てんや 銀座店",
+      "address": "東京都中央区銀座3丁目9-4",
+      "kind": "food",
+      "costMin": 800,
+      "costMax": 1200,
+      "note": ""
+    },
+    "muji": {
+      "name": "MUJI 긴자",
+      "jp": "無印良品 銀座",
+      "address": "東京都中央区銀座3丁目3-5",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "six": {
+      "name": "GINZA SIX·주오도리",
+      "jp": "GINZA SIX",
+      "address": "東京都中央区銀座6丁目10-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "drug": {
+      "name": "마쓰모토키요시 긴자 미유키Ave.점",
+      "jp": "マツモトキヨシ 銀座みゆきAve.店",
+      "address": "東京都中央区銀座5丁目8-9",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "두 번째 쇼핑. 의약품·화장품·선물 목록만 보충. 면세 조건 현장 확인."
+    },
+    "ibuki": {
+      "name": "긴자 이부키",
+      "jp": "銀座 いぶき",
+      "address": "東京都中央区銀座2丁目14-6",
+      "kind": "food",
+      "costMin": 18150,
+      "costMax": 18150,
+      "note": "유지한 특별식. 1인 좌석 예약 필요·현재 미예약. 기본 식사 예산; 음료 추가 비용 별도."
+    },
+    "hachimangu": {
+      "name": "쓰루가오카하치만구",
+      "jp": "鶴岡八幡宮",
+      "address": "神奈川県鎌倉市雪ノ下2丁目1-31",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "경내 산책. 유료 전시 제외."
+    },
+    "komachi": {
+      "name": "고마치도리",
+      "jp": "小町通り",
+      "address": "神奈川県鎌倉市小町2丁目1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "aratama": {
+      "name": "아라타마",
+      "jp": "鎌倉 新荘園 あら珠",
+      "address": "神奈川県鎌倉市小町2丁目12-30",
+      "kind": "food",
+      "costMin": 1500,
+      "costMax": 2000,
+      "note": ""
+    },
+    "hasedera": {
+      "name": "가마쿠라 하세데라",
+      "jp": "長谷寺",
+      "address": "神奈川県鎌倉市長谷3丁目11-2",
+      "kind": "sight",
+      "costMin": 400,
+      "costMax": 400,
+      "note": "계단·전망 산책. 현행 입장료와 동절기 마감 재확인."
+    },
+    "yuigahama": {
+      "name": "유이가하마 해변",
+      "jp": "由比ヶ浜",
+      "address": "神奈川県鎌倉市由比ガ浜4丁目7",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "kokomae": {
+      "name": "가마쿠라코코마에 해안",
+      "jp": "鎌倉高校前駅",
+      "address": "神奈川県鎌倉市腰越1丁目1-25",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "건널목 차도·선로 진입 없이 안전한 보행 구역에서만."
+    },
+    "enoshima": {
+      "name": "에노시마 섬 입구·해안 전망",
+      "jp": "江の島弁天橋",
+      "address": "神奈川県藤沢市片瀬海岸1丁目14",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "섬 입구·해안 위주. 동굴·섬 끝까지는 넣지 않음."
+    },
+    "shirasu": {
+      "name": "시라스야 고시고에 본점",
+      "jp": "しらすや 腰越本店",
+      "address": "神奈川県鎌倉市腰越2丁目10-13",
+      "kind": "food",
+      "costMin": 1500,
+      "costMax": 2000,
+      "note": "겨울 생시라스 판매를 전제하지 않음. 가마아게·생선 메뉴 중 선택."
+    },
+    "kagura": {
+      "name": "가구라자카",
+      "jp": "神楽坂",
+      "address": "東京都新宿区神楽坂3丁目6",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "torijaya": {
+      "name": "도리자야 본점",
+      "jp": "鳥茶屋 本店",
+      "address": "東京都新宿区神楽坂4丁目2",
+      "kind": "food",
+      "costMin": 1500,
+      "costMax": 2000,
+      "note": "런치 영업·현재 메뉴 확인. 혼잡하면 가구라자카 정식집."
+    },
+    "alleys": {
+      "name": "효고요코초·가쿠렌보요코초",
+      "jp": "兵庫横丁",
+      "address": "東京都新宿区神楽坂4丁目2",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "midtown": {
+      "name": "도쿄 미드타운·히노키초공원",
+      "jp": "東京ミッドタウン",
+      "address": "東京都港区赤坂9丁目7-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "tsuru": {
+      "name": "쓰루통탄 롯폰기점",
+      "jp": "つるとんたん 六本木店",
+      "address": "東京都港区六本木3丁目14-12",
+      "kind": "food",
+      "costMin": 1500,
+      "costMax": 2000,
+      "note": "기본 우동 중심. 지점·메뉴·현장 혼잡 확인."
+    },
+    "tower": {
+      "name": "도쿄타워 외관·시바공원",
+      "jp": "東京タワー",
+      "address": "東京都港区芝公園4丁目2-8",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "타워 입장권 없이 외관·야경 감상."
+    },
+    "jimbo": {
+      "name": "진보초 고서점 거리",
+      "jp": "神保町古書店街",
+      "address": "東京都千代田区神田神保町1丁目1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "mandara": {
+      "name": "만다라 진보초",
+      "jp": "マンダラ 神保町",
+      "address": "東京都千代田区神田神保町2丁目17",
+      "kind": "food",
+      "costMin": 1200,
+      "costMax": 1800,
+      "note": ""
+    },
+    "hijiri": {
+      "name": "오차노미즈·히지리바시",
+      "jp": "聖橋",
+      "address": "東京都千代田区神田駿河台4丁目3",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "myojin": {
+      "name": "간다묘진",
+      "jp": "神田明神",
+      "address": "東京都千代田区外神田2丁目16-2",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "radio": {
+      "name": "아키하바라 라디오회관",
+      "jp": "秋葉原ラジオ会館",
+      "address": "東京都千代田区外神田1丁目15-16",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "mandarake": {
+      "name": "아키바 주오도리·만다라케·스루가야",
+      "jp": "まんだらけコンプレックス",
+      "address": "東京都千代田区外神田3丁目11-12",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "yodobashi": {
+      "name": "요도바시 아키바·게임 매장",
+      "jp": "ヨドバシAkiba",
+      "address": "東京都千代田区神田花岡町1-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "gansen": {
+      "name": "간센 아키하바라",
+      "jp": "雁川",
+      "address": "東京都千代田区外神田3丁目10-10",
+      "kind": "food",
+      "costMin": 1000,
+      "costMax": 1500,
+      "note": ""
+    },
+    "donkiAkiba": {
+      "name": "돈키호테 아키하바라점",
+      "jp": "ドン・キホーテ秋葉原店",
+      "address": "東京都千代田区外神田4丁目3-3",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "세 번째 쇼핑. 앞서 산 물건은 빼고 귀국 전 필요한 것만."
+    },
+    "korakuen": {
+      "name": "고이시카와 고라쿠엔",
+      "jp": "小石川後楽園",
+      "address": "東京都文京区後楽1丁目6-6",
+      "kind": "sight",
+      "costMin": 300,
+      "costMax": 300,
+      "note": ""
+    },
+    "east": {
+      "name": "황거 동쪽 정원",
+      "jp": "皇居東御苑",
+      "address": "東京都千代田区千代田1-1",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": "월·금 휴원 및 특별 휴원 공지 확인. 1/21 목요일 계획."
+    },
+    "sobayoshi": {
+      "name": "소바요시 니혼바시 본점",
+      "jp": "そばよし 日本橋本店",
+      "address": "東京都中央区日本橋本町1丁目1-7",
+      "kind": "food",
+      "costMin": 600,
+      "costMax": 1000,
+      "note": ""
+    },
+    "nihonbashi": {
+      "name": "니혼바시·COREDO 무로마치",
+      "jp": "COREDO室町",
+      "address": "東京都中央区日本橋室町2丁目2-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "mitsukoshi": {
+      "name": "니혼바시 미쓰코시·식품관",
+      "jp": "日本橋三越本店",
+      "address": "東京都中央区日本橋室町1丁目4-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "marunouchi": {
+      "name": "도쿄역 마루노우치·교코도리",
+      "jp": "東京駅",
+      "address": "東京都千代田区丸の内1丁目9-1",
+      "kind": "sight",
+      "costMin": 0,
+      "costMax": 0,
+      "note": ""
+    },
+    "character": {
+      "name": "도쿄 캐릭터스트리트",
+      "jp": "東京駅一番街",
+      "address": "東京都千代田区丸の内1丁目9-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": ""
+    },
+    "wako": {
+      "name": "와코 야에스 지하상가점",
+      "jp": "とんかつ和幸 八重洲地下街店",
+      "address": "東京都中央区八重洲2丁目1",
+      "kind": "food",
+      "costMin": 1300,
+      "costMax": 2000,
+      "note": ""
+    },
+    "laqua": {
+      "name": "도쿄돔시티·라쿠아",
+      "jp": "ラクーア",
+      "address": "東京都文京区春日1丁目1-1",
+      "kind": "shopping",
+      "costMin": null,
+      "costMax": null,
+      "note": "주변 산책·마지막 구경. 유료 스파·놀이기구 제외. 귀국편에 따라 생략."
+    },
+    "marugame": {
+      "name": "마루가메제면 도쿄돔시티점",
+      "jp": "丸亀製麺 東京ドームシティ",
+      "address": "東京都文京区後楽1丁目3-61",
+      "kind": "food",
+      "costMin": 600,
+      "costMax": 1100,
+      "note": ""
+    }
+  },
+  "days": [
+    {
+      "n": 1,
+      "title": "입국·숙소 근처 저녁·첫 쇼핑",
+      "city": "대구·도쿄",
+      "stops": []
+    },
+    {
+      "n": 2,
+      "title": "요코하마 항구·모토마치·야경",
+      "city": "요코하마",
+      "stops": [
+        [
+          "hotel",
+          "08:00-08:10"
+        ],
+        [
+          "harbor",
+          "10:00-10:35"
+        ],
+        [
+          "yamate",
+          "10:40-11:10"
+        ],
+        [
+          "motomachi",
+          "11:20-11:50"
+        ],
+        [
+          "keifuku",
+          "12:00-12:50"
+        ],
+        [
+          "yamashita",
+          "13:00-13:40"
+        ],
+        [
+          "osanbashi",
+          "14:00-14:45"
+        ],
+        [
+          "redbrick",
+          "15:05-16:00"
+        ],
+        [
+          "kishamichi",
+          "16:20-17:40"
+        ],
+        [
+          "yokodinner",
+          "18:00-18:50"
+        ],
+        [
+          "hotel",
+          "20:30-21:00"
+        ]
+      ]
+    },
+    {
+      "n": 3,
+      "title": "이노카시라공원·기치조지·시모키타자와",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "08:00-08:10"
+        ],
+        [
+          "inokashira",
+          "09:30-10:40"
+        ],
+        [
+          "kayashima",
+          "11:00-11:50"
+        ],
+        [
+          "kichijoji",
+          "12:00-12:40"
+        ],
+        [
+          "shimokita",
+          "13:20-15:20"
+        ],
+        [
+          "bonus",
+          "15:35-17:00"
+        ],
+        [
+          "poni",
+          "17:20-18:20"
+        ],
+        [
+          "hotel",
+          "20:00-20:30"
+        ]
+      ]
+    },
+    {
+      "n": 4,
+      "title": "신주쿠교엔·하라주쿠·시부야",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "08:00-08:10"
+        ],
+        [
+          "gyoen",
+          "09:15-10:45"
+        ],
+        [
+          "acacia",
+          "11:15-12:00"
+        ],
+        [
+          "meiji",
+          "12:40-13:35"
+        ],
+        [
+          "takeshita",
+          "13:50-14:30"
+        ],
+        [
+          "omotesando",
+          "14:45-15:45"
+        ],
+        [
+          "shibuya",
+          "16:15-17:30"
+        ],
+        [
+          "midori",
+          "18:00-19:00"
+        ],
+        [
+          "hotel",
+          "20:30-21:00"
+        ]
+      ]
+    },
+    {
+      "n": 5,
+      "title": "가와구치코·후지산 겨울 풍경",
+      "city": "가와구치코",
+      "stops": [
+        [
+          "hotel",
+          "06:00-06:10"
+        ],
+        [
+          "fujiShinjuku",
+          "07:15-07:30"
+        ],
+        [
+          "fujiStation",
+          "09:40-09:55"
+        ],
+        [
+          "oishi",
+          "10:30-11:20"
+        ],
+        [
+          "fudou",
+          "12:00-12:50"
+        ],
+        [
+          "northlake",
+          "13:10-14:00"
+        ],
+        [
+          "ropeway",
+          "14:30-15:20"
+        ],
+        [
+          "fujiStation",
+          "16:00-16:30"
+        ],
+        [
+          "fujiShinjuku",
+          "18:30-18:40"
+        ],
+        [
+          "hotel",
+          "20:00-20:30"
+        ]
+      ]
+    },
+    {
+      "n": 6,
+      "title": "네즈·야나카·우에노 골목",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "09:00-09:10"
+        ],
+        [
+          "nezu",
+          "09:45-10:30"
+        ],
+        [
+          "sendagi",
+          "10:45-11:15"
+        ],
+        [
+          "yanaka",
+          "11:30-12:00"
+        ],
+        [
+          "hagi",
+          "12:10-13:00"
+        ],
+        [
+          "yanaka2",
+          "13:15-14:00"
+        ],
+        [
+          "ueno",
+          "14:30-15:45"
+        ],
+        [
+          "ameyoko",
+          "16:00-17:15"
+        ],
+        [
+          "ootoya",
+          "17:30-18:20"
+        ],
+        [
+          "hotel",
+          "19:00-19:30"
+        ]
+      ]
+    },
+    {
+      "n": 7,
+      "title": "도요스 시장·오다이바",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "07:30-07:40"
+        ],
+        [
+          "toyosu",
+          "09:00-10:00"
+        ],
+        [
+          "nakaei",
+          "10:10-11:00"
+        ],
+        [
+          "senkyaku",
+          "11:10-12:30"
+        ],
+        [
+          "diver",
+          "13:15-14:30"
+        ],
+        [
+          "aqua",
+          "14:45-16:00"
+        ],
+        [
+          "beach",
+          "16:10-17:00"
+        ],
+        [
+          "boteya",
+          "17:15-18:10"
+        ],
+        [
+          "hotel",
+          "19:40-20:00"
+        ]
+      ]
+    },
+    {
+      "n": 8,
+      "title": "닛코 게곤폭포·주젠지호 설경",
+      "city": "닛코",
+      "stops": [
+        [
+          "hotel",
+          "06:00-06:10"
+        ],
+        [
+          "nikkoStation",
+          "08:40-09:00"
+        ],
+        [
+          "kegon",
+          "10:00-10:45"
+        ],
+        [
+          "chuzenji",
+          "11:00-11:35"
+        ],
+        [
+          "sanbon",
+          "12:15-13:30"
+        ],
+        [
+          "nikkoStation",
+          "15:00-15:30"
+        ],
+        [
+          "hotel",
+          "18:30-19:00"
+        ]
+      ]
+    },
+    {
+      "n": 9,
+      "title": "하마리큐·긴자·이부키",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "08:30-08:40"
+        ],
+        [
+          "hamarikyu",
+          "09:30-10:40"
+        ],
+        [
+          "itoya",
+          "11:15-12:00"
+        ],
+        [
+          "tenya",
+          "12:10-13:00"
+        ],
+        [
+          "muji",
+          "13:10-14:00"
+        ],
+        [
+          "six",
+          "14:15-15:15"
+        ],
+        [
+          "drug",
+          "15:25-16:00"
+        ],
+        [
+          "ginzaRest",
+          "16:10-17:30"
+        ],
+        [
+          "ibuki",
+          "18:00-20:00"
+        ],
+        [
+          "hotel",
+          "21:00-21:30"
+        ]
+      ]
+    },
+    {
+      "n": 10,
+      "title": "가마쿠라·에노덴·에노시마 해안",
+      "city": "가마쿠라·에노시마",
+      "stops": [
+        [
+          "hotel",
+          "07:00-07:10"
+        ],
+        [
+          "hachimangu",
+          "09:10-10:00"
+        ],
+        [
+          "komachi",
+          "10:10-10:50"
+        ],
+        [
+          "aratama",
+          "11:00-11:50"
+        ],
+        [
+          "hasedera",
+          "12:30-13:20"
+        ],
+        [
+          "yuigahama",
+          "13:35-14:00"
+        ],
+        [
+          "kokomae",
+          "14:30-15:00"
+        ],
+        [
+          "enoshima",
+          "15:40-16:40"
+        ],
+        [
+          "shirasu",
+          "17:10-18:00"
+        ],
+        [
+          "hotel",
+          "20:30-21:00"
+        ]
+      ]
+    },
+    {
+      "n": 11,
+      "title": "공연 가능일·자유시간",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "09:00-09:10"
+        ],
+        [
+          "free",
+          "09:10-20:00"
+        ],
+        [
+          "hotel",
+          "20:00-20:30"
+        ]
+      ]
+    },
+    {
+      "n": 12,
+      "title": "도쿄 돔 호텔 이동·가구라자카·롯폰기",
+      "city": "도쿄",
+      "stops": [
+        [
+          "hotel",
+          "09:00-09:30"
+        ],
+        [
+          "domeBags",
+          "10:15-10:35"
+        ],
+        [
+          "kagura",
+          "11:00-11:40"
+        ],
+        [
+          "torijaya",
+          "11:45-12:35"
+        ],
+        [
+          "alleys",
+          "12:45-13:30"
+        ],
+        [
+          "domeCheckin",
+          "14:00-15:30"
+        ],
+        [
+          "midtown",
+          "16:15-17:15"
+        ],
+        [
+          "tsuru",
+          "17:40-18:30"
+        ],
+        [
+          "tower",
+          "19:00-19:45"
+        ],
+        [
+          "dome",
+          "20:30-21:00"
+        ]
+      ]
+    },
+    {
+      "n": 13,
+      "title": "진보초·간다·아키하바라",
+      "city": "도쿄",
+      "stops": [
+        [
+          "dome",
+          "09:00-09:10"
+        ],
+        [
+          "jimbo",
+          "09:40-11:10"
+        ],
+        [
+          "mandara",
+          "11:30-12:20"
+        ],
+        [
+          "hijiri",
+          "12:40-13:10"
+        ],
+        [
+          "myojin",
+          "13:25-14:00"
+        ],
+        [
+          "radio",
+          "14:15-15:00"
+        ],
+        [
+          "mandarake",
+          "15:10-16:20"
+        ],
+        [
+          "yodobashi",
+          "16:35-17:20"
+        ],
+        [
+          "gansen",
+          "17:35-18:25"
+        ],
+        [
+          "donkiAkiba",
+          "18:40-19:30"
+        ],
+        [
+          "dome",
+          "20:15-20:45"
+        ]
+      ]
+    },
+    {
+      "n": 14,
+      "title": "고라쿠엔·황거·니혼바시·도쿄역",
+      "city": "도쿄",
+      "stops": [
+        [
+          "dome",
+          "08:45-08:55"
+        ],
+        [
+          "korakuen",
+          "09:00-10:00"
+        ],
+        [
+          "east",
+          "10:40-11:40"
+        ],
+        [
+          "sobayoshi",
+          "12:10-13:00"
+        ],
+        [
+          "nihonbashi",
+          "13:10-14:10"
+        ],
+        [
+          "mitsukoshi",
+          "14:15-15:00"
+        ],
+        [
+          "marunouchi",
+          "15:30-16:15"
+        ],
+        [
+          "character",
+          "16:20-17:15"
+        ],
+        [
+          "wako",
+          "17:30-18:20"
+        ],
+        [
+          "dome",
+          "19:15-19:45"
+        ]
+      ]
+    },
+    {
+      "n": 15,
+      "title": "체크아웃·저녁 귀국편 미정",
+      "city": "도쿄·귀국",
+      "stops": [
+        [
+          "domeCheckout",
+          "09:30-10:30"
+        ],
+        [
+          "laqua",
+          "10:40-11:30"
+        ],
+        [
+          "marugame",
+          "11:40-12:30"
+        ],
+        [
+          "domePickup",
+          "항공편 확정 후"
+        ]
+      ]
+    }
+  ]
+}
