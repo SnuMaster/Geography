@@ -1,0 +1,264 @@
+/* Shared concierge palette. Presentation only: transport colours and map tiles retain their data styles. */
+body.command-center.travel-shell{
+ --ink:#253440;--paper:#faf8f2;--white:#fffdf8;--muted:#6f6356;--border:#d8cbbb;
+ --planner-navy:#10202e;--planner-copper:#94613f;--planner-rule:#b39a7c;
+ color:var(--ink);background:var(--paper);
+}
+
+/* The navy masthead anchors the paper surfaces below it. */
+body.command-center.travel-shell .topbar{background:#10202e;border-bottom:1px solid #b39a7c;color:#faf8f2;box-shadow:0 3px 16px #10202e19}
+body.command-center.travel-shell .topbar .brand{color:#faf8f2}
+body.command-center.travel-shell .topbar .brand-year{color:#dfd0bb}
+body.command-center.travel-shell .topbar :where(button,#shellMore>summary){color:#f1ede4;border-radius:4px}
+body.command-center.travel-shell .topbar :where(button,#shellMore>summary):hover{background:#253644;color:#fffdf8}
+body.command-center.travel-shell .topbar>#ccSidebarToggle,
+body.command-center.travel-shell .topbar>#ccSidebarToggle[aria-expanded=false]{background:#253644;color:#f2d7b2;border:1px solid #8c775e}
+body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=true]{background:#33414a;color:#f2d7b2;box-shadow:inset 0 0 0 1px #b39a7c}
+body.command-center.travel-shell .topbar #accountSignup{background:#e6d7c2;color:#10202e}
+body.command-center.travel-shell .topbar #accountSignup:hover{background:#faf8f2}
+body.command-center.travel-shell .topbar #accountToggle,
+body.command-center.travel-shell .topbar #shellMore>summary{background:transparent;color:#f1ede4}
+body.command-center.travel-shell .topbar #accountToggle:hover,
+body.command-center.travel-shell .topbar #shellMore>summary:hover{background:#253644;color:#fffdf8}
+body.command-center.travel-shell :is(#accountActions,.trip-summary){border-color:#58616a}
+body.command-center.travel-shell .trip-summary{color:#f1ede4}
+body.command-center.travel-shell .trip-summary strong{color:#e1b88c}
+body.command-center.travel-shell .topbar #ccClock{color:#d0c6b7}
+body.command-center.travel-shell .topbar #dailyExchange,
+body.command-center.travel-shell .topbar #dailyExchange:hover{color:#edcba3;background:none;box-shadow:none}
+body.command-center.travel-shell .topbar #dailyExchange small{color:#d0c6b7}
+body.command-center.travel-shell .topbar .shell-more-menu{background:#faf8f2;border-color:#b39a7c;border-radius:6px;box-shadow:0 14px 45px #10202e26}
+body.command-center.travel-shell .topbar .shell-more-menu>strong{color:#6f6356;letter-spacing:1px}
+body.command-center.travel-shell .topbar .shell-more-menu button{color:#253440}
+body.command-center.travel-shell .topbar .shell-more-menu button:hover{background:#eee7db;color:#10202e}
+body.command-center.travel-shell .topbar .shell-more-menu button[aria-pressed=true]{background:#e8dfd1;color:#664429}
+body.command-center.travel-shell .offline-status{background:#eee8dd;color:#63584d;border-color:#d8cbbb}
+
+/* Itinerary photos stay visible through the existing translucent wash. */
+body.command-center.travel-shell :is(.days-sidebar,#shellDateDock){background:#faf8f2;border-color:#d8cbbb}
+body.command-center.travel-shell :is(.shell-date-select button,.shell-date-select #ccDaySelect,.cc-mission #ccVariant,.cc-timeline-heading button,.kiseki-type-filter select){background:#f3eee5;color:#253440;border-color:#d8cbbb;border-radius:4px}
+body.command-center.travel-shell .shell-side-tabs{border-color:#b39a7c}
+body.command-center.travel-shell .shell-side-tabs button{color:#655b50}
+body.command-center.travel-shell .shell-side-tabs button[aria-selected=true]{color:#10202e;border-bottom-color:#94613f}
+body.command-center.travel-shell .cc-progress{color:#63584d}
+body.command-center.travel-shell .cc-progress progress{accent-color:#94613f}
+body.command-center.travel-shell .cc-progress progress::-webkit-progress-value{background:#94613f}
+body.command-center.travel-shell .cc-progress progress::-moz-progress-bar{background:#94613f}
+body.command-center.travel-shell #dayHeader{border-bottom:1px solid #b39a7c}
+body.command-center.travel-shell #dayHeader h2{color:#10202e;font-weight:500}
+body.command-center.travel-shell #dayHeader .day-glance>div{background:#ede6d9cc;border-radius:4px}
+body.command-center.travel-shell #stopList .stop-card{background:#fffdf8;border-color:#ded4c5;border-radius:5px;box-shadow:none}
+body.command-center.travel-shell #stopList .stop-card.active{background:#eee7db;border-color:#a4896b;box-shadow:inset 2px 0 #94613f}
+body.command-center.travel-shell #stopList .stop-card.active .stop-name{color:#10202e}
+body.command-center.travel-shell #stopList .stop-card.active .stop-number{background:#10202e;color:#faf8f2}
+body.command-center.travel-shell #stopList :is(.stop-desc,.stop-time){color:#655f55}
+body.command-center.travel-shell .original-visit input{accent-color:#10202e}
+body.command-center.travel-shell .leg-route-button{border-radius:5px}
+body.command-center.travel-shell #dayList .day-item{background:#fffdf8;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell #dayList .day-item.active{background:#ede5d8;border-color:#94613f;box-shadow:inset 0 -2px #94613f}
+body.command-center.travel-shell #dayList .day-item.active:after,
+body.command-center.travel-shell #dayList .day-item.active .day-date{color:#805334}
+body.command-center.travel-shell .city-filters button.active{background:#10202e;color:#faf8f2}
+
+/* Floating map tools use the same paper, rules and selected navy state. */
+body.command-center.travel-shell :is(.shell-view-tabs,.map-title-card,.map-playbar,#shellContextCard,#routeFocusPanel,.location-card,.navigation-card,.ride-panel,.ride-mini){background:#faf8f2f5;color:#253440;border-color:#c7b8a4;border-radius:6px;box-shadow:0 8px 26px #10202e16}
+body.command-center.travel-shell .shell-view-tabs button{border-radius:4px}
+body.command-center.travel-shell .shell-view-tabs button.active:not([aria-pressed=false]),
+body.command-center.travel-shell .shell-view-tabs button[aria-pressed=true]{background:#10202e!important;color:#faf8f2!important;box-shadow:none}
+body.command-center.travel-shell .shell-view-tabs button[aria-pressed=false]{background:transparent!important;color:#4f5a60!important}
+body.command-center.travel-shell .map-action{background:#faf8f2;color:#10202e;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell .cc-next>small{color:#805334}
+body.command-center.travel-shell :is(.route-focus-buttons button,.kiseki-external-links a,.navigation-controls button){background:#f3eee5;color:#253440;border-color:#d3c4b1;border-radius:4px}
+body.command-center.travel-shell :is(#routeNavigationStart,#shellSaveMemo,#kisekiRecordExpense){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(.leaflet-popup-content-wrapper,.leaflet-popup-tip){background:#faf8f2;color:#253440}
+body.command-center.travel-shell .leaflet-popup-content-wrapper{border:1px solid #c7b8a4;border-radius:6px}
+body.command-center.travel-shell .leaflet-popup-content a{color:#805334}
+
+/* Place, train and saved-record surfaces; route emblems keep their own colours. */
+body.command-center.travel-shell :is(#detailSheet,.detail-sheet-header,.detail-sheet-body,.detail-actions){background:#faf8f2;color:#253440;border-color:#c7b8a4}
+body.command-center.travel-shell .detail-sheet-header{border-bottom:1px solid #b39a7c}
+body.command-center.travel-shell .station-departures{background:#f4f1e9;color:#253440;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell .departure-next{background:#ede5d8;border-color:#c7b8a4;border-radius:5px}
+body.command-center.travel-shell :is(.departure-next-time strong,.departure-next-count b){color:#10202e}
+body.command-center.travel-shell :is(.departure-clock,.departure-source,.departure-notice){color:#655b50}
+body.command-center.travel-shell .compact-station [data-ride-choose]{background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(dialog.cc-dialog,#accountDialog,#bookingChecklistDialog,#noticeDialog,#offlinePackDialog){background:#faf8f2;color:#253440;border:1px solid #b39a7c;border-radius:6px;box-shadow:0 18px 65px #10202e30}
+body.command-center.travel-shell :is(dialog.cc-dialog,#accountDialog,#bookingChecklistDialog,#noticeDialog,#offlinePackDialog)::backdrop{background:#10202e70;backdrop-filter:blur(3px)}
+body.command-center.travel-shell :is(.cc-dialog>header,#accountDialog>header,.booking-dialog-header,#noticeDialog>.dialog-header){background:#10202e;color:#faf8f2;border-bottom:1px solid #b39a7c}
+body.command-center.travel-shell :is(.cc-dialog>header,#accountDialog>header,.booking-dialog-header,#noticeDialog>.dialog-header) :is(h2,strong){color:#faf8f2}
+body.command-center.travel-shell :is(.cc-dialog>header,#accountDialog>header,.booking-dialog-header) small{color:#e0c5a4}
+body.command-center.travel-shell :is(.cc-dialog>header button,#accountClose,.booking-dialog-header button,#noticeDialog>.dialog-header button){background:transparent;color:#faf8f2;border-radius:4px}
+body.command-center.travel-shell :is(.cc-dialog-body,#bookingChecklistDialog,#accountDialog) :is(input,select,textarea){background:#fffdf8;color:#253440;border-color:#c7b8a4;border-radius:4px}
+body.command-center.travel-shell :is(.cc-dialog-body .cc-primary,#accountDialog button[type=submit],#accountLogout){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(.booking-summary,.booking-item,.account-tabs){background:#f3eee5;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell :is(.booking-filters button[aria-pressed=true],.variant-tabs button.active,.account-tabs button[aria-selected=true]){background:#10202e;color:#faf8f2;border-color:#10202e}
+body.command-center.travel-shell :is(.booking-details,.cc-dialog-body details){border-color:#d8cbbb}
+body.command-center.travel-shell .cc-dialog-body p{color:#635c52}
+body.command-center.travel-shell :is(.cc-dialog-body h3,.booking-item-title){color:#10202e}
+body.command-center.travel-shell :is(.cc-dialog-body button,.booking-links a){border-radius:4px}
+
+/* Expenses remain actual spending only, with currency and chart colours unchanged. */
+body.command-center.travel-shell #kisekiCostsDialog :is(.cc-dialog-body,.expense-toolbar){background:#faf8f2}
+body.command-center.travel-shell #kisekiCostsDialog .expense-cards article{background:#f0eade;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-cards .expense-actual-card{background:#10202e;color:#faf8f2;border-color:#10202e}
+body.command-center.travel-shell #kisekiCostsDialog .expense-actual-card :is(strong,small,span){color:#faf8f2}
+body.command-center.travel-shell #kisekiCostsDialog .expense-chart{background:#fffdf8;border-color:#d8cbbb;border-radius:5px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-tabs{background:#ece4d7;border-radius:4px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-tabs button[aria-selected=true]{background:#10202e;color:#faf8f2;box-shadow:none}
+body.command-center.travel-shell #kisekiCostsDialog .expense-currencies button[aria-pressed=true]{background:#10202e;color:#faf8f2;box-shadow:none}
+body.command-center.travel-shell #kisekiCostsDialog :is(.expense-date-nav select,.expense-date-nav button){background:#fffdf8;color:#253440;border-color:#c7b8a4;border-radius:4px}
+body.command-center.travel-shell #kisekiCostsDialog .expense-heading h3{font-weight:500}
+body.command-center.travel-shell #kisekiCostsDialog .expense-section{border-color:#d8cbbb}
+body.command-center.travel-shell #kisekiCostsDialog .expense-day-chart button{border-radius:3px}
+body.command-center.travel-shell #assistantToggle{background:#10202e;color:#faf8f2;border:1px solid #b39a7c;border-radius:5px;box-shadow:0 6px 20px #10202e26}
+body.command-center.travel-shell :is(button,a,input,select,textarea,summary):focus-visible{outline:3px solid #b77d53;outline-offset:3px}
+body.command-center.travel-shell .topbar :is(button,a,summary):focus-visible{outline-color:#f2d7b2}
+body.command-center.travel-shell .topbar .shell-more-menu :is(button,a,summary):focus-visible{outline-color:#94613f}
+.departure-date-basis{display:grid;gap:3px;margin:6px 0 12px;font:400 11px/1.6 RouteSans,sans-serif;color:#655b50;overflow-wrap:anywhere}
+.departure-date-basis b{font-weight:600;color:#253440}
+#ccAlertsDialog{width:min(520px,calc(100vw - 24px))}
+#ccAlertsDialog .cc-dialog-body h3{font-size:15px;margin:22px 0 7px}
+#ccAlertsDialog .cc-dialog-body h3:first-child{margin-top:0}
+#ccAlertsDialog #ccAlertsBackground{padding:12px;border-left:2px solid #94613f;background:#eee7db}
+#ccAlertsDialog #ccAlertsPermissionRequest[hidden]{display:none!important}
+
+/* Fare scope stays visible beside the current-date saved station board. */
+.station-departures .departure-fare-basis,.station-departures .departure-plan-total{font-size:11px;line-height:1.7;color:#60715f;margin:10px 0;overflow-wrap:anywhere}
+.station-departures .departure-plan-total{padding:10px 0;border-block:1px solid #d6dece}
+.station-departures .departure-fare-components{margin:10px 0;padding:10px 12px;border:1px solid #d6dece;border-radius:8px;background:#edf1e7}
+.departure-fare-components>div{display:flex;align-items:baseline;justify-content:space-between;gap:10px;font-size:11px;line-height:1.8}
+.departure-fare-components dt{font-weight:400}.departure-fare-components dd{margin:0;white-space:nowrap;font-weight:600}
+
+.departure-fare-sources{font-size:11px;line-height:1.8}
+
+/* A readable, shared Shinkansen pictogram in the map, fare list and itinerary. */
+.operator-logo.operator-shinkansen{width:34px;max-width:34px;height:34px;max-height:34px;padding:0;background:transparent;object-fit:contain;border-radius:7px}
+.rail-map-symbol .operator-shinkansen{width:34px;max-width:34px;height:34px;max-height:34px;filter:drop-shadow(0 1px 3px #17253235)}
+.itinerary-train-card .compact-line>.operator-shinkansen{width:34px;height:34px}
+.operator-logo.operator-fuji-excursion{width:42px;max-width:42px;height:32px;max-height:32px;padding:2px;background:#fffdf8;border-radius:5px;object-fit:contain}
+.itinerary-train-card .compact-line>.operator-logo.operator-fuji-excursion{width:42px;height:32px}
+.leaflet-container .rail-map-symbol img.operator-fuji-excursion{width:42px!important;max-width:42px!important;height:32px!important;max-height:32px!important;box-sizing:border-box;box-shadow:0 0 0 2px #fffdf8,0 2px 6px #183b3530}
+.compact-line .departure-service-name{display:block;margin-top:2px;color:#71677f;font-family:inherit;font-size:9px;font-weight:400;line-height:1.5;letter-spacing:.07em}
+
+/* Selected details replace the left itinerary on desktop and tablet. */
+body.command-center.travel-shell #detailSheet[data-docked=sidebar]{position:absolute;inset:0;margin:0;width:100%;max-width:none;height:100%;max-height:none!important;box-sizing:border-box;border:0;border-radius:0;box-shadow:none;z-index:20}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet-body{flex:1 1 0;min-height:0;max-height:none!important;padding-inline:16px}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .leaflet-popup-content{min-width:0!important;overflow-wrap:anywhere}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet-header{min-height:58px;padding:8px 12px;box-sizing:border-box}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar] .detail-sheet-header strong{font-size:13px;line-height:1.6}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actions{flex-wrap:wrap;gap:8px;padding:10px 12px}
+body.command-center.travel-shell #detailSheet[data-docked=sidebar]>.detail-actions button{flex:1;min-width:0;font-size:11px}
+.map-asset-credit{font-size:10px;line-height:1.7;padding:10px 14px;order:10}.map-asset-credit a{text-decoration:underline}
+
+/* Shared vehicle marks also cover bus, cable-car and ropeway services. */
+.rail-symbol.transit-vehicle{display:flex;flex-direction:column;gap:0;min-width:28px;width:28px;height:30px;border-width:2px;padding:2px;line-height:1;color:var(--rail-color);flex-shrink:0}
+.transit-vehicle>svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.transit-vehicle>small{display:block;font:700 6px/1 Arial,sans-serif;letter-spacing:0;white-space:nowrap}
+.rail-map-symbol .rail-symbol.transit-vehicle{width:33px;height:35px}
+.bus-company-badge{display:inline-flex;align-items:center;gap:5px;max-width:100%;flex-shrink:0}
+.bus-company-logo{display:block;width:88px;height:22px;max-width:88px;object-fit:contain;box-sizing:border-box;flex:none}
+.bus-company-logo.operator-tobu-bus{background:#173b71;border-radius:3px;padding:4px 5px}
+.leaflet-container .bus-company-logo{width:88px!important;max-width:88px!important;height:22px!important;max-height:22px!important}
+.rail-map-symbol.bus-company-symbol{width:104px!important;height:66px!important}
+.rail-map-symbol.bus-company-symbol>.bus-company-badge{flex-direction:column;gap:3px;background:#fffdf8;border-radius:8px;padding:4px;box-shadow:0 0 0 2px #fffffff2,0 2px 8px #183b3545}
+.rail-map-symbol.bus-company-symbol .rail-symbol.vehicle-bus{width:28px;height:30px;box-shadow:none}
+.rail-hover-heading>.bus-company-badge{flex-direction:column;gap:3px}
+.daily-rail-logos .rail-symbol.transit-vehicle{height:27px;width:25px;min-width:25px;flex-basis:25px}
+.command-center.original-sidebar .leg-route-button .leg-line-badges{display:flex;align-items:center;gap:5px;margin:7px 0}
+.command-center.original-sidebar .leg-line-badges .rail-symbol.transit-vehicle{height:29px;width:26px;min-width:26px;flex-basis:26px}
+.rail-symbol.tobu-tojo{border-radius:28%;color:#111;background:#fff;font-family:Arial,sans-serif;font-weight:800;letter-spacing:-.6px}
+.compact-line>.departure-line-mark{flex:0 0 42px;width:42px;height:42px;font-size:19px;border-width:4px}
+.compact-line .departure-station-number{display:block;margin-top:3px;font:400 11px/1.5 RouteSans,sans-serif;color:#6b7469}
+.departure-through-note,.departure-schedule-source{font-size:11px;line-height:1.7;color:#65715f;margin:10px 0}.departure-through-note{border-left:2px solid #b79670;padding-left:9px}.departure-schedule-source a{text-decoration:underline}
+
+/* Keep station letters and both digits legible inside the existing line ring. */
+.rail-symbol.metro-station-symbol{font-size:10px;letter-spacing:-.5px}
+.rail-map-symbol .rail-symbol.metro-station-symbol{font-size:10px}
+.compact-line>.rail-symbol.metro-station-symbol{font-size:14px}
+
+/* User-supplied Skyliner artwork retains its original aspect ratio. */
+.operator-logo.operator-skyliner{width:91px;max-width:91px;height:42px;max-height:42px;object-fit:contain;padding:0;background:#fff;border-radius:4px}
+.itinerary-train-card .compact-line>.operator-logo.operator-skyliner{width:91px;height:42px}
+.rail-map-symbol .operator-logo.operator-skyliner{width:74px;max-width:74px;height:34px;max-height:34px;box-shadow:0 0 0 3px #fffffff2,0 2px 8px #183b3545}
+.daily-rail-logos .operator-logo.operator-skyliner,.day-line-key .operator-logo.operator-skyliner{width:56px;max-width:56px;height:26px;max-height:26px}
+
+/* Station pair layout: line emblem in the header; endpoint numbers retain their line shape. */
+.command-center .station-departures .departure-stations.departure-stations-numbered{display:grid;grid-template-columns:minmax(0,1fr) 18px minmax(0,1fr);grid-template-rows:auto;gap:8px;margin:24px 0;align-items:start}
+.command-center .station-departures .departure-stations-numbered .departure-station-name{display:flex;flex-direction:column;align-items:center;gap:5px;grid-row:1;min-width:0;text-align:center;align-self:start}
+.command-center .station-departures .departure-stations-numbered .departure-origin{grid-column:1}
+.command-center .station-departures .departure-stations-numbered .departure-destination{grid-column:3}
+.command-center .station-departures .departure-stations-numbered .departure-arrow{grid-column:2;grid-row:1;align-self:center;transform:none;margin:0;width:auto;text-align:center}
+.command-center .station-departures .departure-stations-numbered .departure-station-korean{font-size:17px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere;letter-spacing:-.4px}
+.command-center .station-departures .departure-stations-numbered .departure-station-japanese{font-size:11px;line-height:1.5;white-space:normal;word-break:keep-all;overflow-wrap:anywhere;margin:0}
+/* Compact station-sign adaptation using the site's existing type family. */
+.command-center .station-departures .shinkansen-station-sign{display:flex;flex-direction:column;align-items:center;box-sizing:border-box;width:100%;max-width:170px;min-height:90px;overflow:hidden;border:1px solid #d5d9d5;border-radius:6px;background:#fff;font-family:inherit;font-weight:400;box-shadow:0 1px 2px #183b3510}
+.shinkansen-station-reading{display:block;padding:7px 4px 2px;color:#65716a;font-family:inherit;font-size:10px;font-weight:400;line-height:1.4;letter-spacing:0;white-space:nowrap}
+.shinkansen-station-kanji{display:block;padding:0 4px 5px;color:#253440;font-size:24px;font-weight:400;line-height:1.5;letter-spacing:.03em;white-space:nowrap}
+.shinkansen-station-roman{display:block;box-sizing:border-box;width:100%;margin-top:auto;padding:3px 4px;background:#4775a4;color:#fff;font-size:11px;font-weight:400;line-height:1.5;letter-spacing:.02em;text-align:center}
+.command-center .station-departures .shinkansen-stations .departure-station-korean{font-size:14px;font-weight:500;line-height:1.5}
+.command-center .station-departures .shinkansen-stations .departure-arrow{align-self:start;margin-top:34px;font-weight:400}
+.departure-endpoint-code{display:inline-flex;justify-content:center;align-items:center;box-sizing:border-box;width:64px;height:64px;flex:none;margin:0 0 7px;border:5px solid var(--station-color);border-radius:50%;background:#fff;color:#152c37;font:700 17px/1 Arial,sans-serif;letter-spacing:-.6px;white-space:nowrap}
+.command-center .station-departures .compact-line{align-items:center;gap:10px}
+.command-center .station-departures .compact-line>strong{min-width:0;font-size:15px;line-height:1.5;word-break:keep-all;overflow-wrap:anywhere}
+.command-center .station-departures .compact-line>.departure-line-mark{font-size:17px}
+
+.departure-endpoint-code.endpoint-circle{border-radius:50%}
+.departure-endpoint-code.endpoint-square{border-radius:3px}
+.departure-endpoint-code.endpoint-rounded{border-radius:14px}
+.command-center .station-departures .fuji-excursion-stations .departure-endpoint-code:not(.jr-station-number){margin-bottom:33px}
+
+/* Match JR East's stacked line/number frame and major-station black header. */
+.departure-endpoint-code.jr-station-number{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:0;width:72px;height:90px;padding:3px;border:0;border-radius:9px;background:transparent;letter-spacing:0;color:#111}
+.departure-endpoint-code.jr-station-number.has-station-abbreviation{background:#111}
+.jr-station-number .jr-station-tab{display:flex;align-items:center;justify-content:center;width:100%;height:18px;flex:0 0 18px;color:#fff;font:700 16px/18px Arial,sans-serif;letter-spacing:.2px}
+.jr-station-number .jr-station-frame{display:flex;flex-direction:column;justify-content:center;align-items:center;box-sizing:border-box;width:66px;height:66px;flex:0 0 66px;border:6px solid var(--station-color);border-radius:6px;background:#fff}
+.jr-station-number .jr-station-line{display:block;font:700 18px/19px Arial,sans-serif;letter-spacing:-.8px}
+.jr-station-number .jr-station-digits{display:block;font:700 31px/31px Arial,sans-serif;letter-spacing:-1px}
+.rail-symbol.keio-inokashira{background:var(--rail-color);color:#fff}
+.rail-symbol.minatomirai{background:var(--rail-color);color:#fff;border-radius:5px}
+.rail-symbol.yurikamome{background:var(--rail-color);color:#fff}
+.departure-endpoint-code.operator-station-number{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;letter-spacing:0}
+.operator-station-number .operator-station-line{font:700 18px/20px Arial,sans-serif}
+.operator-station-number .operator-station-digits{font:700 27px/29px Arial,sans-serif}
+.departure-endpoint-code.operator-filled{background:var(--station-color);color:#fff}
+.departure-endpoint-code.operator-filled.endpoint-square{border-radius:5px}
+.rail-symbol.fuji-service{width:70px;font-size:12px;letter-spacing:0}
+.departure-endpoint-code.keio-station-number{display:flex;flex-direction:column;justify-content:center;gap:1px;border:5px solid var(--station-color);background:var(--station-color);color:#fff;overflow:hidden}
+.keio-station-number .keio-station-line{font:700 20px/23px Arial,sans-serif}
+.keio-station-number .keio-station-digits{display:block;width:100%;border-radius:0 0 30px 30px;background:#fff;color:#111;text-align:center;font:700 23px/27px Arial,sans-serif}
+.departure-route-choice{padding:12px 14px;border:1px solid #d3c1aa;border-radius:9px;background:#f1ede4;color:#26343c;margin:10px 0}
+.departure-route-choice>b{display:block;font:600 13px/1.5 RouteSans,sans-serif}
+.departure-route-choice>small{display:block;font:400 10px/1.7 RouteSans,sans-serif;color:#6e6355}
+.departure-route-choice details{margin-top:6px;font:400 11px/1.7 RouteSans,sans-serif}
+.departure-route-choice summary{cursor:pointer;min-height:32px;display:flex;align-items:center;color:#805a3f}
+.departure-route-choice p{margin:6px 0;font:inherit}
+
+/* Keep the route and fare readable; open timetable and references only when needed. */
+.station-departures .departure-data-status{font-size:10px;line-height:1.6;color:#655b50;margin:10px 0;overflow-wrap:anywhere}
+.station-departures :is(.departure-timetable,.departure-reference){border-top:1px solid #d8cbbb;margin:0;padding:0}
+.station-departures :is(.departure-timetable,.departure-reference)>summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:44px;padding:8px 0;box-sizing:border-box;font:500 12px/1.5 RouteSans,sans-serif;color:#34434a;cursor:pointer;list-style:none}
+.station-departures :is(.departure-timetable,.departure-reference)>summary::-webkit-details-marker{display:none}
+.station-departures :is(.departure-timetable,.departure-reference)>summary:after{content:'＋';font-size:16px;color:#94613f;flex:none}
+.station-departures :is(.departure-timetable,.departure-reference)[open]>summary:after{content:'−'}
+.station-departures :is(.departure-timetable-body,.departure-reference-body){padding:0 0 12px;overflow-wrap:anywhere}
+.station-departures .departure-timetable-body .departure-heading{margin-top:4px}
+.station-departures .departure-timetable-body .compact-actions{grid-template-columns:minmax(0,1fr)}
+.station-departures .departure-quick-links{display:flex;align-items:center;flex-wrap:wrap;gap:0 16px;padding:0}
+.station-departures .departure-quick-links>a,.station-departures .departure-quick-links .rail-disruption-links>a{display:inline-flex;align-items:center;min-height:44px;font:500 11px/1.5 RouteSans,sans-serif;color:#805334;padding:4px 0;box-sizing:border-box}
+.station-departures .departure-quick-links .rail-disruption-links{margin:0;padding:0;border:0}
+.station-departures .departure-service-notice{font-size:11px;line-height:1.7;color:#805334}
+
+/* One compact destination bar at every screen width; the rest is opt-in. */
+body.command-center.travel-shell[data-viewport] #shellContextCard .fold-card-bar{display:flex;align-items:center;gap:6px;padding:8px 10px;background:#faf8f2;border:0}
+body.command-center.travel-shell[data-viewport] .fold-card-bar #foldNext{display:grid;flex:1;min-width:0;min-height:44px;text-align:left;gap:3px;padding:3px 4px}
+body.command-center.travel-shell[data-viewport] .fold-card-bar #foldNext strong{font-size:12px;line-height:1.5;color:#253440}
+body.command-center.travel-shell[data-viewport] .fold-card-bar #foldCardToggle{display:inline-grid;place-items:center;min-width:44px;width:44px;min-height:44px;padding:0;background:#eee7db;border-radius:4px;color:#805334}
+body.command-center.travel-shell[data-viewport] #shellContextCard .cc-next{display:none}
+body.command-center.travel-shell[data-viewport].cc-card-collapsed #shellContextCard #routeFocusPanel{display:none}
+body.command-center.travel-shell[data-viewport]:not(.cc-card-collapsed) #shellContextCard #routeFocusPanel{border-top:1px solid #d8cbbb;border-radius:0;box-shadow:none}
+
+/* Official Revaty wordmark; preserve the original proportions. */
+.operator-logo.operator-revaty{width:84px;max-width:84px;height:30px;max-height:30px;object-fit:contain;padding:2px;background:#fff;border-radius:4px}
+.itinerary-train-card .compact-line>.operator-logo.operator-revaty{width:84px;height:30px}
+.leaflet-container .rail-map-symbol img.operator-revaty{width:72px!important;max-width:72px!important;height:26px!important;max-height:26px!important;box-sizing:border-box;object-fit:contain;box-shadow:0 0 0 3px #fffdf8,0 2px 6px #183b3530}
+.daily-rail-logos .operator-logo.operator-revaty,.day-line-key .operator-logo.operator-revaty{width:64px;max-width:64px;height:24px;max-height:24px}

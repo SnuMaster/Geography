@@ -1,0 +1,21 @@
+Bus operator marks — source record, checked 2026-11-11
+
+tobu-bus.svg
+Official Tobu Bus website wordmark, unmodified:
+https://www.tobu-bus.com/pc/assets/imgs/logo01_01.svg
+Website: https://www.tobu-bus.com/
+Used to identify the Tobu Bus Nikko C-route. Displayed on a dark background
+because the original official asset has white lettering.
+
+fujikyu-bus.png
+Official Fujikyu Bus website wordmark, unmodified:
+https://www.fujikyubus.co.jp/img/fujikyu-bus-logo.png
+Website: https://www.fujikyubus.co.jp/
+Kawaguchiko sightseeing route: https://www.fujikyubus.co.jp/regular/ticket
+Used only for the identified Kawaguchiko sightseeing Red Line service.
+
+The marks belong to their respective owners. This planner uses them solely
+to identify the transport provider and does not imply endorsement.
+No bus-company mark is assigned to FUUA's facility shuttle: the public access
+page confirms the shuttle but does not establish a separate bus operator.
+https://www.atamibayresort.com/access/

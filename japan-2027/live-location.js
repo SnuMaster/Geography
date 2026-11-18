@@ -32,7 +32,7 @@
  }
  const $=s=>document.querySelector(s),h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
  const metres=n=>n>=1000?(n/1000).toFixed(n>=10000?0:1)+'km':Math.round(n)+'m';
- function tripDay(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const d=Object.fromEntries(parts.map(p=>[p.type,p.value]));const n=Number(d.day)-7;return d.year==='2027'&&d.month==='01'&&n>=1&&n<=22?n:null;}
+ function tripDay(){const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());const d=Object.fromEntries(parts.map(p=>[p.type,p.value]));const n=Number(d.day)-7;return d.year==='2027'&&d.month==='01'&&n>=1&&n<=(window.__routebook?.state.data.days.length||15)?n:null;}
  function show(){document.querySelector('.map-panel').classList.add('location-active');$('#locationCard').hidden=false;}
  function buttonState(){const active=watch!==null||phase==='starting';$('#locationBtn').setAttribute('aria-pressed',String(active));$('#locationBtnLabel').textContent=active?'위치 켜짐':'내 위치';$('#locationFollow').textContent=following?'지도 따라가는 중':'내 위치로 돌아가기';$('#locationFollow').setAttribute('aria-pressed',String(following));$('#locationFollow').disabled=!fix;}
  function pauseFollow(){following=false;if(options)buttonState();}

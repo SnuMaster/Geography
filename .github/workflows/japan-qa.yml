@@ -27,6 +27,40 @@ jobs:
           npm ci --prefix japan-2027/tests
       - name: Accuracy, state, mobile and integrated browser suites
         run: node japan-2027/tests/ci-browser.cjs
+      - name: Assistant state, privacy and offline fallback on Chromium
+        run: node japan-2027/tests/assistant-browser.cjs
+      - name: Simple assistant chat, tools and explicit request cancellation on Chromium
+        run: node japan-2027/tests/assistant-simple-browser.cjs
+      - name: Model choice and usage on Chromium
+        run: node japan-2027/tests/assistant-models-browser.cjs
+      - name: Original itinerary sidebar and train entry on Chromium
+        run: node japan-2027/tests/original-sidebar-browser.cjs
+      - name: Daily exchange board, cache and offline rate on Chromium
+        run: node japan-2027/tests/exchange-board-browser.cjs
+      - name: Inline station cards and independent original popup on Chromium
+        run: node japan-2027/tests/inline-train-browser.cjs
+      - name: Japanese station disruption links on Chromium
+        run: node japan-2027/tests/rail-station-links-browser.cjs
+      - name: Date-by-date expenses and existing personal records on Chromium
+        run: node japan-2027/tests/expense-browser.cjs
+      - name: Compact management, multi-night costs and fare scope on Chromium
+        run: node japan-2027/tests/management-browser.cjs
+      - name: Weather and selectively confirmed ticket results on Chromium
+        run: node japan-2027/tests/assistant-results-browser.cjs
+      - name: Cross-device personal records and lodging allocation on Chromium
+        run: node japan-2027/tests/personal-sync-browser.cjs
+      - name: Active navigation containment and controls on Chromium
+        run: node japan-2027/tests/navigation-layout-browser.cjs
+      - name: Code-free account signup and shared login on Chromium
+        run: node japan-2027/tests/account-browser.cjs
+      - name: Command center layout, personal plans and private records on Chromium
+        run: node japan-2027/tests/command-browser.cjs
+      - name: Selected-route Google Maps links on Chromium
+        run: node japan-2027/tests/google-maps-links-browser.cjs
+      - name: KISEKI brand, photographs and full itinerary integration on Chromium
+        run: node japan-2027/tests/kiseki-browser.cjs
+      - name: Standard Fold8 cover, main display, folding and keyboard layouts on Chromium
+        run: node japan-2027/tests/fold-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -47,6 +81,40 @@ jobs:
       - run: cd japan-2027/tests && npx playwright install --with-deps webkit
       - name: Booking checklist on WebKit mobile and tablet layouts
         run: node japan-2027/tests/booking-webkit.cjs
+      - name: Assistant mobile panel on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-browser.cjs
+      - name: Simple assistant chat, tools and explicit request cancellation on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-simple-browser.cjs
+      - name: Model choice and usage on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-models-browser.cjs
+      - name: Original itinerary sidebar and train entry on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/original-sidebar-browser.cjs
+      - name: Daily exchange board, cache and offline rate on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/exchange-board-browser.cjs
+      - name: Inline station cards and independent original popup on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/inline-train-browser.cjs
+      - name: Japanese station disruption links on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/rail-station-links-browser.cjs
+      - name: Date-by-date expenses and existing personal records on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/expense-browser.cjs
+      - name: Compact management, multi-night costs and fare scope on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/management-browser.cjs
+      - name: Weather and selectively confirmed ticket results on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/assistant-results-browser.cjs
+      - name: Cross-device personal records and lodging allocation on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/personal-sync-browser.cjs
+      - name: Active navigation containment and controls on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/navigation-layout-browser.cjs
+      - name: Code-free account signup and shared login on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/account-browser.cjs
+      - name: Command center layout, personal plans and private records on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/command-browser.cjs
+      - name: Selected-route Google Maps links on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/google-maps-links-browser.cjs
+      - name: KISEKI brand, photographs and full itinerary integration on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/kiseki-browser.cjs
+      - name: Standard Fold8 cover, main display, folding and keyboard layouts on WebKit
+        run: ASSISTANT_BROWSER=webkit node japan-2027/tests/fold-browser.cjs
       - uses: actions/upload-artifact@v4
         if: always()
         with:

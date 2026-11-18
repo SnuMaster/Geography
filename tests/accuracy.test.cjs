@@ -9,7 +9,7 @@ test('six accuracy bug regressions',async t=>{
  for(const r of results)await t.test(r.name,()=>assert.equal(r.pass,true,r.detail));
 });
 
-test('all 102 manifest source dates and revision boundaries match timetable files',()=>{
+test('all manifest source dates and revision boundaries match timetable files',()=>{
  const path=require('node:path');
  for(const [key,p] of Object.entries(globalThis.RailDepartureProfiles.profiles)){
   const data=JSON.parse(fs.readFileSync(path.join(__dirname,base,p.file),'utf8')),m=data.metadata[key];
