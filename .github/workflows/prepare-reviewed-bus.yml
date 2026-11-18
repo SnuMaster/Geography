@@ -1,0 +1,22 @@
+name: Prepare reviewed bus route geometry
+on:
+  push:
+    branches: [codex/trip-review-fixes-20261118]
+    paths: ['scripts/prepare-reviewed-bus.cjs', '.github/workflows/prepare-reviewed-bus.yml']
+permissions:
+  contents: write
+jobs:
+  buses:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node scripts/prepare-reviewed-bus.cjs
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/tokyo-reviewed-bus-sources.json
+          git diff --cached --quiet || git commit -m "Record direction-specific mapped Tobu bus routes and boarding stops"
+          git push origin HEAD:codex/trip-review-fixes-20261118
