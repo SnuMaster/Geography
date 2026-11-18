@@ -1,0 +1,17 @@
+name: Audit remaining fare sources
+on:
+  push:
+    branches: [codex/tokyo-complete-fares-20261118]
+    paths: ['scripts/audit-remaining-fare-sources.cjs', '.github/workflows/fare-source-audit.yml']
+permissions:
+  contents: read
+jobs:
+  audit:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/audit-remaining-fare-sources.cjs
