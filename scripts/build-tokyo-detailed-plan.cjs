@@ -117,6 +117,7 @@ function addDay(p,ss,ls,id='main',label='기본 일정'){
  require(root+'/rail-departure-profiles.js');
  const report=require('./tokyo-fastest-planner.cjs').apply(bundle,{walk,connector:M.connector,rail:railway,connection,unknown:M.unknown,interval:T.interval,minutes:T.minutes,setTime:T.setTime,formatTime:T.formatTime,distance:dist,planUncovered:true,networkOptions:{includeShinkansen:false}});
  require('./tokyo-fare-references.cjs').apply(bundle);
+ require('./complete-tokyo-fares.cjs').apply(bundle);
  // New OD identities keep historic personal expenses/checkmarks on their old
  // cards. Departure comparisons are references, never 2027 live guarantees.
  T.prepare(bundle.data,bundle.routes);
