@@ -12,6 +12,8 @@ on:
       - 'japan-2027/data-model.js'
       - 'japan-2027/tests/trip-review-browser.cjs'
       - 'tests/review-*.test.cjs'
+      - 'tests/inline-train-cards.test.cjs'
+      - 'tests/named-tobu-logos.test.cjs'
       - '.github/workflows/verify-trip-review.yml'
 permissions: {contents: write}
 jobs:
