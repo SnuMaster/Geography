@@ -1,0 +1,20 @@
+name: Prepare official Fujikyu stop sequences
+on:
+  push:
+    branches: [codex/trip-review-fixes-20261118]
+    paths: ['scripts/prepare-fuji-reviewed-stops.py', '.github/workflows/prepare-fuji-stops.yml']
+permissions:
+  contents: write
+jobs:
+  stops:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - run: python scripts/prepare-fuji-reviewed-stops.py
+      - run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/tokyo-fuji-reviewed-stops.json
+          git diff --cached --quiet || git commit -m "Pin exact operator Red Line boarding, alighting and intermediate stops"
+          git push origin HEAD:codex/trip-review-fixes-20261118

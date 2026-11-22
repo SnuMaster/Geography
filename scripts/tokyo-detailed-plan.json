@@ -761,6 +761,26 @@
       "costMin": 600,
       "costMax": 1100,
       "note": ""
+    },
+    "fujiDinner": {
+      "name": "마쓰야 이리야점",
+      "jp": "松屋 入谷店",
+      "kind": "food",
+      "address": "東京都台東区北上野2-31-6",
+      "costMin": 480,
+      "costMax": 1200,
+      "official": "https://pkg.navitime.co.jp/matsuyafoods2/spot/detail?code=0000000394",
+      "note": "가와구치코 귀환 후 저녁. 규메시 보통 480 JP¥ 공표가 기준, 정식·추가 메뉴 포함 1,200 JP¥ 이내 목표. 발권기 주문·1인 식사. 붐비면 포장 또는 가까운 정식집으로 전환."
+    },
+    "nikkoDinner": {
+      "name": "요시노야 이리야점",
+      "jp": "吉野家 入谷店",
+      "kind": "food",
+      "address": "東京都台東区入谷1-6-6",
+      "costMin": 498,
+      "costMax": 1200,
+      "official": "https://stores.yoshinoya.com/yoshinoya/spot/detail?code=ysn_061438",
+      "note": "닛코 귀환 후 저녁. 규동 보통 매장 식사 498 JP¥ 공표가 기준, 사이드 포함 1,200 JP¥ 이내 목표. 1인 식사·예약 없이 방문. 붐비면 포장 또는 인근 식당으로 전환."
     }
   },
   "days": [
@@ -945,8 +965,12 @@
           "18:30-18:40"
         ],
         [
+          "fujiDinner",
+          "19:30-20:10"
+        ],
+        [
           "hotel",
-          "20:00-20:30"
+          "20:25-20:55"
         ]
       ]
     },
@@ -1070,8 +1094,12 @@
           "15:00-15:30"
         ],
         [
+          "nikkoDinner",
+          "18:30-19:10"
+        ],
+        [
           "hotel",
-          "18:30-19:00"
+          "19:25-19:55"
         ]
       ]
     },

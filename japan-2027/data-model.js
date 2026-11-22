@@ -24,6 +24,9 @@
  function date(n){return `2027-01-${String(n+7).padStart(2,'0')}`;}
  function geometry(part){
   const src=part.geometrySource||'';
+  if(part.mode==='bus'&&part.geometryAccuracy==='stop-verified-reference')return {kind:'map-reference',label:'공식 정류장 경유 · 도로 복원 참고'};
+  if(part.mode==='bus'&&part.geometryAccuracy==='route-relation-reference')return {kind:'map-reference',label:'방향별 버스 노선 지도 복원 · 실시간 아님'};
+  if(part.mode==='bus'&&part.geometryAccuracy==='route-reference-repaired')return {kind:'map-reference',label:'버스 노선 지도 + 일부 도로 연결 참고'};
   if(part.mode==='flight'){const recorded=part.flightTrack?.status==='recorded-reference',screen=part.flightTrack?.status==='screen-reference';return {kind:recorded?'recorded-reference':screen?'map-reference':'schematic',label:recorded?'기록 기반 참고 항로 · 여행 당일 실제 항적 아님':screen?'지도 복원 참고 항로 · 원본 GPS 항적 아님':'개략 항로 · 실제 항적 아님'};}
   if(part.mode==='ferry')return part.geometryAccuracy==='schematic'?{kind:'schematic',label:'항만 연결 개략선 · 실제 항적 아님'}:{kind:'recorded-reference',label:'조사 지도 해상 참고선 · 실제 항적 아님'};
   if(/개략|직선|대표 연결|추정|미확인/.test(src)||!src)return {kind:'schematic',label:'개략선 · 실제 경로 미확인'};

@@ -67,20 +67,14 @@
  function checklistModel(){
   const context=checklistContext(),active=[],alternatives=[];
   const revised=context.metadata?.id==='tokyo-20270108-22';
-  const items=revised?[
-   ...checklistItems.filter(i=>['flight-tokyo','hotel-tokyo','ibuki','ishikawa-tour','zutomayo'].includes(i.key)).map(i=>i.key==='zutomayo'?{...i,variant:'concert'}:i),
-   {key:'hotel-dome',group:'travel',kind:'필수',name:'도쿄 돔 호텔 · 3박',day:12,stop:'도쿄 돔 호텔',date:'1/19 체크인 → 1/22 체크아웃',note:'예약·결제 상태·오전 짐 보관 확인',url:'https://www.tokyodome-hotels.co.jp/',details:['1/19~22 3박 계획입니다. 예약 완료로 자동 처리하지 않습니다.','체크인 전·체크아웃 후 짐 보관과 예약 상품의 체크인·체크아웃 시각을 확인하세요.']},
-   {key:'flight-return-tokyo',group:'travel',kind:'필수',name:'1/22 저녁 한국 귀국 항공권 · 미정',day:15,date:'1/22 저녁 예정 · 편명·공항 미정',note:'출발 공항·편명·시각·수하물 확정 필요',details:['하네다와 나리타 중 실제 예약한 공항을 확인하세요. 현재 항공편·터미널·출발·도착 시각은 미정입니다.','오사카행 NH27 및 종전 후쿠오카·선박·부산·KTX 일정은 현재 여행에 포함되지 않습니다.']},
-   {key:'romancecar-hakone',group:'travel',kind:'추천',name:'하코네 로망스카 왕복 지정석',day:6,date:'1/13 · 실제 열차 시각 선택',note:'기본 승차권 외 특급권 필요',url:'https://www.odakyu.jp/romancecar/',details:['왕복 좌석과 1월 로프웨이 정비 운휴 구간을 확인하세요.']},
-   {key:'fuji-excursion',group:'travel',kind:'추천',name:'후지카이유 왕복 지정석',day:8,date:'1/15 · 후지산 기본안',note:'기상과 변경·환불 조건 확인',url:'https://www.fujikyu-railway.jp/fujikaiyuu/',details:['가와구치코 직통편의 왕복 지정석을 확보하세요. 악천후에는 대체안과 표 변경 조건을 확인하세요.']},
-   {key:'nikko-express',group:'travel',kind:'추천',name:'도부닛코 직통 특급 왕복',day:10,date:'1/17 · 기타센주 출발',note:'도부닛코 직통편·왕복 좌석 확인',url:'https://www.tobu.co.jp/railway/special_express/',details:['기타센주에서 도부닛코로 가는 게곤·리버티 게곤 직통편을 선택하세요. 기누가와행과 구분하세요.']}
-  ]:checklistItems;
+  const items=revised?ReservationPlan.build(context,checklistItems):checklistItems;
   for(const item of items){const day=context.days.find(d=>d.n===item.day);if(!day)continue;
    (item.variant&&item.variant!==JourneyState.chosen(day,context.preferences)?alternatives:active).push(item);
   }
   active.sort((a,b)=>a.day-b.day);alternatives.sort((a,b)=>a.day-b.day);
   return {context,active,alternatives,done:active.filter(isComplete).length};
  }
+ function checklistItem(key){const m=checklistModel();return [...m.active,...m.alternatives].find(item=>item.key===key);}
  function itemTiming(item,context){const day=context.days.find(d=>d.n===item.day),variant=day?.variants.find(v=>v.id===itemVariant(item,context));return variant?.stops.find(s=>s.reservationKey===item.key)?.reservationTiming||{};}
  function milestone(item){return item.milestones?.find(([at])=>Date.parse(at)>=Date.now())?.[1]||'';}
  function linkedFields(item,context){
@@ -113,18 +107,18 @@
   document.getElementById('closeBookingChecklist').addEventListener('click',closeChecklist);
   dialog.addEventListener('click',event=>{
    const filter=event.target.closest('[data-booking-filter]');if(filter){checklistFilter=filter.dataset.bookingFilter;renderChecklist();dialog.scrollTop=0;dialog.querySelector('.booking-dialog-body').scrollTop=0;return;}
-   const jump=event.target.closest('[data-booking-jump]'),item=checklistItems.find(item=>item.key===jump?.dataset.bookingJump);if(!item)return;
+   const jump=event.target.closest('[data-booking-jump]'),item=checklistItem(jump?.dataset.bookingJump);if(!item)return;
    const context=checklistContext();closeChecklist();window.dispatchEvent(new CustomEvent('routebook:booking-jump',{detail:{day:item.day,variant:itemVariant(item,context),leg:item.leg,stop:item.stop,stopKey:item.stopKey}}));
   });
   window.addEventListener('routebook:reservation-change',()=>{if(dialog.open)queueMicrotask(renderChecklist);});
  }
  document.addEventListener('input',event=>{
-  const key=event.target.dataset.bookingMemo;if(!checklistItems.some(item=>item.key===key))return;
+  const key=event.target.dataset.bookingMemo;if(!checklistItem(key))return;
   const r=records[key]??={};r.memo=event.target.value.slice(0,300);r.updatedAt=Date.now();save();
   const note=document.getElementById('bookingStorageNote');if(note)note.textContent=storageAvailable?'이 브라우저에 자동 저장 · 실제 예약은 공식 링크에서':'현재 화면에만 반영됨 · 브라우저 저장 실패';
  });
  document.addEventListener('change',event=>{
-  const item=checklistItems.find(item=>item.key===event.target.dataset.bookingComplete);
+  const item=checklistItem(event.target.dataset.bookingComplete);
   if(item){const r=records[item.key]??={},checked=event.target.checked;
    if(definitions[item.key]){const done=item.key==='zutomayo'?'티켓 확보':'예약완료';if(checked){if(r.status!==done)r.checklistPreviousStatus=r.status||'미신청';r.status=done;}else r.status=definitions[item.key].states.includes(r.checklistPreviousStatus)&&r.checklistPreviousStatus!==done?r.checklistPreviousStatus:'미신청';}
    else r.complete=checked;

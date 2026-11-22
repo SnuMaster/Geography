@@ -828,5 +828,21 @@
     "coordinateNote": "국토지리원 공개 주소 대표 좌표 · 매장·시설 실제 출입구는 현장 안내 확인",
     "verifiedAt": "2026-11-18",
     "verificationRun": "https://github.com/SnuMaster/Geography/actions/runs/44270236512"
+  },
+  "fujiDinner": {
+    "lat": 35.719444,
+    "lng": 139.784729,
+    "address": "東京都台東区北上野2-31-6",
+    "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E5%8C%97%E4%B8%8A%E9%87%8E2-31-6",
+    "coordinateAccuracy": "address-reference",
+    "coordinateNote": "국토지리원 공개 주소 대표점 · 실제 출입구 현장 확인"
+  },
+  "nikkoDinner": {
+    "lat": 35.720219,
+    "lng": 139.784393,
+    "address": "東京都台東区入谷1-6-6",
+    "source": "https://msearch.gsi.go.jp/address-search/AddressSearch?q=%E6%9D%B1%E4%BA%AC%E9%83%BD%E5%8F%B0%E6%9D%B1%E5%8C%BA%E5%85%A5%E8%B0%B71-6-6",
+    "coordinateAccuracy": "address-reference",
+    "coordinateNote": "국토지리원 공개 주소 대표점 · 실제 출입구 현장 확인"
   }
 }

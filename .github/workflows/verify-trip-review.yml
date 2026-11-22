@@ -1,0 +1,50 @@
+name: Verify itinerary review fixes
+on:
+  push:
+    branches: [codex/trip-review-fixes-20261118]
+    paths:
+      - 'scripts/apply-review-buses.cjs'
+      - 'scripts/apply-review-meals.cjs'
+      - 'japan-2027/reservation-plan.js'
+      - 'japan-2027/reservations.js'
+      - 'japan-2027/rail-ui.js'
+      - 'japan-2027/rail-departures.js'
+      - 'japan-2027/data-model.js'
+      - 'japan-2027/tests/trip-review-browser.cjs'
+      - 'tests/review-*.test.cjs'
+      - 'tests/inline-train-cards.test.cjs'
+      - 'tests/named-tobu-logos.test.cjs'
+      - '.github/workflows/verify-trip-review.yml'
+permissions: {contents: write}
+jobs:
+  review:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - name: Apply reviewed public data and offline hashes
+        run: |
+          node scripts/apply-review-meals.cjs
+          node scripts/apply-review-buses.cjs
+          node scripts/build-assistant-offline.cjs
+      - name: All regression and review-specific checks
+        run: node --test tests/*.test.cjs
+      - name: Mobile and desktop bookings, bus details, dinners, logos and all route interactions
+        run: |
+          npm ci --prefix japan-2027/tests
+          node japan-2027/tests/trip-review-browser.cjs
+          node japan-2027/tests/unified-movement-browser.cjs
+      - name: Commit only verified public bundle and hashes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add japan-2027/trip-update.json japan-2027/offline-manifest.json
+          git diff --cached --quiet || git commit -m "Apply verified booking, meal, logo and bus route corrections"
+          git push origin HEAD:codex/trip-review-fixes-20261118
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: itinerary-review-checks
+          path: qa-*.png
