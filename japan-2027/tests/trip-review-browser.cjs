@@ -8,6 +8,19 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,{timeout:60000});
+  await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
+  const bookingCheck=await page.evaluate(()=>{
+   const item=document.querySelector('[data-booking-item="fuji-excursion"]'),date=item?.querySelector('.booking-date')?.textContent||'';
+   if(!date.includes('1/12'))throw Error('Wrong visible Fuji date '+date);
+   item.querySelector('[data-booking-complete]').click();
+   if(!ReservationUI.getAssistantBookings().find(x=>x.key==='fuji-excursion')?.confirmed)throw Error('New booking completion did not save');
+   document.querySelector('[data-booking-item="fuji-excursion"] [data-booking-complete]').click();
+   let jump=null;const fn=e=>jump=e.detail;window.addEventListener('routebook:booking-jump',fn);
+   document.querySelector('[data-booking-jump="fuji-excursion"]').click();window.removeEventListener('routebook:booking-jump',fn);
+   return jump;
+  });assert.equal(bookingCheck?.day,5);assert.equal(bookingCheck?.stop,'가와구치코역');
+  await page.waitForFunction(()=>window.__routebook.state.day===5);
+  await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
    if(b.data.version!=='20261118-detailed-plan-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
@@ -15,6 +28,7 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
+   ReservationUI.closeChecklist();
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
     if(ss.length!==d.variants[0].stops.length)throw Error('Missing day stops '+d.n);

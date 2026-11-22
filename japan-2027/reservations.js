@@ -74,6 +74,7 @@
   active.sort((a,b)=>a.day-b.day);alternatives.sort((a,b)=>a.day-b.day);
   return {context,active,alternatives,done:active.filter(isComplete).length};
  }
+ function checklistItem(key){const m=checklistModel();return [...m.active,...m.alternatives].find(item=>item.key===key);}
  function itemTiming(item,context){const day=context.days.find(d=>d.n===item.day),variant=day?.variants.find(v=>v.id===itemVariant(item,context));return variant?.stops.find(s=>s.reservationKey===item.key)?.reservationTiming||{};}
  function milestone(item){return item.milestones?.find(([at])=>Date.parse(at)>=Date.now())?.[1]||'';}
  function linkedFields(item,context){
@@ -106,18 +107,18 @@
   document.getElementById('closeBookingChecklist').addEventListener('click',closeChecklist);
   dialog.addEventListener('click',event=>{
    const filter=event.target.closest('[data-booking-filter]');if(filter){checklistFilter=filter.dataset.bookingFilter;renderChecklist();dialog.scrollTop=0;dialog.querySelector('.booking-dialog-body').scrollTop=0;return;}
-   const jump=event.target.closest('[data-booking-jump]'),item=checklistItems.find(item=>item.key===jump?.dataset.bookingJump);if(!item)return;
+   const jump=event.target.closest('[data-booking-jump]'),item=checklistItem(jump?.dataset.bookingJump);if(!item)return;
    const context=checklistContext();closeChecklist();window.dispatchEvent(new CustomEvent('routebook:booking-jump',{detail:{day:item.day,variant:itemVariant(item,context),leg:item.leg,stop:item.stop,stopKey:item.stopKey}}));
   });
   window.addEventListener('routebook:reservation-change',()=>{if(dialog.open)queueMicrotask(renderChecklist);});
  }
  document.addEventListener('input',event=>{
-  const key=event.target.dataset.bookingMemo;if(!checklistItems.some(item=>item.key===key))return;
+  const key=event.target.dataset.bookingMemo;if(!checklistItem(key))return;
   const r=records[key]??={};r.memo=event.target.value.slice(0,300);r.updatedAt=Date.now();save();
   const note=document.getElementById('bookingStorageNote');if(note)note.textContent=storageAvailable?'이 브라우저에 자동 저장 · 실제 예약은 공식 링크에서':'현재 화면에만 반영됨 · 브라우저 저장 실패';
  });
  document.addEventListener('change',event=>{
-  const item=checklistItems.find(item=>item.key===event.target.dataset.bookingComplete);
+  const item=checklistItem(event.target.dataset.bookingComplete);
   if(item){const r=records[item.key]??={},checked=event.target.checked;
    if(definitions[item.key]){const done=item.key==='zutomayo'?'티켓 확보':'예약완료';if(checked){if(r.status!==done)r.checklistPreviousStatus=r.status||'미신청';r.status=done;}else r.status=definitions[item.key].states.includes(r.checklistPreviousStatus)&&r.checklistPreviousStatus!==done?r.checklistPreviousStatus:'미신청';}
    else r.complete=checked;
