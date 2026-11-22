@@ -122,6 +122,8 @@ function addDay(p,ss,ls,id='main',label='기본 일정'){
  // cards. Departure comparisons are references, never 2027 live guarantees.
  T.prepare(bundle.data,bundle.routes);
  for(const d of days){const v=d.variants[0];d.schedule=v.schedule;d.rows=v.schedule;data.nightRows.push([d.date,d.title,v.stops.at(-1).time]);}
+ require('./apply-review-meals.cjs').apply(bundle,require('./tokyo-review-meals.json'));
+ require('./apply-review-buses.cjs').apply(bundle,require('./tokyo-reviewed-bus-geometry.json'));
  fs.writeFileSync(root+'/trip-update.json',JSON.stringify(bundle)+'\n');
  fs.writeFileSync(__dirname+'/tokyo-detailed-plan-report.json',JSON.stringify({revision,places:resolved,planning:report,counts:T.counts(data,bundle.routes),warnings:M.warnings},null,2)+'\n');
  console.log(JSON.stringify({revision,days:days.length,points:Object.keys(resolved).length,planning:report.reduce((a,r)=>(a[r.status]=(a[r.status]||0)+1,a),{})}));
