@@ -3,6 +3,11 @@
   Content-Security-Policy: base-uri 'self'; object-src 'none'; form-action 'self'; frame-ancestors 'none'
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 
+# GPS is available only on the travel app document, with the user permission prompt.
+https://codex-japan-ai-assistant.geography-3tt.pages.dev/japan-2027/
+  ! Permissions-Policy
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(), usb=()
+
 /admin*
   X-Robots-Tag: noindex, nofollow
 
