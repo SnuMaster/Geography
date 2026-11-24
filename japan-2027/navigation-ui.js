@@ -19,7 +19,8 @@
   if(active.lastRerouteAttempt&&Date.now()-active.lastRerouteAttempt<30000)return;
   const current=active,currentGeneration=generation;current.rerouting=true;current.lastRerouteAttempt=Date.now();
   try{
-   const roads=await OfflineRoads.get(current.day);if(!roads||!active||currentGeneration!==generation)return;
+   const day=state.data.days.find(d=>d.n===current.day);
+   const roads=await OfflineRoads.get(day,state.routeData);if(!roads||!active||currentGeneration!==generation)return;
    const end=current.source.parts.at(-1)?.coords?.at(-1),path=OfflineRoads.findRoute(roads,[fix.lat,fix.lng],end);
    if(!path?.coords?.length||!active||currentGeneration!==generation)return;
    const part={mode:'walk',line:'저장된 도보 도로',from:current.source.from,to:current.source.to,coords:path.coords,geometryAccuracy:'mapped',geometrySource:'OfflineRoads · OpenStreetMap'};

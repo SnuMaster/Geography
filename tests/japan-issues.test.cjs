@@ -54,9 +54,9 @@ test('offline street save only marks data stored after a valid response and can 
  caches:{open:async()=>({match:async k=>cache.get(k)?.clone(),put:async(k,v)=>cache.set(k,v.clone())})},
  fetch:async(url,opts)=>{call++;requestBody=opts.body.toString();if(call<=2)return new Response('{}',{status:503});return new Response(JSON.stringify({elements:[{type:'way',id:1,nodes:[1,2],geometry:[{lat:35.71,lon:139.77},{lat:35.711,lon:139.77}],tags:{highway:'footway'}}]}),{status:200});}};
  vm.createContext(ctx);vm.runInContext(source,ctx);const day={n:1,variants:[{id:'main',stops:[{lat:35.71234,lng:139.78234}]}]};
- await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/503/);assert.equal(await ctx.OfflineRoads.get(1),null);
+ await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/503/);assert.equal(await ctx.OfflineRoads.get(day,{days:{}}),null);
  const result=await ctx.OfflineRoads.save(day,{days:{}});assert.equal(result.elements.length,1);assert.ok(!decodeURIComponent(requestBody).includes('35.71234'));
- ctx.navigator.onLine=false;assert.equal((await ctx.OfflineRoads.get(1)).elements.length,1);await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/인터넷/);
+ ctx.navigator.onLine=false;assert.equal((await ctx.OfflineRoads.get(day,{days:{}})).elements.length,1);await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/인터넷/);
 });
 
 test('a temporary map server failure falls back to a second public data server',async()=>{
@@ -69,8 +69,8 @@ test('partially downloaded street areas are reused after an interrupted day',asy
  const source=fs.readFileSync(require.resolve('../japan-2027/offline-roads.js'),'utf8'),storage=new Map();let count=0,fail=true;
  const ctx={RouteMatch:GPS,URL,URLSearchParams,Response,AbortController,clearTimeout,setTimeout:(f,ms)=>setTimeout(f,ms===1500?0:ms),document:{baseURI:'https://example.test/japan-2027/'},navigator:{onLine:true},caches:{open:async()=>({match:async k=>storage.get(k)?.clone(),put:async(k,v)=>storage.set(k,v.clone()),delete:async k=>storage.delete(k)})},fetch:async()=>{count++;if(fail&&count>1)return new Response('',{status:502});return new Response(JSON.stringify({elements:[{type:'way',id:count,nodes:[1,2],geometry:[{lat:35,lon:139},{lat:35.001,lon:139}],tags:{highway:'footway'}}]}));}};
  vm.createContext(ctx);vm.runInContext(source,ctx);const day={n:3,variants:[{id:'main',stops:[{lat:35,lng:139},{lat:35.1,lng:139},{lat:35.2,lng:139}]}]};
- await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/502/);assert.ok([...storage.keys()].some(k=>k.includes('?grid=')));assert.equal(await ctx.OfflineRoads.get(3),null);
- fail=false;const prior=count;const result=await ctx.OfflineRoads.save(day,{days:{}});assert.equal(count-prior,1);assert.equal(result.day,3);assert.equal([...storage.keys()].filter(k=>k.includes('?grid=')).length,0);assert.ok(await ctx.OfflineRoads.get(3));
+ await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/502/);assert.ok([...storage.keys()].some(k=>k.includes('?grid=')));assert.equal(await ctx.OfflineRoads.get(day,{days:{}}),null);
+ fail=false;const prior=count;const result=await ctx.OfflineRoads.save(day,{days:{}});assert.equal(count-prior,1);assert.equal(result.day,3);assert.equal([...storage.keys()].filter(k=>k.includes('?grid=')).length,0);assert.ok(await ctx.OfflineRoads.get(day,{days:{}}));
 });
 
 test('a verified prebuilt street map is saved locally without contacting a map server',async()=>{
@@ -83,7 +83,7 @@ test('a verified prebuilt street map is saved locally without contacting a map s
  const day={n:1,variants:[{id:'main',stops:[{lat:35.71234,lng:139.78234}]}]},result=await ctx.OfflineRoads.save(day,{days:{}});
  assert.equal(result.generatedAt,'2026-10-27T00:00:00Z');assert.equal(result.elements[0].id,101);assert.equal(calls.length,2);assert.ok(calls.every(u=>u.startsWith('https://example.test/')));
  const info=await ctx.OfflineRoads.bundleInfo();assert.equal(info.days,1);assert.equal(info.downloadBytes,bytes.length);assert.equal(info.storedBytes,1000);
- ctx.navigator.onLine=false;assert.equal((await ctx.OfflineRoads.get(1)).elements[0].id,101);
+ ctx.navigator.onLine=false;assert.equal((await ctx.OfflineRoads.get(day,{days:{}})).elements[0].id,101);
 });
 
 test('prebuilt maps with changed coverage or an invalid hash cannot be saved as complete',async()=>{
@@ -93,7 +93,8 @@ test('prebuilt maps with changed coverage or an invalid hash cannot be saved as 
   const manifest={version:1,days:{1:{path:'day-1.json.gz',sha256:'0'.repeat(64),points:mismatch==='coverage'?[[35.7,139.7]]:[point]}}};
   const ctx={RouteMatch:GPS,URL,URLSearchParams,Response,AbortController,DOMException,DecompressionStream,Uint8Array,crypto:crypto.webcrypto,setTimeout,clearTimeout,document:{baseURI:'https://example.test/japan-2027/'},navigator:{onLine:true},caches:{open:async()=>({match:async k=>storage.get(k)?.clone(),put:async(k,v)=>storage.set(k,v.clone())})},fetch:async url=>{const u=String(url);calls.push(u);if(u.includes('manifest.json'))return new Response(JSON.stringify(manifest));if(u.includes('day-1.json.gz'))return new Response(bad);return new Response('{}',{status:502});}};
   vm.createContext(ctx);vm.runInContext(source,ctx);
-  await assert.rejects(ctx.OfflineRoads.save({n:1,variants:[{id:'main',stops:[{lat:35.71234,lng:139.78234}]}]},{days:{}}),/502/);
-  assert.equal(await ctx.OfflineRoads.get(1),null);assert.equal(calls.some(u=>u.includes('day-1.json.gz')),mismatch==='hash');
+  const day={n:1,variants:[{id:'main',stops:[{lat:35.71234,lng:139.78234}]}]};
+  await assert.rejects(ctx.OfflineRoads.save(day,{days:{}}),/502/);
+  assert.equal(await ctx.OfflineRoads.get(day,{days:{}}),null);assert.equal(calls.some(u=>u.includes('day-1.json.gz')),mismatch==='hash');
  }
 });

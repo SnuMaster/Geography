@@ -37,7 +37,9 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
     if(document.querySelectorAll('#stopList .stop-card').length!==ss.length)throw Error('Missing rendered cards '+d.n);
     const panel=document.querySelector('#itineraryScroll');if(panel.scrollWidth>panel.clientWidth+2)throw Error('Sidebar overflow '+d.n);
     const legs=b.routeData.days[d.n+'-main'];for(let i=0;i<legs.length;i++)r.selectLeg(i+1);
-    for(const [i,l]of legs.entries())if(l.busRoute){r.selectLeg(i+1);const box=r.map._popup?.getElement()?.querySelector('.bus-boarding-info');if(!box||!box.textContent.includes(l.busRoute.boarding.name)||!box.textContent.includes(l.busRoute.alighting.name))throw Error('Missing bus boarding details '+l.legId);r.map.closePopup();}
+    for(const [i,l]of legs.entries())if(l.busRoute){r.selectLeg(i+1);const box=r.map._popup?.getElement()?.querySelector('.bus-boarding-info');if(!box||!box.textContent.includes(l.busRoute.boarding.name)||!box.textContent.includes(l.busRoute.alighting.name))throw Error('Missing bus boarding details '+l.legId);if(l.busTimetable&&!box.querySelector('.bus-timetable')?.textContent.includes(l.busTimetable.trips[0][0]))throw Error('Missing official bus schedule '+l.legId);r.map.closePopup();}
+    const photo={2:'enoshima',7:'odaiba',8:'nikko',10:'day-10'}[d.n];
+    if(photo&&!document.querySelector('#kisekiHeroPhoto').src.endsWith('/'+photo+'.jpg'))throw Error('Wrong itinerary photo '+d.n);
     if([5,8].includes(d.n)){const meal=ss.find(s=>s.planKey===(d.n===5?'fujiDinner':'nikkoDinner'));if(!meal||meal.details.costMax>2000)throw Error('Missing budget dinner');}
     out.push({day:d.n,stops:ss.length,legs:legs.length});
    }
@@ -51,7 +53,49 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   assert.equal(result.length,12);assert.deepEqual(errors,[]);
   await page.waitForFunction(()=>[...document.querySelectorAll('.operator-spacia-x')].some(img=>img.complete&&img.naturalWidth>0));
   await page.screenshot({path:'qa-trip-review-'+width+'.png',fullPage:false});
-  console.log(JSON.stringify({width,days:result}));await page.close();
+  await page.evaluate(async()=>{
+   window.__routebook.setDay(8);
+   const previous=await TravelStore.snapshot();
+   previous.data.days[7].photoDay=7;
+   await TravelStore.saveSnapshot(previous.data,previous.routes,'previous-itinerary-photo');
+  });
+  await page.reload({waitUntil:'domcontentloaded'});
+  await page.waitForFunction(()=>document.querySelector('#kisekiHeroPhoto')?.src.endsWith('/nikko.jpg'));
+  const context=page.context();
+  const externalStreet=[];
+  await context.route(/overpass/,route=>{externalStreet.push(route.request().url());return route.abort();});
+  await page.locator('#offlinePackBtn').evaluate(el=>el.click());
+  await page.locator('#offlinePackSize').filter({hasText:/전체 \d+개 자료/}).waitFor();
+  await page.locator('#offlinePackStart').click();
+  await page.waitForFunction(()=>OfflinePack.record()?.complete,null,{timeout:45000}).catch(async error=>{throw Error(await page.locator('#offlinePackStatus').textContent(),{cause:error});});
+  const stale=await page.evaluate(async()=>{
+   const old=await fetch('assets/offline-streets/manifest.json').then(r=>r.json());
+   const trip=window.__routebook.state,day=trip.data.days[1];
+   const cache=await caches.open('trip-street-data-v1');
+   await cache.put(new URL('offline-streets/day-2.json',document.baseURI),new Response(JSON.stringify({version:1,day:2,points:old.days['2'].points,elements:[{type:'way'}],savedAt:Date.now()})));
+   return OfflineRoads.get(day,trip.routeData);
+  });
+  assert.equal(stale,null);
+  await page.locator('#offlineStreetSize').filter({hasText:/MB/}).waitFor();
+  await page.locator('#offlineStreetStart').click();
+  await page.locator('#offlineStreetStatus').filter({hasText:/12\/12일 저장 완료/}).waitFor({timeout:45000}).catch(async error=>{throw Error(await page.locator('#offlineStreetStatus').textContent(),{cause:error});});
+  assert.deepEqual(externalStreet,[]);
+  await context.setOffline(true);
+  const response=await page.reload({waitUntil:'domcontentloaded'});
+  assert.equal(response.fromServiceWorker(),true);
+  await page.waitForFunction(()=>window.__routebook?.state.data.days.length===12);
+  assert.equal(await page.evaluate(()=>OfflinePack.verifyStored()),true);
+  const stored=await page.evaluate(async()=>{
+   const r=window.__routebook,trip=r.state;
+   const maps=await Promise.all(trip.data.days.map(d=>OfflineRoads.get(d,trip.routeData)));
+   r.setDay(8);
+   r.map.setView([36.74,139.5],15);
+   return maps.filter(m=>m?.elements.some(e=>e.tags?.highway)).length;
+  });
+  assert.equal(stored,12);
+  await page.waitForFunction(()=>document.querySelector('#map').classList.contains('offline-map-active')&&window.__routebook.map.getPane('offlineRoads')?.querySelector('canvas'));
+  await page.waitForFunction(()=>{const img=document.querySelector('#kisekiHeroPhoto');return img?.src.endsWith('/nikko.jpg')&&img.naturalWidth>0;});
+  console.log(JSON.stringify({width,days:result,offlineMaps:stored}));await page.close();
  }
  }finally{await browser.close();server.close();}
 })().catch(e=>{console.error(e.stack);server.close();process.exitCode=1;});

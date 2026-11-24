@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261104-rail-sequence-3',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261124-travel-offline-1',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
@@ -66,7 +66,7 @@
   try{for(const day of days){
    if(controller.signal.aborted)break;
    $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} 처리 중`;
-   const existing=await OfflineRoads.get(day.n);if(existing&&Date.now()-existing.savedAt<30*86400000&&OfflineRoads.covers(existing,OfflineRoads.centres(day,trip.routeData))){ok++;const date=streetDate(existing);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);continue;}
+   const existing=await OfflineRoads.get(day,trip.routeData);if(existing&&Date.now()-existing.savedAt<30*86400000){ok++;const date=streetDate(existing);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);continue;}
    try{const saved=await OfflineRoads.save(day,trip.routeData,{signal:controller.signal,progress:(part,total)=>{$('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} ${part}/${total}구역 완료`;}});ok++;const date=streetDate(saved);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);if(!saved.generatedAt)await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push({date:day.date||String(day.n),message:e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message});break;}
   }
   if(controller.signal.aborted)$('#offlineStreetStatus').textContent=`상세 지도 저장 중단 · ${ok}/${days.length}일 저장됨. 다시 누르면 이어서 저장해요.`;

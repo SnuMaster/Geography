@@ -262,6 +262,7 @@ async function build(){
  if(fares.missing.length)throw Error('Unverified fare OD: '+fares.missing.join(', '));
  console.log('Fare OD still to confirm:', fares.missing);
  T.prepare(bundle.data,bundle.routes);
+ require('./apply-tokyo-bus-connections.cjs').apply(bundle);
  for(const d of days){
    d.schedule=d.rows=d.variants[0].schedule;
    bundle.data.nightRows.push([d.date,d.title,d.variants[0].stops.at(-1).time]);

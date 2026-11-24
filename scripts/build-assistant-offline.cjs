@@ -1,6 +1,9 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto');
-const root=path.join(__dirname,'../japan-2027'),revision='20261124-tokyo-12-days';
+const root=path.join(__dirname,'../japan-2027'),worker=fs.readFileSync(path.join(root,'sw.js'),'utf8');
+const revision=worker.match(/const VERSION='([^']+)'/)[1];
+const pack=fs.readFileSync(path.join(root,'offline-pack.js'),'utf8');
+if(!pack.includes("const REVISION='"+revision+"'"))throw Error('Offline pack and service worker revisions must agree');
 // Git and Pages checkouts use LF for these files. Hash the same bytes on
 // Windows, otherwise a clean checkout can invalidate the offline manifest.
 for(const name of ['index.html','sw.js']){const f=path.join(root,name),text=fs.readFileSync(f,'utf8');fs.writeFileSync(f,text.replaceAll('\r\n','\n'));}

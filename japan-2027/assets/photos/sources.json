@@ -262,5 +262,35 @@
     "source": "https://commons.wikimedia.org/wiki/File:Nagata_Bridge_2022.jpg",
     "checkedAt": "2026-11-01T04:34:17.454Z",
     "changes": "Resized by Wikimedia Commons; cropped to fit in UI"
+  },
+  "enoshima": {
+    "src": "assets/photos/enoshima.jpg",
+    "title": "Enoshima Benten Bridge",
+    "author": "Nandaro",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Enoshima_Benten_Bridge.jpg",
+    "checkedAt": "2026-11-24T06:55:36.030Z",
+    "changes": "Resized for use in the itinerary"
+  },
+  "nikko": {
+    "src": "assets/photos/nikko.jpg",
+    "title": "Kegon Falls in winter",
+    "author": "x768",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Kegon_falls%2C_Nikk%C5%8D_%2816162586711%29.jpg",
+    "checkedAt": "2026-11-24T06:55:36.039Z",
+    "changes": "Resized for use in the itinerary"
+  },
+  "odaiba": {
+    "src": "assets/photos/odaiba.jpg",
+    "title": "Odaiba Statue of Liberty and Rainbow Bridge",
+    "author": "Desburkekennedy",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Tokyo%27s_Statue_of_Liberty.jpg",
+    "checkedAt": "2026-11-24T06:55:36.097Z",
+    "changes": "Resized for use in the itinerary"
   }
 }
