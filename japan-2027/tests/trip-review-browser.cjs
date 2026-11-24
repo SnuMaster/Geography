@@ -1,7 +1,7 @@
 'use strict';
 const {chromium}=require('playwright'),http=require('node:http'),fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict');
 const root=path.resolve(__dirname,'../..'),types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml'};
-const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}const target=fs.existsSync(file)&&fs.statSync(file).isDirectory()?path.join(file,'index.html'):file;fs.readFile(target,(e,b)=>{if(e){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':types[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store'});res.end(b);});});
+const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost').pathname==='/japan-2027/index.html'){res.writeHead(308,{Location:'/japan-2027/'}).end();return;}const file=path.resolve(root,'.'+decodeURIComponent(new URL(req.url,'http://localhost').pathname));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}const target=fs.existsSync(file)&&fs.statSync(file).isDirectory()?path.join(file,'index.html'):file;fs.readFile(target,(e,b)=>{if(e){res.writeHead(404).end();return;}res.writeHead(200,{'Content-Type':types[path.extname(target)]||'application/octet-stream','Cache-Control':'no-store'});res.end(b);});});
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,channel:'chrome'});try{
  for(const width of [390,1440]){
   const page=await browser.newPage({viewport:{width,height:1000}}),errors=[];
@@ -80,6 +80,14 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
   await page.locator('#offlineStreetStart').click();
   await page.locator('#offlineStreetStatus').filter({hasText:/12\/12일 저장 완료/}).waitFor({timeout:45000}).catch(async error=>{throw Error(await page.locator('#offlineStreetStatus').textContent(),{cause:error});});
   assert.deepEqual(externalStreet,[]);
+  const redirects=await page.evaluate(async()=>{
+   const shell=await caches.open('routebook-shell-'+OfflinePack.REVISION);
+   const rootUrl=new URL('./',document.baseURI),indexUrl=new URL('index.html',document.baseURI);
+   const values=await Promise.all([shell.match(rootUrl),shell.match(indexUrl)]);
+   await shell.delete(rootUrl);
+   return values.map(response=>response?.redirected);
+  });
+  assert.deepEqual(redirects,[false,true]);
   await context.setOffline(true);
   const response=await page.reload({waitUntil:'domcontentloaded'});
   assert.equal(response.fromServiceWorker(),true);

@@ -1,6 +1,6 @@
 'use strict';
 (function(){
- const REVISION='20261124-travel-offline-1',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261124-travel-offline-2',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
@@ -49,8 +49,6 @@
     await Promise.all([worker(),worker(),worker()]);
     if(controller.signal.aborted)throw new DOMException('중단','AbortError');
     if(failures.length)throw Error(failures.length+'개 자료 저장 실패 · 다시 저장하면 이어서 확인합니다.');
-    // The navigation fallback uses index.html; './' is an additional convenience entry.
-    const index=await shell.match(new URL('index.html',document.baseURI).href);if(index)await shell.put(new URL('./',document.baseURI).href,index);
     if(!finalize)throw Error('일정 자료가 준비된 다음 다시 저장해 주세요.');await finalize();
     localStorage.setItem(RECORD,JSON.stringify({revision:REVISION,complete:true,savedAt:Date.now(),files:state.done,bytes:state.bytes}));
     $('#offlinePackStatus').textContent='저장 완료 · 인터넷을 꺼도 전체 일정·장소·경로·길 안내·시간표·간략 지도를 사용할 수 있어요.';
