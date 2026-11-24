@@ -66,33 +66,43 @@
       }
     },
     {
-      "key": "tokyo27-f573696ed05477",
+      "key": "tokyo27-0054b94aca5ee1",
       "from": "요코하마",
-      "to": "모토마치·주카가이",
+      "to": "가마쿠라",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 297,
-        "SaturdayHoliday": 272
+        "Weekday": 88,
+        "SaturdayHoliday": 86
       }
     },
     {
-      "key": "tokyo27-df6d8467927e58",
-      "from": "미나토미라이",
-      "to": "요코하마",
+      "key": "tokyo27-8801a1fd4e688b",
+      "from": "하세",
+      "to": "에노시마",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 298,
-        "SaturdayHoliday": 272
+        "Weekday": 76,
+        "SaturdayHoliday": 76
       }
     },
     {
-      "key": "tokyo27-67468cf09a7e12",
-      "from": "요코하마",
+      "key": "tokyo27-9a81b96776e2f0",
+      "from": "에노시마",
+      "to": "후지사와",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 76,
+        "SaturdayHoliday": 76
+      }
+    },
+    {
+      "key": "tokyo27-acfed6351fed55",
+      "from": "후지사와",
       "to": "우에노",
       "throughParts": [
         {
           "lineId": "JR-East.Tokaido",
-          "from": "요코하마",
+          "from": "후지사와",
           "to": "도쿄",
           "line": "도카이도 선"
         },
@@ -110,9 +120,9 @@
       }
     },
     {
-      "key": "tokyo27-89c5a2e800bd4f",
+      "key": "tokyo27-12ab279aed0428",
       "from": "우에노",
-      "to": "도쿄",
+      "to": "간다",
       "sourceClass": "public-reference",
       "counts": {
         "Weekday": 259,
@@ -120,8 +130,8 @@
       }
     },
     {
-      "key": "tokyo27-2b244939dac2a5",
-      "from": "도쿄",
+      "key": "tokyo27-51672ae0d49a57",
+      "from": "간다",
       "to": "기치조지",
       "sourceClass": "public-reference",
       "counts": {
@@ -130,23 +140,33 @@
       }
     },
     {
-      "key": "tokyo27-d7d24f321725fd",
-      "from": "신주쿠",
-      "to": "이와모토초",
+      "key": "tokyo27-c0ce6d3903af56",
+      "from": "시모키타자와",
+      "to": "시부야",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 191,
-        "SaturdayHoliday": 173
+        "Weekday": 305,
+        "SaturdayHoliday": 267
       }
     },
     {
-      "key": "tokyo27-8101ba2f13d0d4",
-      "from": "이와모토초",
-      "to": "신주쿠 3초메",
+      "key": "tokyo27-71ec7535529bde",
+      "from": "시부야",
+      "to": "우에노",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 190,
-        "SaturdayHoliday": 174
+        "Weekday": 325,
+        "SaturdayHoliday": 247
+      }
+    },
+    {
+      "key": "tokyo27-f7170e62bd15cb",
+      "from": "우에노",
+      "to": "신주쿠",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 241,
+        "SaturdayHoliday": 242
       }
     },
     {
@@ -160,23 +180,13 @@
       }
     },
     {
-      "key": "tokyo27-12ab279aed0428",
-      "from": "우에노",
-      "to": "간다",
+      "key": "tokyo27-2871246f8ec2a4",
+      "from": "신주쿠",
+      "to": "우에노",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 259,
-        "SaturdayHoliday": 254
-      }
-    },
-    {
-      "key": "tokyo27-9ffd86e89376ef",
-      "from": "간다",
-      "to": "신주쿠",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 282,
-        "SaturdayHoliday": 248
+        "Weekday": 257,
+        "SaturdayHoliday": 253
       }
     },
     {
@@ -210,8 +220,8 @@
       }
     },
     {
-      "key": "tokyo27-26004231ca6675",
-      "from": "다이바",
+      "key": "tokyo27-cdd92c5a2f55fb",
+      "from": "오다이바카이힌코엔",
       "to": "신바시",
       "sourceClass": "public-reference",
       "counts": {
@@ -220,13 +230,13 @@
       }
     },
     {
-      "key": "tokyo27-0548f63bf9c3d5",
+      "key": "tokyo27-fbc3128c67bd87",
       "from": "신바시",
-      "to": "아키하바라",
+      "to": "우에노",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 195,
-        "SaturdayHoliday": 153
+        "Weekday": 326,
+        "SaturdayHoliday": 248
       }
     },
     {
@@ -264,23 +274,13 @@
       }
     },
     {
-      "key": "tokyo27-0f4776314086b2",
+      "key": "tokyo27-2c58513b3bd27a",
       "from": "도부닛코",
-      "to": "시모이마이치",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 34,
-        "SaturdayHoliday": 34
-      }
-    },
-    {
-      "key": "tokyo27-767ac5d4e8b463",
-      "from": "시모이마이치",
       "to": "기타센주",
       "throughParts": [
         {
           "lineId": "Tobu.Nikko",
-          "from": "시모이마이치",
+          "from": "도부닛코",
           "to": "가스카베",
           "line": "도부 특급"
         },
@@ -293,8 +293,8 @@
       ],
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 21,
-        "SaturdayHoliday": 24
+        "Weekday": 13,
+        "SaturdayHoliday": 16
       }
     },
     {
@@ -308,26 +308,6 @@
       }
     },
     {
-      "key": "tokyo27-4b221afdaa36de",
-      "from": "아키하바라",
-      "to": "신바시",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 194,
-        "SaturdayHoliday": 152
-      }
-    },
-    {
-      "key": "tokyo27-1ae6c75f04ab11",
-      "from": "신바시",
-      "to": "긴자",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 326,
-        "SaturdayHoliday": 248
-      }
-    },
-    {
       "key": "tokyo27-a7b85a6de15b38",
       "from": "히가시긴자",
       "to": "이리야",
@@ -338,133 +318,23 @@
       }
     },
     {
-      "key": "tokyo27-0054b94aca5ee1",
-      "from": "요코하마",
-      "to": "가마쿠라",
+      "key": "tokyo27-89c5a2e800bd4f",
+      "from": "우에노",
+      "to": "도쿄",
       "sourceClass": "public-reference",
       "counts": {
-        "Weekday": 88,
-        "SaturdayHoliday": 86
+        "Weekday": 259,
+        "SaturdayHoliday": 254
       }
     },
     {
-      "key": "tokyo27-060b33513947a4",
-      "from": "와다즈카",
-      "to": "가마쿠라고교앞",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 76,
-        "SaturdayHoliday": 76
-      }
-    },
-    {
-      "key": "tokyo27-1e65bb784c69eb",
-      "from": "가마쿠라고교앞",
-      "to": "에노시마",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 76,
-        "SaturdayHoliday": 76
-      }
-    },
-    {
-      "key": "tokyo27-b3575ca93b821d",
-      "from": "고시고에",
-      "to": "후지사와",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 74,
-        "SaturdayHoliday": 74
-      }
-    },
-    {
-      "key": "tokyo27-3ac532607c0a31",
-      "from": "후지사와",
-      "to": "신바시",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 124,
-        "SaturdayHoliday": 115
-      }
-    },
-    {
-      "key": "tokyo27-01d43e95b7655c",
-      "from": "아키하바라",
-      "to": "스이도바시",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 230,
-        "SaturdayHoliday": 205
-      }
-    },
-    {
-      "key": "tokyo27-4f0fb3a0b72b37",
-      "from": "이다바시",
-      "to": "스이도바시",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 231,
-        "SaturdayHoliday": 206
-      }
-    },
-    {
-      "key": "tokyo27-b21b09b8bdd68c",
-      "from": "스이도바시",
-      "to": "히비야",
+      "key": "tokyo27-d6c2155d107caf",
+      "from": "오테마치",
+      "to": "오나리몬",
       "sourceClass": "public-reference",
       "counts": {
         "Weekday": 202,
         "SaturdayHoliday": 175
-      }
-    },
-    {
-      "key": "tokyo27-2ec7b73fe524f8",
-      "from": "히비야",
-      "to": "노기자카",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 251,
-        "SaturdayHoliday": 197
-      }
-    },
-    {
-      "key": "tokyo27-1df20ecf034286",
-      "from": "오나리몬",
-      "to": "스이도바시",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 201,
-        "SaturdayHoliday": 174
-      }
-    },
-    {
-      "key": "tokyo27-231c62aea3cba1",
-      "from": "스이도바시",
-      "to": "오테마치",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 202,
-        "SaturdayHoliday": 175
-      }
-    },
-    {
-      "key": "tokyo27-2d4892421465f0",
-      "from": "오테마치",
-      "to": "미쓰코시마에",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 289,
-        "SaturdayHoliday": 208
-      }
-    },
-    {
-      "key": "tokyo27-8aaf479d80a637",
-      "from": "오테마치",
-      "to": "스이도바시",
-      "sourceClass": "public-reference",
-      "counts": {
-        "Weekday": 201,
-        "SaturdayHoliday": 174
       }
     },
     {

@@ -254,6 +254,136 @@
       ],
       "checkedAt": "2026-11-18",
       "basis": "한조몬선 0.7km 성인 IC 기본운임"
+    },
+    {
+      "operator": "Enoden",
+      "mode": "rail",
+      "fromJa": "長谷",
+      "toJa": "江ノ島",
+      "icYen": 260,
+      "paperTicketYen": 260,
+      "baseIcYen": 260,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.enoden.co.jp/train/fare/"
+      ]
+    },
+    {
+      "operator": "Enoden",
+      "mode": "rail",
+      "fromJa": "江ノ島",
+      "toJa": "藤沢",
+      "icYen": 220,
+      "paperTicketYen": 220,
+      "baseIcYen": 220,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.enoden.co.jp/train/fare/"
+      ]
+    },
+    {
+      "operator": "JR-East",
+      "mode": "rail",
+      "fromJa": "藤沢",
+      "toJa": "上野",
+      "icYen": 1034,
+      "paperTicketYen": 1040,
+      "baseIcYen": 1034,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/pamphlet.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E8%97%A4%E6%B2%A2_%E4%B8%8A%E9%87%8E.html"
+      ]
+    },
+    {
+      "operator": "Yurikamome",
+      "mode": "rail",
+      "fromJa": "お台場海浜公園",
+      "toJa": "新橋",
+      "icYen": 325,
+      "paperTicketYen": 330,
+      "baseIcYen": 325,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.yurikamome.co.jp/ride-guidance/fare.html"
+      ]
+    },
+    {
+      "operator": "TokyoMetro",
+      "mode": "metro",
+      "fromJa": "新橋",
+      "toJa": "入谷",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "baseIcYen": 209,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.tokyometro.jp/info/files/20260414_jp.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E6%96%B0%E6%A9%8B_%E5%85%A5%E8%B0%B7%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89.html"
+      ]
+    },
+    {
+      "operator": "JR-East",
+      "mode": "rail",
+      "fromJa": "上野",
+      "toJa": "東京",
+      "icYen": 199,
+      "paperTicketYen": 200,
+      "baseIcYen": 199,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/dentoku_yamate.pdf"
+      ]
+    },
+    {
+      "operator": "Toei",
+      "mode": "metro",
+      "fromJa": "大手町",
+      "toJa": "御成門",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "baseIcYen": 178,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.kotsu.metro.tokyo.jp/toei-guide/guide2026.pdf"
+      ]
+    },
+    {
+      "operator": "TokyoMetro",
+      "mode": "metro",
+      "fromJa": "入谷",
+      "toJa": "築地",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "baseIcYen": 209,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 도쿄메트로 공표 운임",
+      "sources": [
+        "https://www.tokyometro.jp/ticket/terms/pdf/ic_card_260314.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E5%85%A5%E8%B0%B7%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89_%E7%AF%89%E5%9C%B0.html"
+      ]
+    },
+    {
+      "operator": "TokyoMetro",
+      "mode": "metro",
+      "fromJa": "神谷町",
+      "toJa": "入谷",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "baseIcYen": 209,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 도쿄메트로 공표 운임",
+      "sources": [
+        "https://www.tokyometro.jp/ticket/terms/pdf/ic_card_260314.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E7%A5%9E%E8%B0%B7%E7%94%BA_%E5%85%A5%E8%B0%B7%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89.html"
+      ]
     }
   ],
   "bus": [

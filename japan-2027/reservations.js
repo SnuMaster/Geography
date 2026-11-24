@@ -66,7 +66,7 @@
  function itemVariant(item,context){const day=context.days.find(d=>d.n===item.day);return item.variant||(day?JourneyState.chosen(day,context.preferences):'main');}
  function checklistModel(){
   const context=checklistContext(),active=[],alternatives=[];
-  const revised=context.metadata?.id==='tokyo-20270108-22';
+  const revised=/^tokyo-20270108-(19|22)$/.test(context.metadata?.id||'');
   const items=revised?ReservationPlan.build(context,checklistItems):checklistItems;
   for(const item of items){const day=context.days.find(d=>d.n===item.day);if(!day)continue;
    (item.variant&&item.variant!==JourneyState.chosen(day,context.preferences)?alternatives:active).push(item);

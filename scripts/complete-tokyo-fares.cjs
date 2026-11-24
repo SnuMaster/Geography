@@ -19,7 +19,7 @@ function amount(components){
  return {min,max:min,icYen:min,paperTicketYen:paper,currency:'JPY',status:'exact',label:min.toLocaleString('ko-KR')+' JP¥',checkedAt:evidence.checkedAt,confidence:'source-verified',sourceClass:'published-current',travelDateVerified:false,basis:'성인 편도 IC 운임 + 명시한 별도 티켓 · 현재 공표 운임 기준 · 2027 운임 개정 시 달라질 수 있음 · 패스 자동 적용 없음',passEligible:covered===min,passExtraMin:min-covered,passExtraMax:min-covered,sources:[...new Set(components.flatMap(c=>c.sources))],breakdown:components};
 }
 function apply(bundle){
- if(bundle.data.metadata.id!=='tokyo-20270108-22')throw Error('Wrong itinerary');
+ if(!['tokyo-20270108-22','tokyo-20270108-19'].includes(bundle.data.metadata.id))throw Error('Wrong itinerary');
  const updated=[],missing=[];
  for(const d of bundle.data.days)for(const v of d.variants){const key=d.n+'-'+v.id,date='2027-'+d.date.replace('/','-'),legs=bundle.routes.days[key];
   for(const [index,leg]of legs.entries()){
@@ -52,8 +52,8 @@ function apply(bundle){
   r.travelDate='2027-01-15';r.checkedAt=evidence.checkedAt;r.basis=r.basis.replaceAll('2027-01-17','2027-01-15');l.fare.checkedAt=evidence.checkedAt;
  }
  const rope=bundle.data.days.flatMap(d=>d.variants.flatMap(v=>v.stops)).find(s=>s.planKey==='ropeway');
- if(rope){Object.assign(rope.details,{costMin:1200,costMax:1200,costKind:'experience',costConfidence:'official-reference',costNote:'2026-11-01 개정 개인 성인 왕복권 1,200 JP¥ · 선택 이용 · 교통카드 잔액으로 내는 버스·전철 운임과 별도',sourceCheckedAt:evidence.checkedAt});rope.details.sources=[...new Set([...rope.details.sources,evidence.ropewaySource])];rope.description='선택 방문 · 개인 성인 왕복권 1,200 JP¥. 강풍·대기·운휴 시 생략. 구입·예약은 자동 처리하지 않음.';rope.details.feature=rope.description;}
- const toyosu=bundle.data.days.find(d=>d.variants[0].stops.some(s=>s.planKey==='toyosu'));if(toyosu){const yuri=bundle.routes.days[toyosu.n+'-main'].flatMap(l=>l.fare.breakdown||[]).filter(r=>r.operator==='Yurikamome').reduce((n,r)=>n+r.icYen,0);toyosu.important='유리카모메 개별 IC 합계 '+yuri.toLocaleString('ko-KR')+' JP¥ · 1일권 820 JP¥과 비교. 다른 운영사 운임 별도 · 패스 자동 적용 없음.';toyosu.fareAlternatives=[{name:'유리카모메 1일권',amount:820,currency:'JPY',source:'https://www.yurikamome.co.jp/ride-guidance/fare.html',checkedAt:evidence.checkedAt,normalFare:yuri,saving:Math.max(0,yuri-820),autoApplied:false}];}
+ if(rope&&bundle.data.metadata.days===15){Object.assign(rope.details,{costMin:1200,costMax:1200,costKind:'experience',costConfidence:'official-reference',costNote:'2026-11-01 개정 개인 성인 왕복권 1,200 JP¥ · 선택 이용 · 교통카드 잔액으로 내는 버스·전철 운임과 별도',sourceCheckedAt:evidence.checkedAt});rope.details.sources=[...new Set([...rope.details.sources,evidence.ropewaySource])];rope.description='선택 방문 · 개인 성인 왕복권 1,200 JP¥. 강풍·대기·운휴 시 생략. 구입·예약은 자동 처리하지 않음.';rope.details.feature=rope.description;}
+ const toyosu=bundle.data.days.find(d=>d.variants[0].stops.some(s=>s.planKey==='toyosu'));if(toyosu&&bundle.data.metadata.days===15){const yuri=bundle.routes.days[toyosu.n+'-main'].flatMap(l=>l.fare.breakdown||[]).filter(r=>r.operator==='Yurikamome').reduce((n,r)=>n+r.icYen,0);toyosu.important='유리카모메 개별 IC 합계 '+yuri.toLocaleString('ko-KR')+' JP¥ · 1일권 820 JP¥과 비교. 다른 운영사 운임 별도 · 패스 자동 적용 없음.';toyosu.fareAlternatives=[{name:'유리카모메 1일권',amount:820,currency:'JPY',source:'https://www.yurikamome.co.jp/ride-guidance/fare.html',checkedAt:evidence.checkedAt,normalFare:yuri,saving:Math.max(0,yuri-820),autoApplied:false}];}
  bundle.data.metadata.faresCheckedAt=evidence.checkedAt;bundle.data.metadata.fareRevision=evidence.revision;
  bundle.data.metadata.farePolicy='adult-ic-plus-explicit-tickets';bundle.data.metadata.unpricedPublicTransport=missing.length;
  return {updated,missing};

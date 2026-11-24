@@ -5,10 +5,10 @@ const context=()=>({days:structuredClone(bundle.data.days),metadata:bundle.data.
 test('booking checklist follows the actual itinerary dates and removes retired trips',()=>{
  const rows=P.build(context(),legacy),by=Object.fromEntries(rows.map(r=>[r.key,r]));
  assert.equal(by['fuji-excursion'].day,5);assert.match(by['fuji-excursion'].date,/1\/12/);assert.match(by['fuji-excursion'].milestones[0][0],/^2026-12-12T10:00/);
- assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/스페이시아 X/);assert.match(by['nikko-express'].details.join(' '),/일반열차/);
+ assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/스페이시아 X/);assert.match(by['nikko-express'].details.join(' '),/09:13.*17:44/);
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
- assert.equal(by['hotel-dome'].day,12);assert.equal(by['flight-return-tokyo'].day,15);
+ assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-return-tokyo'].day,12);
 });
 test('booking dates and visit time derive from the plan without editing checklist literals',()=>{
  const c=context();c.days[4].date='01/13';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
