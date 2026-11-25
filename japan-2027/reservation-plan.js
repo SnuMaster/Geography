@@ -7,16 +7,14 @@
   const copy=key=>{const r=legacy.find(i=>i.key===key);return r?structuredClone(r):null;};
   const date=d=>d.date.split('/').map(Number).join('/'),items=[],push=x=>{if(x)items.push(x);};
   const anchor=(item,key)=>{if(!item)return null;const p=find(key);return p?{...item,day:p.day.n,variant:p.variant.id,stop:p.stop.name,date:date(p.day)+' · '+p.stop.time,stopKey:undefined}:null;};
-  const bookings=days.flatMap(day=>day.travelBookings||[]);
-  push(bookings.find(b=>b.key==='airport-bus-out'));
-  push(bookings.find(b=>b.key==='flight-tokyo')||copy('flight-tokyo'));
+  const outbound=days.find(day=>day.n===1)?.travelBookings;
+  if(outbound?.length)items.push(...outbound);else push(copy('flight-tokyo'));
   push(copy('hotel-tokyo'));
   const ibuki=anchor(copy('ibuki'),'ibuki');if(ibuki){ibuki.date=date(days.find(d=>d.n===ibuki.day))+' · '+find('ibuki').stop.time+' 목표';ibuki.details=['1인 좌석·코스·음료와 세금·서비스료·취소 조건을 공식 예약 화면에서 확인하세요.','일정 시각은 목표이며 예약 완료를 뜻하지 않습니다.'];push(ibuki);}
   const firstDome=find('domeBags')||find('dome'),checkout=find('domeCheckout');
   if(firstDome&&checkout)push({key:'hotel-dome',group:'travel',kind:'필수',name:'도쿄 돔 호텔 · 3박',day:firstDome.day.n,variant:firstDome.variant.id,stop:firstDome.stop.name,date:date(firstDome.day)+' 체크인 → '+date(checkout.day)+' 체크아웃',note:'예약·결제 상태·오전 짐 보관 확인',url:'https://www.tokyodome-hotels.co.jp/',details:['예약 상품의 체크인·체크아웃 시각을 확인하세요.','체크인 전·체크아웃 후 짐 보관을 확인하세요. 예약 완료로 자동 처리하지 않습니다.']});
-  push(bookings.find(b=>b.key==='flight-return-tokyo'));
-  push(bookings.find(b=>b.key==='airport-bus-back'));
-  const last=days.find(d=>d.pendingReturn);if(last)push({key:'flight-return-tokyo',group:'travel',kind:'필수',name:date(last)+' 저녁 한국 귀국 항공권 · 미정',day:last.n,date:date(last)+' 저녁 예정 · 편명·공항 미정',note:'출발 공항·편명·시각·수하물 확정 필요',details:['하네다·나리타 중 실제 예약한 공항과 터미널을 확인하세요.','현재 비행편·출발·도착 시각은 미정입니다. 예약 완료로 자동 처리하지 않습니다.']});
+  items.push(...days.filter(day=>day.n!==1).flatMap(day=>day.travelBookings||[]));
+  const last=days.find(d=>d.pendingReturn&&!d.travelBookings?.length);if(last)push({key:'flight-return-tokyo',group:'travel',kind:'필수',name:date(last)+' 저녁 한국 귀국 항공권 · 미정',day:last.n,date:date(last)+' 저녁 예정 · 편명·공항 미정',note:'출발 공항·편명·시각·수하물 확정 필요',details:['하네다·나리타 중 실제 예약한 공항과 터미널을 확인하세요.','현재 비행편·출발·도착 시각은 미정입니다. 예약 완료로 자동 처리하지 않습니다.']});
   const fuji=find('fujiStation');if(fuji){
    const travel='2027-'+fuji.day.date.replace('/','-'),open=new Date(travel+'T10:00:00+09:00');open.setUTCMonth(open.getUTCMonth()-1);const opening=new Date(open.getTime()+9*3600000).toISOString().slice(0,16);
    push({key:'fuji-excursion',group:'travel',kind:'추천',name:'후지회유 왕복 지정석',day:fuji.day.n,variant:fuji.variant.id,stop:fuji.stop.name,date:date(fuji.day)+' · 신주쿠 ↔ 가와구치코',note:'가는 편·돌아오는 편 지정석 모두 확인',url:'https://www.eki-net.com/en/jreast-train-reservation/Top/Index',source:'https://www.jreast.co.jp/kippu/02.html',details:['일반 지정석 발매 원칙은 승차 한 달 전 10:00 JST입니다. 이번 일정 기준 '+opening.slice(5,10).replace('-','/')+' 10:00이며, 실제 열차 운행과 판매 화면을 확인하세요.','왕복 날짜·좌석·기상에 따른 변경·환불 조건을 확인하세요.'],milestones:[[opening+':00+09:00',opening.slice(5,10).replace('-','/')+' 10:00 · 일반 지정석 발매 기준']]});

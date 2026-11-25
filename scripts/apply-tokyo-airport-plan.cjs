@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const T=require('../japan-2027/data-model');
 const {points,rows}=require('./tokyo-airport-geometry.json');
-const revision='20261125-tokyo-airports-2';
+const revision='20261125-tokyo-airports-3';
 const date='2026-11-25';
 const kobus='https://www.kobus.co.kr/';
 const jeju='https://www.jejuair.net/ko/prepare/flight/viewScheduleInfo.do';
@@ -81,7 +81,8 @@ function booking(key,day,name,when,url,details){
 }
 function apply(bundle){
  const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
- if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return addDeparture(bundle);
+ if(bundle.revision===revision)return bundle;
+ if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return finalize(bundle);
  const ov=out.variants[0],ol=routes.days['1-main'];
  const lv=last.variants[0],ll=routes.days['12-main'];
  const [checkout,market,lunch,pickup]=lv.stops;
@@ -174,7 +175,7 @@ function apply(bundle){
  daySync(last,routeLegs);
  Object.assign(data.metadata,{end:'2027-01-20',japanEnd:'2027-01-19',calendarDays:13,returnDate:'2027-01-20',returnStatus:'selected'});
  if(data.nightRows.length){data.nightRows[0]=[out.date,out.title,ov.stops.at(-1).time];data.nightRows[data.nightRows.length-1]=[last.date,last.title,'1/19 밤 하네다 · 1/20 새벽 귀국'];}
- return addDeparture(bundle);
+ return finalize(bundle);
 }
 function addDeparture(bundle){
  const {data,routes}=bundle,out=data.days[0],v=out.variants[0],legs=routes.days['1-main'];
@@ -191,8 +192,64 @@ function addDeparture(bundle){
  v.stops.unshift(start);
  daySync(out,legs);
  out.note='03:10 어나드범어아파트 → 03:55 동대구 버스 → 11:30 인천발 7C1129 · 스카이라이너 요금 입력 보류';
+}
+function finalize(bundle){
+ addDeparture(bundle);
+ const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
+ const first=out.variants[0].stops,outbound=routes.days['1-main'];
+ const sky=outbound.find(l=>l.fare?.displayBlank);
+ const arrival=first.findIndex(s=>s.uid===sky.toUid);
+ const airportRail=first[arrival-1];
+ const keisei='https://www.keisei.co.jp/keisei/tetudou/skyliner/jp/traffic/skyliner_timetable_1123.php';
+ update(airportRail,'15:35~15:59','T2 지하 1층에서 지정석과 승강장을 확인. 평일 시간표 기준 스카이라이너 46호 16:02 출발 → 16:43 게이세이우에노 도착 후보. 입국 수속이 늦어지면 다음 편 확인.');
+ airportRail.details.sources=[...new Set([...airportRail.details.sources,keisei])];
+ update(first[arrival],'16:46','16:43 스카이라이너 하차 후 개찰구로 이동. 16:46은 개찰 통과 목표.');
+ update(first[arrival+1],'16:55','히비야선 기타센주 방향 승차 목표.');
+ update(first[arrival+2],'17:10','이리야역 하차 후 숙소로 도보 이동.');
+ update(first.at(-2),'19:15~20:00',first.at(-2).description);
+ update(first.at(-1),'20:30~20:45',first.at(-1).description);
+ sky.parts.find(p=>p.mode==='rail').durationMinutes=41;
+ sky.durationMinutes=sky.parts.reduce((n,p)=>n+(p.durationMinutes||0),0);
+ sky.durationLabel='약 '+sky.durationMinutes+'분 · 46호 후보';
+ sky.note='평일 공개 시간표 기준. 스카이라이너 46호 16:02 출발 → 16:43 도착. 역내 이동을 포함한 일정이며, 지정석과 이용일 운행을 확인하세요.';
+ daySync(out,outbound);
+
+ const v=last.variants[0],legs=routes.days['12-main'];
+ const pickup=v.stops.find(s=>s.uid==='t27-12-d12-hotelPickup'),dinner=v.stops.find(s=>s.uid==='t27-12-dinner');
+ const park=v.stops[5];
+ const hnd=v.stops.find(s=>s.uid==='t27-12-hanedaT3'),access=legs.find(l=>l.toUid===hnd.uid);
+ const hotelHours='https://www.jalan.net/yad307486/kuchikomi/archive/';
+ update(v.stops[0],'08:00~10:00','08:00 기상·아침 후 10:00까지 체크아웃. 당일 보관과 18:30 수령을 숙소에 미리 확인. 맡길 수 없으면 우에노역 보관함을 먼저 확인.');
+ v.stops[0].details.thingsToDo=['체크아웃 전에 당일 짐 보관과 18:30 수령 가능 여부를 확인한다. 보관이 어렵다면 우에노역 보관함을 확인한다.'];
+ update(pickup,'18:30~19:00','프런트 마감 전에 짐 수령. 숙소에 맡길 수 없다면 우에노역 보관함에서 짐을 찾고 우에노에서 저녁 후 JR로 하마마쓰초까지 이동.');
+ pickup.details.thingsToDo=['18:30부터 짐을 찾고 19:00까지 마친다. 우에노역 보관함 이용 시 저녁도 우에노에서 해결하고 JR 외선에 탄다.'];
+ pickup.details.sources=[...new Set([...(pickup.details.sources||[]),hotelHours])];
+ update(dinner,'19:15~20:45','19:15 마쓰야에서 저녁. 식사 후 이리야역 근처에서 쉬고 20:45 공항으로 출발.');
+ const toHotel=walk('parkHotel',park,pickup);
+ const toDinner=part('dinnerHotel',pickup,dinner,'walk','도보',roads,rows.dinnerHotel.durationMinutes,true);
+ const toIriya=walk('dinnerIriya',dinner,{name:'이리야'});
+ v.stops.splice(6,2,pickup,dinner);
+ legs.splice(5,3,
+  leg(park,pickup,[toHotel],noFare(),toHotel.durationMinutes),
+  leg(pickup,dinner,[toDinner],noFare(),toDinner.durationMinutes),
+  leg(dinner,hnd,[toIriya,...access.parts.slice(1)],access.fare,access.durationMinutes,access.summary));
+ last.important='18:30 짐 수령 · 20:45 이리야 출발 · 22:15 하네다 T3 목표 · 1/20 01:55 MM809 · 06:20 인천 T1발 버스.';
+ daySync(last,legs);
+ const transport=[
+  [out,outbound,'airport-bus-out','airport-bus-out','1/8 03:55'],
+  [out,outbound,'flight-tokyo','flight-7c1129-20270108','1/8 11:30'],
+  [last,legs,'flight-return-tokyo','flight-mm809-20270120','1/20 01:55'],
+  [last,legs,'airport-bus-back','airport-bus-back','1/20 06:20']
+ ];
+ for(const [day,connections,oldKey,key,depart] of transport){
+  const item=day.travelBookings.find(b=>b.key===oldKey||b.key===key);
+  const index=connections.findIndex(l=>l.travel?.depart===depart);
+  if(!item||index<0)throw Error('Missing booking or trip leg '+key);
+  Object.assign(item,{key,leg:index+1});
+ }
+ if(data.nightRows.length)data.nightRows[0]=[out.date,out.title,first.at(-1).time];
  bundle.revision=data.version=data.metadata.revision=routes.version=revision;
- bundle.updatedAt='2026-11-25T14:30:00+09:00';
+ bundle.updatedAt='2026-11-25T16:00:00+09:00';
  return bundle;
 }
 if(require.main===module){

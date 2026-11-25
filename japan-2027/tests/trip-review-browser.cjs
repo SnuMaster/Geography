@@ -5,6 +5,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,channel:'chrome'});try{
  for(const width of [390,1440]){
   const page=await browser.newPage({viewport:{width,height:1000}}),errors=[];
+  await page.addInitScript(()=>{if(!localStorage.getItem('routebook-reservations-v1'))localStorage.setItem('routebook-reservations-v1',JSON.stringify({'flight-tokyo':{complete:true,ticket:{flight:'TW251'}},'flight-return-tokyo':{complete:true}}));});
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
@@ -22,17 +23,20 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261125-tokyo-airports-2')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261125-tokyo-airports-3')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
-   for(const [key,expected] of [['airport-bus-out','03:55'],['flight-tokyo','7C1129'],['flight-return-tokyo','MM809'],['airport-bus-back','06:20']]){
+   for(const [key,expected] of [['airport-bus-out','03:55'],['flight-7c1129-20270108','7C1129'],['flight-mm809-20270120','MM809'],['airport-bus-back','06:20']]){
     const text=document.querySelector('[data-booking-item="'+key+'"]')?.textContent||'';
     if(!text.includes(expected))throw Error('New booking missing '+key);
    }
-   ReservationUI.closeChecklist();
+   const oldFlight=document.querySelector('[data-booking-item="flight-7c1129-20270108"]');
+   if(oldFlight.querySelector('input').checked||oldFlight.textContent.includes('TW251'))throw Error('Old booking checkout migrated to the new flight');
+   document.querySelector('[data-booking-jump="flight-mm809-20270120"]').click();
+   if(r.state.day!==12||!document.querySelector('[data-leg="9"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
    r.setDay(1);
    if(r.getStops()[0]?.name!=='어나드범어아파트')throw Error('First departure stop was overwritten');
    r.selectLeg(2);
@@ -41,7 +45,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!document.querySelector('#stopList')?.textContent.includes('야나카 긴자'))throw Error('Missing last city day');
    r.selectLeg(9);
    if(!r.map._popup?.getElement()?.textContent.includes('1/20 01:55'))throw Error('Overnight flight date missing');
-   if(by['flight-return-tokyo']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
+   if(by['flight-mm809-20270120']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
     if(ss.length!==d.variants[0].stops.length)throw Error('Missing day stops '+d.n);

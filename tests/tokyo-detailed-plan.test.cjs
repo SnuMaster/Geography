@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved 12-day allocation and three spaced excursions',()=>{
- assert.equal(b.revision,'20261125-tokyo-airports-2');
+ assert.equal(b.revision,'20261125-tokyo-airports-3');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[2,5,8].includes(d.n)).map(d=>d.cityLabel),['가마쿠라·에노시마','가와구치코','닛코']);
  assert.equal(b.data.days[10].title,'공연 가능일·자유시간');
@@ -46,6 +46,11 @@ test('Skyliner stays blank, and airport selections use the correct local dates',
  assert.equal(busBack.departureAt,Date.parse('2027-01-20T06:20:00+09:00'));
  assert.equal(busBack.fare.min,58800);
  assert(!b.data.days[11].pendingReturn);
+ const last=b.data.days[11].variants[0].stops;
+ assert.equal(last[6].time,'18:30~19:00');
+ assert.match(last[6].name,/짐 수령/);
+ assert.match(last[7].name,/마쓰야/);
+ assert.match(b.data.days[0].variants[0].stops.find(s=>s.uid===sky.fromUid).description,/46호 16:02 출발 → 16:43/);
 });
 test('single Iriya stay, daily breakfasts and lakeshore scenery',()=>{
  assert.match(b.data.days[11].variants[0].stops[0].name,/이리야키타 · 체크아웃/);
@@ -67,7 +72,7 @@ test('active routes retain continuous public endpoints and explicit reference-on
  let compared=0;
  for(const d of b.data.days)for(const v of d.variants){
   const legs=b.routes.days[d.n+'-'+v.id];
-  if(d.n!==1&&d.n!==11)assert.deepEqual(C.warnings(v.stops,legs).filter(w=>['overlap','travel'].includes(w.type)),[],d.n+' travel window');
+  if(d.n!==11)assert.deepEqual(C.warnings(v.stops,legs).filter(w=>['overlap','travel'].includes(w.type)),[],d.n+' travel window');
   for(const [i,l]of legs.entries()){
    if(l.private||!l.parts.length)continue;
    assert(G.distance([v.stops[i].lat,v.stops[i].lng],l.parts[0].coords[0])<=70,d.n+' start');

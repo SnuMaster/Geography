@@ -8,7 +8,10 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/스페이시아 X/);assert.match(by['nikko-express'].details.join(' '),/09:13.*17:44/);
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
- assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-return-tokyo'].day,12);
+ assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-7c1129-20270108'].leg,3);
+ assert.equal(by['flight-mm809-20270120'].day,12);
+ assert.equal(by['flight-mm809-20270120'].leg,9);
+ assert(!by['flight-tokyo']);assert(!by['flight-return-tokyo']);
 });
 test('booking dates and visit time derive from the plan without editing checklist literals',()=>{
  const c=context();c.days[4].date='01/13';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
