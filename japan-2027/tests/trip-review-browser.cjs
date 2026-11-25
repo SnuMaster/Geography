@@ -22,7 +22,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261125-tokyo-airports-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261125-tokyo-airports-2')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
@@ -34,8 +34,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    }
    ReservationUI.closeChecklist();
    r.setDay(1);
-   if(!document.querySelector('#stopList')?.textContent.includes('동대구터미널'))throw Error('Public outbound terminal was overwritten');
-   r.selectLeg(1);
+   if(r.getStops()[0]?.name!=='어나드범어아파트')throw Error('First departure stop was overwritten');
+   r.selectLeg(2);
    if(!r.map._popup?.getElement()?.textContent.includes('03:55'))throw Error('Outbound bus schedule missing');
    r.setDay(12);
    if(!document.querySelector('#stopList')?.textContent.includes('야나카 긴자'))throw Error('Missing last city day');

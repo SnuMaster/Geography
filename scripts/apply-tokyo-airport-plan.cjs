@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const T=require('../japan-2027/data-model');
 const {points,rows}=require('./tokyo-airport-geometry.json');
-const revision='20261125-tokyo-airports-1';
+const revision='20261125-tokyo-airports-2';
 const date='2026-11-25';
 const kobus='https://www.kobus.co.kr/';
 const jeju='https://www.jejuair.net/ko/prepare/flight/viewScheduleInfo.do';
@@ -13,7 +13,7 @@ const metro='https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.p
 const jr='https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/kansen.pdf';
 const mono='https://www.tokyo-monorail.co.jp/english/guidance/train_info.html';
 const tokyo='https://www.gotokyo.org/en/destinations/northern-tokyo/yanaka-and-nezu/index.html';
-const hotel='https://www.stayandgo.jp/iriya/';
+const departureSource='https://www.anadd.co.kr/officetel/data/gongo01.pdf';
 const roads='https://www.openstreetmap.org/copyright';
 const copy=structuredClone;
 const pt=s=>[s.lat,s.lng];
@@ -81,7 +81,7 @@ function booking(key,day,name,when,url,details){
 }
 function apply(bundle){
  const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
- if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return bundle;
+ if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return addDeparture(bundle);
  const ov=out.variants[0],ol=routes.days['1-main'];
  const lv=last.variants[0],ll=routes.days['12-main'];
  const [checkout,market,lunch,pickup]=lv.stops;
@@ -172,10 +172,27 @@ function apply(bundle){
  delete last.pendingReturn;
  routes.days['12-main']=routeLegs;
  daySync(last,routeLegs);
- Object.assign(data.metadata,{revision,end:'2027-01-20',japanEnd:'2027-01-19',calendarDays:13,returnDate:'2027-01-20',returnStatus:'selected'});
- bundle.revision=data.version=routes.version=revision;
- bundle.updatedAt='2026-11-25T00:00:00+09:00';
+ Object.assign(data.metadata,{end:'2027-01-20',japanEnd:'2027-01-19',calendarDays:13,returnDate:'2027-01-20',returnStatus:'selected'});
  if(data.nightRows.length){data.nightRows[0]=[out.date,out.title,ov.stops.at(-1).time];data.nightRows[data.nightRows.length-1]=[last.date,last.title,'1/19 밤 하네다 · 1/20 새벽 귀국'];}
+ return addDeparture(bundle);
+}
+function addDeparture(bundle){
+ const {data,routes}=bundle,out=data.days[0],v=out.variants[0],legs=routes.days['1-main'];
+ const uid='t27-12-d1-anadd-departure';
+ if(v.stops[0].uid===uid)return bundle;
+ const terminal=v.stops[0];
+ const start=location(uid,'어나드범어아파트','','departure','03:05~03:10',
+  points.departure,'03:05 차량 호출 준비. 03:10 단지 앞에서 출발해 03:30까지 동대구터미널 도착 목표.',departureSource);
+ start.area='대구 수성구';
+ const taxi='택시 · 어나드범어아파트 → 동대구터미널';
+ const route=part('departureTaxi',start,terminal,'taxi',taxi,roads,12);
+ legs.unshift(leg(start,terminal,[route],fare('KRW',null,roads,'미터 요금 · 호출 시 확인'),12,taxi));
+ legs[0].durationLabel='약 12분 · 호출 여유 별도';
+ v.stops.unshift(start);
+ daySync(out,legs);
+ out.note='03:10 어나드범어아파트 → 03:55 동대구 버스 → 11:30 인천발 7C1129 · 스카이라이너 요금 입력 보류';
+ bundle.revision=data.version=data.metadata.revision=routes.version=revision;
+ bundle.updatedAt='2026-11-25T14:30:00+09:00';
  return bundle;
 }
 if(require.main===module){

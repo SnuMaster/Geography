@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved 12-day allocation and three spaced excursions',()=>{
- assert.equal(b.revision,'20261125-tokyo-airports-1');
+ assert.equal(b.revision,'20261125-tokyo-airports-2');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[2,5,8].includes(d.n)).map(d=>d.cityLabel),['가마쿠라·에노시마','가와구치코','닛코']);
  assert.equal(b.data.days[10].title,'공연 가능일·자유시간');
@@ -30,7 +30,12 @@ test('meal budget, Ginza Ibuki and shopping are preserved',()=>{
 test('Skyliner stays blank, and airport selections use the correct local dates',()=>{
  const sky=b.routes.days['1-main'].find(l=>l.fare?.displayBlank);
  assert(sky);assert.equal(sky.fare.icYen,null);assert.equal(sky.fare.min,null);
- const [busOut,flightOut]=b.routes.days['1-main'];
+ const [taxi,busOut,flightOut]=b.routes.days['1-main'];
+ const trip=require('../japan-2027/personal-trip').patch(structuredClone(b.data),structuredClone(b.routes));
+ assert.equal(trip.data.days[0].variants[0].stops[0].name,'어나드범어아파트');
+ assert.equal(taxi.parts[0].mode,'taxi');
+ assert.equal(taxi.private,false);
+ assert.equal(taxi.departureAt,Date.parse('2027-01-08T03:10:00+09:00'));
  assert.equal(busOut.fare.min,70600);
  assert.equal(flightOut.fare.min,null);
  assert.match(flightOut.summary,/7C1129/);
