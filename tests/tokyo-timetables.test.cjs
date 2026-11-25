@@ -10,7 +10,7 @@ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-
 
 test('active rail coverage retains explicit unsupported ropeway and Shinkansen segments',()=>{
  const remaining=[];let total=0;
- for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>['rail','metro'].includes(p.mode))){total++;if(!ctx.api.keyFor(leg,part))remaining.push(part.lineId);}
+ for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>['rail','metro'].includes(p.mode))){total++;if(!ctx.api.keyFor(leg,part)){if(part.departureInfo)assert.match(part.departureInfo.source,/^https:\/\//);else remaining.push(part.lineId);}}
  assert.ok(total>20);assert.deepEqual(remaining,[]);
  assert.ok(entries.length>10);assert.equal(Object.keys(manifest.profiles).length-entries.length,102);
 });
@@ -30,7 +30,7 @@ test('selected Nikko express chains preserve explicit through connections and ex
 });
 
 test('active Yamanote directions preserve the selected OD without traversing the opposite loop',()=>{
- for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>p.lineId==='JR-East.Yamanote')){
+ for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>p.lineId==='JR-East.Yamanote'&&!p.departureInfo)){
   const k=ctx.api.keyFor(leg,part),p=manifest.profiles[k];assert.ok(p);
   for(const r of Object.values(schedule(k,p)).flat()){assert.equal(r.stops[0].id,p.sourceFromId);assert.equal(r.stops.at(-1).id,p.sourceToId);const ids=r.stops.map(s=>s.id);assert.equal(new Set(ids).size,ids.length);}
  }

@@ -1,9 +1,9 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),bundle=require('../japan-2027/trip-update.json'),F=require('../japan-2027/fare-core'),complete=require('../scripts/complete-tokyo-fares.cjs');
-test('every planned public rail and bus movement is priced except the deliberately blank Skyliner',()=>{
+test('every planned Japanese rail and bus movement is priced except the deliberately blank Skyliner',()=>{
  let priced=0,blank=0;
  for(const [key,legs]of Object.entries(bundle.routes.days))for(const l of legs){
-  if(!l.parts.some(p=>['rail','metro','bus'].includes(p.mode)))continue;
+  if(l.fare.currency==='KRW'||!l.parts.some(p=>['rail','metro','bus'].includes(p.mode)))continue;
   if(l.fare.displayBlank){blank++;for(const field of ['min','max','icYen','paperTicketYen'])assert.equal(l.fare[field],null);assert.deepEqual(l.fare.breakdown,[]);continue;}
   priced++;assert(Number.isFinite(l.fare.icYen)&&l.fare.icYen>=0,key+' '+l.summary);assert.equal(l.fare.min,l.fare.icYen);assert.equal(l.fare.max,l.fare.icYen);assert(l.fare.sources.length,key);
   assert.equal(l.fare.breakdown.reduce((n,r)=>n+r.icYen,0),l.fare.icYen,key);
@@ -34,7 +34,8 @@ test('the optional ropeway uses the current individual round-trip fare, not the 
  const s=bundle.data.days[4].variants[0].stops.find(s=>s.planKey==='ropeway');
  assert.equal(s.details.costMin,1200);assert.equal(s.details.costMax,1200);assert.match(s.description,/선택/);
 });
-test('applying evidence again is idempotent and does not fill the Skyliner or invent the return flight',()=>{
+test('applying evidence again is idempotent and does not fill the Skyliner or overwrite the selected flights',()=>{
  const copy=structuredClone(bundle),before=JSON.stringify(copy.routes),r=complete.apply(copy);assert.deepEqual(r.missing,[]);assert.deepEqual(r.updated,[]);assert.equal(JSON.stringify(copy.routes),before);
- assert.equal(copy.data.days[11].pendingReturn.airport,null);assert.equal(copy.data.days[11].pendingReturn.flight,null);
+ assert.match(copy.routes.days['12-main'].at(-2).summary,/MM809/);
+ assert.equal(copy.routes.days['1-main'][0].fare.min,70600);
 });

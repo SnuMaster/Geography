@@ -23,7 +23,7 @@ function apply(bundle){
  const updated=[],missing=[];
  for(const d of bundle.data.days)for(const v of d.variants){const key=d.n+'-'+v.id,date='2027-'+d.date.replace('/','-'),legs=bundle.routes.days[key];
   for(const [index,leg]of legs.entries()){
-   if(leg.private||leg.fare?.displayBlank||!leg.parts.some(motor))continue;
+   if(leg.private||leg.fare?.displayBlank||leg.fare?.currency==='KRW'||!leg.parts.some(motor))continue;
    if(leg.fare?.icYen!=null&&leg.fare.status!=='unverified')continue;
    let cs;
    const buses=leg.parts.filter(p=>p.mode==='bus');

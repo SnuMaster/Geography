@@ -158,7 +158,7 @@ const RailDepartures = (() => {
  function sectionHtml(key,metrics,day){const p=profiles[key],date=travelDate(day);return `<section class="station-departures compact-station" data-itinerary-date="${esc(date)}" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,date,metrics)}</section>`;}
  function unscheduledSection(part,metrics,day){
   const country=part.lineId?.startsWith('KORAIL.')?'KR':'JP',p={...part,country},u=links(p),from=stationParts(p.from,p.fromJa,country),to=stationParts(p.to,p.toJa,country);
-  const badge=typeof railLineBadge==='function'?railLineBadge(part,'departure-line-mark'):typeof railBadge==='function'?railBadge(part):'',info=manifest.serviceInfo?.[part.lineId];
+  const badge=typeof railLineBadge==='function'?railLineBadge(part,'departure-line-mark'):typeof railBadge==='function'?railBadge(part):'',info=part.departureInfo||manifest.serviceInfo?.[part.lineId];
   return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
    <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>

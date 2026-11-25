@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved 12-day allocation and three spaced excursions',()=>{
- assert.equal(b.revision,'20261124-tokyo-12-days');
+ assert.equal(b.revision,'20261125-tokyo-airports-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[2,5,8].includes(d.n)).map(d=>d.cityLabel),['가마쿠라·에노시마','가와구치코','닛코']);
  assert.equal(b.data.days[10].title,'공연 가능일·자유시간');
@@ -27,11 +27,20 @@ test('meal budget, Ginza Ibuki and shopping are preserved',()=>{
  assert(all.some(s=>/돈키호테 아사쿠사/.test(s.name)));
  assert(all.some(s=>s.planKey==='drug'));
 });
-test('Skyliner fare is blank and return flight remains genuinely unknown',()=>{
+test('Skyliner stays blank, and airport selections use the correct local dates',()=>{
  const sky=b.routes.days['1-main'].find(l=>l.fare?.displayBlank);
  assert(sky);assert.equal(sky.fare.icYen,null);assert.equal(sky.fare.min,null);
- const back=b.data.days[11];assert.equal(back.pendingReturn.status,'unconfirmed');assert.equal(back.pendingReturn.airport,null);assert.equal(back.pendingReturn.flight,null);
- assert(!b.routes.days['12-main'].some(l=>l.parts.some(p=>p.mode==='flight')));
+ const [busOut,flightOut]=b.routes.days['1-main'];
+ assert.equal(busOut.fare.min,70600);
+ assert.equal(flightOut.fare.min,null);
+ assert.match(flightOut.summary,/7C1129/);
+ const [flightBack,busBack]=b.routes.days['12-main'].slice(-2);
+ assert.match(flightBack.summary,/MM809/);
+ assert.equal(flightBack.departureAt,Date.parse('2027-01-20T01:55:00+09:00'));
+ assert.equal(flightBack.arrivalAt,Date.parse('2027-01-20T04:40:00+09:00'));
+ assert.equal(busBack.departureAt,Date.parse('2027-01-20T06:20:00+09:00'));
+ assert.equal(busBack.fare.min,58800);
+ assert(!b.data.days[11].pendingReturn);
 });
 test('single Iriya stay, daily breakfasts and lakeshore scenery',()=>{
  assert.match(b.data.days[11].variants[0].stops[0].name,/이리야키타 · 체크아웃/);

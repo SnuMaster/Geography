@@ -78,11 +78,21 @@ async function main(){
  const cache=process.argv[2];
  if(!cache)throw Error('Pass a directory for raw OpenStreetMap responses');
  fs.mkdirSync(cache,{recursive:true});
+ const previousDetailed=fs.existsSync(path.join(destination,'manifest.json'))?require(path.join(destination,'manifest.json')):null;
  const days=trip.data.days.map(d=>({day:d.n,points:Road.centres(d,trip.routes)}));
+ const changed=days.filter(({day,points})=>{
+  const entry=previousDetailed?.days[day];
+  return !entry||JSON.stringify(entry.points)!==JSON.stringify(points)||!fs.existsSync(path.join(destination,entry.path));
+ });
+ if(!changed.length)return;
  const sources=new Map(),known=new Map();
  for(const entry of Object.values(previous.days))for(const point of entry.points)if(!sources.has(point.join(',')))sources.set(point.join(','),entry.path);
+ for(const entry of Object.values(previousDetailed?.days||{}))for(const point of entry.points){
+  const file=path.join('tokyo-12',entry.path);
+  if(!sources.has(point.join(','))&&fs.existsSync(path.join(base,file)))sources.set(point.join(','),file);
+ }
  const available=new Map(),missing=[];
- for(const point of days.flatMap(d=>d.points)){
+ for(const point of changed.flatMap(d=>d.points)){
   const key=point.join(',');
   if(known.has(key))continue;
   known.set(key,point);
@@ -107,8 +117,8 @@ async function main(){
  }
  fs.mkdirSync(destination,{recursive:true});
  const generatedAt=new Date().toISOString();
- const manifest={version:1,generatedAt,source:'OpenStreetMap contributors via Geofabrik and OpenStreetMap API',license:'ODbL-1.0',attribution:'https://www.openstreetmap.org/copyright',days:{}};
- for(const {day,points} of days){
+ const manifest={version:1,generatedAt,source:'OpenStreetMap contributors via Geofabrik and OpenStreetMap API',license:'ODbL-1.0',attribution:'https://www.openstreetmap.org/copyright',days:{...previousDetailed?.days}};
+ for(const {day,points} of changed){
   const unique=new Map();
   for(const point of points){
    const elements=grid.get(point.join(','));

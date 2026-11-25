@@ -22,13 +22,25 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261124-tokyo-12-days')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261125-tokyo-airports-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
+   for(const [key,expected] of [['airport-bus-out','03:55'],['flight-tokyo','7C1129'],['flight-return-tokyo','MM809'],['airport-bus-back','06:20']]){
+    const text=document.querySelector('[data-booking-item="'+key+'"]')?.textContent||'';
+    if(!text.includes(expected))throw Error('New booking missing '+key);
+   }
    ReservationUI.closeChecklist();
+   r.setDay(1);
+   if(!document.querySelector('#stopList')?.textContent.includes('동대구터미널'))throw Error('Public outbound terminal was overwritten');
+   r.selectLeg(1);
+   if(!r.map._popup?.getElement()?.textContent.includes('03:55'))throw Error('Outbound bus schedule missing');
+   r.setDay(12);
+   if(!document.querySelector('#stopList')?.textContent.includes('야나카 긴자'))throw Error('Missing last city day');
+   r.selectLeg(9);
+   if(!r.map._popup?.getElement()?.textContent.includes('1/20 01:55'))throw Error('Overnight flight date missing');
    if(by['flight-return-tokyo']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
