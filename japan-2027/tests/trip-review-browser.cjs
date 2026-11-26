@@ -5,7 +5,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,channel:'chrome'});try{
  for(const width of [390,1440]){
   const page=await browser.newPage({viewport:{width,height:1000}}),errors=[];
-  await page.addInitScript(()=>{if(!localStorage.getItem('routebook-reservations-v1'))localStorage.setItem('routebook-reservations-v1',JSON.stringify({'flight-tokyo':{complete:true,ticket:{flight:'TW251'}},'flight-return-tokyo':{complete:true},'fuji-excursion':{complete:true,memo:'열차표 메모'}}));});
+  await page.addInitScript(()=>{if(!localStorage.getItem('routebook-reservations-v1'))localStorage.setItem('routebook-reservations-v1',JSON.stringify({'flight-tokyo':{complete:true,ticket:{flight:'TW251'}},'flight-return-tokyo':{complete:true},'fuji-excursion':{complete:true,memo:'열차표 메모'},'nikko-pass-all-area':{complete:true}}));});
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
@@ -35,12 +35,13 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!item.textContent.includes('공식 판매 대기 중')||!nikko.textContent.includes('공식 판매 대기 중')||!item.textContent.includes('78,032원')||!nikko.textContent.includes('47,100원'))throw Error('Pending rail orders are missing');
    if(item.querySelector('input').checked||nikko.querySelector('input').checked)throw Error('Pending rail ticket was marked confirmed');
    if(item.querySelector('[data-booking-memo]').value!=='열차표 메모')throw Error('Existing railway booking memo disappeared');
-   const pass=railGroup.querySelector('[data-booking-item="nikko-pass-all-area"]');
-   if(!pass||!/8,000(?:엔|\s+JP¥)/.test(pass.textContent)||!pass.textContent.includes('기타센주')||pass.querySelector('[data-booking-complete]').checked)throw Error('Wrong optional Nikko Pass purchase card');
+   const pass=railGroup.querySelector('[data-booking-item="nikko-maas-chuzenji-kegon"]');
+   if(!pass||!/4,350(?:엔|\s+JP¥)/.test(pass.textContent)||!pass.textContent.includes('기타센주')||pass.querySelector('[data-booking-complete]').checked)throw Error('Wrong optional Nikko MaaS purchase card');
+   if(railGroup.querySelector('[data-booking-item="nikko-pass-all-area"]'))throw Error('Old All Area pass remained in the checklist');
    pass.querySelector('[data-booking-complete]').click();
    const changed=ReservationUI.getAssistantBookings();
-   if(!changed.find(x=>x.key==='nikko-pass-all-area').confirmed||changed.find(x=>x.key==='nikko-express').confirmed)throw Error('Nikko Pass completion changed the train reservation');
-   document.querySelector('[data-booking-item="nikko-pass-all-area"] [data-booking-complete]').click();
+   if(!changed.find(x=>x.key==='nikko-maas-chuzenji-kegon').confirmed||changed.find(x=>x.key==='nikko-express').confirmed)throw Error('Nikko MaaS completion changed the train reservation');
+   document.querySelector('[data-booking-item="nikko-maas-chuzenji-kegon"] [data-booking-complete]').click();
    const onSite=document.querySelector('#bookingOnSite');
    onSite.querySelector('summary').click();
    if(!onSite.open||!onSite.textContent.includes('나리타 스카이라이너')||onSite.querySelector('input'))throw Error('Wrong on-site purchase guide');
