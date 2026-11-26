@@ -37,7 +37,7 @@ const road=item=>item?.type==='way'&&item.tags?.highway&&item.nodes?.length>1&&i
 async function box(cache,bounds){
  const cacheFile=path.join(cache,bounds.join('_')+'.json');
  if(fs.existsSync(cacheFile))return JSON.parse(fs.readFileSync(cacheFile)).elements;
- const {stdout}=await run('curl.exe',[
+ const {stdout}=await run(process.platform==='win32'?'curl.exe':'curl',[
   '-fLsS','--max-time','25','-A','KisekiTravelPlanner/1.0 (offline itinerary map preparation)',
   'https://api.openstreetmap.org/api/0.6/map.json?bbox='+bounds.join(',')
  ],{maxBuffer:64*1024*1024,encoding:'utf8'});

@@ -29,7 +29,8 @@
   if(skytree){
    skytree.date=skytree.date.split(/[~-]/)[0]+' 입장 목표';
    skytree.note='일몰 무렵에 맞춰 덴보데크(350m) 시간 지정권 예매 권장';
-   skytree.details=['공식 예매에서 날짜와 덴보데크 입장 시각을 선택하세요. 덴보회랑(450m)은 선택 사항입니다.','공식 판매 가격은 날짜에 따라 달라요. 현장권은 잔여분이 있을 때 이용할 수 있어요.'];
+   skytree.source='https://global-official-ticket.tokyo-skytree.jp/zt/faq';
+   skytree.details=['공식 해외 판매처는 약 두 달 전부터 달력을 순차 오픈해요. 날짜와 덴보데크 입장 시각을 확인하세요.','덴보회랑(450m)은 선택 사항이에요. 공식 가격은 날짜에 따라 다르고 현장권은 잔여분에 한해 판매해요.'];
    push(skytree);
   }
   const firstDome=find('domeBags')||find('dome'),checkout=find('domeCheckout');

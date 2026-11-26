@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261126-tokyo-asakusa-1');
+ assert.equal(b.revision,'20261126-tokyo-daegu-taxi-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -18,6 +18,24 @@ test('approved calendar with Jan 9 empty and two excursions',()=>{
  assert(legs[4].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.7116353)<0.00003&&Math.abs(lng-139.8015955)<0.00003),'River Walk crossing');
  assert(legs[6].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.70992)<0.00003&&Math.abs(lng-139.79924)<0.00003),'Azuma Bridge crossing');
  assert(!b.data.days.some(d=>/오사카|하코네|아타미|가와고에/.test(d.title)));
+});
+test('both taxi routes use distinct drivable polylines and connect to the curb stops',()=>{
+ const {outbound,returnTaxi}=require('../scripts/daegu-taxi-geometry.json');
+ const [departure,narita]=b.routes.days['1-main'];
+ const returnLeg=b.routes.days['12-main'].at(-1);
+ for(const [leg,route] of [[departure,outbound],[returnLeg,returnTaxi]]){
+  const [part]=leg.parts;
+  assert.equal(part.mode,'taxi');
+  assert.equal(part.geometryAccuracy,'mapped');
+  assert.deepEqual(part.coords,route.coords);
+  assert(part.coords.length>100);
+  assert.equal(leg.distanceM,route.distanceM);
+  assert.equal(leg.durationMinutes,Math.round(route.durationSeconds/60));
+ }
+ const [airportLat,airportLng]=outbound.coords.at(-1);
+ assert(airportLat>35.899&&airportLng>128.637&&airportLng<128.638);
+ assert.deepEqual(narita.parts[0].coords[0],[airportLat,airportLng]);
+ assert(Math.abs(returnTaxi.coords[0][1]-128.6297418)<0.000002);
 });
 test('public map stops have unique new IDs, sources and one connected leg per interval',()=>{
  const ids=new Set();

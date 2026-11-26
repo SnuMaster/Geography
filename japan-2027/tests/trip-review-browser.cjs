@@ -10,6 +10,22 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
   await page.waitForFunction(()=>window.__routebook.state.routeData.days['12-main'][8].parts[0].flightTrack?.flightNumber==='MM809');
+  const geo=await page.evaluate(()=>{
+   const [a,b]=__routebook.getLeg(1).parts[0].coords;
+   return [a,a.map((x,i)=>x+(b[i]-x)/3)].map(([latitude,longitude])=>({latitude,longitude,accuracy:8}));
+  });
+  await page.context().grantPermissions(['geolocation']);
+  await page.context().setGeolocation(geo[0]);
+  await page.locator('#locationBtn').click();
+  await page.waitForFunction(p=>RouteLocation.getFix()?.lat===p.latitude,geo[0]);
+  await page.context().setGeolocation(geo[1]);
+  await page.waitForFunction(p=>Object.values(__routebook.map._layers).some(layer=>{
+   if(!layer.getElement?.()?.classList.contains('gps-location-marker'))return false;
+   const dot=layer.getLatLng();
+   return dot.lat===p.latitude&&dot.lng===p.longitude;
+  }),geo[1]);
+  await page.locator('#locationStop').click();
+  assert.equal(await page.locator('.gps-location-marker').count(),0);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const bookingCheck=await page.evaluate(()=>{
    const item=document.querySelector('[data-booking-item="fuji-excursion"]'),date=item?.querySelector('.booking-date')?.textContent||'';
@@ -30,7 +46,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261126-tokyo-asakusa-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261126-tokyo-daegu-taxi-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
@@ -48,6 +64,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(r.state.day!==12||!document.querySelector('[data-leg="9"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
    r.setDay(1);
    if(r.getStops()[0]?.name!=='월성로 132')throw Error('First departure stop was overwritten');
+   if(r.getLeg(1).parts[0].geometryAccuracy!=='mapped'||r.getLeg(1).parts[0].coords.length<100)throw Error('Departure taxi route is not mapped');
    r.selectLeg(2);
    if(!r.map._popup?.getElement()?.textContent.includes('1/8 11:10'))throw Error('Outbound flight schedule missing');
    r.map.closePopup();
@@ -68,7 +85,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!busPopup.includes('06:50')||!busPopup.includes('10:56')||!busPopup.includes('10B-3')||!busPopup.includes('동대구터미널 1층 하차장'))throw Error('Wrong return bus timetable or stops');
    const [station,destination]=r.getStops().slice(-2);
    const taxi=b.routeData.days['12-main'].at(-1);
-   if(station.name!=='동대구역 택시 승강장'||destination.name!=='월성로 132'||destination.dayOffset!==1||taxi.parts[0].mode!=='taxi')throw Error('Missing return taxi');
+   if(station.name!=='동대구역 택시 승강장'||destination.name!=='월성로 132'||destination.dayOffset!==1||taxi.parts[0].mode!=='taxi'||taxi.parts[0].geometryAccuracy!=='mapped'||taxi.parts[0].coords.length<100)throw Error('Missing return taxi');
    if(by['flight-mm809-20270120']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
