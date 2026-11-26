@@ -61,6 +61,11 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const dining=document.querySelector('#bookingWalkInDining');
    dining.querySelector('summary').click();
    if(!dining.open||!dining.textContent.includes('무기토로')||!dining.textContent.includes('10:30')||dining.querySelector('input'))throw Error('Wrong walk-in dining guide');
+   const benoit=document.querySelector('[data-booking-item="benoit-aoyama"]');
+   if(!benoit?.textContent.includes('방문일 미정')||benoit.querySelector('[data-booking-jump]')||benoit.querySelector('[data-booking-complete]').checked)throw Error('Benoit was not listed as an undated booking');
+   benoit.querySelector('[data-booking-complete]').click();
+   if(!ReservationUI.getAssistantBookings().find(x=>x.key==='benoit-aoyama')?.confirmed)throw Error('Benoit checklist completion did not save');
+   document.querySelector('[data-booking-item="benoit-aoyama"] [data-booking-complete]').click();
    document.querySelector('[data-booking-item="fuji-excursion"] [data-booking-complete]').click();
    if(!document.querySelector('#bookingOnSite').open)throw Error('On-site guide closed after checking a booking');
    if(!document.querySelector('#bookingWalkInDining').open)throw Error('Dining guide closed after checking a booking');

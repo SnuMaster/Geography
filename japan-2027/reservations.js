@@ -72,10 +72,12 @@
   const context=checklistContext(),active=[],alternatives=[];
   const revised=/^tokyo-20270108-(19|22)$/.test(context.metadata?.id||'');
   const items=revised?ReservationPlan.build(context,checklistItems):checklistItems;
-  for(const item of items){const day=context.days.find(d=>d.n===item.day);if(!day)continue;
+  for(const item of items){
+   if(item.day===null){active.push(item);continue;}
+   const day=context.days.find(d=>d.n===item.day);if(!day)continue;
    (item.variant&&item.variant!==JourneyState.chosen(day,context.preferences)?alternatives:active).push(item);
   }
-  active.sort((a,b)=>a.day-b.day);alternatives.sort((a,b)=>a.day-b.day);
+  active.sort((a,b)=>(a.day??Number.MAX_SAFE_INTEGER)-(b.day??Number.MAX_SAFE_INTEGER));alternatives.sort((a,b)=>a.day-b.day);
   return {context,active,alternatives,done:active.filter(isComplete).length};
  }
  function checklistItem(key){const m=checklistModel();return [...m.active,...m.alternatives].find(item=>item.key===key);}
@@ -87,9 +89,11 @@
   return `<div class="booking-linked-fields"><label>진행 상태<select id="booking-status-${item.key}" data-reservation-status="${item.key}">${def.states.map(state=>`<option${r.status===state?' selected':''}>${h(state)}</option>`).join('')}</select></label><label>확정 방문·입장 시각<input id="booking-time-${item.key}" type="datetime-local" data-reservation-time="${item.key}" value="${h(r.time||'')}" aria-invalid="${!!timing.error}"></label><small>확정 시각은 방문 일정과 이동 계산에도 반영돼요.</small>${(timing.messages||[]).map(message=>`<p class="booking-message" role="status">${h(message)}</p>`).join('')}</div>`;
  }
  function checklistRow(item,context,alternative=false){
-  const done=isComplete(item),r=records[item.key]||{},timing=definitions[item.key]?itemTiming(item,context):{},kind=done&&item.orderSelection?'발권 확인':item.kind,date=timing.applied&&typeof r.time==='string'?item.date.split(' · ')[0]+' · '+r.time.slice(11)+' 사용자 입력':item.date,next=!done?milestone(item):'';
+  const done=isComplete(item),r=records[item.key]||{},timing=definitions[item.key]?itemTiming(item,context):{},kind=done&&item.orderSelection?'발권 확인':item.kind,next=!done?milestone(item):'';
+  const date=timing.applied&&typeof r.time==='string'?item.date.split(' · ')[0]+' · '+r.time.slice(11)+' 사용자 입력':item.date;
+  const jumpLink=item.day===null?'':`<button type="button" data-booking-jump="${item.key}">${alternative?'대체안 선택·보기':'일정에서 보기'}</button>`;
   const completeLabel=item.group==='prep'?'준비 완료':'예약 완료';
-  return `<li class="booking-item${done?' is-complete':''}" data-booking-item="${item.key}"><div class="booking-row"><label class="booking-check"><input id="booking-complete-${item.key}" type="checkbox" data-booking-complete="${item.key}" aria-label="${h(item.name)} ${completeLabel}" ${done?'checked':''}></label><div class="booking-content"><div class="booking-date">${h(date)} <span class="booking-kind">${alternative?'대체안 · ':''}${h(kind)}</span></div><label class="booking-item-title" for="booking-complete-${item.key}">${h(item.name)}</label><p>${h(timing.error?'입력한 예약 시각을 확인해 주세요':done?(item.orderSelection?'왕복 발권 확인 완료':item.group==='prep'?completeLabel:'예약 확인 완료'):item.note)}</p>${next?`<p class="booking-next-date">${h(next)}</p>`:''}<details data-booking-details="${item.key}"><summary>예약 링크·상세${definitions[item.key]?' · '+h(r.status||'미신청'):''}</summary><div class="booking-details">${linkedFields(item,context)}${r.time||r.ticket?`<dl class="booking-ticket-fields">${r.time?'<dt>확인한 날짜·시각</dt><dd>'+h(r.time.replace('T',' '))+'</dd>':''}${Object.entries(r.ticket||{}).filter(([k])=>['flight','seat','place'].includes(k)).map(([k,v])=>'<dt>'+({flight:'편명',seat:'좌석',place:'장소'})[k]+'</dt><dd>'+h(v)+'</dd>').join('')}</dl>`:''}<ul>${item.details.map(text=>`<li>${h(text)}</li>`).join('')}</ul>${definitions[item.key]?`<details class="booking-official-dates"><summary>공식 신청 일정 전체</summary><ul>${definitions[item.key].facts.map(text=>`<li>${h(text)}</li>`).join('')}</ul></details>`:''}<div class="booking-links">${item.url?`<a href="${h(item.url)}" target="_blank" rel="noopener noreferrer">${item.orderSelection?'공식 시간표':'예약·공식 안내'} ↗</a>`:''}<button type="button" data-booking-jump="${item.key}">${alternative?'대체안 선택·보기':'일정에서 보기'}</button>${item.source?`<a class="booking-source" href="${h(item.source)}" target="_blank" rel="noopener noreferrer">예약 조건 ↗</a>`:''}</div><label class="booking-memo-label">메모<input id="booking-memo-${item.key}" type="text" maxlength="300" data-booking-memo="${item.key}" value="${h(r.memo||'')}" placeholder="예약 확인·남은 할 일"></label></div></details></div></div></li>`;
+  return `<li class="booking-item${done?' is-complete':''}" data-booking-item="${item.key}"><div class="booking-row"><label class="booking-check"><input id="booking-complete-${item.key}" type="checkbox" data-booking-complete="${item.key}" aria-label="${h(item.name)} ${completeLabel}" ${done?'checked':''}></label><div class="booking-content"><div class="booking-date">${h(date)} <span class="booking-kind">${alternative?'대체안 · ':''}${h(kind)}</span></div><label class="booking-item-title" for="booking-complete-${item.key}">${h(item.name)}</label><p>${h(timing.error?'입력한 예약 시각을 확인해 주세요':done?(item.orderSelection?'왕복 발권 확인 완료':item.group==='prep'?completeLabel:'예약 확인 완료'):item.note)}</p>${next?`<p class="booking-next-date">${h(next)}</p>`:''}<details data-booking-details="${item.key}"><summary>예약 링크·상세${definitions[item.key]?' · '+h(r.status||'미신청'):''}</summary><div class="booking-details">${linkedFields(item,context)}${r.time||r.ticket?`<dl class="booking-ticket-fields">${r.time?'<dt>확인한 날짜·시각</dt><dd>'+h(r.time.replace('T',' '))+'</dd>':''}${Object.entries(r.ticket||{}).filter(([k])=>['flight','seat','place'].includes(k)).map(([k,v])=>'<dt>'+({flight:'편명',seat:'좌석',place:'장소'})[k]+'</dt><dd>'+h(v)+'</dd>').join('')}</dl>`:''}<ul>${item.details.map(text=>`<li>${h(text)}</li>`).join('')}</ul>${definitions[item.key]?`<details class="booking-official-dates"><summary>공식 신청 일정 전체</summary><ul>${definitions[item.key].facts.map(text=>`<li>${h(text)}</li>`).join('')}</ul></details>`:''}<div class="booking-links">${item.url?`<a href="${h(item.url)}" target="_blank" rel="noopener noreferrer">${item.orderSelection?'공식 시간표':'예약·공식 안내'} ↗</a>`:''}${jumpLink}${item.source?`<a class="booking-source" href="${h(item.source)}" target="_blank" rel="noopener noreferrer">예약 조건 ↗</a>`:''}</div><label class="booking-memo-label">메모<input id="booking-memo-${item.key}" type="text" maxlength="300" data-booking-memo="${item.key}" value="${h(r.memo||'')}" placeholder="예약 확인·남은 할 일"></label></div></details></div></div></li>`;
  }
  function onSiteGuide(items,id,title,open){
   if(!items.length)return '';
@@ -131,7 +135,7 @@
   document.getElementById('closeBookingChecklist').addEventListener('click',closeChecklist);
   dialog.addEventListener('click',event=>{
    const filter=event.target.closest('[data-booking-filter]');if(filter){checklistFilter=filter.dataset.bookingFilter;renderChecklist();dialog.scrollTop=0;dialog.querySelector('.booking-dialog-body').scrollTop=0;return;}
-   const jump=event.target.closest('[data-booking-jump]'),item=checklistItem(jump?.dataset.bookingJump);if(!item)return;
+   const jump=event.target.closest('[data-booking-jump]'),item=checklistItem(jump?.dataset.bookingJump);if(!item||item.day===null)return;
    const context=checklistContext();closeChecklist();window.dispatchEvent(new CustomEvent('routebook:booking-jump',{detail:{day:item.day,variant:itemVariant(item,context),leg:item.leg,stop:item.stop,stopKey:item.stopKey}}));
   });
   window.addEventListener('routebook:reservation-change',()=>{if(dialog.open)queueMicrotask(renderChecklist);});
@@ -160,7 +164,23 @@
  });
  document.addEventListener('click',event=>{const b=event.target.closest('[data-reservation-alt]'),d=definitions[b?.dataset.reservationAlt];if(d)window.dispatchEvent(new CustomEvent('routebook:reservation-alt',{detail:{day:d.day,variant:d.variant}}));});
  function confirmFields(key,fields){
-  const item=checklistModel().active.find(x=>x.key===key);if(!item||!Array.isArray(fields)||!fields.length||fields.length>4)return {ok:false,error:'예약과 저장할 항목을 선택하세요.'};const values={},ticket={};for(const f of fields){if(typeof f.value!=='string'||f.value.length>160)return {ok:false,error:'추출한 항목을 확인하세요.'};if(f.name==='time'){const parsed=ReservationCore.parseTime(f.value);if(!parsed||parsed.date!==TripData.date(item.day))return {ok:false,error:'예약의 여행 날짜와 추출 날짜·시각이 다릅니다. 원문을 확인하세요.'};values.time=f.value;}else if(['flight','seat','place'].includes(f.name)){if(f.name==='flight'&&!/^[A-Za-z0-9가-힣 ·-]{1,40}$/.test(f.value)||f.name==='seat'&&!/^[A-Za-z0-9가-힣 ·-]{1,40}$/.test(f.value)||/[\x00-\x1f]/.test(f.value))return {ok:false,error:'편명·좌석·장소 표기를 확인하세요.'};ticket[f.name]=f.value;}else return {ok:false,error:'지원하지 않는 추출 항목입니다.'};}
+  const model=checklistModel(),item=model.active.find(x=>x.key===key);
+  if(!item||!Array.isArray(fields)||!fields.length||fields.length>4)return {ok:false,error:'예약과 저장할 항목을 선택하세요.'};
+  const values={},ticket={};
+  for(const f of fields){
+   if(typeof f.value!=='string'||f.value.length>160)return {ok:false,error:'추출한 항목을 확인하세요.'};
+   if(f.name==='time'){
+    const parsed=ReservationCore.parseTime(f.value);
+    const matchesDate=item.day===null
+     ?model.context.days.some(day=>TripData.date(day.n)===parsed?.date)
+     :TripData.date(item.day)===parsed?.date;
+    if(!matchesDate)return {ok:false,error:'예약의 여행 날짜와 추출 날짜·시각이 다릅니다. 원문을 확인하세요.'};
+    values.time=f.value;
+   }else if(['flight','seat','place'].includes(f.name)){
+    if(f.name==='flight'&&!/^[A-Za-z0-9가-힣 ·-]{1,40}$/.test(f.value)||f.name==='seat'&&!/^[A-Za-z0-9가-힣 ·-]{1,40}$/.test(f.value)||/[\x00-\x1f]/.test(f.value))return {ok:false,error:'편명·좌석·장소 표기를 확인하세요.'};
+    ticket[f.name]=f.value;
+   }else return {ok:false,error:'지원하지 않는 추출 항목입니다.'};
+  }
   const previous=structuredClone(records[key]||{}),next={...previous,...values,ticket:{...(previous.ticket||{}),...ticket},updatedAt:Date.now()};records[key]=next;save();if(!storageAvailable){records[key]=previous;return {ok:false,error:'기기 저장에 실패했어요. 다시 저장하세요.'};}renderChecklist();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key,field:'ticket'}}));return {ok:true};
  }
  function confirmTime(key,value){if(!definitions[key]||!ReservationCore.parseTime(value))return false;const r=records[key]??={status:'미신청',time:''};r.time=value;r.updatedAt=Date.now();save();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key,field:'time'}}));return storageAvailable;}

@@ -81,6 +81,17 @@
    ];
    push(ibuki);
   }
+  if(context.metadata?.id==='tokyo-20270108-19'&&days.length)push({
+   key:'benoit-aoyama',group:'food',kind:'사전 예약 권장',name:'베부아 · BENOIT 아오야마',day:null,
+   date:'방문일 미정',note:'오모테산도 · 공개 메뉴 기준 런치 7,700엔부터, 디너 10,780엔부터 (서비스료 포함)',
+   url:'https://www.tablecheck.com/ko/shops/benoit-tokyo/reserve',
+   source:'https://www.benoit-tokyo.com/en/reservation/',
+   details:[
+    '라 포르트 아오야마 10층이에요. TableCheck에서 1명과 방문 날짜를 선택해 가능한 시각과 코스를 확인하세요.',
+    '공개 메뉴의 기본 코스는 런치 7,000엔, 디너 9,800엔이에요. 서비스료 10%가 별도로 붙고 코스·추가 요리·음료에 따라 금액이 달라져요.',
+    '공식 취소 안내에는 방문 전날 21:00 이후 취소료가 발생한다고 나와 있어요. 선택한 상품의 조건을 예약 화면에서 확인하세요.'
+   ]
+  });
   const skytree=anchor(copy('skytree'),'skytree');
   if(skytree){
    skytree.date=skytree.date.split(/[~-]/)[0]+' 입장 목표';
