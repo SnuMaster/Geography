@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261126-tokyo-daegu-taxi-1');
+ assert.equal(b.revision,'20261126-tokyo-rail-orders-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -120,6 +120,10 @@ test('active routes retain continuous public endpoints and explicit reference-on
    if(l.timeComparison){compared++;assert.equal(l.timeComparison.live,false);assert.equal(l.timeComparison.travelDateVerified,false);assert.equal(l.timeComparison.departureDate,'2027-'+d.date.replace('/','-'));assert.equal(l.timeComparison.totalMinutes,l.durationMinutes);}
   }
  }
- assert.equal(b.data.days[4].variants[0].stops[1].end,"09:30");
+ assert.equal(b.data.days[4].variants[0].stops[1].end,"10:30");
+ assert.equal(b.data.days[4].variants[0].stops[7].end,"17:41");
+ assert.equal(b.data.days[7].variants[0].stops[1].start,"11:49");
  assert.equal(b.data.days[7].variants[0].stops[5].end,"17:44");
+ assert.deepEqual(b.routes.days['5-main'][2].busTimetable.trips[0],['12:45','13:12']);
+ assert.deepEqual(b.routes.days['8-main'][1].busTimetable.trips[0],['12:15','13:00']);
 });

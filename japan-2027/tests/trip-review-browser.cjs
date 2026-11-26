@@ -5,7 +5,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
 (async()=>{await new Promise(r=>server.listen(0,'127.0.0.1',r));const browser=await chromium.launch({headless:true,channel:'chrome'});try{
  for(const width of [390,1440]){
   const page=await browser.newPage({viewport:{width,height:1000}}),errors=[];
-  await page.addInitScript(()=>{if(!localStorage.getItem('routebook-reservations-v1'))localStorage.setItem('routebook-reservations-v1',JSON.stringify({'flight-tokyo':{complete:true,ticket:{flight:'TW251'}},'flight-return-tokyo':{complete:true}}));});
+  await page.addInitScript(()=>{if(!localStorage.getItem('routebook-reservations-v1'))localStorage.setItem('routebook-reservations-v1',JSON.stringify({'flight-tokyo':{complete:true,ticket:{flight:'TW251'}},'flight-return-tokyo':{complete:true},'fuji-excursion':{complete:true,memo:'열차표 메모'}}));});
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
@@ -32,6 +32,9 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!date.includes('1/12'))throw Error('Wrong visible Fuji date '+date);
    const railGroup=item.closest('.booking-group'),nikko=railGroup.querySelector('[data-booking-item="nikko-express"]');
    if(!item.textContent.includes('12/12 10:00')||!nikko?.textContent.includes('12/15 09:00'))throw Error('Missing rail sale openings');
+   if(!item.textContent.includes('공식 판매 대기 중')||!nikko.textContent.includes('공식 판매 대기 중')||!item.textContent.includes('78,032원')||!nikko.textContent.includes('47,100원'))throw Error('Pending rail orders are missing');
+   if(item.querySelector('input').checked||nikko.querySelector('input').checked)throw Error('Pending rail ticket was marked confirmed');
+   if(item.querySelector('[data-booking-memo]').value!=='열차표 메모')throw Error('Existing railway booking memo disappeared');
    const onSite=document.querySelector('#bookingOnSite');
    onSite.querySelector('summary').click();
    if(!onSite.open||!onSite.textContent.includes('나리타 스카이라이너')||onSite.querySelector('input'))throw Error('Wrong on-site purchase guide');
@@ -46,9 +49,10 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261126-tokyo-daegu-taxi-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261126-tokyo-rail-orders-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
+   if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
@@ -104,7 +108,11 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!document.querySelector('#stopList')?.textContent.includes('스카이트리 전망대')||r.getStops().some(s=>s.planKey==='free'))throw Error('Wrong Jan 18 route');
    r.setDay(2);
    if(r.getStops().length||document.querySelector('#stopList .stop-card')||!document.querySelector('#stopList')?.textContent.includes('비워뒀어요')||!document.querySelector('#playBtn').disabled)throw Error('Day 2 is not empty');
-   r.setDay(8);r.selectLeg(6);
+   for(const [day,leg,name,when] of [[5,2,'후지회유 15호','10:30'],[5,8,'후지회유 48호','17:41'],[8,1,'스페이시아 X 5호','10:12'],[8,6,'스페이시아 X 12호','17:44']]){
+    r.setDay(day);r.selectLeg(leg);
+    const order=r.map._popup?.getElement()?.querySelector('[data-rail-order]')?.textContent||'';
+    if(!order.includes(name)||!order.includes(when))throw Error('Missing requested train in map details: '+name);
+   }
    const el=r.map._popup?.getElement();if(!el?.querySelector('.operator-spacia-x')||el.querySelector('.operator-revaty'))throw Error('Wrong return train logo');
    return out;
   });

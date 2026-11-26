@@ -15,6 +15,21 @@
   return [opening.toISOString().slice(0,10)+'T'+time+':00+09:00',
    (opening.getUTCMonth()+1)+'/'+opening.getUTCDate()+' '+time+' · 지정석 발매 기준 (일본 시각)'];
  }
+ const krw=value=>value.toLocaleString('ko-KR')+'원';
+ function orderDetails(day,recommendation){
+  const orders=(day.railOrders||[]).filter(o=>o.date===day.date);
+  if(!orders.length)return null;
+  const total=orders.reduce((sum,order)=>sum+order.shownKrw,0);
+  return {
+   kind:'공식 판매 대기 중',url:orders[0].source,
+   orderSelection:JSON.stringify(orders.map(({date,service,departure,arrival,seat})=>[date,service,departure.time,arrival.time,seat])),
+   note:`왕복 ${orders.length}편 신청 · 결제 화면 합계 ${krw(total)} · 발권 대기`,
+   trips:orders.map(({service,departure,arrival,seat,shownKrw},index)=>
+    `${index===0?'가는 편':'돌아오는 편'} · ${service} · ${departure.station} ${departure.time} → ${arrival.station} ${arrival.time} · ${seat} · 결제 화면 ${krw(shownKrw)}.`+
+    (departure.platform?` 신청 화면의 출발 승강장 ${departure.platform}번.`:'')),
+   instructions:['판매가 열리면 신청처의 발권 완료 메일과 좌석 정보를 확인하세요. 왕복 두 편 모두 발권을 확인한 뒤 완료로 체크하세요.',recommendation]
+  };
+ }
 
  function build(context,legacy){
   const days=context.days||[],find=key=>{for(const day of days)for(const variant of day.variants||[])for(const stop of variant.stops||[])if(stop.planKey===key)return {day,variant,stop};return null;};
@@ -42,35 +57,33 @@
   const fuji=find('fujiStation');
   if(fuji){
    const opening=saleOpening(fuji.day,start,10);
-   const trips=twelveDay&&date(fuji.day)==='1/12'
-    ?['가는 편 · 후지회유 11호, 신주쿠 09:30 → 가와구치코 11:28.','돌아오는 편 · 후지회유 44호, 가와구치코 16:48 → 신주쿠 18:48.']
-    :[];
+   const pending=orderDetails(fuji.day,'창가 좌석은 희망 사항이에요. 발권 메일에서 배정 좌석과 표 수령·탑승 방법을 확인하세요.');
    push({
-    key:'fuji-excursion',group:'rail',kind:'사전 예매 권장',name:'후지회유 왕복 지정석',
+    key:'fuji-excursion',group:'rail',kind:pending?.kind||'사전 예매 권장',name:'후지회유 왕복 지정석',
     day:fuji.day.n,variant:fuji.variant.id,stop:fuji.stop.name,date:date(fuji.day)+' · 신주쿠 ↔ 가와구치코',
-    note:'전 좌석 지정석 · JR 동일본 에키넷에서 왕복 2편 예매',
-    url:'https://www.eki-net.com/en/jreast-train-reservation/Top/Index',
+    orderSelection:pending?.orderSelection,
+    note:pending?.note||'전 좌석 지정석 · JR 동일본 에키넷에서 왕복 2편 예매',
+    url:pending?.url||'https://www.eki-net.com/en/jreast-train-reservation/Top/Index',
     source:'https://www.jreast.co.jp/kippu/02.html',
-    details:[opening[1]+' · JR 일반 발매는 승차 한 달 전 10:00입니다.',...trips,
-     '왕복 각각 신주쿠–가와구치코 전 구간의 승차권과 특급권을 확인하세요. 실제 운행편과 좌석은 예매 화면에서 확인하세요.'],
+    details:[opening[1],...(pending?.trips||[]),...(pending?.instructions||
+     ['왕복 각각 신주쿠–가와구치코 전 구간의 승차권과 특급권을 확인하세요.'])],
     milestones:[opening]
    });
   }
   const nikko=find('nikkoStation');
   if(nikko){
    const opening=saleOpening(nikko.day,start,9);
-   const trips=twelveDay
-    ?['가는 편 · 스페이시아 X 3호, 기타센주 09:13 → 도부닛코 10:50.','돌아오는 편 · 스페이시아 X 12호, 도부닛코 17:44 → 기타센주 19:21.']
-    :['가는 편 · 기타센주 → 도부닛코 리버티 게곤.','돌아오는 편 · 도부닛코 → 시모이마이치 일반열차, 시모이마이치 → 기타센주 스페이시아 X.'];
+   const pending=orderDetails(nikko.day,'신청 화면 기준으로 닛코 패스 또는 별도의 기본 승차권이 필요해요. 발권 확인 메일과 함께 준비하세요.');
+   const trips=pending?.trips||(twelveDay?[]:['가는 편 · 기타센주 → 도부닛코 리버티 게곤.','돌아오는 편 · 도부닛코 → 시모이마이치 일반열차, 시모이마이치 → 기타센주 스페이시아 X.']);
    push({
-    key:'nikko-express',group:'rail',kind:'사전 예매 권장',name:'닛코 특급 왕복 지정석',
+    key:'nikko-express',group:'rail',kind:pending?.kind||'사전 예매 권장',name:'닛코 특급 왕복 지정석',
     day:nikko.day.n,variant:nikko.variant.id,stop:nikko.stop.name,
     date:date(nikko.day)+' · 기타센주 ↔ 도부닛코',
-    note:twelveDay?'전 좌석 지정석 · 도부 철도에서 스페이시아 X 3호·12호 예매':'도부 철도에서 리버티·스페이시아 X 지정석 예매',
-    url:'https://tobu-japantrip-tickets.com/',
+    orderSelection:pending?.orderSelection,
+    note:pending?.note||(twelveDay?'도부 철도에서 스페이시아 X 왕복 지정석 예매':'도부 철도에서 리버티·스페이시아 X 지정석 예매'),
+    url:pending?.url||'https://tobu-japantrip-tickets.com/',
     source:'https://www.tobu.co.jp/en/express_info/purchase/?version=en',
-    details:[opening[1]+' · 도부 특급 발매는 승차 한 달 전 09:00입니다.',...trips,
-     '왕복 특급권에서 스탠더드 좌석을 선택하세요. 기본 운임도 별도로 필요하며, 실제 운행편과 좌석은 예매 화면에서 확인하세요.'],
+    details:[opening[1],...trips,...(pending?.instructions||['기본 승차권과 특급권을 확인하고 좌석 종류를 선택하세요.'])],
     milestones:[opening]
    });
   }

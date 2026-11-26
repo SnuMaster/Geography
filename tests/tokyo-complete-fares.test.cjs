@@ -16,8 +16,10 @@ test('independent operators retain separate IC components',()=>{
 });
 test('Spacia X return includes one whole-OD base fare and one actual express ticket',()=>{
  const l=bundle.routes.days['8-main'][5],t=l.fare.breakdown.find(r=>r.operator==='TobuNikko');
- assert.equal(l.fare.icYen,3511);assert.equal(t.baseIcYen,1393);assert.equal(t.reservedSurchargeYen,1940);assert.equal(t.icYen,3333);assert.equal(t.travelDate,'2027-01-15');assert.equal(t.season,'normal');assert(t.ticketRequired);assert.match(t.ticketLabel,/스페이시아 X/);
+ assert.equal(l.fare.icYen,4091);assert.equal(t.baseIcYen,1393);assert.equal(t.reservedSurchargeYen,2520);assert.equal(t.icYen,3913);assert.equal(t.travelDate,'2027-01-15');assert.equal(t.season,'normal');assert(t.ticketRequired);assert.match(t.ticketLabel,/스페이시아 X 프리미엄/);
  assert(l.parts.some(p=>/Spacia.?X|스페이시아.?X|スペーシア.?X/i.test(p.serviceName||'')));
+ const out=bundle.routes.days['8-main'][0],cockpit=out.fare.breakdown.find(r=>r.operator==='TobuNikko');
+ assert.equal(out.fare.icYen,4011);assert.equal(cockpit.reservedSurchargeYen,2440);assert.match(cockpit.ticketLabel,/콕핏 라운지/);
 });
 test('bus fares are separate from the Japanese rail-only subtotal and carry stop-level evidence',()=>{
  for(const key of ['5-main','8-main'])for(const l of bundle.routes.days[key].filter(l=>l.parts.some(p=>p.mode==='bus'))){assert(l.fare.breakdown.every(r=>r.mode==='bus'&&r.fromJa&&r.toJa&&r.checkedAt&&r.sources.length));assert.equal(F.summarize([l],{scope:'japan-rail'}).ic,0);assert(l.fare.icYen>0);}

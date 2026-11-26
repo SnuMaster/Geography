@@ -7,7 +7,7 @@ test('both excursion return evenings have budget dinners and a connected free ho
  assert(G.distance([v.stops[i].lat,v.stops[i].lng],l[i].parts[0].coords[0])<2);assert(G.distance([v.stops[i+1].lat,v.stops[i+1].lng],l[i].parts.at(-1).coords.at(-1))<2);
  assert.deepEqual(C.warnings(v.stops,l).filter(w=>['overlap','travel'].includes(w.type)),[]);
  }
- assert(b.routes.days['5-main'].at(-2).fare.icYen>0);assert.equal(b.routes.days['8-main'].at(-2).fare.icYen,3511);
+ assert(b.routes.days['5-main'].at(-2).fare.icYen>0);assert.equal(b.routes.days['8-main'].at(-2).fare.icYen,4091);
 });
 test('meal patch keeps existing records stable and never duplicates food or rail fares',()=>{
  const copy=structuredClone(b),before=JSON.stringify(copy.routes),ids=copy.data.days.flatMap(d=>d.variants[0].stops.map(s=>s.uid));assert.deepEqual(P.apply(copy,e).added,[]);assert.equal(JSON.stringify(copy.routes),before);assert.equal(new Set(ids).size,ids.length);assert.equal(T.counts(copy.data,copy.routes).legs,b.data.days.reduce((n,d)=>n+Math.max(0,d.variants[0].stops.length-1),0));

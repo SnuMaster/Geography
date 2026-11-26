@@ -13,7 +13,13 @@ function apply(bundle,e){
  const reviewed=[];
  for(const r of e.routes){
   const d=bundle.data.days.find(d=>d.n===Number(r.key.split('-')[0])),v=d.variants.find(v=>v.id==='main'),l=bundle.routes.days[r.key][r.index],a=v.stops[r.index],z=v.stops[r.index+1];
-  if(!l?.parts.some(p=>p.mode==='bus'&&p.lineId===r.lineId))throw Error('Bus signature changed '+r.key+'#'+r.index);
+  const existingBus=l?.parts.find(p=>p.mode==='bus'&&p.lineId===r.lineId);
+  if(!existingBus)throw Error('Bus signature changed '+r.key+'#'+r.index);
+  // Keep the chosen departure and its wait time when the reviewed alignment is current.
+  if(l.busTimetable&&l.busRoute?.checkedAt===e.checkedAt&&JSON.stringify(existingBus.coords)===JSON.stringify(r.bus.coords)){
+   reviewed.push({key:r.key,index:r.index,boarding:r.boarding.name,alighting:r.alighting.name,points:existingBus.coords.length,durationMinutes:l.durationMinutes,unchangedFare:l.fare.icYen});
+   continue;
+  }
   const boarding=object(r.boarding.point,r.boarding.name),alighting=object(r.alighting.point,r.alighting.name),parts=access(a,boarding,r.walkIn),begin=object(r.bus.coords[0],r.boarding.name),end=object(r.bus.coords.at(-1),r.alighting.name);
   if(G.distance(point(boarding),point(begin))>2)parts.push(link(boarding,begin));
   parts.push({mode:'bus',lineId:r.lineId,line:r.line,from:r.boarding.name,to:r.alighting.name,fromJa:r.boarding.name,toJa:r.alighting.name,coords:clone(r.bus.coords),distanceM:r.bus.distanceM,durationMinutes:r.bus.durationMinutes,geometryAccuracy:r.accuracy,geometrySource:r.geometryBasis,source:r.bus.source,sources:r.sources,stopSequence:r.stops.map(s=>({name:s.name,point:s.point})),boardingStop:r.boarding,alightingStop:r.alighting,sourceCheckedAt:e.checkedAt});

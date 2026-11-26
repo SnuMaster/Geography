@@ -4,7 +4,7 @@ test('unchanged bus legs use reviewed boarding, alighting and ordered intermedia
  assert.equal(e.routes.length,6);
  for(const r of e.routes.filter(r=>r.key!=='8-main'||r.index===1)){const l=b.routes.days[r.key][r.index],p=l.parts.find(p=>p.mode==='bus');assert.equal(p.fromJa,r.boarding.name);assert.equal(p.toJa,r.alighting.name);assert.deepEqual(p.coords,r.bus.coords);assert(p.coords.length>20);assert.equal(p.stopSequence.length,r.stops.length);assert.equal(l.busRoute.live,false);assert.equal(l.busRoute.checkedAt,'2026-11-18');
   for(let i=1;i<l.parts.length;i++)assert(G.distance(l.parts[i-1].coords.at(-1),l.parts[i].coords[0])<=2.1,r.key+' joins');
-  assert.equal(l.durationMinutes,l.parts.reduce((n,p)=>n+p.durationMinutes,0)+r.waitMinutes);
+  assert.equal(l.durationMinutes,l.parts.reduce((n,p)=>n+p.durationMinutes,0)+l.busRoute.waitMinutes);
  }
  assert.equal(b.routes.days['5-main'][2].fare.icYen,570);assert.equal(b.routes.days['5-main'][3].fare.icYen,280);assert.equal(b.routes.days['5-main'][5].fare.icYen,230);
  assert.equal(b.routes.days['8-main'][1].fare.icYen,1250);assert.equal(b.routes.days['8-main'][4].fare.icYen,1250);

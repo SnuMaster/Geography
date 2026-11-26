@@ -5,8 +5,10 @@ const context=()=>({days:structuredClone(bundle.data.days),metadata:bundle.data.
 test('booking checklist follows the actual itinerary dates and removes retired trips',()=>{
  const rows=P.build(context(),legacy),by=Object.fromEntries(rows.map(r=>[r.key,r]));
  assert.equal(by['fuji-excursion'].day,5);assert.match(by['fuji-excursion'].date,/1\/12/);assert.match(by['fuji-excursion'].milestones[0][0],/^2026-12-12T10:00/);
- assert.equal(by['fuji-excursion'].group,'rail');assert.match(by['fuji-excursion'].details.join(' '),/11호.*44호/);
- assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/스페이시아 X/);assert.match(by['nikko-express'].details.join(' '),/09:13.*17:44/);
+ assert.equal(by['fuji-excursion'].group,'rail');assert.match(by['fuji-excursion'].details.join(' '),/15호.*10:30.*12:24.*48호.*17:41.*19:48/);
+ assert.equal(by['fuji-excursion'].kind,'공식 판매 대기 중');assert.match(by['fuji-excursion'].note,/78,032원/);
+ assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/5호.*10:12.*11:49.*콕핏 라운지.*12호.*17:44.*19:21.*프리미엄/);
+ assert.equal(by['nikko-express'].kind,'공식 판매 대기 중');assert.match(by['nikko-express'].note,/47,100원/);
  assert.equal(by['nikko-express'].group,'rail');assert.equal(by['nikko-express'].milestones[0][0],'2026-12-15T09:00:00+09:00');
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
  assert.equal(by.skytree.date,'1/18 · 16:00 입장 목표');assert.equal(by.skytree.day,11);assert.equal(by.zutomayo,undefined);
@@ -20,6 +22,7 @@ test('booking dates and visit time derive from the plan without editing checklis
  const c=context();c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
  const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='ibuki').date,/18:30/);
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');
+ assert(!r.find(x=>x.key==='fuji-excursion').orderSelection);assert(!r.find(x=>x.key==='nikko-express').orderSelection);
 });
 test('a removed destination removes its booking instead of keeping an unrelated day link',()=>{
  const c=context();for(const d of c.days)for(const v of d.variants)v.stops=v.stops.filter(s=>s.planKey!=='fujiStation');
