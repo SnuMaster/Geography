@@ -36,7 +36,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(item.querySelector('input').checked||nikko.querySelector('input').checked)throw Error('Pending rail ticket was marked confirmed');
    if(item.querySelector('[data-booking-memo]').value!=='열차표 메모')throw Error('Existing railway booking memo disappeared');
    const pass=railGroup.querySelector('[data-booking-item="nikko-pass-all-area"]');
-   if(!pass||!pass.textContent.includes('8,000엔')||!pass.textContent.includes('기타센주')||pass.querySelector('[data-booking-complete]').checked)throw Error('Wrong optional Nikko Pass purchase card');
+   if(!pass||!/8,000(?:엔|\s+JP¥)/.test(pass.textContent)||!pass.textContent.includes('기타센주')||pass.querySelector('[data-booking-complete]').checked)throw Error('Wrong optional Nikko Pass purchase card');
    pass.querySelector('[data-booking-complete]').click();
    const changed=ReservationUI.getAssistantBookings();
    if(!changed.find(x=>x.key==='nikko-pass-all-area').confirmed||changed.find(x=>x.key==='nikko-express').confirmed)throw Error('Nikko Pass completion changed the train reservation');
