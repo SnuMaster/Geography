@@ -23,7 +23,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261126-tokyo-flights-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261126-tokyo-flights-2')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
@@ -38,7 +38,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    document.querySelector('[data-booking-jump="flight-mm809-20270120"]').click();
    if(r.state.day!==12||!document.querySelector('[data-leg="9"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
    r.setDay(1);
-   if(r.getStops()[0]?.name!=='어나드범어아파트')throw Error('First departure stop was overwritten');
+   if(r.getStops()[0]?.name!=='월성로 132')throw Error('First departure stop was overwritten');
    r.selectLeg(2);
    if(!r.map._popup?.getElement()?.textContent.includes('1/8 11:10'))throw Error('Outbound flight schedule missing');
    r.setDay(12);

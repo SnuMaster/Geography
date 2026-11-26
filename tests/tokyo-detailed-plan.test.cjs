@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261126-tokyo-flights-1');
+ assert.equal(b.revision,'20261126-tokyo-flights-2');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -33,10 +33,10 @@ test('Skyliner stays blank, and airport selections use the correct local dates',
  assert(sky);assert.equal(sky.fare.icYen,null);assert.equal(sky.fare.min,null);
  const [taxi,flightOut]=b.routes.days['1-main'];
  const trip=require('../japan-2027/personal-trip').patch(structuredClone(b.data),structuredClone(b.routes));
- assert.equal(trip.data.days[0].variants[0].stops[0].name,'어나드범어아파트');
+ assert.equal(trip.data.days[0].variants[0].stops[0].name,'월성로 132');
  assert.equal(taxi.parts[0].mode,'taxi');
  assert.equal(taxi.private,false);
- assert.equal(taxi.departureAt,Date.parse('2027-01-08T08:00:00+09:00'));
+ assert.equal(taxi.departureAt,Date.parse('2027-01-08T07:20:00+09:00'));
  assert.equal(taxi.to,"대구국제공항");
  assert(!b.routes.days["1-main"].some(l=>l.parts.some(p=>p.mode==="bus")));
  assert.equal(flightOut.fare.min,null);

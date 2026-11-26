@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const T=require('../japan-2027/data-model');
 const {points,rows}=require('./tokyo-airport-geometry.json');
-const revision='20261126-tokyo-flights-1';
+const revision='20261126-tokyo-flights-2';
 const date='2026-11-25';
 const kobus='https://www.kobus.co.kr/';
 const jeju='https://www.jejuair.net/ko/prepare/flight/viewScheduleInfo.do';
@@ -82,6 +82,7 @@ function booking(key,day,name,when,url,details){
 function apply(bundle){
  const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
  if(bundle.revision===revision)return bundle;
+ if(out.travelBookings?.some(b=>b.key==='flight-tw251-20270108'))return updateDaeguDeparture(bundle);
  if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return finalize(bundle);
  const ov=out.variants[0],ol=routes.days['1-main'];
  const lv=last.variants[0],ll=routes.days['12-main'];
@@ -303,6 +304,27 @@ function applyCurrentTrip(bundle){
  daySync(freeDay,[]);
  if(data.nightRows.length)data.nightRows[1]=[freeDay.date,empty,''];
  data.metadata.cities=data.metadata.cities.filter(city=>city!=='가마쿠라·에노시마');
+ return updateDaeguDeparture(bundle);
+}
+function updateDaeguDeparture(bundle){
+ const {data,routes}=bundle,out=data.days[0],v=out.variants[0],legs=routes.days['1-main'];
+ const airport=v.stops[1],previous=v.stops[0];
+ const addressSource='https://juso.app/b/cce9ls874tvnr75u';
+ const origin=location('t27-12-d1-wolseong-departure','월성로 132','','departure','07:10~07:20',
+  [35.82714,128.52280],'07:10 택시 승차 준비. 07:20 월성로 132 단지 앞 출발, 08:20 대구공항 도착 목표.',addressSource);
+ Object.assign(origin,{area:'대구 달서구',selectionId:previous.selectionId,coordinateNote:'공개 도로명주소의 단지 대표 좌표. 탑승 위치는 기사와 확인.'});
+ const name='택시 · 월성로 132 → 대구국제공항';
+ const timing=50;
+ const segment=connector(pt(origin),pt(airport),origin.name,airport.name,timing);
+ Object.assign(segment,{mode:'taxi',line:name,geometrySource:'출발지와 공항을 잇는 개략선 · 실제 주행 경로는 호출 앱 기준',source:addressSource});
+ const airportAccess=leg(origin,airport,[segment],fare('KRW',null,airport.source,'호출 시 운임 확인'),timing,name);
+ airportAccess.distanceLabel='개략 연결';
+ airportAccess.durationLabel='계획 약 50분 · 교통 여유 별도';
+ v.stops[0]=origin;
+ legs[0]=airportAccess;
+ out.note='07:20 월성로 132 출발 · 08:20 대구공항 도착 목표 · 11:10 대구발 TW251';
+ daySync(out,legs);
+ bundle.revision=data.version=data.metadata.revision=routes.version=revision;
  return bundle;
 }
 if(require.main===module){
