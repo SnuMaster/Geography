@@ -35,10 +35,16 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!item.textContent.includes('공식 판매 대기 중')||!nikko.textContent.includes('공식 판매 대기 중')||!item.textContent.includes('78,032원')||!nikko.textContent.includes('47,100원'))throw Error('Pending rail orders are missing');
    if(item.querySelector('input').checked||nikko.querySelector('input').checked)throw Error('Pending rail ticket was marked confirmed');
    if(item.querySelector('[data-booking-memo]').value!=='열차표 메모')throw Error('Existing railway booking memo disappeared');
+   const pass=railGroup.querySelector('[data-booking-item="nikko-pass-all-area"]');
+   if(!pass||!pass.textContent.includes('8,000엔')||!pass.textContent.includes('기타센주')||pass.querySelector('[data-booking-complete]').checked)throw Error('Wrong optional Nikko Pass purchase card');
+   pass.querySelector('[data-booking-complete]').click();
+   const changed=ReservationUI.getAssistantBookings();
+   if(!changed.find(x=>x.key==='nikko-pass-all-area').confirmed||changed.find(x=>x.key==='nikko-express').confirmed)throw Error('Nikko Pass completion changed the train reservation');
+   document.querySelector('[data-booking-item="nikko-pass-all-area"] [data-booking-complete]').click();
    const onSite=document.querySelector('#bookingOnSite');
    onSite.querySelector('summary').click();
    if(!onSite.open||!onSite.textContent.includes('나리타 스카이라이너')||onSite.querySelector('input'))throw Error('Wrong on-site purchase guide');
-   item.querySelector('[data-booking-complete]').click();
+   document.querySelector('[data-booking-item="fuji-excursion"] [data-booking-complete]').click();
    if(!document.querySelector('#bookingOnSite').open)throw Error('On-site guide closed after checking a booking');
    if(!ReservationUI.getAssistantBookings().find(x=>x.key==='fuji-excursion')?.confirmed)throw Error('New booking completion did not save');
    document.querySelector('[data-booking-item="fuji-excursion"] [data-booking-complete]').click();

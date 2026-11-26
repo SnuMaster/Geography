@@ -10,6 +10,11 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/5호.*10:12.*11:49.*콕핏 라운지.*12호.*17:44.*19:21.*프리미엄/);
  assert.equal(by['nikko-express'].kind,'공식 판매 대기 중');assert.match(by['nikko-express'].note,/47,100원/);
  assert.equal(by['nikko-express'].group,'rail');assert.equal(by['nikko-express'].milestones[0][0],'2026-12-15T09:00:00+09:00');
+ const pass=by['nikko-pass-all-area'];
+ assert.equal(pass.day,by['nikko-express'].day);assert.equal(pass.stop,by['nikko-express'].stop);
+ assert.equal(pass.kind,'선택 구매');assert.match(pass.note,/8,000엔.*4일권.*기타센주/);
+ assert.match(pass.details.join(' '),/주젠지온센행.*스페이시아 X.*별도.*아사쿠사·도쿄스카이트리.*5,286엔/);
+ assert.equal(pass.source,'https://www.tobu.co.jp/kr/ticket/nikko/all.html');
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
  assert.equal(by.skytree.date,'1/18 · 16:00 입장 목표');assert.equal(by.skytree.day,11);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
@@ -22,6 +27,7 @@ test('booking dates and visit time derive from the plan without editing checklis
  const c=context();c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
  const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='ibuki').date,/18:30/);
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');
+ assert.match(r.find(x=>x.key==='nikko-pass-all-area').date,/^1\/16/);
  assert(!r.find(x=>x.key==='fuji-excursion').orderSelection);assert(!r.find(x=>x.key==='nikko-express').orderSelection);
 });
 test('a removed destination removes its booking instead of keeping an unrelated day link',()=>{

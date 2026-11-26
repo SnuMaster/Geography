@@ -73,7 +73,7 @@
   const nikko=find('nikkoStation');
   if(nikko){
    const opening=saleOpening(nikko.day,start,9);
-   const pending=orderDetails(nikko.day,'신청 화면 기준으로 닛코 패스 또는 별도의 기본 승차권이 필요해요. 발권 확인 메일과 함께 준비하세요.');
+   const pending=orderDetails(nikko.day,'특급권과 별도로 도부철도 기본 승차권이 필요해요. 닛코 패스를 고려한다면 아래 항목에서 기타센주 이용 조건을 먼저 확인하세요.');
    const trips=pending?.trips||(twelveDay?[]:['가는 편 · 기타센주 → 도부닛코 리버티 게곤.','돌아오는 편 · 도부닛코 → 시모이마이치 일반열차, 시모이마이치 → 기타센주 스페이시아 X.']);
    push({
     key:'nikko-express',group:'rail',kind:pending?.kind||'사전 예매 권장',name:'닛코 특급 왕복 지정석',
@@ -85,6 +85,20 @@
     source:'https://www.tobu.co.jp/en/express_info/purchase/?version=en',
     details:[opening[1],...trips,...(pending?.instructions||['기본 승차권과 특급권을 확인하고 좌석 종류를 선택하세요.'])],
     milestones:[opening]
+   });
+   if(nikko.variant.stops.some(stop=>stop.planKey==='kegon'))push({
+    key:'nikko-pass-all-area',group:'rail',kind:'선택 구매',name:'도부 닛코 패스 올 에어리어 (NIKKO PASS ALL AREA)',
+    day:nikko.day.n,variant:nikko.variant.id,stop:nikko.stop.name,
+    date:date(nikko.day)+' · 닛코·주젠지호',
+    note:'성인 8,000엔 · 4일권 · 구매 전 기타센주 이용 가능 여부 확인',
+    url:'https://tobu-japantrip-tickets.com/',
+    source:'https://www.tobu.co.jp/kr/ticket/nikko/all.html',
+    details:[
+     '외국인 여행자용 패스예요. 도부철도 기본 운임 왕복과 주젠지온센행 도부버스가 포함돼요. 스페이시아 X 특급권과 좌석 요금은 별도예요.',
+     '도부 공식 안내의 출발역은 아사쿠사·도쿄스카이트리예요. 현재 신청한 특급은 기타센주 왕복이므로 이 역에서 패스를 쓸 수 있는지 도부에 먼저 확인하세요.',
+     '현재 당일 동선은 도부 기본 IC 운임 왕복 2,786엔과 주젠지온센 일반 버스 왕복 2,500엔, 합계 5,286엔으로도 이동할 수 있어요. 특급권과 도쿄메트로 운임은 별도예요.',
+     '패스를 구매한다면 공식 모바일 티켓에서 닛코 방문일을 사용 시작일로 선택하고 준비가 끝나면 완료를 체크하세요.'
+    ]
    });
   }
   if(find('free')){const show=copy('zutomayo');if(show){const free=find('free');push({...show,day:free.day.n,variant:'concert',kind:'선택',date:date(free.day)+' · 공연 가능일',note:'티켓·공연 확정 시에만 일정 추가',stopKey:undefined,details:[...show.details,'현재 일정은 자유시간이며 공연장 이동·관람을 확정하지 않았습니다.']});}}
@@ -104,7 +118,7 @@
   add('oishi','가와구치코 레드라인 버스','일반 노선버스라 좌석 예약 없이 정류장에서 탑승해요.','https://bus.fujikyu.co.jp/en/fujitour/kawaguchiko/');
   add('ropeway','가와구치코 파노라마 로프웨이','개인 탑승은 현장에서 표를 사고 대기해요.','https://www.mtfujiropeway.jp/guide/');
   add('toyosu','도요스 시장 일반 견학','일반 견학 통로는 예약 없이 방문할 수 있어요.','https://www.shijou.metro.tokyo.lg.jp/ja/info/0/kenngaku/kenngaku1');
-  add('nikkoStation','닛코 주젠지온센 방면 버스','일반 도부 노선버스는 지정석 없이 정류장에서 탑승해요.','https://www.tobu.co.jp/en/access/nikko/bus_nikko.html?version=en');
+  add('nikkoStation','닛코 주젠지온센 방면 버스','일반 도부 노선버스는 지정석 없이 정류장에서 탑승해요. 도부닛코역↔주젠지온센은 겨울 공표 운임 기준 성인 편도 1,250엔이에요.','https://www.tobu-bus.com/pc/assets/pdf/nikko_rosen_winter_en.pdf?20261118=');
   add('kegon','게곤폭포 엘리베이터','현장에서 표를 살 수 있어요.','https://www.kegon.jp/info/');
   add('hamarikyu','하마리큐 은사정원','일반 입장권은 현장에서 살 수 있어요.','https://www.tokyo-park.or.jp/park/hama-rikyu/');
   add('mugitoro','아사쿠사 무기토로 점심','1층 평일 뷔페는 현장 선착순이에요. 당일 운영 공지를 확인하세요.','https://www.mugitoro.co.jp/en/reservation/');

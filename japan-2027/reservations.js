@@ -51,7 +51,7 @@
   {key:'sanshotei',group:'food',kind:'추천',name:'산쇼테이',day:14,variant:'main',stop:'산쇼테이',date:'1/21 · 12:00 목표',note:'야마자키 예약 확정 후 1인 점심 자리 확인',url:'https://sansyotei.com/',details:['증류소 확정 회차와 점심 시간이 겹치지 않는지 확인하세요.','1인 좌석·해당 날짜 영업 여부를 공식 전화·예약 경로에서 확인하세요.']},
   {key:'hiramatsu',group:'food',kind:'추천',name:'히라마츠 하카타',day:20,stop:'히라마츠 하카타',date:'1/27 · 19:00 목표',note:'1인 좌석·와인 포함 구성 확인 후 예약',url:'https://www.tablecheck.com/ja/shops/frhiramatsu/reserve',source:'https://www.hiramatsurestaurant.jp/hiramatsu-hakata/menu/',details:['와인 3잔 포함 26,000엔 식사권의 해당 날짜 적용과 1인 이용을 먼저 확인하세요.','불가하면 음료 포함 총액 30,000엔 이내 코스로 상담하세요. 식사권 구매와 좌석 예약을 모두 확인한 뒤 체크하세요.']}
  ];
- const checklistGroups={priority:'신청 일정 먼저 확인',rail:'일본 열차 지정석',travel:'항공·숙소·교통',visit:'체험·입장권',food:'식당·카페'};
+ const checklistGroups={priority:'신청 일정 먼저 확인',rail:'일본 열차·교통 패스',travel:'항공·숙소·교통',visit:'체험·입장권',food:'식당·카페'};
  let checklistConfig=null,checklistFilter='all';
  let records={},storageAvailable=true;try{records=JSON.parse(localStorage.getItem(STORE)||'{}');if(!records||typeof records!=='object'||Array.isArray(records))records={};}catch(_){}
  function getRecords(){return JSON.parse(JSON.stringify(records));}
