@@ -52,7 +52,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!prep.find(x=>x.key==='travel-insurance').confirmed||prep.find(x=>x.key==='japan-travel-sim').confirmed)throw Error('Travel insurance completion was not independent');
    document.querySelector('[data-booking-item="travel-insurance"] [data-booking-complete]').click();
    document.querySelector('[data-booking-jump="narita-skyliner-outbound"]').click();
-   if(!document.querySelector('[data-leg="4"].search-highlight')?.textContent.includes('스카이라이너'))throw Error('Skyliner booking jump failed');
+   const trainCard=document.querySelector('[data-leg="4"].search-highlight')?.closest('[data-itinerary-train-leg]');
+   if(!trainCard?.getAttribute('aria-label')?.includes('스카이라이너'))throw Error('Skyliner booking jump failed');
    document.getElementById('bookingChecklistBtn').click();
    const onSite=document.querySelector('#bookingOnSite');
    onSite.querySelector('summary').click();
