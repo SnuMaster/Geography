@@ -489,6 +489,7 @@ function preparePersonalTrip(){
  window.TripPersonal.registerStations(state.data.metadata?.stationNames||{});
  ReservationCore.restore(state.data);TripData.prepare(state.data,state.routeData);
  ReservationCore.apply(state.data,state.routeData,ReservationUI.getRecords());TripData.prepare(state.data,state.routeData);
+ RailDepartures.setRouteReferences(state.routeData);
  renderNotices();
 }
 function handleReservationChange(){

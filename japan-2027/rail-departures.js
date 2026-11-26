@@ -4,6 +4,7 @@ const RailDepartures = (() => {
  const VERSION=TravelStore.VERSION;
  const manifest=globalThis.RailDepartureProfiles||{profiles:{},holidays:[]},profiles=manifest.profiles;
  const entries=Object.entries(profiles),loaded=new BoundedCache.LRU(6,16*1024*1024),pending=new Map(),failed=new Set(),attached=new WeakSet();
+ const routeFares=new Map(),routeDistances=new Map();
  let active=null,interval=null;
  const inlineViews=new Map();
  const firstTrains=new WeakMap();
@@ -39,6 +40,34 @@ const RailDepartures = (() => {
   return through?.[0]||match(part);
  }
  function keysFor(leg,part){return [...new Set((part?[part]:leg?.parts||[]).map(p=>keyFor(leg,p)).filter(Boolean))];}
+ function mappedDistance(leg,part){
+  const key=keyFor(leg,part);
+  const parts=key?leg.parts.filter(p=>keyFor(leg,p)===key):[part];
+  return parts.every(p=>Number.isFinite(p.distanceM))?parts.reduce((sum,p)=>sum+p.distanceM,0):null;
+ }
+ function setRouteReferences(routes){
+  routeFares.clear();routeDistances.clear();
+  const conflicting=new Set();
+  for(const legs of Object.values(routes.days))for(const leg of legs)for(const key of keysFor(leg)){
+   const profile=profiles[key],part=leg.parts.find(p=>keyFor(leg,p)===key),distance=mappedDistance(leg,part);
+   if(distance!==null)routeDistances.set(key,distance);
+   const quote=FareCore.boardingFare(leg,profile);
+   if(!quote||quote.joined||leg.fare?.displayBlank||conflicting.has(key))continue;
+   const saved=routeFares.get(key);
+   if(!saved)routeFares.set(key,quote);
+   else if(saved.amount!==quote.amount){routeFares.delete(key);conflicting.add(key);}
+  }
+ }
+ function referenceFare(key,profile){
+  const saved=routeFares.get(key);
+  if(saved)return saved;
+  const opposite=profiles[profile.reverseKey];
+  if(!opposite||!profile.lineId?.startsWith('TokyoMetro.')||opposite.lineId!==profile.lineId||
+     profile.throughParts||opposite.throughParts||profile.from!==opposite.to||profile.to!==opposite.from)return null;
+  const fare=routeFares.get(profile.reverseKey);
+  // Tokyo Metro single-line adult IC fares use the same distance scale in both directions.
+  return fare?.rows.length===1?fare:null;
+ }
  function supported(day,leg,part){return Number(day)>=1&&Number(day)<=22&&keysFor(leg,part).length>0;}
  function safeUrl(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:null;}catch(_){return null;}}
  function stationMapUrl(p,stop){
@@ -132,8 +161,13 @@ const RailDepartures = (() => {
   return `<strong class="departure-station-name departure-${side}">${badge}<span class="departure-station-korean">${esc(parts.korean)}</span>${parts.japanese?`<small class="departure-station-japanese" lang="ja">${esc(parts.japanese)}</small>`:''}</strong>`;}
  function referenceDetails(metrics,p,info){
   const fare=`${metrics.basis?`<p class="departure-fare-basis">${esc(metrics.basis)}</p>`:''}${metrics.components?.length?`<dl class="departure-fare-components">${metrics.components.map(c=>`<div><dt>${esc(c.label)}</dt><dd>${esc(c.value)}</dd></div>`).join('')}</dl>`:''}${metrics.sources?.length?`<div class="departure-fare-sources">${metrics.sources.filter(safeUrl).map((url,i)=>`<a href="${esc(url)}" target="_blank" rel="noopener noreferrer">운임 기준 ${i+1} ↗</a>`).join(' · ')}</div>`:''}`;
-  const timetable=p?`<p class="departure-schedule-source">자료 확인 ${esc(p.sourceDate||'확인 필요')}<br>${sourceHtml(p)}${safeUrl(p.officialTimetableUrl)?`<br><a href="${esc(safeUrl(p.officialTimetableUrl))}" target="_blank" rel="noopener noreferrer">운영사 안내 ↗</a>`:''}</p>`:info?`<p class="departure-schedule-source">자료 확인 ${esc(info.checkedAt)}${safeUrl(info.source)?`<br><a href="${esc(safeUrl(info.source))}" target="_blank" rel="noopener noreferrer">공식 운행·시간표 확인 ↗</a>`:''}</p>`:'';
+  const timetable=p?`<p class="departure-schedule-source">${p.sourceDate?`자료 확인 ${esc(p.sourceDate)}<br>`:''}${sourceHtml(p)}${safeUrl(p.officialTimetableUrl)?`<br><a href="${esc(safeUrl(p.officialTimetableUrl))}" target="_blank" rel="noopener noreferrer">운영사 안내 ↗</a>`:''}</p>`:info?`<p class="departure-schedule-source">자료 확인 ${esc(info.checkedAt)}${safeUrl(info.source)?`<br><a href="${esc(safeUrl(info.source))}" target="_blank" rel="noopener noreferrer">공식 운행·시간표 확인 ↗</a>`:''}</p>`:'';
   return fare||timetable?`<details class="departure-reference"><summary>자료 정보</summary><div class="departure-reference-body">${fare}${timetable}</div></details>`:'';
+ }
+ function metricsHtml({distance,distanceLabel,fare,fareLabel}){
+  const distanceField=distance?`<span><small>${esc(distanceLabel||'거리')}</small><b>${esc(distance)}</b></span>`:'';
+  const fareField=fare?`<span><small>${esc(fareLabel||'요금')}</small><b>${esc(fare)}</b></span>`:'';
+  return distanceField||fareField?`<div class="compact-metrics">${distanceField}${fareField}</div>`:'';
  }
  function shell(key,itineraryDate,metrics={}){
   const p=profiles[key],u=links(p);
@@ -145,12 +179,12 @@ const RailDepartures = (() => {
   return `<div class="compact-line">${badge}<strong>${esc(p.line)}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?'<small class="departure-service-name" lang="en">FUJI EXCURSION</small>':typeof spaciaXLogo==='function'&&spaciaXLogo(mark)?'<small class="departure-service-name">SPACIA X · 계획 열차</small>':typeof revatyLogo==='function'&&revatyLogo(mark)?'<small class="departure-service-name">Revaty · 계획 열차</small>':''}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
    <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''}${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
-   <div class="compact-metrics"><span><small>${esc(selected.distanceLabel||'거리')}</small><b>${esc(selected.distance||'—')}</b></span><span><small>${esc(selected.fareLabel||'요금')}</small><b>${selected.displayBlank?'':esc(selected.fare||'요금 미확인')}</b></span></div>
+   ${metricsHtml(selected)}
    ${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
    <p class="departure-data-status">${p.sourceClass==='public-reference'?'공개 시간표 참고 · 여행일 미검증':'저장 시간표 기준'} · 실시간 지연 미반영</p>
    <details class="departure-timetable"><summary>시간표·탑승 선택</summary><div class="departure-timetable-body">
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
-   <div class="departure-date-basis"><span>여행 계획 날짜 <b>${esc(itineraryDate||'확인 필요')}</b> · 아래 열차는 현재 날짜 기준</span><span data-departure-query-date>현재 날짜 기준 저장 시간표 조회 · 실시간 지연 미반영</span></div>
+   <div class="departure-date-basis">${itineraryDate?`<span>여행 계획 날짜 <b>${esc(itineraryDate)}</b> · 아래 열차는 현재 날짜 기준</span>`:''}<span data-departure-query-date>현재 날짜 기준 저장 시간표 조회 · 실시간 지연 미반영</span></div>
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
    <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button></div></div></details>
    <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>${referenceDetails(selected,p)}`;
@@ -162,12 +196,12 @@ const RailDepartures = (() => {
   return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
    <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
-   <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel)}</small><b>${esc(metrics.distance)}</b></span><span><small>${esc(metrics.fareLabel)}</small><b>${metrics.displayBlank?'':esc(metrics.fare)}</b></span></div>
+   ${metricsHtml(metrics)}
    <p class="departure-data-status">${esc(info?.label||'저장 시간표 없음')} · 실시간 정보 미지원</p>
    ${info?.notice?`<p class="departure-service-notice">${esc(info.notice)}</p>`:''}
    <details class="departure-timetable"><summary>운행 안내</summary><div class="departure-timetable-body">
    <p class="departure-date-basis">여행 계획 날짜 ${esc(travelDate(day))}</p>
-   <div class="departure-unavailable"><strong>${esc(info?.label||'시간표 확인 필요')}</strong><p>${esc(info?.description||'저장된 시간표가 없는 구간입니다. 출발 시각·막차는 출발역 안내에서 확인하세요.')}</p>${info?.hours?`<p>${esc(info.hours)}</p>`:''}</div></div></details>
+   <div class="departure-unavailable"><strong>${esc(info?.label||'출발역 운행 안내')}</strong><p>${esc(info?.description||'출발역 안내에서 운행 시각을 볼 수 있어요.')}</p>${info?.hours?`<p>${esc(info.hours)}</p>`:''}</div></div></details>
    <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>${referenceDetails(metrics,null,info)}
   </section>`;
  }
@@ -177,14 +211,34 @@ const RailDepartures = (() => {
   if(!items.length)return '';
   const comparison=leg.timeComparison,clock=n=>String(Math.floor(n/60)%24).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
   const preference=comparison?`<aside class="departure-route-choice"><b>최단시간 우선 · 약 ${esc(comparison.totalMinutes)}분</b><small>도보·환승·대기 포함 · 참고 시간표 기준</small><details><summary>계산 기준</summary><p>${esc(comparison.departureDate)} ${esc(clock(comparison.departureMinutes))} 출발 기준<br>도보 ${esc(comparison.walkingMinutes)}분 · 환승 여유 ${esc(comparison.transferMinutes)}분 · 대기 ${esc(comparison.waitingMinutes||0)}분</p><p>등록된 노선·저장 보행로 범위에서 비교했습니다. 환승·보행 시간은 추정이며, 여행일 확정 시간표·실시간 최단 경로는 아닙니다.</p><p>확인 ${esc(comparison.sourceCheckedAt)} · 열차 변경 시 다시 확인하세요.</p></details></aside>`:leg.routePreferenceNotice?`<p class="departure-data-status">${esc(leg.routePreferenceNotice)}</p>`:'';
-  const keys=items.map(item=>item.key),profileByKey=Object.fromEntries(items.map(item=>[item.key,item.profile]));
-  const money=n=>n.toLocaleString('ko-KR')+' JP¥',formatDistance=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'확인 필요',byProfile={};
-  for(const key of new Set(keys.flatMap(k=>[k,profileByKey[k].reverseKey]).filter(Boolean))){const p=profileByKey[key]||profiles[key],q=FareCore.boardingFare(leg,p);let selected={distanceLabel:'선택 구간 거리',distance:formatDistance(q?.distanceM??p.distanceM),fareLabel:'선택 구간 요금',fare:'확인 필요',basis:'저장된 계획에 이 방향의 개별 운임이 없습니다.'};
-   if(q){const reserved=q.rows.some(r=>r.reservedSurchargeYen>0),ticket=q.rows.some(r=>r.ticketRequired);selected={...selected,fare:money(q.amount),fareLabel:q.joined?'환승 포함 운임':ticket?'승차권·별도 티켓 기준':reserved?'기본 + 특급·지정석':'선택 구간 IC 요금',basis:'저장된 계획 운임 · 확인 '+[...new Set(q.rows.map(r=>r.checkedAt||'날짜 미확인'))].join(' / ')+(q.joined?' · '+q.rows.map(r=>TripPersonal.station(r.from,r.fromJa)+' → '+TripPersonal.station(r.to,r.toJa)).join(' / '):'')+(ticket?' · '+q.rows.filter(r=>r.ticketRequired).map(r=>r.ticketLabel||'별도 티켓 필요').join(' / '):''),sources:[...new Set(q.rows.flatMap(r=>r.sources))].slice(0,2),components:q.rows.filter(r=>r.reservedSurchargeYen!=null).flatMap(r=>[{label:r.baseTicketYen!=null?'일반 승차권':'IC 기본운임',value:money(r.baseTicketYen??r.baseIcYen)},{label:r.baseTicketYen!=null?'자유석 특급권 별도 구매':'특급·지정석권 별도 구매',value:money(r.reservedSurchargeYen)}])};}
-   if(p.country==='KR'&&leg.parts.some(s=>s.lineId===p.lineId&&s.from===p.from&&s.to===p.to))selected={...metrics,fareLabel:'저장된 계획 운임',basis:'한국 철도 · IC 운임 아님 · 확인 '+(leg.fare?.checkedAt||'필요')};selected.plannedServiceName=[...new Set(leg.parts.filter(s=>railPart(s)&&keyFor(leg,s)===key).map(s=>s.serviceName).filter(Boolean))].join(' / ');byProfile[key]=selected;
+  const keys=items.map(item=>item.key),itemByKey=Object.fromEntries(items.map(item=>[item.key,item]));
+  const profileByKey=Object.fromEntries(items.map(item=>[item.key,item.profile]));
+  const money=n=>n.toLocaleString('ko-KR')+' JP¥',formatDistance=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'',byProfile={};
+  for(const key of new Set(keys.flatMap(k=>[k,profileByKey[k].reverseKey]).filter(Boolean))){
+   const p=profileByKey[key]||profiles[key],planned=FareCore.boardingFare(leg,p),q=planned||referenceFare(key,p);
+   const part=itemByKey[key]?.unscheduled?p:leg.parts.find(s=>keyFor(leg,s)===key);
+   const metres=(part?mappedDistance(leg,part):null)??routeDistances.get(key)??routeDistances.get(p.reverseKey)??p.distanceM;
+   let selected={distanceLabel:'선택 구간 지도 거리',distance:formatDistance(metres)};
+   if(q){
+    const reserved=q.rows.some(r=>r.reservedSurchargeYen>0),ticket=q.rows.some(r=>r.ticketRequired);
+    const dates=[...new Set(q.rows.map(r=>r.checkedAt).filter(Boolean))].join(' / ');
+    selected={...selected,fare:money(q.amount),
+     fareLabel:q.joined?'환승 포함 운임':ticket?'승차권·별도 티켓 기준':reserved?'기본 + 특급·지정석':planned?'선택 구간 IC 요금':'이 방향 단독 IC 운임',
+     basis:(planned?'저장된 계획 운임':'같은 역 구간의 편도 운임')+(dates?' · 자료 확인 '+dates:'')+
+      (q.joined?' · '+q.rows.map(r=>TripPersonal.station(r.from,r.fromJa)+' → '+TripPersonal.station(r.to,r.toJa)).join(' / '):'')+
+      (ticket?' · '+q.rows.filter(r=>r.ticketRequired).map(r=>r.ticketLabel||'별도 티켓 필요').join(' / '):''),
+     sources:[...new Set(q.rows.flatMap(r=>r.sources))].slice(0,2),
+     components:q.rows.filter(r=>r.reservedSurchargeYen!=null).flatMap(r=>[
+      {label:r.baseTicketYen!=null?'일반 승차권':'IC 기본운임',value:money(r.baseTicketYen??r.baseIcYen)},
+      {label:r.baseTicketYen!=null?'자유석 특급권 별도 구매':'특급·지정석권 별도 구매',value:money(r.reservedSurchargeYen)}
+     ])};
+   }
+   if(p.country==='KR'&&part&&Number.isFinite(leg.fare?.min))selected={...metrics,fareLabel:'저장된 계획 운임',basis:'한국 철도 · IC 운임 아님'+(leg.fare.checkedAt?' · 자료 확인 '+leg.fare.checkedAt:'')};
+   selected.plannedServiceName=[...new Set(leg.parts.filter(s=>railPart(s)&&keyFor(leg,s)===key).map(s=>s.serviceName).filter(Boolean))].join(' / ');
+   byProfile[key]=selected;
   }
   if(leg.fare?.displayBlank){for(const key of Object.keys(byProfile))byProfile[key]={...byProfile[key],displayBlank:true,fare:'',basis:'',components:[],sources:[]};metrics={...metrics,displayBlank:true,fare:'',basis:'',components:[],sources:[]};}
-  metrics={...metrics,byProfile,planFare:leg.fare?.displayBlank?null:metrics?.fare||'확인 필요',planDistance:formatDistance(leg.distanceM)};
+  metrics={...metrics,byProfile,planFare:Number.isFinite(leg.fare?.min)&&!leg.fare?.displayBlank?metrics.fare:null,planDistance:formatDistance(leg.distanceM)};
   const section=(item,scope)=>item.unscheduled?unscheduledSection(item.profile,byProfile[item.key],day):sectionHtml(item.key,scope,day);
   if(keys.length===1)return `${preference}<div class="departure-panel">${section(items[0],metrics)}</div>`;
   // A shared operator OD fare belongs to the whole ride, not to each displayed timetable.
@@ -286,7 +340,7 @@ const RailDepartures = (() => {
  function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else{unmount();unmountInline();}});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
  function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
- return {notice,noticeItems,validityFor,travelDate,supported,html,attach,mountInline,keysFor,keyFor,calendarOptions,getSchedule,isFirstTrain,stationMapUrl,departureMapUrl,disruptionHtml,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
+ return {notice,noticeItems,validityFor,travelDate,supported,html,attach,mountInline,keysFor,keyFor,setRouteReferences,calendarOptions,getSchedule,isFirstTrain,stationMapUrl,departureMapUrl,disruptionHtml,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
 })();
 
 // A reading-view departure board. It never changes an itinerary or a boarded train.

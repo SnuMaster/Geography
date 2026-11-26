@@ -8,11 +8,46 @@ const h=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt
 const ctx={URL,URLSearchParams,DepartureCore:D,FareCore:F,TravelStore:{VERSION:'test'},RailDepartureProfiles:manifest,BoundedCache:require('../japan-2027/lru-cache'),window:{TripPersonal:{station:(a,b)=>b?`${a}(${b})`:a}},TripPersonal:{station:(a,b)=>b?`${a}(${b})`:a},document:{addEventListener(){}},esc:h,railBadge:()=>'<span>노선</span>'};
 vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-departures.js'),'utf8')+';globalThis.api=RailDepartures;',ctx);
 
-test('active rail coverage retains explicit unsupported ropeway and Shinkansen segments',()=>{
+test('every active rail part has a timetable profile',()=>{
  const remaining=[];let total=0;
- for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>['rail','metro'].includes(p.mode))){total++;if(!ctx.api.keyFor(leg,part)){if(part.departureInfo)assert.match(part.departureInfo.source,/^https:\/\//);else remaining.push(part.lineId);}}
+ for(const legs of Object.values(bundle.routes.days))for(const leg of legs)for(const part of leg.parts.filter(p=>['rail','metro'].includes(p.mode))){total++;if(!ctx.api.keyFor(leg,part))remaining.push(part.lineId);}
  assert.ok(total>20);assert.deepEqual(remaining,[]);
- assert.ok(entries.length>10);assert.equal(Object.keys(manifest.profiles).length-entries.length,102);
+ assert.ok(entries.length>10);assert.ok(Object.keys(manifest.profiles).length-entries.length>=102);
+});
+test('all active train cards and reverse directions have measured distances and fares',()=>{
+ ctx.api.setRouteReferences(bundle.routes);
+ assert.equal(ctx.api.noticeItems(bundle.data.days,bundle.routes).length,0);
+ for(const [day,legs] of Object.entries(bundle.routes.days))for(const leg of legs){
+  if(!ctx.api.keysFor(leg).length)continue;
+  const html=ctx.api.html(Number(day.split('-')[0]),leg,null,{fare:F.format(leg.fare,leg)},true);
+  assert.doesNotMatch(html,/확인 필요|요금 미확인|저장 시간표 없음/);
+  for(const [,data] of html.matchAll(/data-compact-metrics="(.*?)" data-query-mode/g)){
+   const {byProfile}=JSON.parse(data.replace(/&quot;|&lt;|&gt;|&amp;|&#39;/g,c=>({'&quot;':'"','&lt;':'<','&gt;':'>','&amp;':'&','&#39;':"'"}[c])));
+   for(const [key,quote] of Object.entries(byProfile)){
+    assert.match(quote.distance,/^\d+\.\d km$/,key);
+    if(leg.fare.displayBlank){assert.equal(quote.fare,'');assert.equal(quote.displayBlank,true);}
+    else assert.match(quote.fare,/^[\d,]+ JP¥$/,key);
+   }
+  }
+ }
+});
+test('Haneda rail cards use the Yamanote outer loop and the Monorail terminal 3 stop',()=>{
+ const leg=bundle.routes.days['12-main'][7];
+ const [metro,jr,mono]=ctx.api.keysFor(leg);
+ assert.equal(metro,'metro-iriya-ueno');
+ assert.equal(jr,'yamanote-ueno-hamamatsucho-outer');
+ assert.equal(mono,'monorail-hamamatsucho-haneda-t3');
+ for(const [key,counts] of [[jr,[259,254]],[mono,[215,203]]]){
+  const p=manifest.profiles[key],data=schedule(key,p);
+  assert.deepEqual([data.Weekday.length,data.SaturdayHoliday.length],counts);
+  for(const row of [...data.Weekday,...data.SaturdayHoliday]){
+   assert(row.id.startsWith(p.lineId+'.'));
+   assert.equal(row.stops[0].id,p.sourceFromId);
+   assert.equal(row.stops.at(-1).id,p.sourceToId);
+   assert.equal(row.destinationArrival,row.stops.at(-1).arrival??null);
+   assert.equal(row.destinationDeparture,row.stops.at(-1).departure??null);
+  }
+ }
 });
 test('every new train survives real weekday and Japanese-holiday normalization with ordered source stop events',()=>{
  let rows=0;

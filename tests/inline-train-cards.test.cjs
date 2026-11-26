@@ -52,7 +52,7 @@ test('explicitly named Revaty boards retain separate station codes and a plannin
 
 test('untrusted station names remain escaped and unsupported lines have no fabricated train controls',()=>{
  const leg={parts:[{mode:'rail',line:'<img onerror=bad()>',lineId:'unknown',from:'<script>',fromJa:'<入口>',to:'도착',toJa:'終点',distanceM:1000}],distanceM:1000,fare:{currency:'JPY'}};
- const html=render(2,leg);assert.doesNotMatch(html,/<script>|<img onerror|data-ride-choose|data-departure-clock/);assert.match(html,/&lt;入口&gt;/);assert.match(html,/확인 필요/);
+ const html=render(2,leg);assert.doesNotMatch(html,/<script>|<img onerror|data-ride-choose|data-departure-clock|확인 필요/);assert.match(html,/&lt;入口&gt;/);assert.match(html,/출발역 운행 안내/);
 });
 
 // Execute the application's real popup and place renderers, so inline-only
