@@ -6,13 +6,13 @@ const Trip=require('../japan-2027/data-model');
 const Roads=require('../japan-2027/offline-roads');
 
 const root=path.join(__dirname,'../japan-2027');
-const revision='20261126-tokyo-asakusa-1';
+const revision='20261126-tokyo-asakusa-2';
 const checkedAt='2026-11-26';
 const streets='https://www.openstreetmap.org/copyright';
 const kappabashi='https://www.gotokyo.org/en/spot/59/index.html';
 const mugitoro='https://www.mugitoro.co.jp/en/reservation/';
 const river='https://www.gotokyo.org/en/spot/1795/index.html';
-const skytree='https://www.tokyo-skytree.jp/ticket/';
+const mizumachi='https://en.www.tokyo-mizumachi.jp/';
 const yoroiya='https://yoroiya.jp/';
 
 function stop(key,name,jp,kind,time,coords,source,description,details){
@@ -60,7 +60,7 @@ function apply(bundle){
  const [hotel]=variant.stops;
  const finish=variant.stops.at(-1);
  hotel.time='08:00~09:30';
- finish.time='19:20~20:10';
+ finish.time='18:00~18:50';
  const stops=[
   hotel,
   stop('kappabashi','갓파바시 도구 거리','かっぱ橋道具街','shopping','10:00~10:55',[35.71418,139.7887],kappabashi,
@@ -74,33 +74,31 @@ function apply(bundle){
    {thingsToDo:['1층 현장 접수. 휴무 공지가 있거나 대기가 길면 가미나리몬 주변 소바·정식으로 바꾼다.'],costMin:1650,costMax:1650,hours:'평일 11:00~14:30 · 최종 입장 14:00',reservationNote:'1층 평일 뷔페는 현장 선착순 · 최신 운영일은 공식 공지 확인'}),
   stop('sumidaWalk','스미다 공원·리버워크','隅田公園・すみだリバーウォーク','sight','13:30~14:15',[35.71275,139.79973],river,
    '스미다강 서쪽 산책로에서 사진을 찍고 리버워크로 강을 건너 미즈마치로 이동.',
-   {thingsToDo:['강변에서 스카이트리 사진을 찍고, 철교 옆 보행교를 건너 기타줏켄강 옆 미즈마치로 이어 걷는다.'],hours:'리버워크 07:00~22:00',reservationNote:'보행교는 예약 없이 이용'}),
-  stop('solamachi','도쿄 소라마치','東京ソラマチ','shopping','14:40~15:45',[35.71022,139.80893],'https://en.www.tokyo-solamachi.jp/information/',
-   '실내에서 카페에 들르거나 과자·기념품을 둘러본다.',
-   {thingsToDo:['간식이나 작은 선물을 보고, 15:45쯤 스카이트리 4층 입구로 이동한다.'],costMin:null,costMax:null,costConfidence:'reference',costNote:'실제 구매비만 기록'}),
-  stop('skytree','도쿄 스카이트리 전망대','東京スカイツリー','sight','16:00~17:15',[35.71006,139.81083],skytree,
-   '16:00 입장 목표. 덴보데크 350m에서 해 질 무렵과 도쿄 야경을 본다.',
-   {thingsToDo:['일몰 무렵 방문하려면 덴보데크 시간 지정권을 예매한다. 구름이 짙거나 표를 구하기 어렵다면 소라마치에서 쉬고 강변 야경을 본다.'],costMin:null,costMax:null,costConfidence:'variable',costNote:'날짜별 공식 입장권 가격 확인',reservationNote:'16:00 목표 · 사전 예매 권장, 현장권은 잔여분에 한함'}),
-  stop('yoroiya','아사쿠사 요로이야','浅草名代らーめん 与ろゐ屋','food','17:50~18:45',[35.7127433,139.7967423],yoroiya,
+   {thingsToDo:['강변에서 사진을 찍고 철교 옆 보행교를 건너 기타줏켄강 옆 미즈마치로 이어 걷는다.'],hours:'리버워크 07:00~22:00',reservationNote:'보행교는 예약 없이 이용'}),
+  stop('mizumachi','도쿄 미즈마치','東京ミズマチ','shopping','14:30~16:05',[35.7113014,139.8027241],mizumachi,
+   '웨스트 존에서 카페에 들르고 기타줏켄강을 따라 작은 가게를 둘러본다.',
+   {thingsToDo:['스미다공원 앞 LAND_A에서 커피나 간식을 먹고 강변 가게를 구경한다.'],costMin:null,costMax:null,costConfidence:'reference',costNote:'실제 구매비만 기록',sources:[mizumachi,'https://land-a.jp/access/']}),
+  stop('yoroiya','아사쿠사 요로이야','浅草名代らーめん 与ろゐ屋','food','16:30~17:25',[35.7127433,139.7967423],yoroiya,
    '아즈마바시로 강을 건너 아사쿠사에서 간장 라멘으로 저녁.',
    {thingsToDo:['기본 간장 라멘이나 유자 향이 나는 메뉴를 고른다.'],costMin:1000,costMax:1800,costConfidence:'estimate',hours:'평일 11:00~21:00 · 주문 마감 20:30',reservationNote:'일반 식사 · 현장 대기'}),
   finish
  ];
  const streetMap=JSON.parse(gunzipSync(fs.readFileSync(path.join(root,'assets/offline-streets/day-2.json.gz'))));
  const crossings={
-  solamachi:[[35.7125951,139.8003128],[35.7116979,139.8021871],[35.71149,139.8032]],
+  mizumachi:[[35.7125951,139.8003128],[35.7116979,139.8021871]],
   yoroiya:[[35.70992,139.79924],[35.71104,139.7978]]
  };
  const legs=stops.slice(1).map((s,i)=>walk(stops[i],s,streetMap,crossings[s.planKey]));
- let selectionId=Math.max(...variant.stops.map(s=>s.selectionId));
- for(const s of stops)if(s.selectionId==null)s.selectionId=++selectionId;
- const title='아사쿠사·스미다강·스카이트리';
+ const selectionByUid=new Map(variant.stops.map(s=>[s.uid,s.selectionId]));
+ let selectionId=Math.max(...selectionByUid.values());
+ for(const s of stops)s.selectionId=selectionByUid.get(s.uid)??++selectionId;
+ const title='아사쿠사·스미다강';
  Object.assign(variant,{title,summary:title,focus:title,stops});
  Object.assign(day,{
   title,shortTitle:title,summary:title,focus:title,mapSummary:title,photoDay:2,
   mapLabel:{city:day.cityLabel,places:title},meals:['아사쿠사 무기토로','아사쿠사 요로이야'],
-  note:'갓파바시 → 센소지 → 스미다강 → 스카이트리 → 아사쿠사 저녁',
-  important:'전망대 16:00 입장 목표 · 무기토로 1층 평일 점심은 현장 접수 · 저녁 후 귀국 짐 정리'
+  note:'갓파바시 → 센소지 → 스미다강 → 미즈마치 → 아사쿠사 저녁',
+  important:'무기토로 1층 평일 점심은 현장 접수 · 미즈마치 산책 뒤 16:30 저녁 · 숙소에서 귀국 짐 정리'
  });
  routes.days['11-main']=legs;
  Trip.prepare({...data,days:[day]},routes);

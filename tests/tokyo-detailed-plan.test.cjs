@@ -4,19 +4,21 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261126-tokyo-rail-orders-1');
+ assert.equal(b.revision,require('../scripts/apply-tokyo-asakusa-day.cjs').revision);
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
  const day11=b.data.days[10],stops=day11.variants[0].stops;
- assert.equal(day11.title,'아사쿠사·스미다강·스카이트리');
- assert.deepEqual(stops.map(s=>s.planKey),['hotel','kappabashi','sensoji','mugitoro','sumidaWalk','solamachi','skytree','yoroiya','hotel']);
+ assert.equal(day11.title,'아사쿠사·스미다강');
+ assert.deepEqual(stops.map(s=>s.planKey),['hotel','kappabashi','sensoji','mugitoro','sumidaWalk','mizumachi','yoroiya','hotel']);
+ assert.doesNotMatch(JSON.stringify(day11),/스카이트리|덴보데크|소라마치/);
  assert.equal(new Set(stops.map(s=>s.selectionId)).size,stops.length);
  assert.equal(b.data.nightRows[10][1],day11.title);
  const legs=b.routes.days['11-main'];
  assert(legs.every(l=>l.parts.every(p=>p.mode==='walk'&&p.geometryAccuracy==='mapped')));
  assert(legs[4].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.7116353)<0.00003&&Math.abs(lng-139.8015955)<0.00003),'River Walk crossing');
- assert(legs[6].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.70992)<0.00003&&Math.abs(lng-139.79924)<0.00003),'Azuma Bridge crossing');
+ assert(legs[5].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.70992)<0.00003&&Math.abs(lng-139.79924)<0.00003),'Azuma Bridge crossing');
+ assert(legs.every(l=>l.parts[0].coords.every(([,lng])=>lng<139.805)),'Stay west of the tower complex');
  assert(!b.data.days.some(d=>/오사카|하코네|아타미|가와고에/.test(d.title)));
 });
 test('both taxi routes use distinct drivable polylines and connect to the curb stops',()=>{
@@ -111,7 +113,7 @@ test('active routes retain continuous public endpoints and explicit reference-on
  let compared=0;
  for(const d of b.data.days)for(const v of d.variants){
   const legs=b.routes.days[d.n+'-'+v.id];
-  if(d.n!==11)assert.deepEqual(C.warnings(v.stops,legs).filter(w=>['overlap','travel'].includes(w.type)),[],d.n+' travel window');
+  assert.deepEqual(C.warnings(v.stops,legs).filter(w=>['overlap','travel'].includes(w.type)),[],d.n+' travel window');
   for(const [i,l]of legs.entries()){
    if(l.private||!l.parts.length)continue;
    assert(G.distance([v.stops[i].lat,v.stops[i].lng],l.parts[0].coords[0])<=70,d.n+' start');

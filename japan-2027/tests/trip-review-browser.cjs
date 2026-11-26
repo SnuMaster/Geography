@@ -69,7 +69,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261126-tokyo-rail-orders-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261126-tokyo-asakusa-2')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -77,7 +77,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
    const skytree=document.querySelector('[data-booking-item="skytree"]');
-   if(!skytree?.textContent.includes('1/18 · 16:00')||document.querySelector('[data-booking-item="zutomayo"]'))throw Error('Wrong Jan 18 bookings');
+   if(skytree||document.querySelector('[data-booking-item="zutomayo"]'))throw Error('Wrong Jan 18 bookings');
    for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back-0650','06:50']]){
     const text=document.querySelector('[data-booking-item="'+key+'"]')?.textContent||'';
     if(!text.includes(expected))throw Error('New booking missing '+key);
@@ -125,7 +125,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
     out.push({day:d.n,stops:ss.length,legs:legs.length});
    }
    r.setDay(11);
-   if(!document.querySelector('#stopList')?.textContent.includes('스카이트리 전망대')||r.getStops().some(s=>s.planKey==='free'))throw Error('Wrong Jan 18 route');
+   const asakusa=document.querySelector('#stopList')?.textContent||'';
+   if(!asakusa.includes('도쿄 미즈마치')||/스카이트리 전망대|도쿄 소라마치/.test(asakusa)||r.getStops().some(s=>s.planKey==='free'))throw Error('Wrong Jan 18 route');
    r.setDay(2);
    if(r.getStops().length||document.querySelector('#stopList .stop-card')||!document.querySelector('#stopList')?.textContent.includes('비워뒀어요')||!document.querySelector('#playBtn').disabled)throw Error('Day 2 is not empty');
    for(const [day,leg,name,when] of [[5,2,'후지회유 15호','10:30'],[5,8,'후지회유 48호','17:41'],[8,1,'스페이시아 X 5호','10:12'],[8,6,'스페이시아 X 12호','17:44']]){

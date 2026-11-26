@@ -22,7 +22,7 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
- assert.equal(by.skytree.date,'1/18 · 16:00 입장 목표');assert.equal(by.skytree.day,11);assert.equal(by.zutomayo,undefined);
+ assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
  assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,2);
  assert.equal(by['flight-mm809-20270120'].day,12);
