@@ -69,7 +69,18 @@
   }
   if(outbound?.length)items.push(...outbound);else push(copy('flight-tokyo'));
   push(copy('hotel-tokyo'));
-  const ibuki=anchor(copy('ibuki'),'ibuki');if(ibuki){ibuki.date=date(days.find(d=>d.n===ibuki.day))+' · '+find('ibuki').stop.time+' 목표';ibuki.details=['1인 좌석·코스·음료와 세금·서비스료·취소 조건을 공식 예약 화면에서 확인하세요.','일정 시각은 목표이며 예약 완료를 뜻하지 않습니다.'];push(ibuki);}
+  const ibuki=anchor(copy('ibuki'),'ibuki');
+  if(ibuki){
+   ibuki.date=ibuki.date.split(/[~-]/)[0]+' 입장 목표';
+   ibuki.kind='사전 예약 권장';
+   ibuki.note='1인 카운터석 · 저녁 가이세키 18,150엔부터 (세금·서비스료 포함, 음료 별도)';
+   ibuki.details=[
+    '공식 TableCheck에서 1명, 카운터석, 일정 시각을 선택해 잔여석을 확인하세요. 예약에 신용카드가 필요해요.',
+    '저녁 코스 16,500엔·19,800엔에 서비스료 10%를 더하면 각각 18,150엔·21,780엔이에요. 음료까지 30,000엔 미만인지 확인하세요.',
+    '공식 예약 안내 기준으로 예약 시각 72시간 전부터 취소·인원 변경 시 선택한 코스 요금의 100%가 부과돼요.'
+   ];
+   push(ibuki);
+  }
   const skytree=anchor(copy('skytree'),'skytree');
   if(skytree){
    skytree.date=skytree.date.split(/[~-]/)[0]+' 입장 목표';
@@ -138,13 +149,13 @@
  function onSite({days=[],metadata}){
   if(metadata?.id!=='tokyo-20270108-19'||days.length!==12)return [];
   const entries=[];
-  const add=(key,name,note,url)=>{
+  const add=(key,name,note,url,group)=>{
    const day=days.find(d=>d.variants.some(v=>v.stops.some(s=>s.planKey===key||s.name===key)));
-   if(day)entries.push({name,date:date(day),note,url});
+   if(day)entries.push({name,date:date(day),note,url,group});
   };
+  const dining=(key,name,note,url)=>add(key,name,note,url,'food');
   add('공항제2빌딩역','TOURIST PASMO','나리타 제2터미널 지하 1층 SKYLINER & KEISEI INFORMATION CENTER에서 살 수 있어요.','https://www.keisei.co.jp/keisei/tetudou/skyliner/us/findus/skyliner.php');
   entries.push({name:'도쿄 시내 일반 열차·지하철',note:'야마노테선·주오선 쾌속·도쿄메트로·유리카모메·도쿄 모노레일 등은 좌석 예약 없이 PASMO나 Suica로 타면 돼요.',url:'https://www.pasmo.co.jp/visitors/en/'});
-  add('poni','포니피리카 저녁','일정의 일요일에는 예약을 받지 않아 현장에서 줄을 서면 돼요.','https://tabelog.com/tokyo/A1318/A131802/13164953/');
   add('gyoen','신주쿠교엔','1월 일반 방문은 현장 입장권을 살 수 있어요.','https://policies.env.go.jp/national-garden/shinjukugyoen/english/guide/information/');
   add('oishi','가와구치코 레드라인 버스','일반 노선버스라 좌석 예약 없이 정류장에서 탑승해요.','https://bus.fujikyu.co.jp/en/fujitour/kawaguchiko/');
   add('ropeway','가와구치코 파노라마 로프웨이','개인 탑승은 현장에서 표를 사고 대기해요.','https://www.mtfujiropeway.jp/guide/');
@@ -152,7 +163,17 @@
   add('nikkoStation','닛코 주젠지온센 방면 버스','일반 도부 노선버스는 지정석 없이 정류장에서 탑승해요. 주젠지·게곤폭포 프리패스를 쓸 수 있고, 개별 승차는 겨울 공표 운임 기준 성인 편도 1,250엔이에요.','https://www.tobu-bus.com/pc/assets/pdf/nikko_rosen_winter_en.pdf?20261118=');
   add('kegon','게곤폭포 엘리베이터','현장에서 표를 살 수 있어요.','https://www.kegon.jp/info/');
   add('hamarikyu','하마리큐 은사정원','일반 입장권은 현장에서 살 수 있어요.','https://www.tokyo-park.or.jp/park/hama-rikyu/');
-  add('mugitoro','아사쿠사 무기토로 점심','1층 평일 뷔페는 현장 선착순이에요. 당일 운영 공지를 확인하세요.','https://www.mugitoro.co.jp/en/reservation/');
+  dining('kayashima','가야시마 점심','예약은 16:00 이후에 받는다고 안내돼 있어요. 점심은 현장 방문이에요.','https://tabelog.com/tokyo/A1320/A132001/13040521/');
+  dining('poni','포니피리카 저녁','매장 안내 기준으로 토·일·공휴일은 예약을 받지 않아요. 일요일 저녁은 현장에서 줄을 서면 돼요.','https://tabelog.com/tokyo/A1318/A131802/13164953/');
+  dining('acacia','아카시아 신주쿠 본점','전 좌석 자유석이라 현장에서 이용해요.','https://www.restaurant-acacia.com/%E3%82%A2%E3%82%AB%E3%82%B7%E3%82%A2shinjuku-honten/');
+  dining('fudou','호토 후도 가와구치코 북본점','예약은 10명 이상부터라 1인은 현장 방문이에요. 호토 면이 소진되면 일찍 마감할 수 있어요.','https://tabelog.com/yamanashi/A1903/A190303/19000116/');
+  dining('gansen','간센 아키하바라','좌석 예약을 받지 않아요. 수요일 저녁은 현장에서 주문해요.','https://tabelog.com/tokyo/A1311/A131101/13024420/');
+  dining('nakaei','나카에이 도요스점','좌석 예약을 받지 않아요. 도요스 시장 수산중도매동 3층에서 현장 주문해요.','https://tabelog.com/tokyo/A1313/A131307/13227147/');
+  dining('boteya','보테쥬 오다이바점','아쿠아시티 1층 푸드코트 매장이에요. 현장에서 주문해요.','https://botejyu.co.jp/shop_detail/aquacity/');
+  dining('wako','와코 야에스 지하상가점','좌석 예약을 받지 않아요. 현장에서 접수해요.','https://wako-group.co.jp/shop/detai/shop_3064/');
+  dining('mugitoro','아사쿠사 무기토로 1층 점심','평일 뷔페는 당일 10:30부터 현장 선착순이에요. 성인 1,650엔이고 최종 입장은 14:00예요.','https://www.mugitoro.co.jp/honten/buffet/');
+  dining('mizumachi','미즈마치 LAND_A','계획한 커피·간식은 현장 방문으로 잡았어요. 식사로 바꿀 경우 매장 예약 페이지에서 좌석을 확인할 수 있어요.','https://www.tablecheck.com/en/shops/land-a/reserve');
+  dining('yoroiya','아사쿠사 요로이야 저녁','좌석 예약을 받지 않아요. 현장에서 줄을 서면 돼요.','https://tabelog.com/tokyo/A1311/A131102/13003715/');
   return entries;
  }
  return {build,onSite};

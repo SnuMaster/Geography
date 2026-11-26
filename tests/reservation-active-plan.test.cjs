@@ -22,6 +22,8 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
+ assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['ibuki']);
+ assert.match(by.ibuki.note,/18,150엔.*음료 별도/);assert.match(by.ibuki.details.join(' '),/1명.*카운터석.*72시간.*100%/);
  assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
  assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,2);
@@ -48,6 +50,10 @@ test('the arrival IC card and local buses are listed as on-site purchases for th
  assert(!rows.some(x=>x.name.includes('스카이라이너')));
  assert.equal(rows.find(x=>x.name.includes('레드라인')).date,'1/12');
  assert.equal(rows.find(x=>x.name.includes('주젠지온센')).date,'1/15');
- assert.match(rows.find(x=>x.name.includes('무기토로')).note,/현장 선착순/);
+ const dining=rows.filter(x=>x.group==='food'),mugitoro=dining.find(x=>x.name.includes('무기토로'));
+ assert.equal(mugitoro.date,'1/18');assert.match(mugitoro.note,/10:30.*현장 선착순.*1,650엔/);
+ assert.equal(dining.find(x=>x.name.includes('가야시마')).date,'1/10');
+ assert(dining.some(x=>x.name.includes('포니피리카')));
+ assert(dining.some(x=>x.name.includes('호토 후도')&&x.note.includes('10명 이상')));
  assert.deepEqual(P.onSite({days:[]}),[]);
 });

@@ -58,8 +58,12 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const onSite=document.querySelector('#bookingOnSite');
    onSite.querySelector('summary').click();
    if(!onSite.open||!onSite.textContent.includes('TOURIST PASMO')||onSite.querySelector('input'))throw Error('Wrong on-site purchase guide');
+   const dining=document.querySelector('#bookingWalkInDining');
+   dining.querySelector('summary').click();
+   if(!dining.open||!dining.textContent.includes('무기토로')||!dining.textContent.includes('10:30')||dining.querySelector('input'))throw Error('Wrong walk-in dining guide');
    document.querySelector('[data-booking-item="fuji-excursion"] [data-booking-complete]').click();
    if(!document.querySelector('#bookingOnSite').open)throw Error('On-site guide closed after checking a booking');
+   if(!document.querySelector('#bookingWalkInDining').open)throw Error('Dining guide closed after checking a booking');
    if(!ReservationUI.getAssistantBookings().find(x=>x.key==='fuji-excursion')?.confirmed)throw Error('New booking completion did not save');
    document.querySelector('[data-booking-item="fuji-excursion"] [data-booking-complete]').click();
    let jump=null;const fn=e=>jump=e.detail;window.addEventListener('routebook:booking-jump',fn);
@@ -74,8 +78,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
-   const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
-   if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
+   const ibuki=document.querySelector('[data-booking-item="ibuki"]');
+   if(!ibuki?.querySelector('.booking-date')?.textContent.includes('18:00')||!/18,150(?:엔|\s+JP¥)/.test(ibuki.textContent)||!ibuki.textContent.includes('72시간'))throw Error('Wrong Ibuki booking details');
    const skytree=document.querySelector('[data-booking-item="skytree"]');
    if(skytree||document.querySelector('[data-booking-item="zutomayo"]'))throw Error('Wrong Jan 18 bookings');
    for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back-0650','06:50']]){
