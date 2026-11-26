@@ -8,7 +8,7 @@ function context(){
  Object.assign(ctx,{addRailMapSymbol:(p,l)=>symbols.push({p,l}),showRailHover:(e,l,p)=>ctx.hover={l,p},positionRailHover(){},hideRailHover(){ctx.hover=null;}});
  return {ctx,layers,symbols,selected};
 }
-test('all active movements retain every geometry, fare, timetable and transfer while choosing one map color',()=>{
+test('all active movements retain their geometry, fare, timetable and transfer details',()=>{
  const {ctx}=context();assert(all.length>70);
  for(const leg of all){const before=JSON.stringify(leg),plan=ctx.movementMapPlan(leg),old=ctx.railMapDrawParts(leg).filter(p=>ctx.mapPartVisible(p)&&p.coords?.length>=2&&p.distanceM>=8);
   assert.equal(JSON.stringify(plan.parts.map(p=>p.coords)),JSON.stringify(old.map(p=>p.coords)),leg.legId);
@@ -22,7 +22,7 @@ test('every daily and overview movement has one complete hit target and all stro
   ctx.drawMapMovement(leg,{overview,symbols:false});
   const hits=ctx.routeVisuals.filter(v=>v.role==='movement-hit'),lines=ctx.routeVisuals.filter(v=>v.role==='movement-line');
   assert.equal(hits.length,plan.parts.length?1:0,leg.legId);if(!hits.length)continue;
-  assert.equal(lines.length,plan.parts.length);assert.equal(new Set(lines.map(v=>v.layer.options.color)).size,1);
+  assert.equal(lines.length,plan.parts.length);assert.deepEqual(lines.map(v=>v.layer.options.color),Array.from(plan.parts,p=>ctx.routeLineStyles(p).line.color));
   const hit=hits[0].layer;assert.equal(JSON.stringify(hit.coords),JSON.stringify(plan.parts.map(p=>p.coords)),'no fabricated bridge or omitted track');
   assert(lines.every(v=>v.layer.options.interactive===false));assert.equal(hit.options.interactive,true);
   const before=lines.map(v=>({...v.layer.options}));hit.events.mouseover({});assert(lines.every(v=>v.layer.options.weight===7&&v.layer.options.opacity===1));
@@ -39,13 +39,15 @@ test('the Haneda journey includes all three boardings in one selection',()=>{
  const html=ctx.railHoverHtml(leg,plan.hover);assert.match(html,/환승 2회/);assert.doesNotMatch(html,/직통 열차 · 환승 없이 계속 탑승/);
  const tobu=bundle.routes.days['8-main'][5];assert.equal(ctx.movementMapPlan(tobu).boardings,2,'direct Spacia X followed by Metro uses two boardings');
 });
-test('walking and schematic segments keep their own dash semantics under the movement color',()=>{
+test('walking, rail and schematic segments keep their own colors and dash patterns',()=>{
  const {ctx}=context(),leg=structuredClone(bundle.routes.days['12-main'][7]),p=leg.parts.find(p=>p.mode==='rail');p.geometryAccuracy='schematic';
  const plan=ctx.movementMapPlan(leg);ctx.drawMapMovement(leg,{symbols:false});
  for(const [i,part]of plan.parts.entries()){
-  const visual=ctx.routeVisuals.filter(v=>v.role==='movement-line')[i];assert.equal(visual.layer.options.color,plan.color);
-  assert.equal(visual.layer.options.dashArray,ctx.routeLineStyles(part).line.dashArray);
+  const visual=ctx.routeVisuals.filter(v=>v.role==='movement-line')[i],style=ctx.routeLineStyles(part).line;
+  assert.equal(visual.layer.options.color,style.color);
+  assert.equal(visual.layer.options.dashArray,style.dashArray);
  }
+ assert.ok(new Set(plan.parts.map(p=>ctx.routeLineStyles(p).line.color)).size>1);
 });
 test('every map and symbol entry point opens the whole movement',()=>{
  const app=fs.readFileSync(require.resolve('../japan-2027/app.js'),'utf8'),ui=fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8');

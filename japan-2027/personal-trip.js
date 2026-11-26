@@ -70,7 +70,8 @@
  function stopName(stop){
   if(!stop||stop.kind!=='station')return stop?.name||'';
   const country=['대구','부산'].includes(stop.area)||(stop.lat>35&&stop.lng<129.7&&stop.lng>128.2)?'KR':'JP';
-  return station(stop.name,null,country);
+  const name=station(stop.name,null,country);
+  return stop.visitLabel?`${name} · ${stop.visitLabel}`:name;
  }
  // Named Maps searches open place information; coordinate-only searches open a bare pin.
  function placeMapUrl(stop){

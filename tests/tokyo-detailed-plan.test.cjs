@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261126-tokyo-flights-3');
+ assert.equal(b.revision,'20261126-tokyo-pasmo-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -49,6 +49,9 @@ test('Skyliner stays blank, and airport selections use the correct local dates',
  assert.equal(busBack.departureAt,Date.parse('2027-01-20T06:50:00+09:00'));
  assert.equal(busBack.arrivalAt,Date.parse('2027-01-20T10:56:00+09:00'));
  assert.equal(busBack.fare.min,45200);
+ assert.match(busBack.travel.notice,/10B-3.*동대구터미널 1층 하차장.*중간 승하차 정류장 없음/);
+ assert.equal(busBack.parts[0].geometryAccuracy,'stop-verified-reference');
+ assert.deepEqual(busBack.parts[0].coords,require('../scripts/tokyo-airport-geometry.json').rows.returnAirportBus.coords);
  assert.equal(b.data.days[11].travelBookings.find(item=>item.key==='airport-bus-back-0650').leg,10);
  assert.equal(walkToTaxi.parts[0].mode,'walk');
  assert.equal(taxiBack.from,'동대구역 택시 승강장');

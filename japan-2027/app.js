@@ -61,7 +61,7 @@ function costText(s){const d=s.details;if(!d)return '';if(!Number.isFinite(d.cos
 function stayText(s){const matches=[...s.time.matchAll(/(\d{1,2}):(\d{2})/g)];if(s.kind!=='hotel'&&matches.length===2){const mins=(Number(matches[1][1])-Number(matches[0][1]))*60+Number(matches[1][2])-Number(matches[0][2]);if(mins>=0&&mins<720)return mins>=60?`${Math.floor(mins/60)}시간${mins%60?' '+mins%60+'분':''}`:`${mins}분`;}return s.details.stayLabel||s.details.typicalStayMin+'분';}
 function placeFacts(s,compact=false){const d=s.details;if(!d)return '';const stay=stayText(s),stayLabel=compact&&stay==='현장 상황에 따라 조정'?'체류 현장 조정':'체류 '+stay,showCost=!compact||!['station','airport','port'].includes(s.kind);return `<div class="place-facts"><span>${compact?'':icon('calendar')}${esc(stayLabel)}</span>${showCost?`<span>${compact?'':icon('star')}${esc(costText(s))}</span>`:''}</div>`;}
 function fukuokaPassHtml(){const legs=state.routeData.days['18-main']||[],ic=legs.filter(l=>l?.parts.some(p=>p.lineId==='West.FK'||p.lineId==='West.FN')).reduce((n,l)=>n+(l.fare?.min||0),0);return `<section class="reservation-info"><h3>공항역 첫 승차 전 · 1일권 비교</h3><p>공식 현재 성인640엔 · 공항·하코자키·나나쿠마선. 각 역 발매기에서 개찰 전에 구매. 발매기권은 구매 당일 첫차~막차, JR·니시테쓰 제외.</p><p>오늘 대상 IC합계${ic.toLocaleString()}엔 / 1일권640엔 / 절약${Math.max(0,ic-640).toLocaleString()}엔. 공항역에서 첫 승차 전 구매해야 공항→하카타도 포함됩니다.</p><a href="https://subway.city.fukuoka.lg.jp/fare/card/oneday.php" target="_blank" rel="noopener">공식1일권 ↗</a></section>`;}
-function detailHtml(s,popup=false){if(s.kind==='home')return '<p>정확한 출발·도착지 주소는 화면에서 표시하지 않습니다.</p>';const d=s.details;if(!d)return '';const sources=(d.sources||[]).filter(u=>/^https?:\/\//.test(u)),things=(d.thingsToDo||[]).filter(t=>typeof t==='string'&&t.trim());return `<div class="place-detail-content"><div class="detail-section"><b>특징</b><p>${esc(d.feature||cleanDesc(s))}</p></div>${things.length?`<div class="detail-section"><b>할 것</b><ul>${things.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}<div class="detail-section"><b>비용</b><p>${esc(costText(s))}<small class="cost-confidence">${esc(({ 'official-current':'공식 현재 요금 · 여행 전 재확인','historical-official':'과거 공식 자료',estimate:'예상 범위',unknown:'미확정','source-reference':'자료 참고 · 여행 전 재확인'})[d.costConfidence]||'자료 참고 · 여행 전 재확인')}</small>${d.costNote?` · ${esc(d.costNote)}`:''}</p></div>${d.hours?`<div class="detail-section"><b>영업시간·운영</b><p>${esc(d.hours)}</p></div>`:''}${d.soloNote?`<div class="detail-section"><b>1인 이용</b><p>${esc(d.soloNote)}</p></div>`:''}${s.timeConfidence==='target'?'<p class="timetable-warning">목표 회차 · 예약 확정 아님</p>':''}${s.reservationKey?ReservationUI.html(s.reservationKey,{popup,timing:s.reservationTiming}):''}${s.fukuokaPassInfo?fukuokaPassHtml():''}${d.reservationNote?`<div class="detail-section"><b>예약·방문 팁</b><p>${esc(d.reservationNote)}</p></div>`:''}${sources.length?`<div class="detail-source-links">${sources.slice(0,3).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">공식·참고 안내 ${i+1} ↗</a>`).join('')}</div>`:''}</div>`;}
+function detailHtml(s,popup=false){if(s.kind==='home')return '<p>정확한 출발·도착지 주소는 화면에서 표시하지 않습니다.</p>';const d=s.details;if(!d)return '';const sources=(d.sources||[]).filter(u=>/^https?:\/\//.test(u)),things=(d.thingsToDo||[]).filter(t=>typeof t==='string'&&t.trim());return `<div class="place-detail-content"><div class="detail-section"><b>특징</b><p>${esc(d.feature||cleanDesc(s))}</p></div>${things.length?`<div class="detail-section"><b>할 것</b><ul>${things.map(t=>`<li>${esc(t)}</li>`).join('')}</ul></div>`:''}<div class="detail-section"><b>비용</b><p>${esc(costText(s))}<small class="cost-confidence">${esc(({ 'official-current':'공식 현재 요금 · 여행 전 재확인','historical-official':'과거 공식 자료',estimate:'예상 범위',unknown:'미확정','source-reference':'자료 참고 · 여행 전 재확인'})[d.costConfidence]||'자료 참고 · 여행 전 재확인')}</small>${d.costNote?` · ${esc(d.costNote)}`:''}</p></div>${d.hours?`<div class="detail-section"><b>영업시간·운영</b><p>${esc(d.hours)}</p></div>`:''}${d.soloNote?`<div class="detail-section"><b>1인 이용</b><p>${esc(d.soloNote)}</p></div>`:''}${s.timeConfidence==='target'?'<p class="timetable-warning">목표 회차 · 예약 확정 아님</p>':''}${s.reservationKey?ReservationUI.html(s.reservationKey,{popup,timing:s.reservationTiming}):''}${s.fukuokaPassInfo?fukuokaPassHtml():''}${d.reservationNote?`<div class="detail-section"><b>예약·방문 팁</b><p>${esc(d.reservationNote)}</p></div>`:''}${sources.length?`<div class="detail-source-links">${sources.slice(0,3).map((u,i)=>`<a href="${esc(u)}" target="_blank" rel="noopener">${u===d.floorMapUrl?'B1 판매 위치 지도':`공식·참고 안내 ${i+1}`} ↗</a>`).join('')}</div>`:''}</div>`;}
 function legDirectionsUrl(leg){const first=leg.parts[0].coords[0],last=leg.parts.at(-1).coords.at(-1);const a=getStops().find(s=>s.uid===leg.fromUid)||{lat:first[0],lng:first[1]},b=getStops().find(s=>s.uid===leg.toUid)||{lat:last[0],lng:last[1],modeFromPrevious:leg.parts[0].mode};return directionsUrl(a,b);}
 function legHtml(leg,part=null){if(leg.travel)return travelHtml(leg);const walk=part&&['walk','transfer'].includes(part.mode);const partFare=walk?'도보·환승 추가 0엔':fareText(leg.fare,leg);const paidParts=leg.parts.filter(p=>['rail','metro','bus','taxi'].includes(p.mode)),geometryPart=part||paidParts[0]||leg.parts[0];
  const fareQuote=FareCore.quote(leg.fare,leg,fareOptions());
@@ -85,7 +85,7 @@ function applyWestData(base,west){
  base.westUpdatedAt=west.updatedAt;base.version=west.version;return base;
 }
 let flightRouteReferences=null;
-async function loadFlightRouteReferences(){try{return await TravelStore.readJson('flight-route-overrides.json?v='+TravelStore.VERSION,{timeout:6000,preferCache:true});}catch(_){return null;}}
+async function loadFlightRouteReferences(){try{return await TravelStore.readJson('flight-route-overrides.json?v='+TravelStore.VERSION,{timeout:6000});}catch(_){return null;}}
 function applyFlightRouteReferences(routes,payload){
  const distance=window.FlightPlayback?.core?.distance;
  if(!routes?.days||!Array.isArray(payload?.flights)||typeof distance!=='function')return routes;
@@ -98,12 +98,12 @@ function applyFlightRouteReferences(routes,payload){
    const notices=[];let changed=false;
    for(const part of leg.parts){
     if(part?.mode!=='flight'||!Array.isArray(part.coords)||!point(part.coords[0])||!point(part.coords.at(-1)))continue;
-    // Match public airport geometry only; schedule, fare, and flight selection stay in the itinerary.
-    const matches=references.filter(r=>distance(part.coords[0],r.airportReferenceCoordinates[0])<=10000&&distance(part.coords.at(-1),r.airportReferenceCoordinates[1])<=10000);
+    const flightNumber=(part.line||leg.travel?.operator||'').match(/\b[A-Z][A-Z0-9]\d{1,4}\b/)?.[0];
+    const matches=references.filter(r=>distance(part.coords[0],r.airportReferenceCoordinates[0])<=10000&&distance(part.coords.at(-1),r.airportReferenceCoordinates[1])<=10000&&(!flightNumber||r.flightNumber===flightNumber||r.flightTrack.referenceRole==='same-airport-pair'));
     if(matches.length!==1)continue;
     const reference=matches[0];
     part.coords=reference.coords.map(p=>[p[0],p[1]]);part.distanceM=reference.distanceM;
-    part.source=reference.flightTrack.sourceUrl;part.geometrySource=reference.geometrySource;part.flightTrack={...reference.flightTrack};
+    part.source=reference.flightTrack.sourceUrl;part.geometrySource=reference.geometrySource;part.geometryAccuracy=reference.flightTrack.status;part.flightTrack={...reference.flightTrack};
     notices.push(reference.geometryNotice);changed=true;
    }
    if(changed){
@@ -201,12 +201,12 @@ function arrowFor(points,color){
  const marker=L.marker(pos,{interactive:false,keyboard:false,zIndexOffset:-500,icon:L.divIcon({className:'route-arrow-icon',html:`<svg viewBox="0 0 18 18" aria-hidden="true"><path d="m5 4 7 5-7 5" fill="none" stroke="${color}" stroke-width="3.3" stroke-linejoin="round" stroke-linecap="round"/></svg>`,iconSize:[18,18],iconAnchor:[9,9]})}).addTo(routeLayer);arrows.push({marker,a,b});
 }
 function updateArrowAngles(){if(!map)return;arrows.forEach(x=>{const a=map.latLngToLayerPoint(x.a),b=map.latLngToLayerPoint(x.b),el=x.marker.getElement();if(el){const svg=el.querySelector('svg');svg.style.transform=`rotate(${Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI}deg)`;svg.style.opacity=map.distance(x.a,x.b)<20?'0':'1';}});}
-function highlightDirection(leg){if(window.CommandCore?.privateLeg(leg,state.data.days))leg=null;for(const a of arrows)routeLayer.removeLayer(a.marker);arrows=[];if(!leg)return;const part=railMapDrawParts(leg).filter(p=>p.geometryAccuracy!=='schematic').sort((a,b)=>b.distanceM-a.distanceM)[0];if(part?.coords?.length>1){arrowFor(part.coords,movementMapPlan(leg).color);updateArrowAngles();}}
+function highlightDirection(leg){if(window.CommandCore?.privateLeg(leg,state.data.days))leg=null;for(const a of arrows)routeLayer.removeLayer(a.marker);arrows=[];if(!leg)return;const part=railMapDrawParts(leg).filter(p=>mapPartVisible(p)&&p.geometryAccuracy!=='schematic').sort((a,b)=>b.distanceM-a.distanceM)[0];if(part?.coords?.length>1){arrowFor(part.coords,routeLineStyles(part).line.color);updateArrowAngles();}}
 function renderMap(fit=true){
  if(window.FlightPlayback?.isActive())stopPlay();
  window.RouteLocation?.refresh();
  hideRailHover();railSymbolKeys.clear();railSymbolGroups.clear();map.closePopup();
- setTiles(state.view==='overview'||state.day===1||state.day>=21||window.RouteLocation?.isActive()?'world':'gsi');
+ setTiles(state.view==='overview'||[1,12].includes(state.day)||state.day>=21||window.RouteLocation?.isActive()?'world':'gsi');
  routeLayer.clearLayers();routeVisuals=[];overviewPlaceGroups=[];markers=[];arrows=[];legLines=[];stopGroups=[];
  if(state.view==='overview'){renderOverviewMap(fit);return;}
  const stops=getStops();
@@ -223,7 +223,7 @@ function renderMap(fit=true){
  }
  const groups=new Map();stops.forEach((s,i)=>{if(s.kind==='home'||!Number.isFinite(s.lat)||!Number.isFinite(s.lng))return;const key=s.lat.toFixed(5)+','+s.lng.toFixed(5);if(!groups.has(key))groups.set(key,[]);groups.get(key).push(i);});
  groups.forEach(indices=>{
-  const i=indices[0],s=stops[i];if(s.kind==='home')return;const marker=L.marker([s.lat,s.lng],{icon:markerIcon(indices),keyboard:true,alt:indices.map(i=>`${i+1}. ${stops[i].name}`).join(' / '),title:s.name,zIndexOffset:s.kind==='station'?0:100}).addTo(routeLayer);
+  const i=indices[0],s=stops[i];if(s.kind==='home')return;const marker=L.marker([s.lat,s.lng],{icon:markerIcon(indices),keyboard:true,alt:indices.map(i=>`${i+1}. ${stopLabel(stops[i])}`).join(' / '),title:stopLabel(s),zIndexOffset:s.kind==='station'?0:100}).addTo(routeLayer);
   marker.bindTooltip(`${indices.map(i=>i+1).join('·')} · ${esc(stopLabel(s))}`,{direction:'top',offset:[0,-25],className:'stop-tooltip'});
   marker.on('click',()=>{let idx=indices[0];if(indices.includes(state.selected))idx=indices[(indices.indexOf(state.selected)+1)%indices.length];selectStop(idx,false,false,{source:'user'});marker.bindPopup(popupHtml(stops[idx],idx),DetailView.options('place-info-popup',{routeStopIndex:idx})).openPopup();});
   indices.forEach(idx=>markers[idx]=marker);stopGroups.push({indices,marker});

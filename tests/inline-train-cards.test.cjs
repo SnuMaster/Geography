@@ -134,6 +134,9 @@ test('JR numbers use the official stacked frame and station abbreviations while 
   assert.match(html,new RegExp('class="departure-endpoint-code endpoint-square jr-station-number has-station-abbreviation"[^>]*aria-label="역 번호 '+code+' · '+abbreviation+'"[^>]*><span class="jr-station-tab" aria-hidden="true">'+abbreviation+'</span><span class="jr-station-frame" aria-hidden="true"><span class="jr-station-line">'+code.slice(0,2)+'</span><span class="jr-station-digits">'+code.slice(2)+'</span>'));
  };
  const y=render(3,bundle.routes.days['3-main'][0]);assert.match(y,/역 번호 JY06/);assert.match(y,/jr-station-line\"[^>]*>JY/);assertJr(y,'JY13','IKB');assert.doesNotMatch(y,/>IBK</);
+ const active=require('../japan-2027/trip-update.json');
+ const kanda=active.routes.days['3-main'].find(leg=>leg.parts.some(part=>part.lineId==='JR-East.Yamanote'&&part.to==='간다'));
+ assertJr(render(3,kanda),'JY02','KND');
  const m=render(2,bundle.routes.days['2-main'][0]);for(const code of ['H19','H11','Y20','Y22'])assert.ok(new RegExp('class="departure-endpoint-code endpoint-circle"[^>]*>'+code+'<').test(m),code);
  for(const code of ['16','14'])assert.match(m,new RegExp('endpoint-circle operator-station-number operator-filled[^>]*[\\s\\S]*?<span class="operator-station-line">U</span><span class="operator-station-digits">'+code+'</span>'));
  const through=render(4,bundle.routes.days['4-main'][0]);assertJr(through,'JU02','UEN');assertJr(through,'JT05','YHM');

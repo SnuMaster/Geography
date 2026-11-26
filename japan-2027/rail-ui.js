@@ -155,7 +155,7 @@ for(const [id,rows]of Object.entries({
  'Tobu.TobuSkytree':[['TS01','아사쿠사','浅草'],['TS27','가스카베','春日部']],
  'Tobu.Nikko':[['TS27','가스카베','春日部'],['TN23','시모이마이치','下今市']],
  'Odakyu.Odawara':[['OH07','시모키타자와','下北沢'],['OH01','신주쿠','新宿']],
- 'JR-East.Yamanote':[['JY06','우구이스다니','鶯谷'],['JY18','요요기','代々木']],
+ 'JR-East.Yamanote':[['JY02','간다','神田'],['JY06','우구이스다니','鶯谷'],['JY18','요요기','代々木']],
  'JR-East.KeihinTohokuNegishi':[['JK30','우에노','上野'],['JK31','우구이스다니','鶯谷'],['JK26','도쿄','東京'],['JK28','아키하바라','秋葉原'],['JK24','신바시','新橋'],['JK27','간다','神田']],
  'JR-East.ChuoRapid':[['JC02','간다','神田'],['JC04','요쓰야','四ツ谷']],
  'JR-East.ChuoSobuLocal':[['JB14','요쓰야','四ツ谷'],['JB28','모토야와타','本八幡']],
@@ -207,7 +207,7 @@ function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAcc
 // Both strokes must share the same dash pattern: a solid casing turns a
 // schematic connection into an apparently confirmed railway on the map.
 function routeLineStyles(part,{overview=false,local=false,night=false}={}){
- const schematic=part.geometryAccuracy==='schematic',color=part.mapColor||railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
+ const schematic=part.geometryAccuracy==='schematic',color=railInfo(part)?.color||(part.mode==='transfer'?'#949e96':(MODE[part.mode]||MODE.rail).color);
  const dashArray=schematic?'2 6':part.mode==='flight'?'9 7':part.mode==='transfer'?'3 5':null;
  const weight=schematic?2:overview?(local?4:3):4.5,opacity=schematic?.6:night?.6:1;
  return {line:{color,weight,opacity,lineCap:'round',lineJoin:'round',dashArray},casing:{color:'#fffdf8',weight:weight+3,opacity:schematic?.45:.9,dashArray,lineCap:'round',lineJoin:'round',interactive:false}};
@@ -242,8 +242,7 @@ function splitRailService(part){
  railSectionCache.set(part,result);return result;
 }
 function railParts(leg){return leg.parts.flatMap(splitRailService);}
-// Keep the original route pieces for timetable matching and source attribution.
-// The drawing projection below combines only verified, contiguous through rides.
+// Keep each line's geometry and group the map symbols of contiguous through rides.
 function railMapParts(leg){
  const original=window.TripPersonal?.displayParts(leg)||leg?.parts||[],parts=original.slice();
  const profiles=Object.values(globalThis.RailDepartureProfiles?.profiles||{}).filter(p=>p.throughParts?.length>1);
@@ -259,13 +258,10 @@ function railMapParts(leg){
  return parts;
 }
 function railMapDrawParts(leg){
- return railMapParts(leg).filter(p=>!p.suppressSymbol).map(part=>{
-  if(!part.mapSymbol)return part;
-  const joined=part.mapSymbol,ids=joined.mapSymbolKey.split('|')[0].split('+');
-  // A through ride keeps one map color in both directions. Station badges and
-  // detail lists continue to use each operator's actual line identity/color.
-  const mainId=ids.includes('Tobu.TobuSkytree')?'Tobu.TobuSkytree':ids[0];
-  return {...joined,mapColor:railInfo({lineId:mainId})?.color,mapSourcePart:part};
+ return railMapParts(leg).flatMap(part=>{
+  const sections=splitRailService(part);
+  if(sections.length===1||sections.some(section=>section.coords.length<2))return [part];
+  return sections.map((section,index)=>index===0?{...section,mapSymbol:part}:{...section,suppressSymbol:true});
  });
 }
 
@@ -276,7 +272,8 @@ function movementMapPlan(leg){
  const motor=parts.filter(p=>['rail','metro','bus','taxi','flight','ferry'].includes(p.mode));
  const dominant=motor.slice().sort((a,b)=>(b.distanceM||0)-(a.distanceM||0)||String(a.lineId||a.mode).localeCompare(String(b.lineId||b.mode)))[0]||parts[0];
  const color=dominant?routeLineStyles(dominant).line.color:MODE.walk.color;
- return {parts,color,boardings:motor.length,hover:{...(dominant||{}),movement:true,line:leg.summary,from:leg.from,to:leg.to,distanceM:leg.distanceM,boardings:motor.length}};
+ const boardings=motor.filter(part=>!part.suppressSymbol).length;
+ return {parts,color,boardings,hover:{...(dominant||{}),movement:true,line:leg.summary,from:leg.from,to:leg.to,distanceM:leg.distanceM,boardings}};
 }
 function highlightMapMovement(leg,active){
  for(const visual of routeVisuals){
@@ -287,13 +284,13 @@ function highlightMapMovement(leg,active){
 function drawMapMovement(leg,{overview=false,local=false,symbols=true,index=leg.legIndex}={}){
  const plan=movementMapPlan(leg),lines=[];
  for(const part of plan.parts){
-  const strokes=routeLineStyles({...part,mapColor:plan.color},{overview,local,night:!overview&&state.night});
+  const strokes=routeLineStyles(part,{overview,local,night:!overview&&state.night});
   routeVisual(L.polyline(part.coords,strokes.casing).addTo(routeLayer),leg,index,part.mode);
   const style={...strokes.line,interactive:false},line=routeVisual(L.polyline(part.coords,style).addTo(routeLayer),leg,index,part.mode);
   const visual=routeVisuals.at(-1);Object.assign(visual,{role:'movement-line',baseStyle:{...style}});
-  line.getElement?.()?.setAttribute('data-movement-color',plan.color);
-  lines.push({line,index,color:plan.color});
-  if(symbols)addRailMapSymbol(part.mapSourcePart||part,leg);
+  line.getElement?.()?.setAttribute('data-movement-color',style.color);
+  lines.push({line,index,color:style.color});
+  if(symbols)addRailMapSymbol(part,leg);
  }
  if(!plan.parts.length)return lines;
  // MultiPolyline retains every geometry and gap: never draw a straight bridge

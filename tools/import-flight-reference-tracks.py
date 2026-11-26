@@ -86,8 +86,10 @@ def validate_source(flight: dict) -> None:
     if (
         source.scheme != "https"
         or source.netloc != "www.flightradar24.com"
-        or source.path != f"/data/flights/{flight['flightNumber'].lower()}"
-        or source.fragment != flight["sourceFlightId"]
+        or (source.path, source.fragment) not in {
+            (f"/data/flights/{flight['flightNumber'].lower()}", flight["sourceFlightId"]),
+            (f"/data/playback/{flight['sourceFlightId']}", ""),
+        }
         or source.query
     ):
         raise ValueError(f"{flight['id']}: source URL does not identify the declared public flight")
@@ -109,12 +111,13 @@ def validate_source(flight: dict) -> None:
     if not captures or len({c["id"] for c in captures}) != len(captures):
         raise ValueError(f"{flight['id']}: missing or duplicate capture IDs")
     for capture in captures:
-        if not re.fullmatch(r"[0-9a-f]{64}", capture["sourceImageSha256"]):
+        marker_samples = capture.get("observationMethod") == "playback-marker-samples"
+        if not marker_samples and not re.fullmatch(r"[0-9a-f]{64}", capture.get("sourceImageSha256", "")):
             raise ValueError(f"{flight['id']}: missing capture checksum")
         for field in ("imageSize", "viewportSize"):
             if not finite_pair(capture[field]) or not all(n > 0 for n in capture[field]):
                 raise ValueError(f"{flight['id']}: invalid capture dimensions")
-        if not finite_pair(capture["worldPixelOrigin"]) or not isinstance(capture["zoom"], int) or not 0 <= capture["zoom"] <= 22:
+        if not finite_pair(capture["worldPixelOrigin"]) or not isinstance(capture["zoom"], (int, float)) or not 0 <= capture["zoom"] <= 22:
             raise ValueError(f"{flight['id']}: invalid map calibration")
 
 
@@ -167,6 +170,12 @@ def build_coordinates(flight: dict) -> list[list[float]]:
 def build_reference(flight: dict) -> dict:
     coordinates = build_coordinates(flight)
     length = round(sum(distance_m(a, b) for a, b in zip(coordinates, coordinates[1:])))
+    marker_samples = any(c.get("observationMethod") == "playback-marker-samples" for c in flight["captures"])
+    precision = (
+        "재생 지도에서 관측한 위치 사이를 이어 그렸습니다. 원본 GPS 좌표나 여행 당일 항적이 아닙니다."
+        if marker_samples else
+        "원본 GPS 좌표가 아닌 공개 지도 표시선 기준. 활주·기호 아래 구간은 정밀 복원하지 않았습니다."
+    )
     return {
         "id": flight["id"],
         "flightNumber": flight["flightNumber"],
@@ -187,9 +196,9 @@ def build_reference(flight: dict) -> dict:
             "sourceFlightId": flight["sourceFlightId"],
             "registration": flight["registration"],
             "retrievedAt": flight["retrievedAt"],
-            "coverage": "displayed-trail",
+            "coverage": "playback-marker-samples" if marker_samples else "displayed-trail",
             "method": "공개 재생 지도에서 판독한 참고 항로",
-            "precisionNote": "원본 GPS 좌표가 아닌 공개 지도 표시선 기준. 활주·기호 아래 구간은 정밀 복원하지 않았습니다.",
+            "precisionNote": precision,
             "endpointNotice": flight["endpointCoverage"]["notice"],
             "referenceRole": flight["referenceRole"],
             "hasRecordedTimestamps": False,

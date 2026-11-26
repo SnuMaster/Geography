@@ -14,7 +14,7 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
     const items=routeVisuals.filter(v=>v.day===leg.dayNumber&&v.variant===leg.variant&&v.index===leg.legIndex),hits=items.filter(v=>v.role==='movement-hit'),lines=items.filter(v=>v.role==='movement-line'),plan=movementMapPlan(leg);
     if(hits.length!==(plan.parts.length?1:0))throw Error('Split hit target '+leg.legId);
     if(!hits.length)return;
-    if(new Set(lines.map(v=>v.layer.options.color)).size!==1)throw Error('Split color '+leg.legId);
+    if(lines.length!==plan.parts.length||lines.some((v,i)=>v.layer.options.color!==routeLineStyles(plan.parts[i]).line.color))throw Error('Incorrect line color '+leg.legId);
     if(JSON.stringify(hits[0].layer.getLatLngs().map(ps=>ps.map(p=>[p.lat,p.lng])))!==JSON.stringify(plan.parts.map(p=>p.coords)))throw Error('Geometry changed '+leg.legId);
     const hit=hits[0].layer;
     hit.fire('mouseover',{containerPoint:r.map.getSize().divideBy(2),originalEvent:{pointerType:'mouse'}});
@@ -39,7 +39,7 @@ const server=http.createServer((req,res)=>{const file=path.resolve(root,'.'+deco
    r.map.closePopup();
    return report;
   });
-  assert.equal(result.length,15);assert.deepEqual(errors,[]);
+  assert.equal(result.length,12);assert.deepEqual(errors,[]);
   await page.screenshot({path:'qa-unified-movement-'+width+'.png',fullPage:false});
   console.log(JSON.stringify({width,days:result}));await page.close();
  }
