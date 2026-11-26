@@ -4,6 +4,11 @@ const legacy=[{key:'ibuki',group:'food',name:'긴자 이부키',details:[]},{key
 const context=()=>({days:structuredClone(bundle.data.days),metadata:bundle.data.metadata});
 test('booking checklist follows the actual itinerary dates and removes retired trips',()=>{
  const rows=P.build(context(),legacy),by=Object.fromEntries(rows.map(r=>[r.key,r]));
+ const insurance=by['travel-insurance'],sim=by['japan-travel-sim'],skyliner=by['narita-skyliner-outbound'];
+ assert.equal(insurance.group,'prep');assert.equal(insurance.date,'출국 전 · 1/8~1/20');
+ assert.equal(sim.group,'prep');assert.match(sim.details.join(' '),/eSIM.*유심.*나리타 공항/);
+ assert.equal(skyliner.day,1);assert.equal(skyliner.leg,4);assert.equal(skyliner.group,'rail');
+ assert.match(skyliner.note,/지정석.*제2터미널 지하 1층/);assert.match(skyliner.date,/나리타 T2 → 게이세이우에노/);
  assert.equal(by['fuji-excursion'].day,5);assert.match(by['fuji-excursion'].date,/1\/12/);assert.match(by['fuji-excursion'].milestones[0][0],/^2026-12-12T10:00/);
  assert.equal(by['fuji-excursion'].group,'rail');assert.match(by['fuji-excursion'].details.join(' '),/15호.*10:30.*12:24.*48호.*17:41.*19:48/);
  assert.equal(by['fuji-excursion'].kind,'공식 판매 대기 중');assert.match(by['fuji-excursion'].note,/78,032원/);
@@ -25,8 +30,9 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert(!by['flight-tokyo']);assert(!by['flight-7c1129-20270108']);assert(!by['airport-bus-out']);assert(!by['flight-return-tokyo']);
 });
 test('booking dates and visit time derive from the plan without editing checklist literals',()=>{
- const c=context();c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
+ const c=context();c.metadata={...c.metadata,returnDate:'2027-01-21'};c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
  const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='ibuki').date,/18:30/);
+ assert.equal(r.find(x=>x.key==='travel-insurance').date,'출국 전 · 1/8~1/21');
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');
  const pass=r.find(x=>x.key==='nikko-maas-chuzenji-kegon');
  assert.match(pass.date,/^1\/16/);assert.match(pass.details[1],/1\/16/);
@@ -36,9 +42,10 @@ test('a removed destination removes its booking instead of keeping an unrelated 
  const c=context();for(const d of c.days)for(const v of d.variants)v.stops=v.stops.filter(s=>s.planKey!=='fujiStation');
  assert(!P.build(c,legacy).some(x=>x.key==='fuji-excursion'));
 });
-test('arrival train and local buses are listed as on-site purchases for the active itinerary',()=>{
+test('the arrival IC card and local buses are listed as on-site purchases for the active itinerary',()=>{
  const rows=P.onSite(context());
- assert.match(rows.find(x=>x.name.includes('스카이라이너')).note,/지정석.*제2터미널 지하 1층/);
+ assert.match(rows.find(x=>x.name==='TOURIST PASMO').note,/제2터미널 지하 1층/);
+ assert(!rows.some(x=>x.name.includes('스카이라이너')));
  assert.equal(rows.find(x=>x.name.includes('레드라인')).date,'1/12');
  assert.equal(rows.find(x=>x.name.includes('주젠지온센')).date,'1/15');
  assert.match(rows.find(x=>x.name.includes('무기토로')).note,/현장 선착순/);

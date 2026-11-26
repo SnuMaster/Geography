@@ -36,7 +36,37 @@
   const copy=key=>{const r=legacy.find(i=>i.key===key);return r?structuredClone(r):null;};
   const items=[],push=x=>{if(x)items.push(x);};
   const anchor=(item,key)=>{if(!item)return null;const p=find(key);return p?{...item,day:p.day.n,variant:p.variant.id,stop:p.stop.name,date:date(p.day)+' · '+p.stop.time,stopKey:undefined}:null;};
-  const outbound=days.find(day=>day.n===1)?.travelBookings;
+  const departure=days.find(day=>day.n===1),outbound=departure?.travelBookings;
+  if(departure){
+   const [,returnMonth,returnDay]=(context.metadata?.returnDate||'').split('-').map(Number);
+   const coverageDates=returnMonth&&returnDay?' · '+date(departure)+'~'+returnMonth+'/'+returnDay:'';
+   items.push({
+    key:'travel-insurance',group:'prep',kind:'가입 확인',name:'해외여행자 보험',day:departure.n,
+    date:'출국 전'+coverageDates,note:'출국 전에 가입하고 한국 귀국까지 보장되는지 확인',
+    url:'https://e-insmarket.or.kr/',
+    source:'https://www.0404.go.kr/bbs/bbsPst/MST0000000000026/ATC0000000047498/detail',
+    details:['보험 시작·종료 시각을 실제 출발과 귀국 일정에 맞추고, 해외 의료비 보장 한도와 제외 항목을 확인하세요.','가입증명서와 긴급지원 연락처를 휴대폰에 저장하세요.']
+   },{
+    key:'japan-travel-sim',group:'prep',kind:'구매·설치 확인',name:'일본 유심·eSIM',day:departure.n,
+    date:date(departure)+' 일본 도착 전 준비',note:'기기 호환 여부와 여행 기간에 맞는 데이터 용량·유효기간 확인',
+    url:'https://www.japan.travel/en/plan/wifi-and-connectivity/',
+    source:'https://www.japan.travel/en/plan/airport-access/narita-airport/',
+    details:['eSIM은 기기 지원 여부와 유효기간이 시작되는 조건을 확인한 뒤 판매처 안내에 따라 설치·활성화하세요.','실물 유심은 잠금이 해제된 휴대폰에서 사용할 수 있어요. 나리타 공항 도착층에서도 구매할 수 있어요.']
+   });
+   for(const variant of departure.variants||[]){
+    const stationIndex=variant.stops.findIndex((stop,index)=>stop.name==='공항제2빌딩역'&&variant.stops[index+1]?.name==='게이세이우에노역');
+    if(stationIndex<0)continue;
+    items.push({
+     key:'narita-skyliner-outbound',group:'rail',kind:'지정석 구매',name:'나리타 스카이라이너 편도',
+     day:departure.n,variant:variant.id,leg:stationIndex+1,
+     date:date(departure)+' · 나리타 T2 → 게이세이우에노',note:'전 좌석 지정석 · 공항 도착 후 나리타 제2터미널 지하 1층에서 구매 가능',
+     url:'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/skyliner/purchase.php',
+     source:'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/findus/skyliner.php',
+     details:['입국 수속과 수하물 수령을 마치고 지하 1층 스카이라이너 매표소 또는 게이세이 안내센터에서 게이세이우에노행 좌석을 선택하세요.','온라인으로 먼저 구매했다면 구매 경로의 교환·좌석 지정 안내를 확인하세요. 승차권과 지정석이 준비되면 완료로 체크하세요.']
+    });
+    break;
+   }
+  }
   if(outbound?.length)items.push(...outbound);else push(copy('flight-tokyo'));
   push(copy('hotel-tokyo'));
   const ibuki=anchor(copy('ibuki'),'ibuki');if(ibuki){ibuki.date=date(days.find(d=>d.n===ibuki.day))+' · '+find('ibuki').stop.time+' 목표';ibuki.details=['1인 좌석·코스·음료와 세금·서비스료·취소 조건을 공식 예약 화면에서 확인하세요.','일정 시각은 목표이며 예약 완료를 뜻하지 않습니다.'];push(ibuki);}
@@ -112,7 +142,7 @@
    const day=days.find(d=>d.variants.some(v=>v.stops.some(s=>s.planKey===key||s.name===key)));
    if(day)entries.push({name,date:date(day),note,url});
   };
-  add('공항제2빌딩역','나리타 스카이라이너','전 좌석 지정석. 입국 수속 후 나리타 제2터미널 지하 1층 게이세이 창구에서 게이세이우에노행 좌석을 사세요. TOURIST PASMO도 같은 층 안내센터에서 살 수 있어요.','https://www.keisei.co.jp/keisei/tetudou/skyliner/us/skyliner/purchase.php');
+  add('공항제2빌딩역','TOURIST PASMO','나리타 제2터미널 지하 1층 SKYLINER & KEISEI INFORMATION CENTER에서 살 수 있어요.','https://www.keisei.co.jp/keisei/tetudou/skyliner/us/findus/skyliner.php');
   entries.push({name:'도쿄 시내 일반 열차·지하철',note:'야마노테선·주오선 쾌속·도쿄메트로·유리카모메·도쿄 모노레일 등은 좌석 예약 없이 PASMO나 Suica로 타면 돼요.',url:'https://www.pasmo.co.jp/visitors/en/'});
   add('poni','포니피리카 저녁','일정의 일요일에는 예약을 받지 않아 현장에서 줄을 서면 돼요.','https://tabelog.com/tokyo/A1318/A131802/13164953/');
   add('gyoen','신주쿠교엔','1월 일반 방문은 현장 입장권을 살 수 있어요.','https://policies.env.go.jp/national-garden/shinjukugyoen/english/guide/information/');
