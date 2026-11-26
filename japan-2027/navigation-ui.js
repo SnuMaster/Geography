@@ -34,8 +34,8 @@
  function render(){
   if(!active)return;if(active.paused){setText('#navigationInstruction','길 안내 일시정지 · 재개를 눌러 계속하세요.');return;}const fix=RouteLocation.getFix(),status=RouteLocation.getStatus(),value=TripNavigation.guide(active.plan,fix,previous);
   if(status.phase==='denied'||status.phase==='unsupported'){value.state='permission';value.text=status.phase==='denied'?'위치 권한을 허용해 주세요':'이 브라우저에서 위치를 사용할 수 없어요';}
+  else if(status.pending){value.state=fix?'stale':'waiting';value.text=status.pending;previous=null;}
   else if(status.rejectedNotice){value.state='uncertain';value.text='GPS 위치 도약 · 다음 관측을 기다려요';}
-  else if(document.hidden){value.state='stale';value.text='화면을 다시 열면 위치를 확인해요';}
   if(value.state==='off'&&fix?.timestamp!==active.lastOffTimestamp){active.lastOffTimestamp=fix.timestamp;active.offFixes=(active.offFixes||0)+1;if(active.offFixes>=3)tryReroute(fix);}else if(value.state!=='off')active.offFixes=0;
   if(value.match&&['guiding','near','transit','reference'].includes(value.state)&&value.match.distanceM<=80+fix.accuracy)previous=value.match;
   if(value.part?.to&&value.text)value.text=value.text.replace(value.part.to,stationLabel(value.part.to));
@@ -47,12 +47,12 @@
   const reliable=actionable||value.state==='reference';
   setText('#navigationRemaining',reliable&&Number.isFinite(value.remainingM)?(value.state==='reference'?'참고선 남은 ':'남은 경로 ')+metres(value.remainingM):'남은 거리 확인 중');
   $('#navigationProgress').value=reliable?Math.max(0,active.plan.totalM-value.remainingM):0;
-  $('#navigationFollow').textContent=status.following?'내 위치 따라가는 중':'내 위치로';$('#navigationFollow').disabled=!fix;$('#navigationFollow').setAttribute('aria-pressed',String(status.following));
+  $('#navigationFollow').textContent=status.following?'내 위치 따라가는 중':'내 위치로';$('#navigationFollow').disabled=!fix||!!status.pending||value.state==='stale';$('#navigationFollow').setAttribute('aria-pressed',String(status.following));
   $('#navigationCompass').hidden=Boolean(RouteLocation.getHeading())||status.orientationPermission==='unsupported';
   $('#navigationArrived').hidden=value.state!=='near';
-  const accurate=fix&&Date.now()-fix.timestamp<=30000;setText('#navigationAccuracy',accurate?'GPS ±'+metres(fix.accuracy):'위치 갱신 대기');
+  const accurate=fix&&!status.pending&&Date.now()-fix.timestamp<=30000;setText('#navigationAccuracy',accurate?'GPS ±'+metres(fix.accuracy):'위치 갱신 대기');
   const explanation=value.state==='off'?'저장된 도보 지도에서 재탐색을 시도해요. 경로를 찾지 못하면 안전한 보행로로 기존 경로에 돌아와 주세요.':value.state==='transit'?`${value.part.line||'철도'} · 승하차는 현장 안내와 탑승 열차에서 확인하세요.`:value.state==='reference'?'개략선·역내 통로·차량 이동은 회전 안내를 하지 않아요. 현장 안내를 확인하세요.':value.state==='permission'?'브라우저의 이 사이트 위치 권한을 허용한 뒤 ‘위치 다시 시도’를 눌러 주세요.':value.state==='stale'||value.state==='uncertain'?'화면을 켜고 GPS가 다시 잡힐 때까지 기다려 주세요.':active.rerouted?'저장된 도로로 재탐색한 도보 경로 · 실제 표지판과 횡단보도를 따라 이동하세요.':'저장된 보행 경로 기준 · 실제 표지판과 횡단보도를 따라 이동하세요.';
-  setText('#navigationNote',explanation);$('#navigationRetry').hidden=!['permission'].includes(value.state);
+  setText('#navigationNote',explanation);$('#navigationRetry').hidden=!status.canRetry;
   setText('#navigationOffline',navigator.onLine?packageReady?'오프라인 준비됨':'출발 전 오프라인 저장':packageReady?'오프라인 길 안내':'오프라인 · 열린 경로 안내');
   const walking=active.plan.parts.every(p=>p.mode==='walk');setText('#navigationETA',actionable&&walking&&Number.isFinite(value.remainingM)?'도보 추정 도착 '+new Date(Date.now()+value.remainingM/1.2*1000).toLocaleTimeString('ko-KR',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'})+' · 신호·휴식 미반영':active.source.arrivalAt?'계획 도착 '+new Date(active.source.arrivalAt).toLocaleTimeString('ko-KR',{timeZone:'Asia/Tokyo',hour:'2-digit',minute:'2-digit'})+' · 실시간 미반영':'도착 예상 확인 필요');renderDirection();
  }
@@ -85,12 +85,13 @@
  function init(){
   if(ready)return;ready=true;$('#navigationPause').onclick=()=>{if(!active)return;active.paused=!active.paused;$('#navigationPause').textContent=active.paused?'재개':'일시정지';$('#navigationPause').setAttribute('aria-pressed',String(active.paused));if(active.paused)RouteLocation.pauseFollow();render();};$('#routeNavigationStart').addEventListener('click',start);$('#navigationStop').addEventListener('click',()=>stop());
   $('#navigationFollow').addEventListener('click',()=>{RouteLocation.follow();render();});$('#navigationCompass').addEventListener('click',()=>RouteLocation.requestHeading());
-  $('#navigationRetry').addEventListener('click',()=>{RouteLocation.start({preserveDay:true});if(active)RouteLocation.selectLeg(active.index-1);render();});
+  $('#navigationRetry').addEventListener('click',()=>{RouteLocation.retry();if(active)RouteLocation.selectLeg(active.index-1);render();});
   $('#navigationSave').addEventListener('click',()=>OfflinePack.show());
   $('#navigationArrived').addEventListener('click',()=>{const c=focusedContext(),next=active?.index+1;stop();if(c&&next<c.variant.stops.length)setFocusedLeg(next,{fit:true});announce('도착 확인 · 다음 이동은 길 안내를 눌러 시작하세요.');});
   window.addEventListener('routebook:location',event=>{if(active&&event.detail===null){stop({clearSaved:false});return;}render();});window.addEventListener('routebook:heading',renderDirection);
   window.addEventListener('offline',render);window.addEventListener('online',render);window.addEventListener('routebook:offline-ready',()=>{if(active){packageReady=true;render();}});
-  window.addEventListener('pagehide',()=>stop({clearSaved:false}));document.addEventListener('visibilitychange',render);
+  window.addEventListener('pagehide',event=>{if(!event.persisted)stop({clearSaved:false});});
+  window.addEventListener('pageshow',render);document.addEventListener('visibilitychange',render);
   const saved=record(),c=focusedContext();if(saved&&c&&saved.day===c.day.n&&saved.variant===c.variant.id&&saved.index<c.variant.stops.length)setFocusedLeg(saved.index,{fit:true});refresh();
  }
  window.RouteNavigation={init,start,stop,refresh,isActive:()=>!!active};
