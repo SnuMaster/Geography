@@ -25,6 +25,13 @@
   if(outbound?.length)items.push(...outbound);else push(copy('flight-tokyo'));
   push(copy('hotel-tokyo'));
   const ibuki=anchor(copy('ibuki'),'ibuki');if(ibuki){ibuki.date=date(days.find(d=>d.n===ibuki.day))+' · '+find('ibuki').stop.time+' 목표';ibuki.details=['1인 좌석·코스·음료와 세금·서비스료·취소 조건을 공식 예약 화면에서 확인하세요.','일정 시각은 목표이며 예약 완료를 뜻하지 않습니다.'];push(ibuki);}
+  const skytree=anchor(copy('skytree'),'skytree');
+  if(skytree){
+   skytree.date=skytree.date.split(/[~-]/)[0]+' 입장 목표';
+   skytree.note='일몰 무렵에 맞춰 덴보데크(350m) 시간 지정권 예매 권장';
+   skytree.details=['공식 예매에서 날짜와 덴보데크 입장 시각을 선택하세요. 덴보회랑(450m)은 선택 사항입니다.','공식 판매 가격은 날짜에 따라 달라요. 현장권은 잔여분이 있을 때 이용할 수 있어요.'];
+   push(skytree);
+  }
   const firstDome=find('domeBags')||find('dome'),checkout=find('domeCheckout');
   if(firstDome&&checkout)push({key:'hotel-dome',group:'travel',kind:'필수',name:'도쿄 돔 호텔 · 3박',day:firstDome.day.n,variant:firstDome.variant.id,stop:firstDome.stop.name,date:date(firstDome.day)+' 체크인 → '+date(checkout.day)+' 체크아웃',note:'예약·결제 상태·오전 짐 보관 확인',url:'https://www.tokyodome-hotels.co.jp/',details:['예약 상품의 체크인·체크아웃 시각을 확인하세요.','체크인 전·체크아웃 후 짐 보관을 확인하세요. 예약 완료로 자동 처리하지 않습니다.']});
   items.push(...days.filter(day=>day.n!==1).flatMap(day=>day.travelBookings||[]));
@@ -86,6 +93,7 @@
   add('nikkoStation','닛코 주젠지온센 방면 버스','일반 도부 노선버스는 지정석 없이 정류장에서 탑승해요.','https://www.tobu.co.jp/en/access/nikko/bus_nikko.html?version=en');
   add('kegon','게곤폭포 엘리베이터','현장에서 표를 살 수 있어요.','https://www.kegon.jp/info/');
   add('hamarikyu','하마리큐 은사정원','일반 입장권은 현장에서 살 수 있어요.','https://www.tokyo-park.or.jp/park/hama-rikyu/');
+  add('mugitoro','아사쿠사 무기토로 점심','1층 평일 뷔페는 현장 선착순이에요. 당일 운영 공지를 확인하세요.','https://www.mugitoro.co.jp/en/reservation/');
   return entries;
  }
  return {build,onSite};

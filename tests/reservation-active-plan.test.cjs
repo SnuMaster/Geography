@@ -1,6 +1,6 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),P=require('../japan-2027/reservation-plan'),bundle=require('../japan-2027/trip-update.json');
-const legacy=[{key:'ibuki',group:'food',name:'긴자 이부키',details:[]},{key:'flight-tokyo',day:1},{key:'hotel-tokyo',day:1},{key:'zutomayo',details:[]}];
+const legacy=[{key:'ibuki',group:'food',name:'긴자 이부키',details:[]},{key:'flight-tokyo',day:1},{key:'hotel-tokyo',day:1},{key:'zutomayo',details:[]},{key:'skytree',group:'visit',details:[]}];
 const context=()=>({days:structuredClone(bundle.data.days),metadata:bundle.data.metadata});
 test('booking checklist follows the actual itinerary dates and removes retired trips',()=>{
  const rows=P.build(context(),legacy),by=Object.fromEntries(rows.map(r=>[r.key,r]));
@@ -9,6 +9,7 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(by['nikko-express'].day,8);assert.match(by['nikko-express'].date,/1\/15/);assert.match(by['nikko-express'].details.join(' '),/스페이시아 X/);assert.match(by['nikko-express'].details.join(' '),/09:13.*17:44/);
  assert.equal(by['nikko-express'].group,'rail');assert.equal(by['nikko-express'].milestones[0][0],'2026-12-15T09:00:00+09:00');
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
+ assert.equal(by.skytree.date,'1/18 · 16:00 입장 목표');assert.equal(by.skytree.day,11);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
  assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,2);
  assert.equal(by['flight-mm809-20270120'].day,12);
@@ -29,5 +30,6 @@ test('arrival train and local buses are listed as on-site purchases for the acti
  assert.match(rows.find(x=>x.name.includes('스카이라이너')).note,/지정석.*제2터미널 지하 1층/);
  assert.equal(rows.find(x=>x.name.includes('레드라인')).date,'1/12');
  assert.equal(rows.find(x=>x.name.includes('주젠지온센')).date,'1/15');
+ assert.match(rows.find(x=>x.name.includes('무기토로')).note,/현장 선착순/);
  assert.deepEqual(P.onSite({days:[]}),[]);
 });
