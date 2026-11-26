@@ -283,6 +283,9 @@ function applyCurrentTrip(bundle){
  update(v.stops[5],'15:35','히비야선 기타센주 방향 승차 목표.');
  update(v.stops[6],'15:50','이리야역 하차 후 숙소로 도보 이동.');
  update(v.stops[7],'16:05~17:40','숙소 체크인·짐 정리·휴식.');
+ const returnToHotel=v.stops.at(-1);
+ update(returnToHotel,returnToHotel.time,'숙소로 돌아와 휴식합니다.');
+ returnToHotel.details.thingsToDo=['숙소로 돌아와 쉬면서 필요한 물품과 충전 상태를 확인한다.'];
  const skyliner=outbound.find(l=>l.fare.displayBlank);
  skyliner.durationLabel='약 '+skyliner.durationMinutes+'분 · 38호 후보';
  skyliner.note='평일 공개 시간표 기준 스카이라이너 38호 14:42 출발 → 15:23 도착 후보. 역내 이동을 포함한 일정이며 지정석과 이용일 운행 확인.';
