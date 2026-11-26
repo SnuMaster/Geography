@@ -23,13 +23,13 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261126-tokyo-flights-2')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261126-tokyo-flights-3')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
-   for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back','06:20']]){
+   for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back-0650','06:50']]){
     const text=document.querySelector('[data-booking-item="'+key+'"]')?.textContent||'';
     if(!text.includes(expected))throw Error('New booking missing '+key);
    }
@@ -45,6 +45,12 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!document.querySelector('#stopList')?.textContent.includes('야나카 긴자'))throw Error('Missing last city day');
    r.selectLeg(9);
    if(!r.map._popup?.getElement()?.textContent.includes('1/20 01:55'))throw Error('Overnight flight date missing');
+   r.selectLeg(10);
+   const busPopup=r.map._popup?.getElement()?.textContent||'';
+   if(!busPopup.includes('06:50')||!busPopup.includes('10:56'))throw Error('Wrong return bus timetable');
+   const [station,destination]=r.getStops().slice(-2);
+   const taxi=b.routeData.days['12-main'].at(-1);
+   if(station.name!=='동대구역 택시 승강장'||destination.name!=='월성로 132'||destination.dayOffset!==1||taxi.parts[0].mode!=='taxi')throw Error('Missing return taxi');
    if(by['flight-mm809-20270120']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
