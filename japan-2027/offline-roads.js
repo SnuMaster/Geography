@@ -15,6 +15,7 @@
     if(part.mode!=='walk')continue;let last=null;for(const p of part.coords||[])if(validPoint(p)&&(!last||GPS.distance(last,p)>500)){add(p);last=p;}
    }
   }
+  if(!result.length)add(day?.mapCenter);
   if(result.length>45)throw Error('지도 범위가 너무 넓어요. 구간별로 저장해야 합니다.');
   return result;
  }

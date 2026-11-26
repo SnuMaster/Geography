@@ -10,5 +10,5 @@ test('both excursion return evenings have budget dinners and a connected free ho
  assert(b.routes.days['5-main'].at(-2).fare.icYen>0);assert.equal(b.routes.days['8-main'].at(-2).fare.icYen,3511);
 });
 test('meal patch keeps existing records stable and never duplicates food or rail fares',()=>{
- const copy=structuredClone(b),before=JSON.stringify(copy.routes),ids=copy.data.days.flatMap(d=>d.variants[0].stops.map(s=>s.uid));assert.deepEqual(P.apply(copy,e).added,[]);assert.equal(JSON.stringify(copy.routes),before);assert.equal(new Set(ids).size,ids.length);assert.equal(T.counts(copy.data,copy.routes).legs,b.data.days.reduce((n,d)=>n+d.variants[0].stops.length-1,0));
+ const copy=structuredClone(b),before=JSON.stringify(copy.routes),ids=copy.data.days.flatMap(d=>d.variants[0].stops.map(s=>s.uid));assert.deepEqual(P.apply(copy,e).added,[]);assert.equal(JSON.stringify(copy.routes),before);assert.equal(new Set(ids).size,ids.length);assert.equal(T.counts(copy.data,copy.routes).legs,b.data.days.reduce((n,d)=>n+Math.max(0,d.variants[0].stops.length-1),0));
 });

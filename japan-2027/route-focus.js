@@ -60,10 +60,11 @@ function applyRouteFocus(){
  }
  const panel=$('#routeFocusPanel');panel.dataset.day=c?.day.n||'';panel.dataset.focusedLeg=index??'';
  $('#routeAllToggle').setAttribute('aria-pressed',String(routeAll));$('#routeAllToggle').textContent=routeAll?'전체 경로 끄기':'전체 경로';
- $('#routeLegPrevious').disabled=!c||index<=1;$('#routeLegNext').disabled=!c||index>=stops.length-1;
- $('#routeFocusDetail').disabled=!c;
- $('#routeFocusCount').textContent=c?`${c.day.date} · 이동 ${index} / ${stops.length-1} · 방문 ${index} → ${index+1}`:'전체 여정 · 도시를 누르거나 지도를 확대하세요';
- $('#routeFocusTitle').textContent=c?stopLabel(stops[index-1])+' → '+stopLabel(stops[index]):'지역을 고르면 한 구간씩 볼 수 있어요';
+ const selected=index!==null;
+ $('#routeLegPrevious').disabled=!selected||index<=1;$('#routeLegNext').disabled=!selected||index>=stops.length-1;
+ $('#routeFocusDetail').disabled=!selected;
+ $('#routeFocusCount').textContent=selected?`${c.day.date} · 이동 ${index} / ${stops.length-1} · 방문 ${index} → ${index+1}`:c?c.day.date+' · 이동 일정 없음':'전체 여정 · 도시를 누르거나 지도를 확대하세요';
+ $('#routeFocusTitle').textContent=selected?stopLabel(stops[index-1])+' → '+stopLabel(stops[index]):c?'비워둔 날':'지역을 고르면 한 구간씩 볼 수 있어요';
  const leg=c?.legs[index-1];$('#routeFocusMode').textContent=leg?`${leg.summary||''} · ${leg.durationLabel||distanceText(leg.distanceM)}`:'';
  // A single arrow follows the selected ride; verified through rides share one map color.
  highlightDirection(leg);window.RouteNavigation?.refresh();window.OfflineMap?.refresh();

@@ -23,24 +23,24 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261125-tokyo-airports-3')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261126-tokyo-flights-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"] .booking-date')?.textContent||'';
    if(!ibuki.includes('18:00'))throw Error('Ibuki time mismatch '+ibuki);
-   for(const [key,expected] of [['airport-bus-out','03:55'],['flight-7c1129-20270108','7C1129'],['flight-mm809-20270120','MM809'],['airport-bus-back','06:20']]){
+   for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back','06:20']]){
     const text=document.querySelector('[data-booking-item="'+key+'"]')?.textContent||'';
     if(!text.includes(expected))throw Error('New booking missing '+key);
    }
-   const oldFlight=document.querySelector('[data-booking-item="flight-7c1129-20270108"]');
-   if(oldFlight.querySelector('input').checked||oldFlight.textContent.includes('TW251'))throw Error('Old booking checkout migrated to the new flight');
+   const oldFlight=document.querySelector('[data-booking-item="flight-tw251-20270108"]');
+   if(oldFlight.querySelector('input').checked||oldFlight.querySelector('.booking-ticket-fields'))throw Error('Old booking checkout migrated to the new flight');
    document.querySelector('[data-booking-jump="flight-mm809-20270120"]').click();
    if(r.state.day!==12||!document.querySelector('[data-leg="9"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
    r.setDay(1);
    if(r.getStops()[0]?.name!=='어나드범어아파트')throw Error('First departure stop was overwritten');
    r.selectLeg(2);
-   if(!r.map._popup?.getElement()?.textContent.includes('03:55'))throw Error('Outbound bus schedule missing');
+   if(!r.map._popup?.getElement()?.textContent.includes('1/8 11:10'))throw Error('Outbound flight schedule missing');
    r.setDay(12);
    if(!document.querySelector('#stopList')?.textContent.includes('야나카 긴자'))throw Error('Missing last city day');
    r.selectLeg(9);
@@ -49,19 +49,18 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
     if(ss.length!==d.variants[0].stops.length)throw Error('Missing day stops '+d.n);
-    if(d.n>1&&!document.querySelector('.day-breakfast')?.textContent.includes('08:00'))throw Error('Missing morning plan');
+    if(d.n>2&&!document.querySelector('.day-breakfast')?.textContent.includes('08:00'))throw Error('Missing morning plan');
     if(document.querySelectorAll('#stopList .stop-card').length!==ss.length)throw Error('Missing rendered cards '+d.n);
     const panel=document.querySelector('#itineraryScroll');if(panel.scrollWidth>panel.clientWidth+2)throw Error('Sidebar overflow '+d.n);
     const legs=b.routeData.days[d.n+'-main'];for(let i=0;i<legs.length;i++)r.selectLeg(i+1);
     for(const [i,l]of legs.entries())if(l.busRoute){r.selectLeg(i+1);const box=r.map._popup?.getElement()?.querySelector('.bus-boarding-info');if(!box||!box.textContent.includes(l.busRoute.boarding.name)||!box.textContent.includes(l.busRoute.alighting.name))throw Error('Missing bus boarding details '+l.legId);if(l.busTimetable&&!box.querySelector('.bus-timetable')?.textContent.includes(l.busTimetable.trips[0][0]))throw Error('Missing official bus schedule '+l.legId);r.map.closePopup();}
-    const photo={2:'enoshima',7:'odaiba',8:'nikko',10:'day-10'}[d.n];
+    const photo={7:'odaiba',8:'nikko',10:'day-10'}[d.n];
     if(photo&&!document.querySelector('#kisekiHeroPhoto').src.endsWith('/'+photo+'.jpg'))throw Error('Wrong itinerary photo '+d.n);
     if([5,8].includes(d.n)){const meal=ss.find(s=>s.planKey===(d.n===5?'fujiDinner':'nikkoDinner'));if(!meal||meal.details.costMax>2000)throw Error('Missing budget dinner');}
     out.push({day:d.n,stops:ss.length,legs:legs.length});
    }
    r.setDay(2);
-   const temple=[...document.querySelectorAll('#stopList .stop-card')].find(el=>el.textContent.includes('하세데라'));
-   if(!temple?.textContent.includes('미하라시다이'))throw Error('Place detail did not render');
+   if(r.getStops().length||document.querySelector('#stopList .stop-card')||!document.querySelector('#stopList')?.textContent.includes('비워뒀어요')||!document.querySelector('#playBtn').disabled)throw Error('Day 2 is not empty');
    r.setDay(8);r.selectLeg(6);
    const el=r.map._popup?.getElement();if(!el?.querySelector('.operator-spacia-x')||el.querySelector('.operator-revaty'))throw Error('Wrong return train logo');
    return out;

@@ -3,16 +3,17 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
-test('approved 12-day allocation and three spaced excursions',()=>{
- assert.equal(b.revision,'20261125-tokyo-airports-3');
+test('approved calendar with Jan 9 empty and two excursions',()=>{
+ assert.equal(b.revision,'20261126-tokyo-flights-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
- assert.deepEqual(b.data.days.filter(d=>[2,5,8].includes(d.n)).map(d=>d.cityLabel),['가마쿠라·에노시마','가와구치코','닛코']);
+ assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
+ assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
  assert.equal(b.data.days[10].title,'공연 가능일·자유시간');
  assert(!b.data.days.some(d=>/오사카|하코네|아타미|가와고에/.test(d.title)));
 });
 test('public map stops have unique new IDs, sources and one connected leg per interval',()=>{
  const ids=new Set();
- for(const d of b.data.days)for(const v of d.variants){const legs=b.routes.days[d.n+'-'+v.id];assert.equal(legs.length,v.stops.length-1);assert(legs.every(l=>l.parts?.length),'App requires one explicit part per connection');
+ for(const d of b.data.days)for(const v of d.variants){const legs=b.routes.days[d.n+'-'+v.id];assert.equal(legs.length,Math.max(0,v.stops.length-1));assert(legs.every(l=>l.parts?.length),'App requires one explicit part per connection');
   v.stops.forEach((s,i)=>{assert(!ids.has(s.uid));ids.add(s.uid);assert.match(s.uid,/^t27-(p1118|12)-/);if(s.kind==='home'){assert.equal(s.lat,null);assert.equal(s.lng,null);}else{assert(Number.isFinite(s.lat)&&Number.isFinite(s.lng),s.name);assert(s.source||s.coordinateSource||s.details?.sources?.length,s.name);}
    if(i){assert.equal(legs[i-1].fromUid,v.stops[i-1].uid);assert.equal(legs[i-1].toUid,s.uid);}
   });
@@ -30,15 +31,17 @@ test('meal budget, Ginza Ibuki and shopping are preserved',()=>{
 test('Skyliner stays blank, and airport selections use the correct local dates',()=>{
  const sky=b.routes.days['1-main'].find(l=>l.fare?.displayBlank);
  assert(sky);assert.equal(sky.fare.icYen,null);assert.equal(sky.fare.min,null);
- const [taxi,busOut,flightOut]=b.routes.days['1-main'];
+ const [taxi,flightOut]=b.routes.days['1-main'];
  const trip=require('../japan-2027/personal-trip').patch(structuredClone(b.data),structuredClone(b.routes));
  assert.equal(trip.data.days[0].variants[0].stops[0].name,'어나드범어아파트');
  assert.equal(taxi.parts[0].mode,'taxi');
  assert.equal(taxi.private,false);
- assert.equal(taxi.departureAt,Date.parse('2027-01-08T03:10:00+09:00'));
- assert.equal(busOut.fare.min,70600);
+ assert.equal(taxi.departureAt,Date.parse('2027-01-08T08:00:00+09:00'));
+ assert.equal(taxi.to,"대구국제공항");
+ assert(!b.routes.days["1-main"].some(l=>l.parts.some(p=>p.mode==="bus")));
  assert.equal(flightOut.fare.min,null);
- assert.match(flightOut.summary,/7C1129/);
+ assert.match(flightOut.summary,/TW251/);
+ assert.equal(flightOut.departureAt,Date.parse("2027-01-08T11:10:00+09:00"));assert.equal(flightOut.arrivalAt,Date.parse("2027-01-08T13:20:00+09:00"));
  const [flightBack,busBack]=b.routes.days['12-main'].slice(-2);
  assert.match(flightBack.summary,/MM809/);
  assert.equal(flightBack.departureAt,Date.parse('2027-01-20T01:55:00+09:00'));
@@ -50,12 +53,11 @@ test('Skyliner stays blank, and airport selections use the correct local dates',
  assert.equal(last[6].time,'18:30~19:00');
  assert.match(last[6].name,/짐 수령/);
  assert.match(last[7].name,/마쓰야/);
- assert.match(b.data.days[0].variants[0].stops.find(s=>s.uid===sky.fromUid).description,/46호 16:02 출발 → 16:43/);
+ assert.match(b.data.days[0].variants[0].stops.find(s=>s.uid===sky.fromUid).description,/38호 14:42 출발 → 15:23/);
 });
 test('single Iriya stay, daily breakfasts and lakeshore scenery',()=>{
  assert.match(b.data.days[11].variants[0].stops[0].name,/이리야키타 · 체크아웃/);
- assert(b.data.days.slice(1).every(d=>d.breakfast.includes('08:00')&&d.breakfast.includes('편의점')));
- assert(b.data.days[1].variants[0].stops.find(s=>s.planKey==='hasedera').details.thingsToDo.some(t=>t.includes('전망대')));
+ assert(b.data.days.slice(2).every(d=>d.breakfast.includes('08:00')&&d.breakfast.includes('편의점')));
  const nikko=b.data.days[7].variants[0].stops;
  assert(nikko.some(s=>s.planKey==='kegon'));assert(nikko.some(s=>s.planKey==='chuzenji'));assert(!nikko.some(s=>s.planKey==='sanbon'));
  assert(!nikko.some(s=>/도쇼구/.test(s.name)));

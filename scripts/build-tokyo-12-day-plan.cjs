@@ -267,7 +267,7 @@ async function build(){
  T.prepare(bundle.data,bundle.routes);
  for(const d of days){
    d.schedule=d.rows=d.variants[0].schedule;
-   bundle.data.nightRows.push([d.date,d.title,d.n===12?'1/19 밤 하네다 · 1/20 새벽 귀국':d.variants[0].stops.at(-1).time]);
+   bundle.data.nightRows.push([d.date,d.title,d.n===12?'1/19 밤 하네다 · 1/20 새벽 귀국':(d.variants[0].stops.at(-1)?.time||'')]);
  }
  fs.writeFileSync(target,JSON.stringify(bundle)+'\n');
  console.log(T.counts(bundle.data,bundle.routes));

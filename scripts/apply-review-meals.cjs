@@ -27,7 +27,7 @@ function apply(bundle,evidence){
   bundle.data.food[m.key]={name:m.name,jp:m.jp,area:m.address,order:'규동·정식 중 선택',budget:m.min+'–'+m.max+' JP¥',hours:m.hours,note:m.note,url:m.official};added.push(m.key);
  }
  T.prepare(bundle.data,bundle.routes);for(const d of bundle.data.days){const v=d.variants[0];d.schedule=v.schedule;d.rows=v.schedule;}
- bundle.data.nightRows=bundle.data.days.map(d=>[d.date,d.title,d.variants[0].stops.at(-1).time]);bundle.data.metadata.reviewRevision='20261118-review-fixes-4';
+ bundle.data.nightRows=bundle.data.days.map(d=>[d.date,d.title,d.variants[0].stops.at(-1)?.time||'']);bundle.data.metadata.reviewRevision='20261118-review-fixes-4';
  return {added};
 }
 module.exports={apply,foot,connector};

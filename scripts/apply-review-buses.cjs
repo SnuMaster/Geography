@@ -27,7 +27,7 @@ function apply(bundle,e){
  // This never invents a timetable or changes the chosen train services.
  for(const n of [5,8]){const d=bundle.data.days.find(d=>d.n===n),ss=d.variants[0].stops,ls=bundle.routes.days[n+'-main'];for(let i=1;i<ss.length;i++){const prior=T.interval(ss[i-1]),now=T.interval(ss[i]),start=T.minutes(now.start),before=T.minutes(prior.end),duration=ls[i-1].durationMinutes;if(start!==null&&before!==null&&Number.isFinite(duration)&&start<before+duration){const next=before+duration,stay=Math.max(0,(T.minutes(now.end)??start)-start);if(next+stay>=1440)throw Error('Day exceeds midnight');T.setTime(ss[i],T.formatTime(next),T.formatTime(next+stay));}}}
  T.prepare(bundle.data,bundle.routes);for(const d of bundle.data.days){d.schedule=d.variants[0].schedule;d.rows=d.schedule;}
- bundle.data.nightRows=bundle.data.days.map(d=>[d.date,d.title,d.variants[0].stops.at(-1).time]);bundle.data.metadata.reviewBusCheckedAt=e.checkedAt;bundle.data.metadata.reviewedBusLegs=reviewed.length;
+ bundle.data.nightRows=bundle.data.days.map(d=>[d.date,d.title,d.variants[0].stops.at(-1)?.time||'']);bundle.data.metadata.reviewBusCheckedAt=e.checkedAt;bundle.data.metadata.reviewedBusLegs=reviewed.length;
  return {reviewed};
 }
 module.exports={apply,access};

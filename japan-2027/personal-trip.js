@@ -113,7 +113,7 @@
   }
   for(const legs of Object.values(routes?.days||{}))for(const leg of legs||[]){if(!leg)continue;for(const part of leg.parts||[])if(part.mode==='taxi'&&part.line&&!/Uber/i.test(part.line))part.line=part.line.replace(/택시/g,'Uber Taxi');if(leg.parts?.some(p=>p.mode==='taxi')&&leg.summary&&!/Uber/i.test(leg.summary))leg.summary=leg.summary.replace(/택시/g,'Uber Taxi');}
   const firstVariant=data?.days?.find(d=>d.n===1)?.variants?.find(v=>v.id==='main'),first=firstVariant?.stops?.[0],airport=firstVariant?.stops?.[1];
-  if(first&&airport?.name==='대구국제공항'){Object.assign(first,HOME,{time:'07:10-07:20',modeFromPrevious:'walk',transportFromPrevious:'비공개 출발지 · Uber Taxi 호출 준비'});airport.transportFromPrevious='비공개 출발지 → 대구국제공항 · Uber Taxi (호출 시 소요시간 확인)';}
+  if(first&&first.kind!=='departure'&&airport?.name==='대구국제공항'){Object.assign(first,HOME,{time:'07:10-07:20',modeFromPrevious:'walk',transportFromPrevious:'비공개 출발지 · Uber Taxi 호출 준비'});airport.transportFromPrevious='비공개 출발지 → 대구국제공항 · Uber Taxi (호출 시 소요시간 확인)';}
   const last=data?.days?.find(d=>d.n===22)?.variants?.find(v=>v.id==='main'),lastLegs=routes?.days?.['22-main'];
   if(last&&lastLegs?.length){const station=last.stops.find(s=>s.uid==='d22-main-6');if(station)station.transportFromPrevious='부산 → 서대구 KTX-산천330 직통 · 현재표 참고';if(!last.stops.some(s=>s.uid==='d22-main-home')&&last.stops.at(-1)?.uid==='d22-main-6'){const from=last.stops.at(-1),home={...HOME,uid:'d22-main-home',id:'d22-main-home',area:'대구',time:'서대구역 하차 후 · 귀가 시각 미확정',modeFromPrevious:'taxi',transportFromPrevious:'서대구역 → 비공개 도착지 · Uber Taxi 호출'};last.stops.push(home);lastLegs.push({fromUid:from.uid,toUid:home.uid});}}
   // Redact old offline snapshots as well as newly loaded files, without dropping place UIDs or visit records.

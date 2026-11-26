@@ -3,7 +3,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const T=require('../japan-2027/data-model');
 const {points,rows}=require('./tokyo-airport-geometry.json');
-const revision='20261125-tokyo-airports-3';
+const revision='20261126-tokyo-flights-1';
 const date='2026-11-25';
 const kobus='https://www.kobus.co.kr/';
 const jeju='https://www.jejuair.net/ko/prepare/flight/viewScheduleInfo.do';
@@ -249,7 +249,57 @@ function finalize(bundle){
  }
  if(data.nightRows.length)data.nightRows[0]=[out.date,out.title,first.at(-1).time];
  bundle.revision=data.version=data.metadata.revision=routes.version=revision;
- bundle.updatedAt='2026-11-25T16:00:00+09:00';
+ bundle.updatedAt='2026-11-26T00:00:00+09:00';
+ return applyCurrentTrip(bundle);
+}
+function applyCurrentTrip(bundle){
+ const {data,routes}=bundle;
+ const [out,freeDay]=data.days,v=out.variants[0],outbound=routes.days['1-main'];
+ const [start,,airport,naritaStop]=v.stops;
+ const airportGuide='https://www.airport.co.kr/daegu/index.do';
+ const trinity='https://www.trinityairways.com/app/serviceInfo/flightSchedule?showWholeSchedule=Y';
+ const t2Guide='https://www.narita-airport.jp/en/access/train/railway-route-2/';
+ const tae=[35.8941,128.6589],t2=[35.7732,140.3879];
+ update(start,'07:50~08:00','07:50 단지 앞 승차 준비. 08:00 택시 출발, 08:20 대구공항 도착 목표.');
+ const taeStop={...location(airport.uid,'대구국제공항','大邱国際空港','airport','08:20~11:10',tae,'08:20 도착 목표. 국제선 체크인·수하물 위탁·출국 수속 후 11:10 TW251 탑승.',airportGuide),selectionId:airport.selectionId};
+ const nrtStop={...location(naritaStop.uid,'나리타공항 제2터미널','成田空港 第2ターミナル','airport','13:20~14:15',t2,'13:20 T2 도착. 입국심사·수하물·세관 통과 후 도착층에서 지하 1층 철도역으로 이동.',t2Guide),selectionId:naritaStop.selectionId};
+ const rail=v.stops[4];
+ const taxi='택시 · 어나드범어아파트 → 대구국제공항';
+ const flightName='트리니티항공 TW251 · 대구 → 나리타 T2';
+ const taxiPart=connector(pt(start),pt(taeStop),start.name,taeStop.name,20);
+ Object.assign(taxiPart,{mode:'taxi',line:taxi,geometrySource:'출발지와 공항을 잇는 개략선 · 실제 주행 경로는 호출 앱에서 확인',source:airportGuide});
+ const terminalWalk=connector(pt(nrtStop),pt(rail),nrtStop.name,rail.name,5);
+ Object.assign(terminalWalk,{line:'T2 도착층 → B1 철도역',source:t2Guide,geometrySource:'나리타공항 안내 · 실내 통로 개략 연결'});
+ const airportAccess=leg(start,taeStop,[taxiPart],fare('KRW',null,airportGuide,'호출 시 운임 확인'),20,taxi);
+ airportAccess.distanceLabel='개략 연결';
+ const flightLeg=leg(taeStop,nrtStop,[flight(taeStop,nrtStop,flightName,trinity,130)],fare('KRW',null,trinity,'확정 결제액 미입력'),130,flightName,
+  travel('1/8 11:10','1/8 13:20',flightName,trinity,'항공사 현재 공개 시간표 기준. 나리타 T2 도착. 수하물과 최종 출발 시각은 전자항공권 확인.'));
+ const railAccess=leg(nrtStop,rail,[terminalWalk],noFare(),5,'T2 내부 철도역 연결');
+ railAccess.distanceLabel='터미널 내부';
+ v.stops.splice(1,3,taeStop,nrtStop);
+ outbound.splice(0,4,airportAccess,flightLeg,railAccess);
+ update(rail,'14:20~14:39','나리타 T2 지하 1층 지정석과 승강장 확인. 현재 평일표 스카이라이너 38호 14:42 출발 → 15:23 게이세이우에노 도착 후보. 수속이 늦으면 다음 편 확인.');
+ update(v.stops[4],'15:26','15:23 스카이라이너 하차. 15:26 개찰 통과 목표.');
+ update(v.stops[5],'15:35','히비야선 기타센주 방향 승차 목표.');
+ update(v.stops[6],'15:50','이리야역 하차 후 숙소로 도보 이동.');
+ update(v.stops[7],'16:05~17:40','숙소 체크인·짐 정리·휴식.');
+ const skyliner=outbound.find(l=>l.fare.displayBlank);
+ skyliner.durationLabel='약 '+skyliner.durationMinutes+'분 · 38호 후보';
+ skyliner.note='평일 공개 시간표 기준 스카이라이너 38호 14:42 출발 → 15:23 도착 후보. 역내 이동을 포함한 일정이며 지정석과 이용일 운행 확인.';
+ rail.details.sources=rail.details.sources.filter(url=>!url.includes('railway-route-3'));
+ rail.details.sources=[...new Set([...rail.details.sources,t2Guide])];
+ out.note='08:00 택시 출발 · 11:10 대구발 TW251 · 13:20 나리타 T2 도착 · 스카이라이너 요금 입력 보류';
+ out.travelBookings=[{...booking('flight-tw251-20270108',1,flightName,'1/8 11:10 → 13:20',trinity,['대구국제공항 출발 · 나리타 제2터미널 도착','이용일 운항과 위탁수하물 조건은 전자항공권 확인']),leg:2}];
+ daySync(out,outbound);
+ const empty='일정 없음';
+ const mapCenter=pt(freeDay.variants[0].stops[0]);
+ Object.assign(freeDay,{title:empty,shortTitle:empty,summary:empty,focus:empty,mapSummary:empty,cityLabel:'도쿄',cityEn:'Tokyo',
+  mapCenter,mapLabel:{city:'도쿄',places:empty},meals:[],breakfast:'',breakfastNote:'',note:empty,photoDay:1});
+ Object.assign(freeDay.variants[0],{title:empty,summary:empty,focus:empty,stops:[]});
+ routes.days['2-main']=[];
+ daySync(freeDay,[]);
+ if(data.nightRows.length)data.nightRows[1]=[freeDay.date,empty,''];
+ data.metadata.cities=data.metadata.cities.filter(city=>city!=='가마쿠라·에노시마');
  return bundle;
 }
 if(require.main===module){
