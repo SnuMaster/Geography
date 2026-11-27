@@ -4,7 +4,7 @@
  let observedLegs=null,observedDay=null,dateNotice=false,dateReason='selection',rejectedNotice='';
  let resolution=null,lastMatch=null,previousFix=null,selectedHint=null,passedLegs=new Set();
  let compass=null,orientationPermission='idle',orientationGeneration=0,orientationAttached=false,headingFrame=null,lastOrientation=null;
- let watchGeneration=0,watchStartedAt=0,freshWatch=false,suspended=false,waitingReason=null,lowAccuracy=false,refreshAttempted=false;
+ let watchGeneration=0,watchStartedAt=0,freshWatch=false,suspended=false,waitingReason=null,lowAccuracy=false,refreshAttempted=false,probeTimer=null;
  const staleAfter=30000;
  const tripCalendar=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
  const screenAngle=()=>Number.isFinite(window.screen?.orientation?.angle)?window.screen.orientation.angle:Number.isFinite(window.orientation)?window.orientation:0;
@@ -142,6 +142,7 @@
    return;
   }
   if(!recent){lastMatch=null;passedLegs.clear();offSince=null;offCount=0;}
+  clearTimeout(probeTimer);probeTimer=null;
   waitingReason=null;rejectedNotice='';refreshAttempted=false;previousFix=recent;fix=next;phase='tracking';offCount++;
   resolveFix();render();addTrail();
   window.dispatchEvent(new CustomEvent('routebook:location',{detail:{...fix}}));
@@ -152,6 +153,7 @@
  }
  function clearWatch(){
   watchGeneration++;
+  clearTimeout(probeTimer);probeTimer=null;
   if(watch!==null)navigator.geolocation?.clearWatch(watch);
   watch=null;
  }
@@ -171,6 +173,18 @@
     {enableHighAccuracy:highAccuracy,maximumAge:fresh?0:5000,timeout:20000}
    );
    if(generation===watchGeneration)watch=id;else geo.clearWatch(id);
+   if(generation===watchGeneration&&typeof geo.getCurrentPosition==='function'){
+    probeTimer=setTimeout(()=>{
+     if(generation!==watchGeneration||!active()||document.hidden||fix&&currentFix())return;
+     try{
+      geo.getCurrentPosition(
+       position=>{if(generation===watchGeneration)accept(position);},
+       failure=>{if(generation===watchGeneration&&failure.code===1)error(failure);},
+       {enableHighAccuracy:false,maximumAge:fresh?0:5000,timeout:8000}
+      );
+     }catch(_){/* The active watch still reports provider failures. */}
+    },6000);
+   }
   }catch(_){error({code:2});}
  }
  function error(e){
@@ -241,7 +255,10 @@
   dateNotice=today!==null&&today!==options.context().day.n;dateReason='selection';
   options.prepareMap?.();following=true;firstFix=true;phase='starting';offSince=null;offCount=0;
   waitingReason=null;suspended=false;refreshAttempted=false;
-  refresh();startOrientation();render();
+  refresh();
+  // On iOS, request location first. The compass has its own permission button.
+  if(typeof window.DeviceOrientationEvent?.requestPermission!=='function')startOrientation();
+  render();
   timer=setInterval(tick,5000);
   watchPosition();
  }

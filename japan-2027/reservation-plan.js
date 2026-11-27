@@ -95,6 +95,8 @@
   },'bebuya');
   if(bebuya){
    bebuya.date=bebuya.date.split(/[~-]/)[0]+' 입장 목표';
+   bebuya.confirmDate=bebuya.date;
+   bebuya.details.unshift('기존 예약이 있으면 매장 예약 화면에서 새 일정과 날짜가 일치하는지 확인하세요.');
    push(bebuya);
   }
   const skytree=anchor(copy('skytree'),'skytree');
@@ -131,8 +133,9 @@
   if(nikko){
    const opening=saleOpening(nikko.day,start,9);
    const visitsKegon=nikko.variant.stops.some(stop=>stop.planKey==='kegon');
-   const pending=orderDetails(nikko.day,'특급권과 별도로 도부철도 기본 승차권이 필요해요.'+
-    (visitsKegon?' 아래 주젠지·게곤폭포 프리패스에 기타센주↔도부닛코 기본 운임이 포함돼요.':''));
+   const pending=orderDetails(nikko.day,visitsKegon
+    ?'기본 운임은 아래 주젠지·게곤폭포 프리패스로 충당하세요. 이미 신청한 특급권 왕복은 발권 메일만 확인하면 돼요.'
+    :'특급권과 별도로 도부철도 기본 승차권이 필요해요.');
    const trips=pending?.trips||(snowTrip?[]:['가는 편 · 기타센주 → 도부닛코 리버티 게곤.','돌아오는 편 · 도부닛코 → 시모이마이치 일반열차, 시모이마이치 → 기타센주 스페이시아 X.']);
    push({
     key:'nikko-express',group:'rail',kind:pending?.kind||'사전 예매 권장',name:'닛코 특급 왕복 지정석',
@@ -146,16 +149,17 @@
     milestones:[opening]
    });
    if(visitsKegon)push({
-    key:'nikko-maas-chuzenji-kegon',group:'rail',kind:'선택 구매',name:'도부 NIKKO MaaS · 주젠지·게곤폭포 디지털 프리패스',
+    key:'nikko-maas-chuzenji-kegon',group:'rail',kind:'추가 구매',action:'purchase',name:'도부 NIKKO MaaS · 주젠지·게곤폭포 패스',
     day:nikko.day.n,variant:nikko.variant.id,stop:nikko.stop.name,
     date:date(nikko.day)+' · 닛코·주젠지호',
-    note:'기타센주 출발 성인 4,350엔 · 4일권 · 주젠지온센 버스 포함',
+    note:'닛코에서 살 표는 이 패스 1장 · 기타센주 출발 성인 4,350엔 · 4일권',
     url:'https://www.tobu-maas.jp/traffic-tickets/1562/details',
     source:'https://storage.userlocal.jp/chatbot/images/51426afe-1899-4498-b475-0e31648d8a6a.jpg',
     details:[
      '기타센주↔도부닛코 도부철도 기본 운임 왕복과 도부닛코역↔주젠지온센 버스가 포함돼요. 스페이시아 X 특급권은 별도로 필요해요.',
      '휴대폰에서 NIKKO MaaS를 열고 「デジタル中禅寺・華厳の滝フリーパス」의 출발역을 기타센주(北千住), 사용 시작일을 '+date(nikko.day)+'로 선택하세요.',
-     '금액은 도부 공표 운임 기준이에요. 기타센주 출발과 결제 금액을 확인하고, 구매하면 완료로 체크하세요.'
+     '기타센주 출발과 결제 금액을 확인하고, 구매하면 완료로 체크하세요.',
+     '열차 기본 운임까지 이미 따로 가지고 있다면 버스 전용 주젠지온센 프리패스(현행 2,300엔, 2일권)로 대신할 수 있어요.'
     ]
    });
   }
@@ -177,7 +181,7 @@
   add('toyosu','도요스 시장 일반 견학','일반 견학 통로는 예약 없이 방문할 수 있어요.','https://www.shijou.metro.tokyo.lg.jp/ja/info/0/kenngaku/kenngaku1');
   add('nikkoStation','닛코 주젠지온센 방면 버스','일반 도부 노선버스는 지정석 없이 정류장에서 탑승해요. 주젠지·게곤폭포 프리패스를 쓸 수 있고, 개별 승차는 겨울 공표 운임 기준 성인 편도 1,250엔이에요.','https://www.tobu-bus.com/pc/assets/pdf/nikko_rosen_winter_en.pdf?20261118=');
   add('kegon','게곤폭포 엘리베이터','현장에서 표를 살 수 있어요.','https://www.kegon.jp/info/');
-  add('hamarikyu','하마리큐 은사정원','일반 입장권은 현장에서 살 수 있어요.','https://www.tokyo-park.or.jp/park/hama-rikyu/');
+  add('sunshineAquarium','이케부쿠로 선샤인 수족관','날짜별 가격과 입장권 잔여는 공식 달력에서 확인하세요. 온라인 입장권과 현장권을 안내해요.','https://sunshinecity.jp/aquarium/ticket/');
   dining('kayashima','가야시마 점심','예약은 16:00 이후에 받는다고 안내돼 있어요. 점심은 현장 방문이에요.','https://tabelog.com/tokyo/A1320/A132001/13040521/');
   dining('poni','포니피리카 저녁','매장 안내 기준으로 토·일·공휴일은 예약을 받지 않아요. 일요일 저녁은 현장에서 줄을 서면 돼요.','https://tabelog.com/tokyo/A1318/A131802/13164953/');
   dining('acacia','아카시아 신주쿠 본점','전 좌석 자유석이라 현장에서 이용해요.','https://www.restaurant-acacia.com/%E3%82%A2%E3%82%AB%E3%82%B7%E3%82%A2shinjuku-honten/');
@@ -186,9 +190,8 @@
   dining('nakaei','나카에이 도요스점','좌석 예약을 받지 않아요. 도요스 시장 수산중도매동 3층에서 현장 주문해요.','https://tabelog.com/tokyo/A1313/A131307/13227147/');
   dining('boteya','보테쥬 오다이바점','아쿠아시티 1층 푸드코트 매장이에요. 현장에서 주문해요.','https://botejyu.co.jp/shop_detail/aquacity/');
   dining('wako','와코 야에스 지하상가점','좌석 예약을 받지 않아요. 현장에서 접수해요.','https://wako-group.co.jp/shop/detai/shop_3064/');
-  dining('mugitoro','아사쿠사 무기토로 1층 점심','평일 뷔페는 당일 10:30부터 현장 선착순이에요. 성인 1,650엔이고 최종 입장은 14:00예요.','https://www.mugitoro.co.jp/honten/buffet/');
-  dining('mizumachi','미즈마치 LAND_A','계획한 커피·간식은 현장 방문으로 잡았어요. 식사로 바꿀 경우 매장 예약 페이지에서 좌석을 확인할 수 있어요.','https://www.tablecheck.com/en/shops/land-a/reserve');
-  dining('yoroiya','아사쿠사 요로이야 저녁','좌석 예약을 받지 않아요. 현장에서 줄을 서면 돼요.','https://tabelog.com/tokyo/A1311/A131102/13003715/');
+  dining('coco','코코이찌방야 선샤인시티점','알파 지하 1층에서 현장 주문해요.','https://sunshinecity.jp/restaurant/restaurant_list/entry-549.html');
+  dining('mutekiya','멘소보 무테키야','이케부쿠로 남동쪽 라멘점에서 현장 주문해요.','https://www.mutekiya.com/en/about/index.html');
   return entries;
  }
  return {build,onSite};

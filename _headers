@@ -4,7 +4,11 @@
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
 
 # GPS is available only on the travel app document, with the user permission prompt.
-https://codex-japan-ai-assistant.geography-3tt.pages.dev/japan-2027/
+/japan-2027/
+  ! Permissions-Policy
+  Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(), usb=()
+
+/japan-2027/index.html
   ! Permissions-Policy
   Permissions-Policy: camera=(), microphone=(), geolocation=(self), payment=(), usb=()
 

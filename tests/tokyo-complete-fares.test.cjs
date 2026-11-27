@@ -11,7 +11,7 @@ test('every planned Japanese rail and bus movement is priced except the delibera
  assert(priced>25);assert.equal(blank,1);assert.equal(bundle.data.metadata.unpricedPublicTransport,0);
 });
 test('independent operators retain separate IC components',()=>{
- const l=bundle.routes.days['10-main'][0];assert.equal(l.fare.icYen,377);
+ const l=bundle.routes.days['4-main'][0];assert.equal(l.fare.icYen,377);
  assert.deepEqual(l.fare.breakdown.map(r=>r.operator),['TokyoMetro','JR-East']);
 });
 test('Spacia X return includes one whole-OD base fare and one actual express ticket',()=>{

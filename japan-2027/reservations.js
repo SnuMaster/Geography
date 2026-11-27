@@ -64,7 +64,7 @@
  function isComplete(item){
   const r=records[item.key]||{};
   if(definitions[item.key])return r.status===(item.key==='zutomayo'?'티켓 확보':'예약완료');
-  return r.complete===true&&r.orderSelection===item.orderSelection;
+  return r.complete===true&&r.orderSelection===item.orderSelection&&(!item.confirmDate||r.confirmDate===item.confirmDate);
  }
  function checklistContext(){return checklistConfig?.context?.()||{days:[],preferences:{}};}
  function itemVariant(item,context){const day=context.days.find(d=>d.n===item.day);return item.variant||(day?JourneyState.chosen(day,context.preferences):'main');}
@@ -122,7 +122,7 @@
   const progress=document.getElementById('bookingChecklistProgress');progress.max=Math.max(model.active.length,1);progress.value=model.done;
   document.getElementById('bookingStorageNote').textContent=storageAvailable?'이 브라우저에 자동 저장 · 실제 예약은 공식 링크에서':'현재 화면에만 반영됨 · 브라우저 저장 실패';
   dialog.querySelectorAll('[data-booking-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.bookingFilter===checklistFilter)));
-  const nextItems=active.filter(item=>!isComplete(item)&&(item.orderSelection||item.action==='reserve'));
+  const nextItems=active.filter(item=>!isComplete(item)&&(item.orderSelection||['reserve','purchase'].includes(item.action)));
   nextItems.sort((a,b)=>(Date.parse(a.milestones?.[0]?.[0])||Infinity)-(Date.parse(b.milestones?.[0]?.[0])||Infinity));
   const next=nextItems.length?`<section class="booking-group" id="bookingNextActions"><h3>다음 할 일</h3><ul class="booking-list">${nextItems.map(item=>checklistRow(item,model.context)).join('')}</ul></section>`:'';
   const groups=Object.entries(checklistGroups).map(([key,title])=>{
@@ -161,6 +161,7 @@
     r.complete=checked;
     if(item.orderSelection)r.orderSelection=item.orderSelection;
     else delete r.orderSelection;
+    if(item.confirmDate)r.confirmDate=item.confirmDate;
    }
    r.updatedAt=Date.now();save();
    if(definitions[item.key])window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key:item.key,field:'status'}}));else renderChecklist();return;

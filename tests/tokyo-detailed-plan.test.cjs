@@ -4,21 +4,17 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261127-tokyo-venue-updates-1');
+ assert.equal(b.revision,'20261127-tokyo-preferences-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
  const day11=b.data.days[10],stops=day11.variants[0].stops;
- assert.equal(day11.title,'아사쿠사·스미다강');
- assert.deepEqual(stops.map(s=>s.planKey),['hotel','kappabashi','sensoji','mugitoro','sumidaWalk','mizumachi','yoroiya','hotel']);
- assert.doesNotMatch(JSON.stringify(day11),/스카이트리|덴보데크|소라마치/);
- assert.equal(new Set(stops.map(s=>s.selectionId)).size,stops.length);
+ assert.equal(day11.title,'이케부쿠로·선샤인시티');
+ assert.deepEqual(stops.slice(1,-1).map(s=>s.planKey),['animate','coco','poke','sunshineAquarium','mutekiya']);
  assert.equal(b.data.nightRows[10][1],day11.title);
- const legs=b.routes.days['11-main'];
- assert(legs.every(l=>l.parts.every(p=>p.mode==='walk'&&p.geometryAccuracy==='mapped')));
- assert(legs[4].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.7116353)<0.00003&&Math.abs(lng-139.8015955)<0.00003),'River Walk crossing');
- assert(legs[5].parts[0].coords.some(([lat,lng])=>Math.abs(lat-35.70992)<0.00003&&Math.abs(lng-139.79924)<0.00003),'Azuma Bridge crossing');
- assert(legs.every(l=>l.parts[0].coords.every(([,lng])=>lng<139.805)),'Stay west of the tower complex');
+ const parks=b.data.days.flatMap(d=>d.variants[0].stops).filter(stop=>stop.kind==='sight'&&/공원|교엔|은사정원/.test(stop.name));
+ assert.deepEqual(parks.map(s=>s.name),['이노카시라공원','오이시공원','신주쿠교엔']);
+ assert(!b.data.days.some(d=>/메이지신궁|메이지진구|아사쿠사/.test(JSON.stringify(d))));
  assert(!b.data.days.some(d=>/오사카|하코네|아타미|가와고에/.test(d.title)));
 });
 test('the public itinerary begins at Daegu Airport and ends at Dongdaegu Station',()=>{
@@ -38,11 +34,14 @@ test('the public itinerary begins at Daegu Airport and ends at Dongdaegu Station
  assert.deepEqual(walk.parts.at(-1).coords.at(-1),[station.lat,station.lng]);
  assert(!['1-main','12-main','13-main'].some(key=>b.routes.days[key].some(leg=>leg.parts.some(part=>part.mode==='taxi'))));
 });
-test('1/11 retains the 10:00 garden visit with published holiday hours',()=>{
- const day=b.data.days[3],garden=day.variants[0].stops.find(s=>s.name==='신주쿠교엔');
+test('the two days swap while the 1/11 holiday stays on the calendar',()=>{
+ const day=b.data.days[3],shibuya=b.data.days[9],garden=shibuya.variants[0].stops.find(s=>s.name==='신주쿠교엔');
+ assert.match(day.title,/마루노우치/);
+ assert.match(shibuya.title,/시부야/);
+ assert.equal(shibuya.publicHoliday,undefined);
  assert.equal(day.publicHoliday.name,'성년의 날');
  assert.equal(garden.start,'10:00');
- assert.match(garden.details.hours,/공휴일 개원.*1\/12 휴원/);
+ assert.match(garden.details.hours,/일요일 09:00~16:30/);
  require('../japan-2027/rail-departure-profiles');
  assert(globalThis.RailDepartureProfiles.holidays.includes(T.date(day.n)));
 });
@@ -60,13 +59,13 @@ test('meal budget, Ginza Ibuki and shopping are preserved',()=>{
  assert(!all.some(s=>/도쿄 돔 호텔|스시노미도리/.test(s.name)));
  assert(all.some(s=>s.name==='도쿄 기프트 팔레트'));
  for(const s of all.filter(s=>s.kind==='food'&&!['ibuki','midori','bebuya'].includes(s.planKey)))assert(s.details.costMax<=2000,s.name);
- assert(all.some(s=>/돈키호테 아사쿠사/.test(s.name)));
+ assert(all.some(s=>/돈키호테 우에노/.test(s.name)));
  assert(all.some(s=>s.planKey==='drug'));
 });
 test('BEBU-YA dinner follows Center Gai and connects to the Iriya hotel',()=>{
- const day=b.data.days[3];
+ const day=b.data.days[9];
  const [centerGai,dinner,hotel]=day.variants[0].stops.slice(-3);
- const [toDinner,toHotel]=b.routes.days['4-main'].slice(-2);
+ const [toDinner,toHotel]=b.routes.days['10-main'].slice(-2);
  assert.deepEqual([centerGai.planKey,dinner.planKey,hotel.planKey],['shibuya','bebuya','hotel']);
  assert.equal(dinner.time,'18:40~20:10');
  assert.equal(dinner.details.costMin,4000);
@@ -125,7 +124,7 @@ test('single Iriya stay, daily breakfasts and lakeshore scenery',()=>{
  assert(!nikko.some(s=>/도쇼구/.test(s.name)));
 });
 test('the Gundam shop and both restaurant pins replace the retired or generic stops',()=>{
- const [odaiba,nikko,tower]=[6,7,9].map(i=>b.data.days[i]);
+ const [odaiba,nikko,tower]=[6,7,3].map(i=>b.data.days[i]);
  const gundam=odaiba.variants[0].stops.find(stop=>stop.planKey==='diver');
  assert.equal(gundam.name,'건담 베이스 도쿄');
  assert.match(gundam.address,/7F/);
@@ -141,7 +140,7 @@ test('the Gundam shop and both restaurant pins replace the retired or generic st
   assert(T.minutes(stops[index+1].start)-T.minutes(meal.end)>=outbound.durationMinutes);
  }
  assert.equal(tower.variants[0].stops[7].time,'18:00~18:50');
- assert(b.routes.days['10-main'][7].parts.some(part=>part.mode==='walk'&&part.to==='가미야초'&&part.geometryAccuracy==='mapped'));
+ assert(b.routes.days['4-main'][7].parts.some(part=>part.mode==='walk'&&part.to==='가미야초'&&part.geometryAccuracy==='mapped'));
 });
 test('mapped geometry has actual intermediate vertices and no airport route is invented',()=>{
  for(const legs of Object.values(b.routes.days))for(const l of legs)for(const p of l.parts){

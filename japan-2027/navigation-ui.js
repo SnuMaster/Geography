@@ -11,7 +11,7 @@
   if(!ready)return;const c=focusedContext(),index=focusedIndex(c),saved=record();
   if(active&&(!c||c.day.n!==active.day||c.variant.id!==active.variant||index!==active.index||c.legs[index-1]!==active.source)){stop({clearSaved:false});return;}
   const available=!!c&&!!c.legs[index-1]?.parts?.some(p=>p.coords?.length>1);$('#routeNavigationStart').disabled=!available;
-  $('#routeNavigationStart').textContent=saved&&c&&saved.day===c.day.n&&saved.variant===c.variant.id&&saved.index===index?'길 안내 계속':'길 안내';
+  $('#routeNavigationStart').textContent=navigator.onLine&&c&&railGoogleDirections(c.legs[index-1])?'Google 지도':saved&&c&&saved.day===c.day.n&&saved.variant===c.variant.id&&saved.index===index?'길 안내 계속':'길 안내';
  }
  function renderDirection(){if(!active)return;const heading=RouteLocation.getHeading();setText('#navigationDirection',heading?`${heading.source==='compass'?'휴대폰':'이동'} 방향 · ${RouteMatch.directionName(heading.degrees)} ${Math.round(heading.degrees)%360}°`:$('#locationDirection').textContent||'방향 확인 중');}
  async function tryReroute(fix){
@@ -65,6 +65,8 @@
  }
  function start(){
   let c=focusedContext(),index=focusedIndex(c);if(!c||index===null)return;
+  const external=navigator.onLine&&railGoogleDirections(c.legs[index-1]);
+  if(external){window.open(external,'_blank','noopener,noreferrer');return;}
   const inheritedOwnership=!!active&&ownsGPS;if(active)stop({clearSaved:false,keepGPS:true});
   if(state.view==='overview'){const target={day:c.day.n,variant:c.variant.id,view:'daily'};navigateScreen(target);setFocusedLeg(index);c=focusedContext();}
   const leg=c.legs[index-1],plan=TripNavigation.build(leg);if(!plan.segments.length){announce('이 구간의 저장 경로가 없어요.');return;}
@@ -89,7 +91,7 @@
   $('#navigationSave').addEventListener('click',()=>OfflinePack.show());
   $('#navigationArrived').addEventListener('click',()=>{const c=focusedContext(),next=active?.index+1;stop();if(c&&next<c.variant.stops.length)setFocusedLeg(next,{fit:true});announce('도착 확인 · 다음 이동은 길 안내를 눌러 시작하세요.');});
   window.addEventListener('routebook:location',event=>{if(active&&event.detail===null){stop({clearSaved:false});return;}render();});window.addEventListener('routebook:heading',renderDirection);
-  window.addEventListener('offline',render);window.addEventListener('online',render);window.addEventListener('routebook:offline-ready',()=>{if(active){packageReady=true;render();}});
+  for(const event of ['offline','online'])window.addEventListener(event,()=>{refresh();render();});window.addEventListener('routebook:offline-ready',()=>{if(active){packageReady=true;render();}});
   window.addEventListener('pagehide',event=>{if(!event.persisted)stop({clearSaved:false});});
   window.addEventListener('pageshow',render);document.addEventListener('visibilitychange',render);
   const saved=record(),c=focusedContext();if(saved&&c&&saved.day===c.day.n&&saved.variant===c.variant.id&&saved.index<c.variant.stops.length)setFocusedLeg(saved.index,{fit:true});refresh();

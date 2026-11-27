@@ -123,9 +123,9 @@ function metroStationCode(part){
 // https://www.mm21railway.co.jp/global/english/info/pdf/map.pdf ; https://www.tobu.co.jp/kr/service/station/
 // https://www.keio.co.jp/assets/pdf/global/routes/stations/shibuya/k55_shibuya.pdf
 const RAIL_STATION_NUMBERS={...METRO_STATION_NUMBERS,
- 'Yurikamome.Yurikamome':[['U01','신바시','新橋'],['U14','시조마에','市場前'],['U07','다이바','台場']],
+ 'Yurikamome.Yurikamome':[['U01','신바시','新橋'],['U06','오다이바카이힌코엔','お台場海浜公園'],['U07','다이바','台場'],['U08','도쿄국제크루즈터미널','東京国際クルーズターミナル'],['U14','시조마에','市場前']],
  'Minatomirai.Minatomirai':[['MM01','요코하마','横浜'],['MM06','모토마치·주카가이','元町・中華街']],
- 'JR-East.Yamanote':[['JY19','하라주쿠','原宿']],
+ 'JR-East.Yamanote':[['JY13','이케부쿠로','池袋'],['JY19','하라주쿠','原宿']],
  'JR-East.Tokaido':[['JT05','요코하마','横浜']],
  'JR-East.KeihinTohokuNegishi':[['JK11','사쿠라기초','桜木町'],['JK12','요코하마','横浜']],
  'JR-East.ChuoSobuLocal':[['JB02','기치조지','吉祥寺'],['JB10','신주쿠','新宿'],['JB17','스이도바시','水道橋']],

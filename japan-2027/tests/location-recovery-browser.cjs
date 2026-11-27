@@ -27,10 +27,11 @@ async function recovery(page,url){
    static now(){return now;}
   };
   Object.defineProperty(document,'hidden',{configurable:true,get:()=>hidden});
-  const watches=[],cleared=[];
+  const watches=[],cleared=[],probes=[];
   Object.defineProperty(navigator,'geolocation',{configurable:true,value:{
    watchPosition(success,error,options){return watches.push({success,error,options})-1;},
-   clearWatch(id){cleared.push(id);}
+   clearWatch(id){cleared.push(id);},
+   getCurrentPosition(success,error,options){probes.push({success,error,options});}
   }});
   window.gpsQA={
    show(value){hidden=!value;document.dispatchEvent(new Event('visibilitychange'));},
@@ -42,6 +43,8 @@ async function recovery(page,url){
    },
    error(id,code){watches[id].error({code});},
    requests:()=>watches.map(w=>w.options.maximumAge),
+   probes:()=>probes.length,
+   sendProbe(latitude,longitude){probes.at(-1).success({timestamp:now,coords:{latitude,longitude,accuracy:65}});},
    isHighAccuracy:id=>watches[id].options.enableHighAccuracy,
    cleared:()=>cleared.slice()
   };
@@ -114,6 +117,16 @@ async function recovery(page,url){
  await page.evaluate(()=>{gpsQA.clock(35000);window.dispatchEvent(new Event('focus'));});
  assert.equal(await state(),'stale','focus recovers a stale watch when the browser omitted visibility changes');
  assert.equal(await page.evaluate(()=>gpsQA.isHighAccuracy(11)),true);
+ await page.locator('#locationStop').click();
+
+ await button.click();
+ const count=await page.evaluate(()=>gpsQA.probes());
+ await page.waitForFunction(count=>gpsQA.probes()>count,count,{timeout:8500});
+ await page.evaluate(()=>gpsQA.sendProbe(35.8793,128.6281));
+ await page.locator('.gps-location-marker').waitFor();
+ assert.equal((await readFix()).lat,35.8793,'single-fix fallback renders a marker while the watch is silent');
+ await page.evaluate(()=>{gpsQA.clock(1000);gpsQA.send(gpsQA.requests().length-1,35.8795,128.6282);});
+ assert.equal((await readFix()).lat,35.8795,'the same watch keeps updating after a fallback fix');
  await page.locator('#locationStop').click();
 }
 
