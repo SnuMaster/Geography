@@ -31,11 +31,12 @@
   let board=RailDepartures.html(leg.dayNumber||api?.app.state.day,leg,null,{distanceLabel:'전체 거리',distance:distanceText(leg.distanceM),fareLabel,fare:fareText(leg.fare,leg),displayBlank:leg.fare?.displayBlank===true},true);
   const ktx=leg.parts.find(part=>part.lineId==='KORAIL.GyeongbuHSR');if(ktx)board=board.replace(/<span class="departure-station-code[^"]*"[^>]*>KTX<\/span>/,operatorLogo(ktx));
   const line=railInfo(firstRail),route=shortRoute(leg);
+  const names=route.split(' → ').map((name,i)=>`<span class="itinerary-train-name">${i?'→ ':''}${h(name)}</span>`).join(' ');
   const mark=line?.code?.length<=4?`<span class="itinerary-line-code" style="--itinerary-line-color:${h(line.color)}">${h(line.code)}</span>`:icon('rail');
   return `<details class="itinerary-train-card" data-itinerary-train-leg="${index}" aria-label="${h(route)} 열차 정보">
    <summary class="itinerary-train-summary">
     <span class="itinerary-train-mark" aria-hidden="true">${mark}</span>
-    <span class="itinerary-train-label"><strong>${h(route)}</strong><small>${h(leg.durationLabel)}</small></span>
+    <span class="itinerary-train-label"><strong>${names}</strong><small>${h(leg.durationLabel)}</small></span>
     <span class="cc-sr">열차 상세</span>
    </summary>
    ${board}

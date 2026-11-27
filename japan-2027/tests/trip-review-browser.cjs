@@ -13,6 +13,32 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   const sidebar=page.locator('#ccSidebarToggle');
   const sidebarWasClosed=await sidebar.getAttribute('aria-expanded')==='false';
   if(sidebarWasClosed)await sidebar.click();
+  if(width===1440){
+   const fullSize=page.viewportSize();
+   await page.setViewportSize({width:816,height:620});
+   await page.waitForSelector('body[data-viewport="fold"]');
+   await page.locator('#ccDaySelect').selectOption('3');
+   const rail=page.locator('#stopList [data-itinerary-train-leg="1"]');
+   const wrapCount=nodes=>nodes.map(node=>{
+    const range=document.createRange();
+    range.selectNodeContents(node);
+    return range.getClientRects().length;
+   });
+   const names=rail.locator('.itinerary-train-name');
+   assert.deepEqual(await names.allTextContents(),['히비야선','→ 야마노테 선','→ 주오 선 쾌속']);
+   assert.deepEqual(await names.evaluateAll(wrapCount),[1,1,1]);
+   const closedWidth=(await rail.boundingBox()).width;
+   await rail.locator('.itinerary-train-summary').click();
+   assert.ok((await rail.boundingBox()).width>closedWidth,'Open rail board uses the timetable width');
+   const board=rail.locator('.compact-station').first(),values=board.locator('.compact-metrics b');
+   assert.equal(await board.locator('.compact-line > strong').textContent(),'히비야선');
+   assert.deepEqual(await board.locator('.compact-line > strong').evaluateAll(wrapCount),[1]);
+   assert.deepEqual(await values.allTextContents(),['1.2 km','178 JP¥']);
+   assert.deepEqual(await values.evaluateAll(wrapCount),[1,1]);
+   assert.equal(await board.evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
+   await page.setViewportSize(fullSize);
+   await page.waitForSelector('body[data-viewport="desktop"]');
+  }
   await page.locator('#ccDaySelect').selectOption('7');
   const timetable=page.locator('#stopList');
   const firstTime=timetable.locator('.stop-time').first(),firstPlace=timetable.locator('.stop-name').first();

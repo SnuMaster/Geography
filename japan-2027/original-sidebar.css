@@ -91,8 +91,10 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle{display:inline-flex;fle
 body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=true]{background:#f9e3ca;color:#a94318;box-shadow:inset 0 0 0 1px #d99b6b}
 @media(max-width:1100px){body.command-center.travel-shell .topbar>#ccAlertsToggle{width:44px;padding:10px}#ccAlertsToggle>span{display:none}}
 @media(max-width:699px) and (min-height:501px){body.command-center[data-viewport=cover] .topbar>#ccAlertsToggle{grid-column:4;grid-row:2;justify-self:end}body.command-center[data-viewport=cover] .topbar>.header-actions{width:calc(100% - 49px)}}
-/* Rail details share the same timetable columns and expand in place. */
-.command-center.original-sidebar #stopList .itinerary-train-card{margin:0;border:1px solid #d7e1e5;border-radius:8px;background:#f3f6f5;overflow:hidden;min-width:0;color:#284b3e}
+/* Open rail boards use the full timetable width, including the time column. */
+.command-center.original-sidebar #stopList .itinerary-train-card{container:rail-card / inline-size;margin:0;border:1px solid #d7e1e5;border-radius:8px;background:#f3f6f5;overflow:hidden;min-width:0;color:#284b3e}
+.itinerary-leg-row>.itinerary-train-card[open]{grid-column:1/-1}
+.itinerary-leg-row:has(>.itinerary-train-card[open])>.itinerary-leg-label{display:none}
 .itinerary-train-summary{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:7px;min-height:44px;padding:7px 9px;list-style:none;background:#e9f0f4;color:#16435b;cursor:pointer}
 .itinerary-train-summary::-webkit-details-marker{display:none}
 .itinerary-train-summary:hover,.itinerary-train-card[open]>.itinerary-train-summary{background:#dceaf1}
@@ -103,13 +105,20 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=tru
 .itinerary-train-mark .icon{width:18px;height:18px}
 .itinerary-line-code{padding:2px 3px;border:2px solid var(--itinerary-line-color);border-radius:5px;background:#f9fcfe;color:#173749;font-size:11px;font-weight:700;line-height:1.2}
 .itinerary-train-label{display:flex;align-items:baseline;justify-content:space-between;gap:0 7px;flex-wrap:wrap;min-width:0}
-.itinerary-train-label strong{font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.itinerary-train-label strong{min-width:0;font-size:13px;line-height:1.45}
+.itinerary-train-name{display:inline-block;max-width:100%;word-break:keep-all;overflow-wrap:break-word}
 .itinerary-train-label small{font-size:12px;line-height:1.45;white-space:nowrap}
+@container rail-card (max-width:190px){
+ .itinerary-train-label{display:contents}
+ .itinerary-train-label strong{grid-area:2 / 1 / 3 / -1}
+ .itinerary-train-label small{grid-area:1 / 2}
+ .itinerary-train-summary::after{grid-area:1 / 3}
+}
 .itinerary-train-card>.leg-direction{display:inline-flex;align-items:center;min-height:44px;margin:0 12px;font-size:12px;white-space:normal}
 .itinerary-train-card .departure-panel{margin:0;border:0;border-radius:0;background:transparent}
 .itinerary-train-card .compact-station{padding:16px;min-width:0}
-.itinerary-train-card .compact-line{font-size:14px;line-height:1.5;gap:9px}
-.itinerary-train-card .compact-line>strong{flex:1}
+#stopList .itinerary-train-card .compact-line{flex-wrap:wrap;gap:6px 8px;font-size:14px;line-height:1.5}
+#stopList .itinerary-train-card .compact-line>strong{flex:1 1 min-content;max-width:100%;word-break:keep-all;overflow-wrap:break-word}
 .itinerary-train-card .departure-station-code{flex-shrink:0}
 .itinerary-train-card .compact-station .departure-stations-aligned{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;gap:5px;margin:17px 0}
 .itinerary-train-card .compact-station .departure-stations-aligned .departure-station-name,.itinerary-train-card .compact-station .departure-stations-aligned .departure-arrow{grid-column:1;min-width:0}
@@ -118,8 +127,9 @@ body.command-center.travel-shell .topbar>#ccAlertsToggle[data-alerts-enabled=tru
 .itinerary-train-card .compact-station .departure-stations-aligned .departure-destination{grid-row:3}
 .itinerary-train-card .departure-station-korean{font-size:17px;line-height:1.5;overflow-wrap:anywhere}
 .itinerary-train-card .departure-station-japanese{font-size:12px;line-height:1.5}
-.itinerary-train-card .compact-metrics{gap:10px;padding:13px}
-.itinerary-train-card .compact-metrics b{font-size:21px}
+.itinerary-train-card .compact-metrics{display:flex;flex-wrap:wrap;gap:8px 12px;padding:10px 12px}
+.itinerary-train-card .compact-metrics>span{flex:1 1 auto}
+.itinerary-train-card .compact-metrics :is(small,b){word-break:keep-all;overflow-wrap:break-word}
 .itinerary-train-card .departure-heading{gap:8px;flex-wrap:wrap}
 .itinerary-train-card .compact-station .compact-next{background:#f7efda;border-color:#d4ddc7;padding:14px 12px;gap:8px;min-width:0}
 .itinerary-train-card .compact-station .compact-next .departure-next-time strong{font-size:30px}
