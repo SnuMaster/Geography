@@ -109,7 +109,7 @@
   if(firstDome&&checkout)push({key:'hotel-dome',group:'travel',kind:'필수',name:'도쿄 돔 호텔 · 3박',day:firstDome.day.n,variant:firstDome.variant.id,stop:firstDome.stop.name,date:date(firstDome.day)+' 체크인 → '+date(checkout.day)+' 체크아웃',note:'예약·결제 상태·오전 짐 보관 확인',url:'https://www.tokyodome-hotels.co.jp/',details:['예약 상품의 체크인·체크아웃 시각을 확인하세요.','체크인 전·체크아웃 후 짐 보관을 확인하세요. 예약 완료로 자동 처리하지 않습니다.']});
   items.push(...days.filter(day=>day.n!==1).flatMap(day=>day.travelBookings||[]));
   const last=days.find(d=>d.pendingReturn&&!d.travelBookings?.length);if(last)push({key:'flight-return-tokyo',group:'travel',kind:'필수',name:date(last)+' 저녁 한국 귀국 항공권 · 미정',day:last.n,date:date(last)+' 저녁 예정 · 편명·공항 미정',note:'출발 공항·편명·시각·수하물 확정 필요',details:['하네다·나리타 중 실제 예약한 공항과 터미널을 확인하세요.','현재 비행편·출발·도착 시각은 미정입니다. 예약 완료로 자동 처리하지 않습니다.']});
-  const twelveDay=days.length===12;
+  const snowTrip=context.metadata?.id==='tokyo-20270108-19';
   const start=context.metadata?.start||'2027-01-08';
   const fuji=find('fujiStation');
   if(fuji){
@@ -133,13 +133,13 @@
    const visitsKegon=nikko.variant.stops.some(stop=>stop.planKey==='kegon');
    const pending=orderDetails(nikko.day,'특급권과 별도로 도부철도 기본 승차권이 필요해요.'+
     (visitsKegon?' 아래 주젠지·게곤폭포 프리패스에 기타센주↔도부닛코 기본 운임이 포함돼요.':''));
-   const trips=pending?.trips||(twelveDay?[]:['가는 편 · 기타센주 → 도부닛코 리버티 게곤.','돌아오는 편 · 도부닛코 → 시모이마이치 일반열차, 시모이마이치 → 기타센주 스페이시아 X.']);
+   const trips=pending?.trips||(snowTrip?[]:['가는 편 · 기타센주 → 도부닛코 리버티 게곤.','돌아오는 편 · 도부닛코 → 시모이마이치 일반열차, 시모이마이치 → 기타센주 스페이시아 X.']);
    push({
     key:'nikko-express',group:'rail',kind:pending?.kind||'사전 예매 권장',name:'닛코 특급 왕복 지정석',
     day:nikko.day.n,variant:nikko.variant.id,stop:nikko.stop.name,
     date:date(nikko.day)+' · 기타센주 ↔ 도부닛코',
     orderSelection:pending?.orderSelection,
-    note:pending?.note||(twelveDay?'도부 철도에서 스페이시아 X 왕복 지정석 예매':'도부 철도에서 리버티·스페이시아 X 지정석 예매'),
+    note:pending?.note||(snowTrip?'도부 철도에서 스페이시아 X 왕복 지정석 예매':'도부 철도에서 리버티·스페이시아 X 지정석 예매'),
     url:pending?.url||'https://tobu-japantrip-tickets.com/',
     source:'https://www.tobu.co.jp/en/express_info/purchase/?version=en',
     details:[opening[1],...trips,...(pending?.instructions||['기본 승차권과 특급권을 확인하고 좌석 종류를 선택하세요.'])],
@@ -163,7 +163,7 @@
   return items;
  }
  function onSite({days=[],metadata}){
-  if(metadata?.id!=='tokyo-20270108-19'||days.length!==12)return [];
+  if(metadata?.id!=='tokyo-20270108-19'||!days.length)return [];
   const entries=[];
   const add=(key,name,note,url,group)=>{
    const day=days.find(d=>d.variants.some(v=>v.stops.some(s=>s.planKey===key||s.name===key)));

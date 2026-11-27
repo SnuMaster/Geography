@@ -13,7 +13,8 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.match(skyliner.source,/skyliner_timetable/);
  const bus=by['airport-bus-back-0650'];
  assert.equal(bus.date,'1/20 06:50 → 10:56');
- assert.match(bus.details.at(-1),/10B-3.*직통 07:20편 또는 08:00편/);
+ assert.match(bus.details.join(' '),/10B-3.*직통 07:20편 또는 08:00편/);
+ assert.match(bus.details.at(-1),/경북고속.*06:50 공개 배차/);
  assert.equal(by['fuji-excursion'].day,5);assert.match(by['fuji-excursion'].date,/1\/12/);assert.match(by['fuji-excursion'].milestones[0][0],/^2026-12-12T10:00/);
  assert.equal(by['fuji-excursion'].group,'rail');assert.match(by['fuji-excursion'].details.join(' '),/15호.*10:30.*12:24.*48호.*17:41.*19:48/);
  assert.equal(by['fuji-excursion'].kind,'공식 판매 대기 중');assert.match(by['fuji-excursion'].note,/78,032원/);
@@ -37,8 +38,9 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
  assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,1);
- assert.equal(by['flight-mm809-20270120'].day,12);
- assert.equal(by['flight-mm809-20270120'].leg,9);
+ assert.equal(by['flight-mm809-20270120'].day,13);
+ assert.equal(by['flight-mm809-20270120'].leg,1);
+ assert.equal(bus.day,13);assert.equal(bus.leg,2);
  assert(!by['flight-tokyo']);assert(!by['flight-7c1129-20270108']);assert(!by['airport-bus-out']);assert(!by['flight-return-tokyo']);
 });
 test('booking dates and visit time derive from the plan without editing checklist literals',()=>{

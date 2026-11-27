@@ -9,7 +9,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   page.on('pageerror',e=>errors.push(e.message));
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
-  await page.waitForFunction(()=>window.__routebook.state.routeData.days['12-main'][8].parts[0].flightTrack?.flightNumber==='MM809');
+  await page.waitForFunction(()=>window.__routebook.state.routeData.days['13-main'][0].parts[0].flightTrack?.flightNumber==='MM809');
   const geo=await page.evaluate(()=>{
    const [a,b]=__routebook.getLeg(2).parts[0].coords;
    return [a,a.map((x,i)=>x+(b[i]-x)/3)].map(([latitude,longitude])=>({latitude,longitude,accuracy:8}));
@@ -88,7 +88,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261127-tokyo-final-day-edits-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-return-day-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -111,11 +111,12 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const oldFlight=document.querySelector('[data-booking-item="flight-tw251-20270108"]');
    if(oldFlight.querySelector('input').checked||oldFlight.querySelector('.booking-ticket-fields'))throw Error('Old booking checkout migrated to the new flight');
    document.querySelector('[data-booking-jump="flight-mm809-20270120"]').click();
-   if(r.state.day!==12||!document.querySelector('[data-leg="9"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
+   if(r.state.day!==13||!document.querySelector('[data-leg="1"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
    r.setDay(1);
    if(r.getStops()[0]?.name!=='대구국제공항'||r.getLeg(1).parts[0].mode!=='flight')throw Error('Private origin remains in the public itinerary');
    r.selectLeg(1);
    if(!r.map._popup?.getElement()?.textContent.includes('1/8 11:10'))throw Error('Outbound flight schedule missing');
+   if(!r.map._popup.getElement().querySelector('.airline-trinity')||!document.querySelector('#stopList [data-leg="1"] .airline-trinity'))throw Error('Missing Trinity logo');
    r.map.closePopup();
    r.selectLeg(3);
    if(!r.map._popup?.getElement()?.textContent.includes('나리타 T2 15:02 → 게이세이우에노 15:43'))throw Error('Missing Skyliner map backup');
@@ -134,10 +135,18 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    r.setDay(12);
    const lastDay=document.querySelector('#stopList')?.textContent||'';
    if(!lastDay.includes('야나카 긴자')||!lastDay.includes('18:30부터 숙소 프런트')||lastDay.includes('보관함'))throw Error('Wrong last city day or baggage arrangement');
-   r.selectLeg(9);
+   if(r.getStops().at(-1).uid!=='t27-12-hanedaT3'||r.getLeg(9))throw Error('January 19 did not end at Haneda');
+   document.querySelector('#nextDay').click();
+   if(r.state.day!==13||r.getStops()[0].time!=='00:00~01:55'||document.querySelector('#ccDaySelect').value!=='13'||!document.querySelector('.trip-summary').textContent.includes('13 DAYS'))throw Error('January 20 is missing from the day navigation');
+   if(!document.querySelector('#stopList [data-leg="1"] .airline-peach')||!r.map.getContainer().querySelector('.airline-map-symbol .airline-peach'))throw Error('Missing Peach logo on itinerary or map');
+   if(!document.querySelector('#stopList [data-leg="2"] .operator-kyungbuk-express'))throw Error('Missing Kyungbuk Express logo on the itinerary');
+   r.selectLeg(1);
    if(!r.map._popup?.getElement()?.textContent.includes('1/20 01:55'))throw Error('Overnight flight date missing');
    if(!r.map._popup?.getElement()?.querySelector('.flight-track-source a')?.href.endsWith('/data/playback/42b68444'))throw Error('MM809 flight reference missing');
-   r.selectLeg(10);
+   if(!r.map._popup.getElement().querySelector('.airline-popup-logo.airline-peach'))throw Error('Missing Peach logo in flight details');
+   r.selectLeg(2);
+   if(!r.map.getContainer().querySelector('.bus-company-symbol .operator-kyungbuk-express'))throw Error('Missing Kyungbuk Express logo on the map');
+   if(!r.map._popup?.getElement()?.querySelector('.bus-popup-logo.operator-kyungbuk-express'))throw Error('Missing Kyungbuk Express logo in bus details');
    const busPopup=r.map._popup?.getElement()?.textContent||'';
    if(!busPopup.includes('06:50')||!busPopup.includes('10:56')||!busPopup.includes('10B-3')||!busPopup.includes('동대구터미널 1층 하차장'))throw Error('Wrong return bus timetable or stops');
    if(!busPopup.includes('07:20편 또는 08:00편'))throw Error('Missing airport bus map backups');
@@ -145,16 +154,16 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    busPicker.value='08:00';busPicker.dispatchEvent(new Event('change',{bubbles:true}));
    const busImpact=document.querySelector('#stopList [data-connection-impact]').textContent;
    if(!busImpact.includes('08:00 동대구 직통')||!busImpact.includes('발권 화면')||!busImpact.includes('10:56')||!busImpact.includes('11:10'))throw Error('Return backup hid the affected arrival and taxi');
-   const station=r.getStops().at(-1),walk=b.routeData.days['12-main'].at(-1);
-   if(station.name!=='동대구역 택시 승강장'||station.dayOffset!==1||walk.parts[0].mode!=='walk')throw Error('Private destination remains in the public itinerary');
+   const station=r.getStops().at(-1),walk=b.routeData.days['13-main'].at(-1);
+   if(station.name!=='동대구역 택시 승강장'||station.dayOffset!==0||walk.parts[0].mode!=='walk')throw Error('Private destination remains in the public itinerary');
    r.setDay(4);
    const holiday=document.querySelector('.day-public-holiday')?.textContent||'';
    if(!holiday.includes('성년의 날')||!holiday.includes('공휴일 열차 시간표'))throw Error('Missing holiday in the itinerary');
-   if(by['flight-mm809-20270120']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
+   if(by['flight-mm809-20270120']?.day!==13||by['hotel-dome'])throw Error('Wrong lodging or return booking');
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();
     if(ss.length!==d.variants[0].stops.length)throw Error('Missing day stops '+d.n);
-    if(d.n>2&&!document.querySelector('.day-breakfast')?.textContent.includes('08:00'))throw Error('Missing morning plan');
+    if(d.n>2&&d.n<13&&!document.querySelector('.day-breakfast')?.textContent.includes('08:00'))throw Error('Missing morning plan');
     if(document.querySelectorAll('#stopList .stop-card').length!==ss.length)throw Error('Missing rendered cards '+d.n);
     const panel=document.querySelector('#itineraryScroll');if(panel.scrollWidth>panel.clientWidth+2)throw Error('Sidebar overflow '+d.n);
     const legs=b.routeData.days[d.n+'-main'];for(let i=0;i<legs.length;i++)r.selectLeg(i+1);
@@ -179,7 +188,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const el=r.map._popup?.getElement();if(!el?.querySelector('.operator-spacia-x')||el.querySelector('.operator-revaty'))throw Error('Wrong return train logo');
    return out;
   });
-  assert.equal(result.length,12);assert.deepEqual(errors,[]);
+  assert.equal(result.length,13);assert.deepEqual(errors,[]);
   await page.waitForFunction(()=>[...document.querySelectorAll('.operator-spacia-x')].some(img=>img.complete&&img.naturalWidth>0));
   await page.screenshot({path:'qa-trip-review-'+width+'.png',fullPage:false});
   await page.evaluate(async()=>{
@@ -207,7 +216,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   assert.equal(stale,null);
   await page.locator('#offlineStreetSize').filter({hasText:/MB/}).waitFor();
   await page.locator('#offlineStreetStart').click();
-  await page.locator('#offlineStreetStatus').filter({hasText:/12\/12일 저장 완료/}).waitFor({timeout:45000}).catch(async error=>{throw Error(await page.locator('#offlineStreetStatus').textContent(),{cause:error});});
+  await page.locator('#offlineStreetStatus').filter({hasText:/13\/13일 저장 완료/}).waitFor({timeout:45000}).catch(async error=>{throw Error(await page.locator('#offlineStreetStatus').textContent(),{cause:error});});
   assert.deepEqual(externalStreet,[]);
   const redirects=await page.evaluate(async()=>{
    const shell=await caches.open('routebook-shell-'+OfflinePack.REVISION);
@@ -220,7 +229,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await context.setOffline(true);
   const response=await page.reload({waitUntil:'domcontentloaded'});
   assert.equal(response.fromServiceWorker(),true);
-  await page.waitForFunction(()=>window.__routebook?.state.data.days.length===12);
+  await page.waitForFunction(()=>window.__routebook?.state.data.days.length===13);
   assert.equal(await page.evaluate(()=>OfflinePack.verifyStored()),true);
   const stored=await page.evaluate(async()=>{
    const r=window.__routebook,trip=r.state;
@@ -229,7 +238,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    r.map.setView([36.74,139.5],15);
    return maps.filter(m=>m?.elements.some(e=>e.tags?.highway)).length;
   });
-  assert.equal(stored,12);
+  assert.equal(stored,13);
   await page.waitForFunction(()=>document.querySelector('#map').classList.contains('offline-map-active')&&window.__routebook.map.getPane('offlineRoads')?.querySelector('canvas'));
   await page.waitForFunction(()=>{const img=document.querySelector('#kisekiHeroPhoto');return img?.src.endsWith('/nikko.jpg')&&img.naturalWidth>0;});
   console.log(JSON.stringify({width,days:result,offlineMaps:stored}));await page.close();

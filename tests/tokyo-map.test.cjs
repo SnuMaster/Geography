@@ -41,6 +41,17 @@ test('bus company marks identify only verified bus operators and remain availabl
  for(const p of [{mode:'bus',line:'Unknown red bus'},{mode:'rail',lineId:'TobuBus.Nikko.C'},{mode:'bus',lineId:'Atami.FuuaShuttle',line:'Fuua 무료 셔틀'}]){assert.equal(ui.busCompanyFor(p),null);assert.equal(ui.busCompanyLogo(p),'');}
  const unknown={mode:'bus',line:'Unknown bus'};assert.match(ui.railBadge(unknown),/vehicle-bus/);assert.doesNotMatch(ui.railBadge(unknown),/bus-company-logo/);
 });
+test('airline and airport bus logos identify each active return service and are cached offline',()=>{
+ const {routes}=require('../japan-2027/trip-update.json');
+ const [peach,bus]=routes.days['13-main'];
+ assert.match(ui.travelLogo(routes.days['1-main'][0].parts[0],'leg'),/trinity\.svg/);
+ assert.match(ui.travelLogo(peach.parts[0],'popup'),/peach\.svg.*피치항공 로고/);
+ assert.match(ui.travelLogo(bus.parts[0],'popup'),/kyungbuk-express\.png.*경북고속 로고/);
+ assert.match(ui.railLineBadge(bus.parts[0]),/kyungbuk-express\.png/);
+ assert.deepEqual(ui.busCompanyFor({mode:'bus',line:'동대구 직통'}),null);
+ const manifest=require('../japan-2027/offline-manifest.json');
+ for(const path of ['assets/airlines/peach.svg','assets/operators/kyungbuk-express.png'])assert(manifest.files.some(f=>f.path===path));
+});
 test('every active rail, metro and bus service has a visible mark, including split through services',()=>{
  ui.L={latLng:p=>({point:p,distanceTo:q=>G.distance(p,q.point)})};
  for(const leg of Object.values(bundle.routes.days).flat())for(const p of ui.railParts(leg).filter(p=>['rail','metro','bus'].includes(p.mode))){assert.ok(ui.railInfo(p),p.lineId+' '+p.line);assert.match(ui.railBadge(p),/role="img"|operator-logo/,p.line);}

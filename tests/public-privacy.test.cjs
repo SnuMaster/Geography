@@ -16,8 +16,13 @@ test('opening a legacy offline snapshot redacts home strings and geometry while 
 });
 test('old 12-day snapshots drop both personal taxi legs and renumber the outbound bookings',()=>{
  const {data,routes}=structuredClone(require('../japan-2027/trip-update.json'));
- const [out]=data.days,back=data.days.at(-1);
+ const [out]=data.days,moved=data.days.pop(),back=data.days.at(-1);
  const outStops=out.variants[0].stops,backStops=back.variants[0].stops;
+ backStops.push(...moved.variants[0].stops.slice(1).map(s=>({...s,dayOffset:1})));
+ const returnLegs=routes.days['13-main'];
+ returnLegs[0].fromUid=backStops.at(-4).uid;
+ routes.days['12-main'].push(...returnLegs);
+ delete routes.days['13-main'];
  const privatePoint=(kind,uid)=>({kind,uid,name:'PRIVATE TEST ADDRESS',lat:12.34567,lng:98.76543,time:'07:00'});
  const privateLeg=(from,to)=>({fromUid:from.uid,toUid:to.uid,parts:[{mode:'taxi',coords:[[from.lat,from.lng],[to.lat,to.lng]]}]});
  const departure=privatePoint('departure','fixture-private-origin'),arrival=privatePoint('arrival','fixture-private-destination');

@@ -78,7 +78,7 @@ async function recovery(page,url){
 
  await page.evaluate(()=>{gpsQA.clock('2027-01-20T11:15:00+09:00');__routebook.setDay(1);});
  await button.click();
- assert.equal(await page.evaluate(()=>__routebook.state.day),12,'overnight homebound legs are part of day 12');
+ assert.equal(await page.evaluate(()=>__routebook.state.day),13,'the January 20 return uses its own itinerary day');
  await page.evaluate(()=>gpsQA.error(3,3));
  assert.equal(await page.evaluate(()=>gpsQA.isHighAccuracy(4)),false,'first timeout falls back to a standard location request');
  await page.evaluate(()=>gpsQA.error(4,2));

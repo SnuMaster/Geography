@@ -9,7 +9,7 @@ test('all prebuilt street maps match the current itinerary and their compressed 
 },()=>{
  const trip=require(path.join(root,'trip-update.json'));
  const manifest=JSON.parse(fs.readFileSync(path.join(directory,'manifest.json')));
- assert.equal(manifest.version,1);assert.equal(Object.keys(manifest.days).length,12);
+ assert.equal(manifest.version,1);assert.equal(Object.keys(manifest.days).length,trip.data.days.length);
  for(const day of trip.data.days){
   const entry=manifest.days[day.n],points=Roads.centres(day,trip.routes);assert.ok(entry,'missing day '+day.n);assert.deepEqual(entry.points,points);
   const bytes=fs.readFileSync(path.join(directory,entry.path));assert.equal(bytes.length,entry.bytes);

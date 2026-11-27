@@ -31,6 +31,6 @@ test('Yurikamome amounts follow their exact station pairs',()=>{
 });
 test('applying evidence again is idempotent and does not fill the Skyliner or overwrite the selected flights',()=>{
  const copy=structuredClone(bundle),before=JSON.stringify(copy.routes),r=complete.apply(copy);assert.deepEqual(r.missing,[]);assert.deepEqual(r.updated,[]);assert.equal(JSON.stringify(copy.routes),before);
- assert.match(copy.routes.days['12-main'].find(l=>l.parts.some(p=>p.mode==='flight')).summary,/MM809/);
+ assert.match(copy.routes.days['13-main'].find(l=>l.parts.some(p=>p.mode==='flight')).summary,/MM809/);
  assert.match(copy.routes.days['1-main'][0].summary,/TW251/);
 });

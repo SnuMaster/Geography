@@ -262,3 +262,8 @@ body.command-center.travel-shell[data-viewport]:not(.cc-card-collapsed) #shellCo
 .itinerary-train-card .compact-line>.operator-logo.operator-revaty{width:84px;height:30px}
 .leaflet-container .rail-map-symbol img.operator-revaty{width:72px!important;max-width:72px!important;height:26px!important;max-height:26px!important;box-sizing:border-box;object-fit:contain;box-shadow:0 0 0 3px #fffdf8,0 2px 6px #183b3530}
 .daily-rail-logos .operator-logo.operator-revaty,.day-line-key .operator-logo.operator-revaty{width:64px;max-width:64px;height:24px;max-height:24px}
+
+.leg-route-button>.bus-leg-logo{width:68px;height:24px;padding:3px;background:#fff;border-radius:4px}
+.bus-hover-logo,.bus-popup-logo{margin:0 0 10px;background:#fff;border-radius:4px}
+.cc-leg:has(.airline-leg-logo,.bus-leg-logo){display:inline-flex;align-items:center;gap:7px}
+.cc-leg :is(.airline-leg-logo,.bus-leg-logo){width:68px;height:24px;padding:3px;border-radius:4px}

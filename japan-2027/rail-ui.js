@@ -1,10 +1,11 @@
 'use strict';
 const AIRLINE_BRANDS={
  trinity:{name:'트리니티항공',src:'assets/airlines/trinity.svg'},
+ peach:{name:'피치항공',src:'assets/airlines/peach.svg'},
  jal:{name:'JAL 일본항공',src:'assets/airlines/jal.svg'},
  ana:{name:'ANA 전일본공수',src:'assets/airlines/ana.svg'}
 };
-function airlineFor(part){if(part?.mode!=='flight')return null;const line=part.line||'';return /TW251|트리니티|Trinity/i.test(line)?'trinity':/\bJAL\b/.test(line)?'jal':/\bANA\b/.test(line)?'ana':null;}
+function airlineFor(part){if(part?.mode!=='flight')return null;const line=part.line||'';return /TW251|트리니티|Trinity/i.test(line)?'trinity':/MM809|피치항공|Peach/i.test(line)?'peach':/\bJAL\b/.test(line)?'jal':/\bANA\b/.test(line)?'ana':null;}
 function skylinerLogo(part,extra=''){
  const service=part?.line||part?.throughService||'';if(!['Special.Direct','Keisei.NaritaSkyAccess','Keisei.Main'].includes(part?.lineId)||!/스카이라이너|Skyliner|スカイライナー/i.test(service))return '';
  return '<img class="operator-logo operator-skyliner '+extra+'" src="assets/operators/skyliner.png" alt="스카이라이너 로고" width="91" height="42" decoding="async">';
@@ -41,6 +42,7 @@ function operatorLogo(part,extra=''){
  return '<img class="operator-logo operator-'+type+' '+extra+'" src="assets/operators/'+type+'.svg" alt="'+name+' 로고" width="72" height="27" decoding="async">';
 }
 function airlineLogo(part,extra=''){const key=airlineFor(part);if(!key)return '';const b=AIRLINE_BRANDS[key];return `<img class="airline-logo airline-${key} ${extra}" src="${b.src}" alt="${b.name} 로고" width="96" height="30" decoding="async">`;}
+function travelLogo(part,placement){return airlineLogo(part,'airline-'+placement+'-logo')||busCompanyLogo(part,'bus-'+placement+'-logo');}
 // Line letters follow the operators' published station-numbering maps.
 // Colors are screen approximations of the line colors, not operator logos.
 const RAIL_LINES={
@@ -196,11 +198,12 @@ let railHoverCard=null,railSymbolKeys=new Set(),railSymbolGroups=new Map();
 function railInfo(part){return RAIL_LINES[part.lineId]||(skylinerLogo(part)?{code:'Skyliner',color:MODE.rail.color,shape:'rounded',logo:true}:part.lineId==='Special.Direct'&&/후지/.test(part.line||'')?{code:'富士回遊',color:'#276bad',shape:'rounded',markClass:'fuji-service',source:'https://www.jreast.co.jp/multi/traininformation/fuji_excursion/'}:part.mode==='bus'?{code:/레드라인|Red Line/i.test(part.line||'')?'RED':'BUS',color:/레드라인|Red Line/i.test(part.line||'')?'#c83d3d':'#477b95',shape:'rounded',vehicle:'bus'}:null);}
 function busCompanyFor(part){
  if(part?.mode!=='bus')return null;
+ if(part.operatorBrand==='kyungbuk-express')return {id:'kyungbuk-express',name:'경북고속',src:'assets/operators/kyungbuk-express.png'};
  if(part.lineId==='TobuBus.Nikko.C')return {id:'tobu-bus',name:'도부 버스',src:'assets/operators/tobu-bus.svg'};
  if(part.lineId==='FujikyuBus.KawaguchikoRed'||part.line==='가와구치코 관광버스 레드라인')return {id:'fujikyu-bus',name:'후지큐 버스',src:'assets/operators/fujikyu-bus.png'};
  return null;
 }
-function busCompanyLogo(part){const b=busCompanyFor(part);return b?`<img class="bus-company-logo operator-${b.id}" src="${b.src}" alt="${b.name} 로고" width="88" height="22" decoding="async">`:'';}
+function busCompanyLogo(part,extra=''){const b=busCompanyFor(part);return b?`<img class="bus-company-logo operator-${b.id} ${extra}" src="${b.src}" alt="${b.name} 로고" width="88" height="22" decoding="async">`:'';}
 const TRANSIT_VEHICLES={bus:'<rect x="4" y="4" width="16" height="14" rx="3"/><path d="M4 10h16M8 18v3m8-3v3M8 14h.01M16 14h.01"/>',cable:'<path d="m3 20 18-8M5 14V5h11l4 3v8M5 10h14M10 5v11M3 23l18-8"/>',ropeway:'<path d="M2 3h20M12 3v5M5 11l3-3h8l3 3v10H5zM5 15h14M12 8v13"/>'};
 function transitVehicleBadge(part,info,extra=''){return `<span class="rail-symbol transit-vehicle ${info.shape} vehicle-${info.vehicle} ${extra}" style="--rail-color:${info.color}" role="img" aria-label="${esc((info.vehicle==='bus'?'버스':info.vehicle==='cable'?'케이블카':'로프웨이')+' · '+part.line)}" title="${esc(part.line)}"><svg viewBox="0 0 24 24" aria-hidden="true">${TRANSIT_VEHICLES[info.vehicle]}</svg><small>${esc(info.code)}</small></span>`;}
 function mapPartVisible(part){return !(part.mode==='transfer'&&(part.geometryAccuracy==='schematic'||/개략|대표.*연결|미확인/.test(part.geometrySource||'')));}
@@ -349,7 +352,7 @@ function initRailHover(){
 }
 let hoveredMapMovement=null;
 function hideRailHover(){if(hoveredMapMovement){highlightMapMovement(hoveredMapMovement,false);hoveredMapMovement=null;}if(railHoverCard)railHoverCard.hidden=true;}
-function railHoverHtml(leg,part){if(leg.travel)return `${airlineLogo(part,'airline-hover-logo')}<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(stationLabel(leg.from))} <span>→</span> ${esc(stationLabel(leg.to))}</div><div class="rail-hover-footer">${esc(leg.travel.depart)} → ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>${esc(part.mode==='flight'?(window.FlightPlayback?.geometryLabel(leg)||'개략 항로'):part.geometryAccuracy==='schematic'?'항만 연결 개략선':'해상 참고선')} · 클릭하면 상세</span></div>`;
+function railHoverHtml(leg,part){if(leg.travel)return `${travelLogo(part,'hover')}<div class="rail-hover-heading">${icon(part.mode)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(stationLabel(leg.from))} <span>→</span> ${esc(stationLabel(leg.to))}</div><div class="rail-hover-footer">${esc(leg.travel.depart)} → ${esc(leg.travel.arrive)}</div><div class="rail-hover-metrics"><div><small>소요시간</small><b>${esc(leg.durationLabel)}</b></div><div><small>${leg.fare.status==='selectedQuote'?'이전 선택 견적':'현재 공시 요금'}</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-footer">${leg.fare.status==='selectedQuote'?'현재 판매가·예약 확정 아님':'객실·연료·세금 변경 가능'}<br><span>${esc(part.mode==='flight'?(window.FlightPlayback?.geometryLabel(leg)||'개략 항로'):part.geometryAccuracy==='schematic'?'항만 연결 개략선':'해상 참고선')} · 클릭하면 상세</span></div>`;
  if(part.movement)return `<div class="rail-hover-heading"><strong>이동 전체</strong><span>${railLegBadges(leg)}</span></div><div class="rail-hover-stations">${esc(stationLabel(leg.from))} <span>→</span> ${esc(stationLabel(leg.to))}</div><div class="rail-hover-metrics"><div><small>전체 이동 거리</small><b>${distanceText(leg.distanceM)}</b></div><div><small>전체 구간 운임</small><b>${esc(fareText(leg.fare,leg))}</b></div></div><div class="rail-hover-through">${part.boardings>1?'환승 '+(part.boardings-1)+'회 · 상세에서 갈아타는 역 확인':part.boardings===1?'한 번 탑승 · 전체 경로 함께 선택':'도보 이동'}</div><div class="rail-hover-footer">${esc(leg.durationLabel)}<br><span>클릭하면 전체 노선·환승 상세</span></div>`;
  const walk=['walk','transfer'].includes(part.mode),fare=walk?'추가 0엔':fareText(leg.fare,leg);
  return `<div class="rail-hover-heading">${railBadge(part)}<strong>${esc(part.line)}</strong></div><div class="rail-hover-stations">${esc(stationLabel(part.from))} <span>→</span> ${esc(stationLabel(part.to))}</div><div class="rail-hover-metrics"><div><small>이동 거리</small><b>${distanceText(part.distanceM)}</b></div><div><small>${walk?'이 선의 요금':'전체 구간 운임'}</small><b>${esc(fare)}</b></div></div>${part.throughService?'<div class="rail-hover-through">직통 열차 · 환승 없이 계속 탑승</div>':''}<div class="rail-hover-footer">전체 이동 ${esc(leg.durationLabel)}<br><span>클릭하면 노선·환승 상세</span></div>`;
@@ -384,8 +387,12 @@ function addRailMapSymbol(part,leg){
  const existing=railSymbolGroups.get(groupKey);if(existing){existing.entries.push({part:sourcePart,leg});existing.marker.setTooltipContent?.(`${info.code} · ${existing.entries.length}개 이동 방향`);const el=existing.marker.getElement();if(el){el.setAttribute('aria-label',info.code+' '+part.line+' · 겹친 '+existing.entries.length+'개 이동 방향 선택');if(!el.querySelector('.route-direction-count'))el.insertAdjacentHTML('beforeend','<b class="route-direction-count">↔</b>');}return;}
  const group={key:groupKey,point,entries:[{part:sourcePart,leg}]};railSymbolGroups.set(groupKey,group);
  const compact=part.mode==='flight'?'항공':part.mode==='taxi'?'택시':part.mode==='ferry'?'배':info.code;
- const brandedBus=!!busCompanyFor(part);
- const marker=L.marker(point,{icon:L.divIcon({className:'rail-map-symbol compact-route-symbol'+(brandedBus?' bus-company-symbol':''),html:railInfo(part)?railLineBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>',iconSize:brandedBus?[104,66]:[44,44],iconAnchor:brandedBus?[52,42]:[22,22]}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
+ const flightLogo=airlineLogo(part),brandedBus=!!busCompanyFor(part);
+ const className='rail-map-symbol '+(flightLogo?'airline-map-symbol':'compact-route-symbol'+(brandedBus?' bus-company-symbol':''));
+ const html=flightLogo||(railInfo(part)?railLineBadge(part):'<span class="compact-mode-symbol">'+esc(compact)+'</span>');
+ const iconSize=flightLogo?[100,40]:brandedBus?[104,66]:[44,44];
+ const iconAnchor=flightLogo?[50,20]:brandedBus?[52,42]:[22,22];
+ const marker=L.marker(point,{icon:L.divIcon({className,html,iconSize,iconAnchor}),keyboard:true,zIndexOffset:-800,title:info.code+' '+part.line+' · 이동 방향·상세',alt:info.code+' '+part.from+' → '+part.to}).addTo(routeLayer);group.marker=marker;marker.getElement()?.setAttribute('aria-label',info.code+' '+part.line+' '+part.from+' → '+part.to+' 이동 상세');
  marker.on('click',()=>{hideRailHover();const entry=visibleDirectionEntries(group)[0];L.popup(symbolOptions(entry.leg)).setLatLng(point).setContent(directionHtml(group,entry)).openOn(map);});
  marker.on('mouseover',e=>{const entry=visibleDirectionEntries(group)[0];showRailHover(e,entry.leg,entry.part);});marker.on('mousemove',positionRailHover);marker.on('mouseout',hideRailHover);
 }
