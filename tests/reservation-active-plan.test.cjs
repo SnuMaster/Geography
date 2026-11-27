@@ -26,7 +26,7 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.match(pass.details.join(' '),/기타센주↔도부닛코.*주젠지온센 버스.*스페이시아 X.*별도.*北千住.*1\/15/);
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
- assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
+ assert.equal(by.ibuki.date,'1/16 · 18:00 입장 목표');
  assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['ibuki','bebuya-shibuya']);
  assert.match(by.ibuki.note,/18,150엔.*음료 별도/);assert.match(by.ibuki.details.join(' '),/1명.*카운터석.*72시간.*100%/);
  const bebuya=by['bebuya-shibuya'];
@@ -58,6 +58,7 @@ test('a removed destination removes its booking instead of keeping an unrelated 
 });
 test('the arrival IC card and local buses are listed as on-site purchases for the active itinerary',()=>{
  const rows=P.onSite(context());
+ assert(!rows.some(x=>x.name.includes('로프웨이')));
  assert.match(rows.find(x=>x.name==='TOURIST PASMO').note,/제2터미널 지하 1층/);
  assert(!rows.some(x=>x.name.includes('스카이라이너')));
  assert.equal(rows.find(x=>x.name.includes('레드라인')).date,'1/12');

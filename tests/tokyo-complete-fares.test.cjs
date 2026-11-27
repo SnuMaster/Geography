@@ -23,15 +23,11 @@ test('Spacia X return includes one whole-OD base fare and one actual express tic
 });
 test('bus fares are separate from the Japanese rail-only subtotal and carry stop-level evidence',()=>{
  for(const key of ['5-main','8-main'])for(const l of bundle.routes.days[key].filter(l=>l.parts.some(p=>p.mode==='bus'))){assert(l.fare.breakdown.every(r=>r.mode==='bus'&&r.fromJa&&r.toJa&&r.checkedAt&&r.sources.length));assert.equal(F.summarize([l],{scope:'japan-rail'}).ic,0);assert(l.fare.icYen>0);}
- for(const [key,i,price] of [['5-main',2,570],['5-main',3,280],['5-main',5,230],['8-main',1,1250],['8-main',4,1250]])assert.equal(bundle.routes.days[key][i].fare.icYen,price);
+ for(const [key,i,price] of [['5-main',2,570],['5-main',3,280],['5-main',5,370],['8-main',1,1250],['8-main',4,1250]])assert.equal(bundle.routes.days[key][i].fare.icYen,price);
 });
 test('Yurikamome amounts follow their exact station pairs',()=>{
  assert.equal(bundle.routes.days['7-main'][3].fare.icYen,325);
  assert.equal(bundle.routes.days['7-main'][6].fare.breakdown.find(r=>r.operator==='Yurikamome').icYen,325);
-});
-test('the optional ropeway uses the current individual round-trip fare, not the group fare',()=>{
- const s=bundle.data.days[4].variants[0].stops.find(s=>s.planKey==='ropeway');
- assert.equal(s.details.costMin,1200);assert.equal(s.details.costMax,1200);assert.match(s.description,/선택/);
 });
 test('applying evidence again is idempotent and does not fill the Skyliner or overwrite the selected flights',()=>{
  const copy=structuredClone(bundle),before=JSON.stringify(copy.routes),r=complete.apply(copy);assert.deepEqual(r.missing,[]);assert.deepEqual(r.updated,[]);assert.equal(JSON.stringify(copy.routes),before);

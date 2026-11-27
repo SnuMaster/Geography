@@ -174,7 +174,6 @@
   entries.push({name:'도쿄 시내 일반 열차·지하철',note:'야마노테선·주오선 쾌속·도쿄메트로·유리카모메·도쿄 모노레일 등은 좌석 예약 없이 PASMO나 Suica로 타면 돼요.',url:'https://www.pasmo.co.jp/visitors/en/'});
   add('gyoen','신주쿠교엔','1월 일반 방문은 현장 입장권을 살 수 있어요.','https://policies.env.go.jp/national-garden/shinjukugyoen/english/guide/information/');
   add('oishi','가와구치코 레드라인 버스','일반 노선버스라 좌석 예약 없이 정류장에서 탑승해요.','https://bus.fujikyu.co.jp/en/fujitour/kawaguchiko/');
-  add('ropeway','가와구치코 파노라마 로프웨이','개인 탑승은 현장에서 표를 사고 대기해요.','https://www.mtfujiropeway.jp/guide/');
   add('toyosu','도요스 시장 일반 견학','일반 견학 통로는 예약 없이 방문할 수 있어요.','https://www.shijou.metro.tokyo.lg.jp/ja/info/0/kenngaku/kenngaku1');
   add('nikkoStation','닛코 주젠지온센 방면 버스','일반 도부 노선버스는 지정석 없이 정류장에서 탑승해요. 주젠지·게곤폭포 프리패스를 쓸 수 있고, 개별 승차는 겨울 공표 운임 기준 성인 편도 1,250엔이에요.','https://www.tobu-bus.com/pc/assets/pdf/nikko_rosen_winter_en.pdf?20261118=');
   add('kegon','게곤폭포 엘리베이터','현장에서 표를 살 수 있어요.','https://www.kegon.jp/info/');

@@ -238,10 +238,10 @@ function finalize(bundle){
  const park=v.stops[5];
  const hnd=v.stops.find(s=>s.uid==='t27-12-hanedaT3'),access=legs.find(l=>l.toUid===hnd.uid);
  const hotelHours='https://www.jalan.net/yad307486/kuchikomi/archive/';
- update(v.stops[0],'08:00~10:00','08:00 기상·아침 후 10:00까지 체크아웃. 당일 보관과 18:30 수령을 숙소에 미리 확인. 맡길 수 없으면 우에노역 보관함을 먼저 확인.');
- v.stops[0].details.thingsToDo=['체크아웃 전에 당일 짐 보관과 18:30 수령 가능 여부를 확인한다. 보관이 어렵다면 우에노역 보관함을 확인한다.'];
- update(pickup,'18:30~19:00','프런트 마감 전에 짐 수령. 숙소에 맡길 수 없다면 우에노역 보관함에서 짐을 찾고 우에노에서 저녁 후 JR로 하마마쓰초까지 이동.');
- pickup.details.thingsToDo=['18:30부터 짐을 찾고 19:00까지 마친다. 우에노역 보관함 이용 시 저녁도 우에노에서 해결하고 JR 외선에 탄다.'];
+ update(v.stops[0],'08:00~10:00','10:00까지 체크아웃. 당일 짐 보관과 18:30 수령 가능 여부를 숙소에 미리 확인.');
+ v.stops[0].details.thingsToDo=['체크아웃 전에 프런트에 짐을 맡길 수 있는지와 수령 시간을 확인해요.'];
+ update(pickup,'18:30~19:00','18:30부터 숙소 프런트에서 짐을 찾아요.');
+ pickup.details.thingsToDo=['19:00까지 짐을 찾고 여권과 수하물을 확인해요.'];
  pickup.details.sources=[...new Set([...(pickup.details.sources||[]),hotelHours])];
  update(dinner,'19:15~20:45','19:15 마쓰야에서 저녁. 식사 후 이리야역 근처에서 쉬고 20:45 공항으로 출발.');
  const toHotel=walk('parkHotel',park,pickup);

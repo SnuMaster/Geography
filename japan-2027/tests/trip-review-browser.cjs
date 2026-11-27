@@ -66,7 +66,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    document.getElementById('bookingChecklistBtn').click();
    const onSite=document.querySelector('#bookingOnSite');
    onSite.querySelector('summary').click();
-   if(!onSite.open||!onSite.textContent.includes('TOURIST PASMO')||onSite.querySelector('input'))throw Error('Wrong on-site purchase guide');
+   if(!onSite.open||!onSite.textContent.includes('TOURIST PASMO')||onSite.textContent.includes('로프웨이')||onSite.querySelector('input'))throw Error('Wrong on-site purchase guide');
    const dining=document.querySelector('#bookingWalkInDining');
    dining.querySelector('summary').click();
    if(!dining.open||!dining.textContent.includes('무기토로')||!dining.textContent.includes('10:30')||dining.querySelector('input'))throw Error('Wrong walk-in dining guide');
@@ -88,13 +88,13 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261127-tokyo-trip-readiness-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-final-day-edits-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const ibuki=document.querySelector('[data-booking-item="ibuki"]');
-   if(!ibuki?.querySelector('.booking-date')?.textContent.includes('18:00')||!/18,150(?:엔|\s+JP¥)/.test(ibuki.textContent)||!ibuki.textContent.includes('72시간'))throw Error('Wrong Ibuki booking details');
+   if(!ibuki?.querySelector('.booking-date')?.textContent.includes('1/16 · 18:00')||!/18,150(?:엔|\s+JP¥)/.test(ibuki.textContent)||!ibuki.textContent.includes('72시간'))throw Error('Wrong Ibuki booking details');
    const skytree=document.querySelector('[data-booking-item="skytree"]');
    if(skytree||document.querySelector('[data-booking-item="zutomayo"]'))throw Error('Wrong Jan 18 bookings');
    for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back-0650','06:50']]){
@@ -132,7 +132,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!pasmoPopup?.textContent.includes('SKYLINER & KEISEI INFORMATION CENTER')||!floorMap?.textContent.includes('B1 판매 위치 지도'))throw Error('Missing PASMO counter or floor map');
    r.map.closePopup();
    r.setDay(12);
-   if(!document.querySelector('#stopList')?.textContent.includes('야나카 긴자'))throw Error('Missing last city day');
+   const lastDay=document.querySelector('#stopList')?.textContent||'';
+   if(!lastDay.includes('야나카 긴자')||!lastDay.includes('18:30부터 숙소 프런트')||lastDay.includes('보관함'))throw Error('Wrong last city day or baggage arrangement');
    r.selectLeg(9);
    if(!r.map._popup?.getElement()?.textContent.includes('1/20 01:55'))throw Error('Overnight flight date missing');
    if(!r.map._popup?.getElement()?.querySelector('.flight-track-source a')?.href.endsWith('/data/playback/42b68444'))throw Error('MM809 flight reference missing');
@@ -161,6 +162,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
     const photo={7:'odaiba',8:'nikko',10:'day-10',11:'day-2'}[d.n];
     if(photo&&!document.querySelector('#kisekiHeroPhoto').src.endsWith('/'+photo+'.jpg'))throw Error('Wrong itinerary photo '+d.n);
     if([5,8].includes(d.n)){const meal=ss.find(s=>s.planKey===(d.n===5?'fujiDinner':'nikkoDinner'));if(!meal||meal.details.costMax>2000)throw Error('Missing budget dinner');}
+    if(d.n===5&&(ss.some(s=>s.planKey==='ropeway')||!document.querySelector('#dayNote')?.textContent.includes('15:50 레드라인 → 가와구치코역 16:09')))throw Error('Wrong Kawaguchiko return itinerary');
+    if(d.n===8&&!document.querySelector('#stopList .connection-backup')?.textContent.includes('기본 15:50 → 16:26 · 대체 16:30 → 17:06'))throw Error('Missing Nikko bus choices in the itinerary');
     out.push({day:d.n,stops:ss.length,legs:legs.length});
    }
    r.setDay(11);
@@ -168,7 +171,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!asakusa.includes('도쿄 미즈마치')||/스카이트리 전망대|도쿄 소라마치/.test(asakusa)||r.getStops().some(s=>s.planKey==='free'))throw Error('Wrong Jan 18 route');
    r.setDay(2);
    if(r.getStops().length||document.querySelector('#stopList .stop-card')||!document.querySelector('#stopList')?.textContent.includes('비워뒀어요')||!document.querySelector('#playBtn').disabled)throw Error('Day 2 is not empty');
-   for(const [day,leg,name,when] of [[5,2,'후지회유 15호','10:30'],[5,8,'후지회유 48호','17:41'],[8,1,'스페이시아 X 5호','10:12'],[8,6,'스페이시아 X 12호','17:44']]){
+   for(const [day,leg,name,when] of [[5,2,'후지회유 15호','10:30'],[5,7,'후지회유 48호','17:41'],[8,1,'스페이시아 X 5호','10:12'],[8,6,'스페이시아 X 12호','17:44']]){
     r.setDay(day);r.selectLeg(leg);
     const order=r.map._popup?.getElement()?.querySelector('[data-rail-order]')?.textContent||'';
     if(!order.includes(name)||!order.includes(when))throw Error('Missing requested train in map details: '+name);

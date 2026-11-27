@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,require('../scripts/apply-tokyo-trip-readiness.cjs').revision);
+ assert.equal(b.revision,require('../scripts/apply-tokyo-final-day-edits.cjs').revision);
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:12},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -132,9 +132,14 @@ test('active routes retain continuous public endpoints and explicit reference-on
   }
  }
  assert.equal(b.data.days[4].variants[0].stops[1].end,"10:30");
- assert.equal(b.data.days[4].variants[0].stops[7].end,"17:41");
+ const fuji=b.data.days[4],returnOrder=fuji.railOrders.find(order=>order.departure.time==='17:41');
+ assert(!fuji.variants[0].stops.some(s=>s.planKey==='ropeway'));
+ assert.equal(fuji.variants[0].stops[returnOrder.leg-1].end,'17:41');
+ assert.match(b.routes.days['5-main'][returnOrder.leg-1].summary,/후지회유 48호/);
  assert.equal(b.data.days[7].variants[0].stops[1].start,"11:49");
  assert.equal(b.data.days[7].variants[0].stops[5].end,"17:44");
  assert.deepEqual(b.routes.days['5-main'][2].busTimetable.trips[0],['12:45','13:12']);
  assert.deepEqual(b.routes.days['8-main'][1].busTimetable.trips[0],['12:15','13:00']);
+ assert.match(b.routes.days['8-main'][4].connectionBackup.text,/기본 15:50 → 16:26 · 대체 16:30 → 17:06.*17:44.*38분/);
+ assert.doesNotMatch(JSON.stringify(b.data.days[11]),/보관함|multiecube/);
 });

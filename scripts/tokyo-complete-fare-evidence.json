@@ -590,6 +590,41 @@
           "sourceSha256": "d36d8be1a09962a7e22cf161068ea47a5b21b01b37d9799566734fa1af39dd99"
         }
       ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "Fujikyu.Kawaguchiko.Red",
+          "河口湖美術館",
+          "河口湖駅"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "mode": "bus",
+          "from": "가와구치코 미술관",
+          "to": "가와구치코역",
+          "fromJa": "河口湖美術館",
+          "toJa": "河口湖駅",
+          "lineIds": [
+            "Fujikyu.Kawaguchiko.Red"
+          ],
+          "icYen": 370,
+          "paperTicketYen": 370,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-27",
+          "sources": [
+            "https://bus.fujikyu.co.jp/rosen/gtfs/",
+            "https://gtfs-jp.buskita.com/fjb/gtfs.zip",
+            "https://bus.fujikyu.co.jp/pdf/omni_map_202604.pdf"
+          ],
+          "basis": "공식 GTFS 河口湖周遊バス route 80611 · zone 1837 → 0025",
+          "sourceSha256": "3b364f6f5ba71eb9ee16fd92101de892193619792e6f55c62cb247b72beec121"
+        }
+      ]
     }
   ],
   "transferDiscountSource": "https://www.kotsu.metro.tokyo.jp/subway/fare/discount.html",
