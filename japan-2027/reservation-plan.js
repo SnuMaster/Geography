@@ -82,14 +82,14 @@
    push(ibuki);
   }
   if(context.metadata?.id==='tokyo-20270108-19'&&days.length)push({
-   key:'benoit-aoyama',group:'food',kind:'사전 예약 권장',name:'베부아 · BENOIT 아오야마',day:null,
-   date:'방문일 미정',note:'오모테산도 · 공개 메뉴 기준 런치 7,700엔부터, 디너 10,780엔부터 (서비스료 포함)',
-   url:'https://www.tablecheck.com/ko/shops/benoit-tokyo/reserve',
-   source:'https://www.benoit-tokyo.com/en/reservation/',
+   key:'bebuya-shibuya',group:'food',kind:'사전 예약 권장',name:'BEBU-YA 시부야점',day:null,
+   date:'방문일 미정',note:'시부야 우다가와초 · 야키니쿠 무한리필 4,000엔부터 (세금 포함)',
+   url:'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true',
+   source:'https://shop.bsp-j.com/detail/Be_shibuya/',
    details:[
-    '라 포르트 아오야마 10층이에요. TableCheck에서 1명과 방문 날짜를 선택해 가능한 시각과 코스를 확인하세요.',
-    '공개 메뉴의 기본 코스는 런치 7,000엔, 디너 9,800엔이에요. 서비스료 10%가 별도로 붙고 코스·추가 요리·음료에 따라 금액이 달라져요.',
-    '공식 취소 안내에는 방문 전날 21:00 이후 취소료가 발생한다고 나와 있어요. 선택한 상품의 조건을 예약 화면에서 확인하세요.'
+    '시부야구 우다가와초 31-1, HULIC & New SHIBUYA 5층이에요.',
+    '공식 예약 화면에서 성인 1명을 선택할 수 있어요. 날짜와 시각을 고르면 예약 가능한 코스가 표시돼요.',
+    '무한리필은 90분이고 주문 마감은 시작 70분 후예요. 원하는 코스의 와규 포함 여부와 음료 요금을 확인하세요.'
    ]
   });
   const skytree=anchor(copy('skytree'),'skytree');

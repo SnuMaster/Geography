@@ -22,11 +22,12 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
  assert.match(by.ibuki.date,/18:00/);assert.doesNotMatch(by.ibuki.date,/19:00/);
- assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['ibuki','benoit-aoyama']);
+ assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['ibuki','bebuya-shibuya']);
  assert.match(by.ibuki.note,/18,150엔.*음료 별도/);assert.match(by.ibuki.details.join(' '),/1명.*카운터석.*72시간.*100%/);
- const benoit=by['benoit-aoyama'];
- assert.equal(benoit.day,null);assert.equal(benoit.date,'방문일 미정');assert.match(benoit.note,/7,700엔.*10,780엔/);
- assert.equal(benoit.url,'https://www.tablecheck.com/ko/shops/benoit-tokyo/reserve');
+ const bebuya=by['bebuya-shibuya'];
+ assert.equal(bebuya.day,null);assert.equal(bebuya.date,'방문일 미정');assert.match(bebuya.note,/야키니쿠.*4,000엔/);
+ assert.equal(bebuya.url,'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true');
+ assert.match(bebuya.details.join(' '),/SHIBUYA 5층.*성인 1명.*90분/);
  assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
  assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,2);
