@@ -46,6 +46,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const sim=document.querySelector('[data-booking-item="japan-travel-sim"]');
    const skyliner=document.querySelector('[data-booking-item="narita-skyliner-outbound"]');
    if(!insurance?.textContent.includes('1/8~1/20')||!sim?.textContent.includes('유심·eSIM')||!skyliner?.textContent.includes('제2터미널 지하 1층'))throw Error('Missing travel preparation checklist items');
+   if(!skyliner.textContent.includes('나리타 T2 15:02 → 게이세이우에노 15:43'))throw Error('Missing Skyliner backup in reservations');
    if([insurance,sim,skyliner].some(el=>el.querySelector('[data-booking-complete]').checked))throw Error('Travel preparation was marked complete');
    insurance.querySelector('[data-booking-complete]').click();
    const prep=ReservationUI.getAssistantBookings();
@@ -62,7 +63,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    dining.querySelector('summary').click();
    if(!dining.open||!dining.textContent.includes('무기토로')||!dining.textContent.includes('10:30')||dining.querySelector('input'))throw Error('Wrong walk-in dining guide');
    const bebuya=document.querySelector('[data-booking-item="bebuya-shibuya"]');
-   if(!bebuya?.textContent.includes('방문일 미정')||!bebuya.querySelector('a[href*="booking.resty.jp"]')||bebuya.querySelector('[data-booking-jump]')||bebuya.querySelector('[data-booking-complete]').checked)throw Error('BEBU-YA was not listed as an undated booking');
+   if(!bebuya?.textContent.includes('1/11 · 18:40 입장 목표')||!bebuya.querySelector('a[href*="booking.resty.jp"]')||!bebuya.querySelector('[data-booking-jump]')||bebuya.querySelector('[data-booking-complete]').checked)throw Error('Wrong BEBU-YA booking');
    if(document.querySelector('[data-booking-item="benoit-aoyama"]'))throw Error('The incorrect restaurant remained in the checklist');
    bebuya.querySelector('[data-booking-complete]').click();
    if(!ReservationUI.getAssistantBookings().find(x=>x.key==='bebuya-shibuya')?.confirmed)throw Error('BEBU-YA checklist completion did not save');
@@ -79,7 +80,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261126-tokyo-asakusa-2')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-connections-dinner-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -92,6 +93,13 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
     const text=document.querySelector('[data-booking-item="'+key+'"]')?.textContent||'';
     if(!text.includes(expected))throw Error('New booking missing '+key);
    }
+   const bus=document.querySelector('[data-booking-item="airport-bus-back-0650"]');
+   if(!bus.textContent.includes('07:20편 또는 08:00편'))throw Error('Missing airport bus backups in reservations');
+   document.querySelector('[data-booking-jump="bebuya-shibuya"]').click();
+   const dinner=r.getStops().findIndex(s=>s.planKey==='bebuya');
+   if(r.state.day!==4||dinner<0||r.state.selected!==dinner)throw Error('BEBU-YA booking jump failed');
+   if(!r.map.getContainer().querySelector('.leaflet-marker-icon[title*="BEBU-YA"]'))throw Error('Missing BEBU-YA map pin');
+   document.getElementById('bookingChecklistBtn').click();
    const oldFlight=document.querySelector('[data-booking-item="flight-tw251-20270108"]');
    if(oldFlight.querySelector('input').checked||oldFlight.querySelector('.booking-ticket-fields'))throw Error('Old booking checkout migrated to the new flight');
    document.querySelector('[data-booking-jump="flight-mm809-20270120"]').click();
@@ -101,6 +109,9 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(r.getLeg(1).parts[0].geometryAccuracy!=='mapped'||r.getLeg(1).parts[0].coords.length<100)throw Error('Departure taxi route is not mapped');
    r.selectLeg(2);
    if(!r.map._popup?.getElement()?.textContent.includes('1/8 11:10'))throw Error('Outbound flight schedule missing');
+   r.map.closePopup();
+   r.selectLeg(4);
+   if(!r.map._popup?.getElement()?.textContent.includes('나리타 T2 15:02 → 게이세이우에노 15:43'))throw Error('Missing Skyliner map backup');
    r.map.closePopup();
    const pasmo=r.getStops().findIndex(s=>s.visitLabel==='TOURIST PASMO 구매');
    const pasmoPin=r.map.getContainer().querySelector('.leaflet-marker-icon[title*="TOURIST PASMO"]');
@@ -117,6 +128,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    r.selectLeg(10);
    const busPopup=r.map._popup?.getElement()?.textContent||'';
    if(!busPopup.includes('06:50')||!busPopup.includes('10:56')||!busPopup.includes('10B-3')||!busPopup.includes('동대구터미널 1층 하차장'))throw Error('Wrong return bus timetable or stops');
+   if(!busPopup.includes('07:20편 또는 08:00편'))throw Error('Missing airport bus map backups');
    const [station,destination]=r.getStops().slice(-2);
    const taxi=b.routeData.days['12-main'].at(-1);
    if(station.name!=='동대구역 택시 승강장'||destination.name!=='월성로 132'||destination.dayOffset!==1||taxi.parts[0].mode!=='taxi'||taxi.parts[0].geometryAccuracy!=='mapped'||taxi.parts[0].coords.length<100)throw Error('Missing return taxi');

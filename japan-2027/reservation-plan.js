@@ -56,13 +56,14 @@
    for(const variant of departure.variants||[]){
     const stationIndex=variant.stops.findIndex((stop,index)=>stop.name==='공항제2빌딩역'&&variant.stops[index+1]?.name==='게이세이우에노역');
     if(stationIndex<0)continue;
+    const backup=variant.stops[stationIndex].connectionBackup;
     items.push({
      key:'narita-skyliner-outbound',group:'rail',kind:'지정석 구매',name:'나리타 스카이라이너 편도',
      day:departure.n,variant:variant.id,leg:stationIndex+1,
      date:date(departure)+' · 나리타 T2 → 게이세이우에노',note:'전 좌석 지정석 · 공항 도착 후 나리타 제2터미널 지하 1층에서 구매 가능',
      url:'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/skyliner/purchase.php',
-     source:'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/findus/skyliner.php',
-     details:['입국 수속과 수하물 수령을 마치고 지하 1층 스카이라이너 매표소 또는 게이세이 안내센터에서 게이세이우에노행 좌석을 선택하세요.','온라인으로 먼저 구매했다면 구매 경로의 교환·좌석 지정 안내를 확인하세요. 승차권과 지정석이 준비되면 완료로 체크하세요.']
+     source:backup?.source||'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/findus/skyliner.php',
+     details:['입국 수속과 수하물 수령을 마치고 지하 1층 스카이라이너 매표소 또는 게이세이 안내센터에서 게이세이우에노행 좌석을 선택하세요.','온라인으로 먼저 구매했다면 구매 경로의 교환·좌석 지정 안내를 확인하세요. 승차권과 지정석이 준비되면 완료로 체크하세요.',...(backup?[backup.text]:[])]
     });
     break;
    }
@@ -81,9 +82,9 @@
    ];
    push(ibuki);
   }
-  if(context.metadata?.id==='tokyo-20270108-19'&&days.length)push({
-   key:'bebuya-shibuya',group:'food',kind:'사전 예약 권장',name:'BEBU-YA 시부야점',day:null,
-   date:'방문일 미정',note:'시부야 우다가와초 · 야키니쿠 무한리필 4,000엔부터 (세금 포함)',
+  const bebuya=anchor({
+   key:'bebuya-shibuya',group:'food',kind:'사전 예약 권장',name:'BEBU-YA 시부야점',
+   note:'시부야 우다가와초 · 야키니쿠 무한리필 4,000엔부터 (세금 포함)',
    url:'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true',
    source:'https://shop.bsp-j.com/detail/Be_shibuya/',
    details:[
@@ -91,7 +92,11 @@
     '공식 예약 화면에서 성인 1명을 선택할 수 있어요. 날짜와 시각을 고르면 예약 가능한 코스가 표시돼요.',
     '무한리필은 90분이고 주문 마감은 시작 70분 후예요. 원하는 코스의 와규 포함 여부와 음료 요금을 확인하세요.'
    ]
-  });
+  },'bebuya');
+  if(bebuya){
+   bebuya.date=bebuya.date.split(/[~-]/)[0]+' 입장 목표';
+   push(bebuya);
+  }
   const skytree=anchor(copy('skytree'),'skytree');
   if(skytree){
    skytree.date=skytree.date.split(/[~-]/)[0]+' 입장 목표';

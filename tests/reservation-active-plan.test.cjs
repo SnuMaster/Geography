@@ -9,6 +9,11 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(sim.group,'prep');assert.match(sim.details.join(' '),/eSIM.*유심.*나리타 공항/);
  assert.equal(skyliner.day,1);assert.equal(skyliner.leg,4);assert.equal(skyliner.group,'rail');
  assert.match(skyliner.note,/지정석.*제2터미널 지하 1층/);assert.match(skyliner.date,/나리타 T2 → 게이세이우에노/);
+ assert.match(skyliner.details.at(-1),/40호 .*15:02 → 게이세이우에노 15:43/);
+ assert.match(skyliner.source,/skyliner_timetable/);
+ const bus=by['airport-bus-back-0650'];
+ assert.equal(bus.date,'1/20 06:50 → 10:56');
+ assert.match(bus.details.at(-1),/10B-3.*직통 07:20편 또는 08:00편/);
  assert.equal(by['fuji-excursion'].day,5);assert.match(by['fuji-excursion'].date,/1\/12/);assert.match(by['fuji-excursion'].milestones[0][0],/^2026-12-12T10:00/);
  assert.equal(by['fuji-excursion'].group,'rail');assert.match(by['fuji-excursion'].details.join(' '),/15호.*10:30.*12:24.*48호.*17:41.*19:48/);
  assert.equal(by['fuji-excursion'].kind,'공식 판매 대기 중');assert.match(by['fuji-excursion'].note,/78,032원/);
@@ -25,7 +30,8 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['ibuki','bebuya-shibuya']);
  assert.match(by.ibuki.note,/18,150엔.*음료 별도/);assert.match(by.ibuki.details.join(' '),/1명.*카운터석.*72시간.*100%/);
  const bebuya=by['bebuya-shibuya'];
- assert.equal(bebuya.day,null);assert.equal(bebuya.date,'방문일 미정');assert.match(bebuya.note,/야키니쿠.*4,000엔/);
+ assert.equal(bebuya.day,4);assert.equal(bebuya.date,'1/11 · 18:40 입장 목표');assert.equal(bebuya.stop,'BEBU-YA 시부야점');
+ assert.match(bebuya.note,/야키니쿠.*4,000엔/);
  assert.equal(bebuya.url,'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true');
  assert.match(bebuya.details.join(' '),/SHIBUYA 5층.*성인 1명.*90분/);
  assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
@@ -37,7 +43,9 @@ test('booking checklist follows the actual itinerary dates and removes retired t
 });
 test('booking dates and visit time derive from the plan without editing checklist literals',()=>{
  const c=context();c.metadata={...c.metadata,returnDate:'2027-01-21'};c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
+ c.days[3].variants[0].stops.find(s=>s.planKey==='bebuya').time='19:00~20:30';
  const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='ibuki').date,/18:30/);
+ assert.equal(r.find(x=>x.key==='bebuya-shibuya').date,'1/11 · 19:00 입장 목표');
  assert.equal(r.find(x=>x.key==='travel-insurance').date,'출국 전 · 1/8~1/21');
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');
  const pass=r.find(x=>x.key==='nikko-maas-chuzenji-kegon');

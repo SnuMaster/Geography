@@ -115,4 +115,4 @@ if(require.main===module){
  const bundle=apply(JSON.parse(fs.readFileSync(file,'utf8')));
  fs.writeFileSync(file,JSON.stringify(bundle)+'\n');
 }
-module.exports={apply,revision};
+module.exports={apply,revision,walk};
