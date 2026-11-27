@@ -5,6 +5,8 @@ const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'))
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and three excursions',()=>{
  assert.equal(b.revision,'20261127-tokyo-dining-bookings-1');
+ assert.equal(b.data.version,b.revision);
+ assert.equal(b.routes.version,b.revision);
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8,11].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코','요코하마']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
