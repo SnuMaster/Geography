@@ -27,6 +27,31 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   assert.equal(await page.locator('#itineraryScroll').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
   await cruiseTrain.locator('summary.itinerary-train-summary').click();
   assert.equal(await cruiseStation.isVisible(),false);
+  await page.evaluate(()=>__routebook.showOverview());
+  const overview=page.locator('#overviewTimetable');
+  const dates=overview.locator('[data-overview-timetable-day]');
+  assert.equal(await dates.count(),13);
+  const overviewTimes=await dates.evaluateAll(groups=>groups.map(group=>[...group.querySelectorAll('.overview-timetable-stop .stop-time')].map(time=>time.textContent)));
+  const plannedTimes=await page.evaluate(()=>__routebook.state.data.days.map(day=>MapPlan.variant(day,__routebook.state.selectedVariantByDay).stops.map(stop=>stop.time)));
+  assert.deepEqual(overviewTimes,plannedTimes);
+  assert.equal(await dates.first().locator('summary').first().isVisible(),true);
+  const emptyDay=dates.nth(1),odaibaDay=dates.nth(6),returnDay=dates.last();
+  await emptyDay.locator(':scope>summary').click();
+  assert.equal(await emptyDay.getByText('이날은 비워뒀어요.').isVisible(),true);
+  await returnDay.locator(':scope>summary').click();
+  assert.match(await returnDay.locator('.overview-timetable-stop').first().textContent(),/00:00~01:55/);
+  await odaibaDay.locator(':scope>summary').click();
+  const [overviewTimeBox,overviewPlaceBox]=await Promise.all(['.stop-time','.stop-name'].map(selector=>odaibaDay.locator(selector).first().boundingBox()));
+  assert.ok(overviewTimeBox.x<overviewPlaceBox.x&&Math.abs(overviewTimeBox.y-overviewPlaceBox.y)<2,'Overview time and place share a timetable row');
+  const overviewTrain=odaibaDay.locator('[data-itinerary-train-leg="4"]');
+  await overviewTrain.locator('.itinerary-train-summary').click();
+  assert.equal(await overviewTrain.getByRole('link',{name:/Google 지도 대중교통/}).isVisible(),true);
+  await page.evaluate(()=>__routebook.map.setView([35.627,139.773],13,{animate:false}));
+  await page.waitForSelector('#mapTitle [data-overview-day="7"]');
+  assert.equal(await overviewTrain.locator('[aria-label="역 번호 U08"]').isVisible(),true);
+  assert.equal(await page.locator('#itineraryScroll').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
+  await odaibaDay.getByRole('button',{name:'이 날짜 전체 일정 열기'}).click();
+  await page.waitForFunction(()=>__routebook.state.view==='daily'&&__routebook.state.day===7);
   await page.locator('#ccDaySelect').selectOption('1');
   if(sidebarWasClosed)await sidebar.click();
   const geo=await page.evaluate(()=>{
@@ -216,7 +241,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const cruise=document.querySelector('#stopList [data-itinerary-train-leg="4"] [aria-label="역 번호 U08"]');
    if(!cruise?.closest('.departure-station-name')?.textContent.includes('도쿄국제크루즈터미널'))throw Error('Missing Cruise Terminal station sign');
    r.setDay(2);
-   if(r.getStops().length||document.querySelector('#stopList .stop-card')||!document.querySelector('#stopList')?.textContent.includes('비워뒀어요')||!document.querySelector('#playBtn').disabled)throw Error('Day 2 is not empty');
+   if(r.getStops().length||document.querySelector('#stopList .stop-card')||!document.querySelector('#stopList')?.textContent.includes('비워뒀어요')||document.querySelector('#routeDetails').hasChildNodes()||!document.querySelector('#playBtn').disabled)throw Error('Day 2 is not empty');
    for(const [day,leg,name,when] of [[5,2,'후지회유 15호','10:30'],[5,7,'후지회유 48호','17:41'],[8,1,'스페이시아 X 5호','10:12'],[8,6,'스페이시아 X 12호','17:44']]){
     r.setDay(day);r.selectLeg(leg);
     const order=r.map._popup?.getElement()?.querySelector('[data-rail-order]')?.textContent||'';

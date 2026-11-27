@@ -60,6 +60,24 @@ body.command-center.original-sidebar #stopList .stop-time{display:block;margin:0
 .command-center.original-sidebar #stopList .itinerary-leg-row>.leg-row:before{display:none}
 .command-center.original-sidebar #stopList .leg-route-button{width:100%;margin:0;min-width:0;min-height:44px;padding:8px;white-space:normal;overflow-wrap:anywhere}
 .command-center.original-sidebar .leg-route-button>span{min-width:0}.command-center.original-sidebar .leg-line-badges{flex-wrap:wrap}
+.overview-region{margin-block-end:8px;border-bottom:1px solid var(--schedule-rule)}
+.overview-region>summary{min-height:44px;align-content:center;color:#655f55;font-size:13px;cursor:pointer}
+.overview-timetable-day{border-bottom:1px solid var(--schedule-rule)}
+.overview-timetable-heading{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-height:52px;padding:9px 4px;list-style:none;cursor:pointer;color:#253440}
+.overview-timetable-heading::-webkit-details-marker{display:none}
+.overview-timetable-heading::after{content:'';width:7px;height:7px;margin:0 4px 4px 0;border:solid #805334;border-width:0 1.5px 1.5px 0;transform:rotate(45deg)}
+.overview-timetable-day[open]>.overview-timetable-heading::after{transform:rotate(225deg);margin-top:6px}
+.overview-timetable-heading strong{color:#805334;font-size:14px;white-space:nowrap}
+.overview-timetable-heading small{display:block;color:#655f55;font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.overview-timetable-heading:hover,.overview-timetable-heading:focus-visible{background:#eee7db}
+#overviewTimetable .itinerary-columns{border-top:1px solid var(--schedule-rule);padding-inline-start:3px}
+.command-center.original-sidebar #stopList .overview-timetable-stop{min-height:44px;padding-block:9px;text-align:left}
+.command-center.original-sidebar #stopList .overview-timetable-stop .stop-name{grid-column:2;padding-inline-end:4px;margin:0}
+.command-center.original-sidebar #stopList .overview-timetable-stop .stop-time{grid-column:1;text-align:left}
+button.overview-timetable-stop:not(:disabled):hover{box-shadow:inset 2px 0 #94613f}
+.overview-timetable-open{min-height:44px;margin-inline-start:calc(var(--schedule-time) + var(--schedule-gap));color:#805334;font-size:13px;text-align:left}
+.overview-timetable-empty{margin:0;padding:0 4px 14px;color:#655f55;font-size:13px}
+.overview-preview-heading{margin:6px 0 8px}
 .original-plan-tools{border-top:1px solid #e4dbce;margin-top:18px;padding-top:10px}.original-plan-tools p{font-size:11px;line-height:1.7}.original-plan-tools button{min-height:44px;border:1px solid #ded5c6;border-radius:8px;padding:7px 12px;margin:4px 5px 4px 0}
 .command-center #mapSettings #kisekiLegal{font-size:12px;border-top:1px solid #ded5c6;padding:12px 0;margin-top:14px}.command-center #mapSettings #kisekiLegal summary{cursor:pointer}
 .compact-station [data-ride-choose]{min-height:44px;background:#c76636;color:#fffdf7;border-color:#c76636}
