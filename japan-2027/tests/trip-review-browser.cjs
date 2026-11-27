@@ -10,6 +10,25 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
   await page.waitForFunction(()=>window.__routebook.state.routeData.days['13-main'][0].parts[0].flightTrack?.flightNumber==='MM809');
+  const sidebar=page.locator('#ccSidebarToggle');
+  const sidebarWasClosed=await sidebar.getAttribute('aria-expanded')==='false';
+  if(sidebarWasClosed)await sidebar.click();
+  await page.locator('#ccDaySelect').selectOption('7');
+  const timetable=page.locator('#stopList');
+  const firstTime=timetable.locator('.stop-time').first(),firstPlace=timetable.locator('.stop-name').first();
+  const [timeBox,placeBox]=await Promise.all([firstTime.boundingBox(),firstPlace.boundingBox()]);
+  assert.ok(timeBox.x<placeBox.x&&Math.abs(timeBox.y-placeBox.y)<2,'Time and place share a timetable row');
+  const cruiseTrain=timetable.locator('[data-itinerary-train-leg="4"]');
+  const cruiseStation=cruiseTrain.locator('[aria-label="역 번호 U08"]');
+  assert.equal(await cruiseStation.isVisible(),false);
+  await cruiseTrain.locator('summary.itinerary-train-summary').click();
+  assert.equal(await cruiseStation.isVisible(),true);
+  assert.equal(await cruiseTrain.getByRole('link',{name:/Google 지도 대중교통/}).isVisible(),true);
+  assert.equal(await page.locator('#itineraryScroll').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
+  await cruiseTrain.locator('summary.itinerary-train-summary').click();
+  assert.equal(await cruiseStation.isVisible(),false);
+  await page.locator('#ccDaySelect').selectOption('1');
+  if(sidebarWasClosed)await sidebar.click();
   const geo=await page.evaluate(()=>{
    const [a,b]=__routebook.getLeg(2).parts[0].coords;
    return [a,a.map((x,i)=>x+(b[i]-x)/3)].map(([latitude,longitude])=>({latitude,longitude,accuracy:8}));
