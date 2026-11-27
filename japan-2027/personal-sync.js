@@ -9,8 +9,55 @@
  const database=(u=user)=>u==='guest'?'routebook-private-files-v1':'routebook-private-files-account-'+u;
  async function db(u=user){return new Promise((resolve,reject)=>{const r=indexedDB.open(database(u),1);r.onupgradeneeded=()=>r.result.createObjectStore('files',{keyPath:'id'});r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('첨부 저장소를 열 수 없습니다.'));});}
  async function files(u=user){const d=await db(u);try{return await new Promise((resolve,reject)=>{const r=d.transaction('files').objectStore('files').getAll();r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(Error('첨부 조회 실패'));});}finally{d.close();}}
- async function replaceFiles(values,u=user){const d=await db(u);try{await new Promise((resolve,reject)=>{const tx=d.transaction('files','readwrite'),s=tx.objectStore('files');s.clear();for(const f of values)s.put(f);tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(Error('첨부 저장 실패'));});}finally{d.close();}}
- window.AccountRecords={storage,database,scope:()=>user};
+ async function writeFiles(u,write){
+  const d=await db(u);
+  try{await new Promise((resolve,reject)=>{
+   const tx=d.transaction('files','readwrite');
+   tx.oncomplete=resolve;
+   tx.onabort=()=>reject(tx.error||Error('첨부 저장을 중단했어요.'));
+   const abort=error=>{reject(error);tx.abort();};
+   try{write(tx.objectStore('files'),abort);}catch(error){abort(error);}
+  });}finally{d.close();}
+ }
+ function putFiles(values,u=user){return writeFiles(u,store=>{for(const f of values)store.put(f);});}
+ function replaceFiles(values,u=user,valid){return writeFiles(u,(store,abort)=>{
+  const replace=()=>{store.clear();for(const f of values)store.put(f);};
+  if(!valid)return replace();
+  store.count().onsuccess=()=>{
+   if(!valid())return abort(Object.assign(Error('동기화 중 기기 수정'),{status:409}));
+   replace();
+  };
+ });}
+ const attachmentTypes=['image/jpeg','image/png','image/webp','application/pdf'];
+ function attachmentChanged(u){if(u===user){window.dispatchEvent(new Event('routebook:record-write'));window.dispatchEvent(new Event('routebook:attachments-change'));}}
+ async function addAttachment(owner,file,u=user){
+  if(!file.size||file.size>2*1024*1024||!attachmentTypes.includes(file.type))throw Error('2MB 이하 JPG·PNG·WebP·PDF만 저장할 수 있어요.');
+  const data=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('파일을 읽지 못했어요.'));r.readAsDataURL(file);});
+  await writeFiles(u,(store,abort)=>{
+   const all=store.getAll();
+   all.onsuccess=()=>{
+    if(u!==user)return abort(Error('계정이 변경되어 첨부를 중단했어요.'));
+    if(all.result.length>=30||all.result.reduce((sum,f)=>sum+f.data.length,data.length)>28*1024*1024)return abort(Error('첨부 보관 한도를 초과했어요.'));
+    writeGeneration++;
+    store.add({id:crypto.randomUUID(),owner,name:file.name.slice(0,200),data});
+   };
+  });
+  attachmentChanged(u);
+ }
+ async function removeAttachment(id,owners,u=user){
+  await writeFiles(u,(store,abort)=>{
+   const request=store.get(id);
+   request.onsuccess=()=>{
+    if(u!==user)return abort(Error('계정이 변경되어 삭제를 중단했어요.'));
+    if(request.result&&owners.includes(request.result.owner)){
+     writeGeneration++;
+     store.delete(id);
+    }
+   };
+  });
+  attachmentChanged(u);
+ }
+ window.AccountRecords={storage,database,scope:()=>user,files,putFiles,addAttachment,removeAttachment};
  let api,ready=false,busy=false,again=false,epoch=0,timer,remote=null,state='기기에 저장됨',applying=false,writeGeneration=0;
  const metaKey=()=>prefix('routebook-sync-meta-v1'),meta=()=>{try{const m=JSON.parse(get(metaKey())||'{}');if(m.base)m.base=fingerprint(JSON.parse(m.base));return m;}catch(_){return {};}};
  function status(text){state=text;const p=document.querySelector('#personalSyncStatus');if(p)p.textContent=text;window.dispatchEvent(new Event('routebook:sync-status'));}
@@ -33,8 +80,10 @@
   const generation=writeGeneration;
   const downloaded=[];for(const f of payload.files){const data=await request('/records/file?id='+encodeURIComponent(f.id));if(data.hash!==f.hash||await hash(data.data)!==f.hash)throw Error('첨부 무결성 확인 실패');downloaded.push({id:f.id,owner:f.owner,name:f.name,data:data.data});}
   if(ticket!==epoch)return;if(generation!==writeGeneration){const error=Error('동기화 중 기기 수정');error.status=409;throw error;}CommandCore.parseBackup({format:'routebook-personal-backup',version:1,storage:payload.storage,attachments:downloaded});const previous=snapshot(),oldFiles=await files();applying=true;
-  try{await replaceFiles(downloaded);for(const k of KEYS){if(Object.hasOwn(payload.storage,k))set(prefix(k),payload.storage[k]);else raw?.removeItem(prefix(k));}set(metaKey(),JSON.stringify({revision:version,base:fingerprint(payload),updatedAt}));reload();}
-  catch(error){await replaceFiles(oldFiles);for(const k of KEYS){if(Object.hasOwn(previous,k))set(prefix(k),previous[k]);else raw?.removeItem(prefix(k));}reload();throw error;}finally{applying=false;}
+  let replaced=false;
+  const u=user;
+  try{await replaceFiles(downloaded,u,()=>ticket===epoch&&generation===writeGeneration);replaced=true;if(ticket!==epoch)return;for(const k of KEYS){if(Object.hasOwn(payload.storage,k))set(prefix(k),payload.storage[k]);else raw?.removeItem(prefix(k));}set(metaKey(),JSON.stringify({revision:version,base:fingerprint(payload),updatedAt}));reload();}
+  catch(error){if(replaced&&ticket===epoch){await replaceFiles(oldFiles,u);for(const k of KEYS){if(Object.hasOwn(previous,k))set(prefix(k),previous[k]);else raw?.removeItem(prefix(k));}reload();}throw error;}finally{applying=false;}
  }
  async function push(local,version,ticket){for(const f of local.files){const info=local.payload.files.find(x=>x.id===f.id);await request('/records/file',{...info,data:f.data});if(ticket!==epoch)return;}const result=await request('/records',{revision:version,payload:local.payload});if(ticket!==epoch)return;set(metaKey(),JSON.stringify({revision:result.revision,base:fingerprint(local.payload),updatedAt:result.updatedAt}));}
  async function sync(choice){

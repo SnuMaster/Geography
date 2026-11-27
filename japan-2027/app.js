@@ -255,11 +255,12 @@ function renderStops(){
      <div class="stop-desc">${esc(cleanDesc(s))}</div>${s.kind!=='hotel'?placeFacts(s,true):''}
      ${s.kind!=='hotel'&&s.details?`<details class="place-expand"><summary aria-label="방문·메뉴·예약 상세">상세 보기</summary>${detailHtml(s)}${f?`<div class="food-detail"><strong>${esc(f.budget)}</strong><br>${esc(f.order)}<br>${esc(f.hours)}</div>`:''}</details>`:''}
      <div class="stop-links">${mapUrl(s)?`<a href="${mapUrl(s)}" target="_blank" rel="noopener noreferrer" class="place-map">장소 보기 ${icon('arrowUpRight')}</a>`:''}${f?`<a href="${esc(f.url)}" target="_blank" rel="noopener">매장 안내 ${icon('arrowUpRight')}</a>`:''}</div>
+     ${s.kind==='food'?ReservationPhotos.button(s):''}
     </div>
    </div>
   </div>`;
  }).join('');
- $$('#stopList [data-stop]').forEach(el=>{el.addEventListener('click',e=>{if(e.target.closest('a,details'))return;selectStop(Number(el.dataset.stop),true,false);});el.addEventListener('keydown',e=>{if(e.target.closest('a,details'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();selectStop(Number(el.dataset.stop),true,false);}});});
+ $$('#stopList [data-stop]').forEach(el=>{el.addEventListener('click',e=>{if(e.target.closest('a,button,details'))return;selectStop(Number(el.dataset.stop),true,false);});el.addEventListener('keydown',e=>{if(e.target.closest('a,button,details'))return;if(e.key==='Enter'||e.key===' '){e.preventDefault();selectStop(Number(el.dataset.stop),true,false);}});});
  $$('#stopList [data-leg]').forEach(b=>b.addEventListener('click',()=>selectLeg(Number(b.dataset.leg))));
  $('#routeDetails').innerHTML=`<details><summary>이동 메모·시간표 전체</summary><h3>${icon('rail')} 오늘의 이동 메모</h3>${(v.routes||d.routes).map(s=>`<p>${esc(s)}</p>`).join('')}<p>${esc(v.note||d.note)}</p><details class="full-schedule"><summary>시간표 전체 보기</summary>${v.stops.map(s=>[s.time,stopLabel(s),cleanDesc(s)]).map(r=>`<div class="schedule-row"><b>${esc(r[0])}</b><div><strong>${esc(r[1])}</strong><br>${esc(r[2])}</div></div>`).join('')}</details></details>`;
 }
