@@ -11,7 +11,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
   await page.waitForFunction(()=>window.__routebook.state.routeData.days['12-main'][8].parts[0].flightTrack?.flightNumber==='MM809');
   const geo=await page.evaluate(()=>{
-   const [a,b]=__routebook.getLeg(1).parts[0].coords;
+   const [a,b]=__routebook.getLeg(2).parts[0].coords;
    return [a,a.map((x,i)=>x+(b[i]-x)/3)].map(([latitude,longitude])=>({latitude,longitude,accuracy:8}));
   });
   await page.context().grantPermissions(['geolocation']);
@@ -30,14 +30,22 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   const bookingCheck=await page.evaluate(()=>{
    const item=document.querySelector('[data-booking-item="fuji-excursion"]'),date=item?.querySelector('.booking-date')?.textContent||'';
    if(!date.includes('1/12'))throw Error('Wrong visible Fuji date '+date);
-   const railGroup=item.closest('.booking-group'),nikko=railGroup.querySelector('[data-booking-item="nikko-express"]');
-   if(!item.textContent.includes('12/12 10:00')||!nikko?.textContent.includes('12/15 09:00'))throw Error('Missing rail sale openings');
-   if(!item.textContent.includes('공식 판매 대기 중')||!nikko.textContent.includes('공식 판매 대기 중')||!item.textContent.includes('78,032원')||!nikko.textContent.includes('47,100원'))throw Error('Pending rail orders are missing');
-   if(item.querySelector('input').checked||nikko.querySelector('input').checked)throw Error('Pending rail ticket was marked confirmed');
-   if(item.querySelector('[data-booking-memo]').value!=='열차표 메모')throw Error('Existing railway booking memo disappeared');
-   const pass=railGroup.querySelector('[data-booking-item="nikko-maas-chuzenji-kegon"]');
+   const next=[...document.querySelectorAll('#bookingNextActions [data-booking-item]')].map(el=>el.dataset.bookingItem);
+   if(next.join(',')!=='fuji-excursion,nikko-express,bebuya-shibuya')throw Error('Booking actions out of order: '+next);
+   const originalNow=Date.now;
+   try{Date.now=()=>Date.parse('2026-12-12T10:01:00+09:00');ReservationUI.renderChecklist();
+    if(!document.querySelector('[data-booking-item="fuji-excursion"] .booking-kind').textContent.includes('발권 확인 필요'))throw Error('Opening did not promote the Fuji request to ticket check');
+    if(!document.querySelector('[data-booking-item="nikko-express"] .booking-kind').textContent.includes('공식 판매 대기 중'))throw Error('Nikko status changed before opening');
+   }finally{Date.now=originalNow;ReservationUI.renderChecklist();}
+
+   const fuji=document.querySelector('[data-booking-item="fuji-excursion"]'),railGroup=fuji.closest('.booking-group'),nikko=railGroup.querySelector('[data-booking-item="nikko-express"]');
+   if(!fuji.textContent.includes('12/12 10:00')||!nikko?.textContent.includes('12/15 09:00'))throw Error('Missing rail sale openings');
+   if(!fuji.textContent.includes('공식 판매 대기 중')||!nikko.textContent.includes('공식 판매 대기 중')||!fuji.textContent.includes('78,032원')||!nikko.textContent.includes('47,100원'))throw Error('Pending rail orders are missing');
+   if(fuji.querySelector('input').checked||nikko.querySelector('input').checked)throw Error('Pending rail ticket was marked confirmed');
+   if(fuji.querySelector('[data-booking-memo]').value!=='열차표 메모')throw Error('Existing railway booking memo disappeared');
+   const pass=document.querySelector('[data-booking-item="nikko-maas-chuzenji-kegon"]');
    if(!pass||!/4,350(?:엔|\s+JP¥)/.test(pass.textContent)||!pass.textContent.includes('기타센주')||pass.querySelector('[data-booking-complete]').checked)throw Error('Wrong optional Nikko MaaS purchase card');
-   if(railGroup.querySelector('[data-booking-item="nikko-pass-all-area"]'))throw Error('Old All Area pass remained in the checklist');
+   if(document.querySelector('[data-booking-item="nikko-pass-all-area"]'))throw Error('Old All Area pass remained in the checklist');
    pass.querySelector('[data-booking-complete]').click();
    const changed=ReservationUI.getAssistantBookings();
    if(!changed.find(x=>x.key==='nikko-maas-chuzenji-kegon').confirmed||changed.find(x=>x.key==='nikko-express').confirmed)throw Error('Nikko MaaS completion changed the train reservation');
@@ -53,7 +61,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    if(!prep.find(x=>x.key==='travel-insurance').confirmed||prep.find(x=>x.key==='japan-travel-sim').confirmed)throw Error('Travel insurance completion was not independent');
    document.querySelector('[data-booking-item="travel-insurance"] [data-booking-complete]').click();
    document.querySelector('[data-booking-jump="narita-skyliner-outbound"]').click();
-   const trainCard=document.querySelector('[data-leg="4"].search-highlight')?.closest('[data-itinerary-train-leg]');
+   const trainCard=document.querySelector('[data-leg="3"].search-highlight')?.closest('[data-itinerary-train-leg]');
    if(!trainCard?.getAttribute('aria-label')?.includes('스카이라이너'))throw Error('Skyliner booking jump failed');
    document.getElementById('bookingChecklistBtn').click();
    const onSite=document.querySelector('#bookingOnSite');
@@ -80,7 +88,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261127-tokyo-connections-dinner-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-trip-readiness-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -105,13 +113,16 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    document.querySelector('[data-booking-jump="flight-mm809-20270120"]').click();
    if(r.state.day!==12||!document.querySelector('[data-leg="9"].search-highlight')?.textContent.includes('MM809'))throw Error('Return flight booking jump failed');
    r.setDay(1);
-   if(r.getStops()[0]?.name!=='월성로 132')throw Error('First departure stop was overwritten');
-   if(r.getLeg(1).parts[0].geometryAccuracy!=='mapped'||r.getLeg(1).parts[0].coords.length<100)throw Error('Departure taxi route is not mapped');
-   r.selectLeg(2);
+   if(r.getStops()[0]?.name!=='대구국제공항'||r.getLeg(1).parts[0].mode!=='flight')throw Error('Private origin remains in the public itinerary');
+   r.selectLeg(1);
    if(!r.map._popup?.getElement()?.textContent.includes('1/8 11:10'))throw Error('Outbound flight schedule missing');
    r.map.closePopup();
-   r.selectLeg(4);
+   r.selectLeg(3);
    if(!r.map._popup?.getElement()?.textContent.includes('나리타 T2 15:02 → 게이세이우에노 15:43'))throw Error('Missing Skyliner map backup');
+   const skyPicker=document.querySelector('#stopList [data-connection-choice]');
+   skyPicker.value='15:02';skyPicker.dispatchEvent(new Event('change',{bubbles:true}));
+   const skyImpact=r.map._popup.getElement().querySelector('[data-connection-impact]').textContent;
+   if(!skyImpact.includes('15:43')||!skyImpact.includes('우에노역 15:35')||!skyImpact.includes('열차 도착 전')||!skyImpact.includes('STAY&GO'))throw Error('Skyliner backup did not show missed and affected times');
    r.map.closePopup();
    const pasmo=r.getStops().findIndex(s=>s.visitLabel==='TOURIST PASMO 구매');
    const pasmoPin=r.map.getContainer().querySelector('.leaflet-marker-icon[title*="TOURIST PASMO"]');
@@ -129,9 +140,15 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const busPopup=r.map._popup?.getElement()?.textContent||'';
    if(!busPopup.includes('06:50')||!busPopup.includes('10:56')||!busPopup.includes('10B-3')||!busPopup.includes('동대구터미널 1층 하차장'))throw Error('Wrong return bus timetable or stops');
    if(!busPopup.includes('07:20편 또는 08:00편'))throw Error('Missing airport bus map backups');
-   const [station,destination]=r.getStops().slice(-2);
-   const taxi=b.routeData.days['12-main'].at(-1);
-   if(station.name!=='동대구역 택시 승강장'||destination.name!=='월성로 132'||destination.dayOffset!==1||taxi.parts[0].mode!=='taxi'||taxi.parts[0].geometryAccuracy!=='mapped'||taxi.parts[0].coords.length<100)throw Error('Missing return taxi');
+   const busPicker=r.map._popup.getElement().querySelector('[data-connection-choice]');
+   busPicker.value='08:00';busPicker.dispatchEvent(new Event('change',{bubbles:true}));
+   const busImpact=document.querySelector('#stopList [data-connection-impact]').textContent;
+   if(!busImpact.includes('08:00 동대구 직통')||!busImpact.includes('발권 화면')||!busImpact.includes('10:56')||!busImpact.includes('11:10'))throw Error('Return backup hid the affected arrival and taxi');
+   const station=r.getStops().at(-1),walk=b.routeData.days['12-main'].at(-1);
+   if(station.name!=='동대구역 택시 승강장'||station.dayOffset!==1||walk.parts[0].mode!=='walk')throw Error('Private destination remains in the public itinerary');
+   r.setDay(4);
+   const holiday=document.querySelector('.day-public-holiday')?.textContent||'';
+   if(!holiday.includes('성년의 날')||!holiday.includes('공휴일 열차 시간표'))throw Error('Missing holiday in the itinerary');
    if(by['flight-mm809-20270120']?.day!==12||by['hotel-dome'])throw Error('Wrong lodging or return booking');
    const out=[];
    for(const d of b.data.days){r.setDay(d.n);r.setVariant('main');const ss=r.getStops();

@@ -4,7 +4,7 @@
  let observedLegs=null,observedDay=null,dateNotice=false,dateReason='selection',rejectedNotice='';
  let resolution=null,lastMatch=null,previousFix=null,selectedHint=null,passedLegs=new Set();
  let compass=null,orientationPermission='idle',orientationGeneration=0,orientationAttached=false,headingFrame=null,lastOrientation=null;
- let watchGeneration=0,watchStartedAt=0,suspended=false,waitingReason=null,lowAccuracy=false,refreshAttempted=false;
+ let watchGeneration=0,watchStartedAt=0,freshWatch=false,suspended=false,waitingReason=null,lowAccuracy=false,refreshAttempted=false;
  const staleAfter=30000;
  const tripCalendar=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit'});
  const screenAngle=()=>Number.isFinite(window.screen?.orientation?.angle)?window.screen.orientation.angle:Number.isFinite(window.orientation)?window.orientation:0;
@@ -134,9 +134,8 @@
   if(suspended||document.hidden){waitingReason='refresh';return;}
   const c=position.coords,now=Date.now();
   const next={lat:c.latitude,lng:c.longitude,accuracy:c.accuracy,heading:Number.isFinite(c.heading)?c.heading:null,speed:Number.isFinite(c.speed)?c.speed:null,timestamp:position.timestamp};
-  if(next.timestamp<=fix?.timestamp||now-next.timestamp>staleAfter)return;
-  // A fix from before a signal loss is not a reliable baseline for jump filtering.
-  const recent=fix&&now-fix.timestamp<=staleAfter?fix:null;
+  if(next.timestamp<=fix?.timestamp||now-next.timestamp>staleAfter||freshWatch&&next.timestamp<watchStartedAt)return;
+  const recent=fix&&!waitingReason&&now-fix.timestamp<=staleAfter?fix:null;
   const check=RouteMatch.validateFix(next,recent,now);
   if(!check.accepted){
    if(check.reason==='jump'){rejectedNotice='GPS 위치 도약 · 다음 관측 확인 중';render();}
@@ -164,7 +163,7 @@
  function watchPosition({fresh=false,highAccuracy=true}={}){
   clearWatch();
   const generation=watchGeneration,geo=navigator.geolocation;
-  lowAccuracy=!highAccuracy;watchStartedAt=Date.now();
+  lowAccuracy=!highAccuracy;freshWatch=fresh;watchStartedAt=Date.now();
   try{
    const id=geo.watchPosition(
     position=>{if(generation===watchGeneration)accept(position);},
@@ -186,11 +185,13 @@
    return;
   }
   if(suspended||document.hidden)return;
-  if(!fix&&!lowAccuracy){
-   waitingReason='fallback';
-   watchPosition({fresh:true,highAccuracy:false});
-  }else waitingReason=e.code===3?'timeout':'unavailable';
+  if(!lowAccuracy&&(!fix||waitingReason==='refresh'))return standardAccuracy();
+  waitingReason=e.code===3?'timeout':'unavailable';
   render();
+ }
+ function standardAccuracy(){
+  waitingReason='fallback';
+  watchPosition({fresh:true,highAccuracy:false});render();
  }
  function requestFresh(){
   waitingReason='refresh';refreshAttempted=true;compass=null;
@@ -206,7 +207,10 @@
   if(!active()||suspended||document.hidden)return;
   updateTripDay();
   if(fix&&Date.now()-fix.timestamp>staleAfter&&!refreshAttempted){requestFresh();return;}
-  if((!fix||waitingReason)&&Date.now()-watchStartedAt>25000&&!canRetry())waitingReason='timeout';
+  if((!fix||waitingReason)&&Date.now()-watchStartedAt>25000&&!canRetry()){
+   if(!lowAccuracy)return standardAccuracy();
+   waitingReason='timeout';
+  }
   render();
  }
  function suspend(release=false){
@@ -264,6 +268,13 @@
   $('#locationLeg').addEventListener('change',e=>{chosen=e.target.value==='auto'?null:Number(e.target.value);window.RouteUI?.userExplore();selectedHint=null;lastMatch=null;offSince=null;offCount=0;if(fix){resolveFix();render();}});
   config.map.on('dragstart popupopen',pauseFollow);
   document.addEventListener('visibilitychange',()=>document.hidden?suspend():resume());
+  document.addEventListener('freeze',()=>suspend(true));
+  document.addEventListener('resume',resume);
+  window.addEventListener('focus',()=>{
+   if(document.hidden||!active())return;
+   if(suspended)return resume();
+   if(canRetry()||fix&&Date.now()-fix.timestamp>staleAfter&&!refreshAttempted)requestFresh();
+  });
   window.addEventListener('pagehide',event=>event.persisted?suspend(true):stop());
   window.addEventListener('pageshow',event=>{if(event.persisted)resume();});
   const rotate=()=>{if(lastOrientation&&Date.now()-(compass?.timestamp||0)<=10000)orientationChanged(lastOrientation);};

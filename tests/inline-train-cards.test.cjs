@@ -60,7 +60,7 @@ test('untrusted station names remain escaped and unsupported lines have no fabri
 const appSource=fs.readFileSync(require.resolve('../japan-2027/app.js'),'utf8');
 Object.assign(ctx,{state:{day:6},stationLabel:station,fareOptions:()=>({}),fareText:F.format,distanceText:n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'확인 필요',TripData:{geometry:()=>({label:'저장된 경로'})},cleanDesc:s=>s.description||'',costText:()=> '비용 미확인'});
 ctx.MODE.walk={icon:'walk'};ctx.MODE.transfer={icon:'walk'};
-vm.runInContext(appSource.slice(appSource.indexOf('function legHtml('),appSource.indexOf('function applyTokyoData('))+'\n'+appSource.slice(appSource.indexOf('function detailHtml('),appSource.indexOf('function legDirectionsUrl(')),ctx);
+vm.runInContext(appSource.slice(appSource.indexOf('const connectionChoices='),appSource.indexOf('function applyTokyoData('))+'\n'+appSource.slice(appSource.indexOf('function detailHtml('),appSource.indexOf('function legDirectionsUrl(')),ctx);
 test('map detail preserves every rail segment from mixed supported/unsupported itineraries',()=>{
  for(const day of [3,4,5,6,7,10,12]){
   const leg=bundle.routes.days[day+'-main'][0],html=ctx.legHtml(leg);

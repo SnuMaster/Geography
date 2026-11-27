@@ -165,3 +165,11 @@
 
 /* One click opens only the selected service's departure station. */
 .rail-disruption-links>a,.leaflet-popup-content .rail-disruption-links>a{display:flex;align-items:center;min-height:44px;padding:12px 4px;color:#315843;font:600 12px RouteSans,sans-serif;line-height:1.5;text-decoration:none;overflow-wrap:anywhere}.rail-disruption-links>a:hover{text-decoration:underline}.rail-disruption-links>a:focus-visible{outline:3px solid #477b95;outline-offset:2px}
+
+.connection-backup{padding:8px 10px;font-size:.82rem;line-height:1.55;overflow-wrap:anywhere}
+.connection-backup p{margin:0 0 6px}
+.connection-backup label{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;font-weight:600}
+.connection-backup select{max-width:100%;min-height:44px;padding:4px 8px;font:inherit;color:inherit;background:transparent;border:1px solid currentColor;border-radius:4px}
+.connection-backup [data-connection-impact]:not(:empty){margin-top:8px}
+.connection-backup ul{margin:4px 0 0;padding-inline-start:20px}
+.day-public-holiday{margin:4px 0 8px;font-size:.84rem}

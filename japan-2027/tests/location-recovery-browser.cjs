@@ -34,10 +34,11 @@ async function recovery(page,url){
   }});
   window.gpsQA={
    show(value){hidden=!value;document.dispatchEvent(new Event('visibilitychange'));},
+   lifecycle(type){document.dispatchEvent(new Event(type));},
    page(type,persisted){window.dispatchEvent(new PageTransitionEvent(type,{persisted}));},
    clock(value){now=typeof value==='string'?Date.parse(value):now+value;},
-   send(id,latitude,longitude,accuracy=8){
-    watches[id].success({timestamp:now,coords:{latitude,longitude,accuracy}});
+   send(id,latitude,longitude,accuracy=8,age=0){
+    watches[id].success({timestamp:now-age,coords:{latitude,longitude,accuracy}});
    },
    error(id,code){watches[id].error({code});},
    requests:()=>watches.map(w=>w.options.maximumAge),
@@ -102,6 +103,17 @@ async function recovery(page,url){
  assert.equal((await page.evaluate(()=>gpsQA.requests())).at(-1),0);
  await page.evaluate(()=>gpsQA.send(8,35.8792,128.6281));
  await page.locator('.gps-location-marker').waitFor();
+ await page.evaluate(()=>{gpsQA.lifecycle('freeze');gpsQA.clock(3000);gpsQA.lifecycle('resume');});
+ assert.equal(await page.evaluate(()=>gpsQA.requests().length),10,'a frozen tab requests a new fix');
+ await page.evaluate(()=>gpsQA.send(9,35.87,128.63,8,1000));
+ assert.equal((await readFix()).lat,35.8792,'a pre-resume cached fix cannot refresh the marker');
+ await page.evaluate(()=>gpsQA.error(9,3));
+ assert.equal(await page.evaluate(()=>gpsQA.isHighAccuracy(10)),false,'a stalled resume with an old fix also uses standard accuracy');
+ await page.evaluate(()=>{gpsQA.clock(500);gpsQA.send(10,35.87,128.63);});
+ assert.equal((await readFix()).lat,35.87,'resume recovers immediately even when the previous marker was far away');
+ await page.evaluate(()=>{gpsQA.clock(35000);window.dispatchEvent(new Event('focus'));});
+ assert.equal(await state(),'stale','focus recovers a stale watch when the browser omitted visibility changes');
+ assert.equal(await page.evaluate(()=>gpsQA.isHighAccuracy(11)),true);
  await page.locator('#locationStop').click();
 }
 

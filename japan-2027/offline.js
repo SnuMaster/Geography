@@ -22,23 +22,34 @@
   return {match:async id=>{const r=await transaction('readonly',s=>s.get(typeof id==='string'?id:id.url));return r?new Response(r.body,{headers:r.headers}):undefined;},put:async(id,response)=>{const body=await response.text(),headers=[...response.headers];await transaction('readwrite',s=>s.put({body,headers},typeof id==='string'?id:id.url));},keys:async()=> (await transaction('readonly',s=>s.getAllKeys())).map(url=>new Request(url)),delete:async request=>transaction('readwrite',s=>s.delete(typeof request==='string'?request:request.url))};
  }
  async function cache(){try{return await caches.open(CACHE);}catch(_){try{return await fallbackCache();}catch(_){storageAvailable=false;return null;}}}
+ async function tripResponse(id,response,c,write=false){
+  const value=await response.clone().json();
+  const isTrip=/\/(?:trip-update|saved-trip-snapshot)\.json$/.test(new URL(id).pathname);
+  const changed=isTrip&&window.TripData?.publicAirportTransfers(value.data,value.routes);
+  if(c&&(write||changed))try{
+   const saved=changed?new Response(JSON.stringify(value),{headers:{'Content-Type':'application/json'}}):response;
+   await c.put(id,saved);storageAvailable=true;
+  }catch(_){storageAvailable=false;}
+  return value;
+ }
  async function readJson(url,{timeout=12000,preferCache=false,networkOnly=false}={}){
   const id=key(url),pendingId=id+(networkOnly?'|network':''),c=await cache(),old=await c?.match(id);
-  if(pending.has(pendingId))return preferCache&&!networkOnly&&old?old.clone().json():pending.get(pendingId);
-  const task=(async()=>{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{const response=await fetch(url,{signal:controller.signal,cache:'no-cache'});if(!response.ok)throw Error('data unavailable');const data=await response.clone().json();if(c)try{await c.put(id,response);storageAvailable=true;}catch(_){storageAvailable=false;}meta[id]=Date.now();stale.delete(id);try{localStorage.setItem(META,JSON.stringify(meta));}catch(_){}status();return data;}catch(error){if(old&&!networkOnly){stale.add(id);status();return old.clone().json();}throw error;}finally{clearTimeout(timer);pending.delete(pendingId);}})();pending.set(pendingId,task);
-  if(preferCache&&!networkOnly&&old){task.catch(()=>{});return old.clone().json();}return task;
+  if(pending.has(pendingId))return preferCache&&!networkOnly&&old?tripResponse(id,old,c):pending.get(pendingId);
+  const task=(async()=>{const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),timeout);try{const response=await fetch(url,{signal:controller.signal,cache:'no-cache'});if(!response.ok)throw Error('data unavailable');const data=await tripResponse(id,response,c,true);meta[id]=Date.now();stale.delete(id);try{localStorage.setItem(META,JSON.stringify(meta));}catch(_){}status();return data;}catch(error){if(old&&!networkOnly){stale.add(id);status();return tripResponse(id,old,c);}throw error;}finally{clearTimeout(timer);pending.delete(pendingId);}})();pending.set(pendingId,task);
+  if(preferCache&&!networkOnly&&old){task.catch(()=>{});return tripResponse(id,old,c);}return task;
  }
  function checkedAt(urls){const values=urls.map(url=>meta[key(url)]);return values.length&&values.every(Number.isFinite)?Math.min(...values):null;}
  async function saveSnapshot(data,routes,sourceSignature,updatedAt=Date.now()){
+  window.TripData?.publicAirportTransfers(data,routes);
   const value={version:VERSION,data,routes,sourceSignature,updatedAt};
   if(!window.frameElement){const c=await cache();if(c)try{await c.put(key('saved-trip-snapshot.json'),new Response(JSON.stringify(value),{headers:{'Content-Type':'application/json'}}));}catch(_){storageAvailable=false;status();}}
   return value;
  }
 
- async function snapshot(){if(window.frameElement)return null;try{const c=await cache(),r=await c?.match(key('saved-trip-snapshot.json'));if(r){return r.json();}}catch(_){}return null;}
+ async function snapshot(){if(window.frameElement)return null;try{const c=await cache(),id=key('saved-trip-snapshot.json'),r=await c?.match(id);if(r)return await tripResponse(id,r,c);}catch(_){}return null;}
  function pinned(){try{return new Set(JSON.parse(localStorage.getItem('routebook-offline-pins-v1')||'[]'));}catch(_){return new Set();}}
  function pinFiles(files){localStorage.setItem('routebook-offline-pins-v1',JSON.stringify(files.map(f=>key(f).split('?')[0])));}
- async function readCachedJson(url){const c=await cache(),r=await c?.match(key(url));if(!r)throw Error('저장된 자료가 없습니다.');return r.json();}
+ async function readCachedJson(url){const c=await cache(),id=key(url),r=await c?.match(id);if(!r)throw Error('저장된 자료가 없습니다.');return tripResponse(id,r,c);}
  async function trimTimetables(){const c=await cache();if(!c)return;const protectedFiles=pinned(),files=(await c.keys()).filter(r=>new URL(r.url).pathname.includes('/timetables/'));files.sort((a,b)=>(meta[b.url]||0)-(meta[a.url]||0));let activeFile=null;try{const record=JSON.parse(localStorage.getItem('routebook-boarded-train-v1')||'null');activeFile=globalThis.RailDepartureProfiles?.profiles[record?.key]?.file;}catch(_){}for(const r of files.slice(12)){if(protectedFiles.has(r.url.split('?')[0])||activeFile&&new URL(r.url).pathname.endsWith('/'+activeFile))continue;await c.delete(r);delete meta[r.url];}}
  async function register(){if(!('serviceWorker'in navigator)||window.frameElement)return;try{const registration=await navigator.serviceWorker.register('sw.js?v='+(window.OfflinePack?.REVISION||VERSION),{scope:'./'});await registration.update();}catch(_){}status();}
  window.addEventListener('online',()=>{status();window.dispatchEvent(new Event('routebook:online'));});window.addEventListener('offline',status);document.addEventListener('DOMContentLoaded',register);

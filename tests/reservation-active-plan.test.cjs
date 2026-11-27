@@ -7,7 +7,7 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  const insurance=by['travel-insurance'],sim=by['japan-travel-sim'],skyliner=by['narita-skyliner-outbound'];
  assert.equal(insurance.group,'prep');assert.equal(insurance.date,'출국 전 · 1/8~1/20');
  assert.equal(sim.group,'prep');assert.match(sim.details.join(' '),/eSIM.*유심.*나리타 공항/);
- assert.equal(skyliner.day,1);assert.equal(skyliner.leg,4);assert.equal(skyliner.group,'rail');
+ assert.equal(skyliner.day,1);assert.equal(skyliner.leg,3);assert.equal(skyliner.group,'rail');
  assert.match(skyliner.note,/지정석.*제2터미널 지하 1층/);assert.match(skyliner.date,/나리타 T2 → 게이세이우에노/);
  assert.match(skyliner.details.at(-1),/40호 .*15:02 → 게이세이우에노 15:43/);
  assert.match(skyliner.source,/skyliner_timetable/);
@@ -36,7 +36,7 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.match(bebuya.details.join(' '),/SHIBUYA 5층.*성인 1명.*90분/);
  assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
- assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,2);
+ assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,1);
  assert.equal(by['flight-mm809-20270120'].day,12);
  assert.equal(by['flight-mm809-20270120'].leg,9);
  assert(!by['flight-tokyo']);assert(!by['flight-7c1129-20270108']);assert(!by['airport-bus-out']);assert(!by['flight-return-tokyo']);

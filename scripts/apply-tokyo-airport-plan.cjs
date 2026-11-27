@@ -20,7 +20,6 @@ const metro='https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.p
 const jr='https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/kansen.pdf';
 const mono='https://www.tokyo-monorail.co.jp/english/guidance/train_info.html';
 const tokyo='https://www.gotokyo.org/en/destinations/northern-tokyo/yanaka-and-nezu/index.html';
-const departureSource='https://www.anadd.co.kr/officetel/data/gongo01.pdf';
 const roads='https://www.openstreetmap.org/copyright';
 const copy=structuredClone;
 const pt=s=>[s.lat,s.lng];
@@ -117,7 +116,7 @@ function apply(bundle){
 function applyAirportPlan(bundle){
  const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
  if(out.travelBookings?.some(b=>b.key==='flight-tw251-20270108')){
-  if(out.variants[0].stops[0].uid!=='t27-12-d1-wolseong-departure')updateDaeguDeparture(bundle);
+  T.publicAirportTransfers(data,routes);
   return updateReturnJourney(bundle);
  }
  if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return finalize(bundle);
@@ -214,24 +213,7 @@ function applyAirportPlan(bundle){
  if(data.nightRows.length){data.nightRows[0]=[out.date,out.title,ov.stops.at(-1).time];data.nightRows[data.nightRows.length-1]=[last.date,last.title,'1/19 밤 하네다 · 1/20 새벽 귀국'];}
  return finalize(bundle);
 }
-function addDeparture(bundle){
- const {data,routes}=bundle,out=data.days[0],v=out.variants[0],legs=routes.days['1-main'];
- const uid='t27-12-d1-anadd-departure';
- if(v.stops[0].uid===uid)return bundle;
- const terminal=v.stops[0];
- const start=location(uid,'어나드범어아파트','','departure','03:05~03:10',
-  points.departure,'03:05 차량 호출 준비. 03:10 단지 앞에서 출발해 03:30까지 동대구터미널 도착 목표.',departureSource);
- start.area='대구 수성구';
- const taxi='택시 · 어나드범어아파트 → 동대구터미널';
- const route=part('departureTaxi',start,terminal,'taxi',taxi,roads,12);
- legs.unshift(leg(start,terminal,[route],fare('KRW',null,roads,'미터 요금 · 호출 시 확인'),12,taxi));
- legs[0].durationLabel='약 12분 · 호출 여유 별도';
- v.stops.unshift(start);
- daySync(out,legs);
- out.note='03:10 어나드범어아파트 → 03:55 동대구 버스 → 11:30 인천발 7C1129 · 스카이라이너 요금 입력 보류';
-}
 function finalize(bundle){
- addDeparture(bundle);
  const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
  const first=out.variants[0].stops,outbound=routes.days['1-main'];
  const sky=outbound.find(l=>l.fare?.displayBlank);
@@ -288,34 +270,29 @@ function finalize(bundle){
 function applyCurrentTrip(bundle){
  const {data,routes}=bundle;
  const [out,freeDay]=data.days,v=out.variants[0],outbound=routes.days['1-main'];
- const [start,,airport,naritaStop]=v.stops;
+ if(v.stops[0]?.kind==='departure'){v.stops.shift();outbound.shift();}
+ const [,airport,naritaStop]=v.stops;
  const airportGuide='https://www.airport.co.kr/daegu/index.do';
  const trinity='https://www.trinityairways.com/app/serviceInfo/flightSchedule?showWholeSchedule=Y';
  const t2Guide='https://www.narita-airport.jp/en/access/train/railway-route-2/';
  const tae=[35.8941,128.6589],t2=[35.7732,140.3879];
- update(start,'07:50~08:00','07:50 단지 앞 승차 준비. 08:00 택시 출발, 08:20 대구공항 도착 목표.');
  const taeStop={...location(airport.uid,'대구국제공항','大邱国際空港','airport','08:20~11:10',tae,'08:20 도착 목표. 국제선 체크인·수하물 위탁·출국 수속 후 11:10 TW251 탑승.',airportGuide),selectionId:airport.selectionId};
  const nrtStop={...location(naritaStop.uid,'나리타공항 제2터미널','成田空港 第2ターミナル','airport','13:20~14:15',t2,'13:20 T2 도착. 입국심사·수하물·세관 통과 후 도착층에서 지하 1층 철도역으로 이동.',t2Guide),selectionId:naritaStop.selectionId};
- const rail=v.stops[4];
- const taxi='택시 · 어나드범어아파트 → 대구국제공항';
+ const rail=v.stops[3];
  const flightName='트리니티항공 TW251 · 대구 → 나리타 T2';
- const taxiPart=connector(pt(start),pt(taeStop),start.name,taeStop.name,20);
- Object.assign(taxiPart,{mode:'taxi',line:taxi,geometrySource:'출발지와 공항을 잇는 개략선 · 실제 주행 경로는 호출 앱에서 확인',source:airportGuide});
  const terminalWalk=connector(pt(nrtStop),pt(rail),nrtStop.name,rail.name,5);
  Object.assign(terminalWalk,{line:'T2 도착층 → B1 철도역',source:t2Guide,geometrySource:'나리타공항 안내 · 실내 통로 개략 연결'});
- const airportAccess=leg(start,taeStop,[taxiPart],fare('KRW',null,airportGuide,'호출 시 운임 확인'),20,taxi);
- airportAccess.distanceLabel='개략 연결';
  const flightLeg=leg(taeStop,nrtStop,[flight(taeStop,nrtStop,flightName,trinity,130)],fare('KRW',null,trinity,'확정 결제액 미입력'),130,flightName,
   travel('1/8 11:10','1/8 13:20',flightName,trinity,'항공사 현재 공개 시간표 기준. 나리타 T2 도착. 수하물과 최종 출발 시각은 전자항공권 확인.'));
  const railAccess=leg(nrtStop,rail,[terminalWalk],noFare(),5,'T2 내부 철도역 연결');
  railAccess.distanceLabel='터미널 내부';
- v.stops.splice(1,3,taeStop,nrtStop);
- outbound.splice(0,4,airportAccess,flightLeg,railAccess);
+ v.stops.splice(0,3,taeStop,nrtStop);
+ outbound.splice(0,3,flightLeg,railAccess);
  update(rail,'14:20~14:39','나리타 T2 지하 1층 지정석과 승강장 확인. 현재 평일표 스카이라이너 38호 14:42 출발 → 15:23 게이세이우에노 도착 후보. 수속이 늦으면 다음 편 확인.');
- update(v.stops[4],'15:26','15:23 스카이라이너 하차. 15:26 개찰 통과 목표.');
- update(v.stops[5],'15:35','히비야선 기타센주 방향 승차 목표.');
- update(v.stops[6],'15:50','이리야역 하차 후 숙소로 도보 이동.');
- update(v.stops[7],'16:05~17:40','숙소 체크인·짐 정리·휴식.');
+ update(v.stops[3],'15:26','15:23 스카이라이너 하차. 15:26 개찰 통과 목표.');
+ update(v.stops[4],'15:35','히비야선 기타센주 방향 승차 목표.');
+ update(v.stops[5],'15:50','이리야역 하차 후 숙소로 도보 이동.');
+ update(v.stops[6],'16:05~17:40','숙소 체크인·짐 정리·휴식.');
  const returnToHotel=v.stops.at(-1);
  update(returnToHotel,returnToHotel.time,'숙소로 돌아와 휴식합니다.');
  returnToHotel.details.thingsToDo=['숙소로 돌아와 쉬면서 필요한 물품과 충전 상태를 확인한다.'];
@@ -324,8 +301,8 @@ function applyCurrentTrip(bundle){
  skyliner.note='평일 공개 시간표 기준 스카이라이너 38호 14:42 출발 → 15:23 도착 후보. 역내 이동을 포함한 일정이며 지정석과 이용일 운행 확인.';
  rail.details.sources=rail.details.sources.filter(url=>!url.includes('railway-route-3'));
  rail.details.sources=[...new Set([...rail.details.sources,t2Guide])];
- out.note='08:00 택시 출발 · 11:10 대구발 TW251 · 13:20 나리타 T2 도착 · 스카이라이너 요금 입력 보류';
- out.travelBookings=[{...booking('flight-tw251-20270108',1,flightName,'1/8 11:10 → 13:20',trinity,['대구국제공항 출발 · 나리타 제2터미널 도착','이용일 운항과 위탁수하물 조건은 전자항공권 확인']),leg:2}];
+ out.note='08:20 대구공항 도착 목표 · 11:10 대구발 TW251 · 13:20 나리타 T2 도착 · 스카이라이너 요금 입력 보류';
+ out.travelBookings=[{...booking('flight-tw251-20270108',1,flightName,'1/8 11:10 → 13:20',trinity,['대구국제공항 출발 · 나리타 제2터미널 도착','이용일 운항과 위탁수하물 조건은 전자항공권 확인']),leg:1}];
  daySync(out,outbound);
  const empty='일정 없음';
  const mapCenter=pt(freeDay.variants[0].stops[0]);
@@ -336,27 +313,8 @@ function applyCurrentTrip(bundle){
  daySync(freeDay,[]);
  if(data.nightRows.length)data.nightRows[1]=[freeDay.date,empty,''];
  data.metadata.cities=data.metadata.cities.filter(city=>city!=='가마쿠라·에노시마');
- return updateReturnJourney(updateDaeguDeparture(bundle));
-}
-function updateDaeguDeparture(bundle){
- const {data,routes}=bundle,out=data.days[0],v=out.variants[0],legs=routes.days['1-main'];
- const airport=v.stops[1],previous=v.stops[0];
- const addressSource='https://juso.app/b/cce9ls874tvnr75u';
- const origin=location('t27-12-d1-wolseong-departure','월성로 132','','departure','07:10~07:20',
-  [35.82714,128.52280],'07:10 택시 승차 준비. 07:20 월성로 132 단지 앞 출발, 08:20 대구공항 도착 목표.',addressSource);
- Object.assign(origin,{area:'대구 달서구',selectionId:previous.selectionId,coordinateNote:'공개 도로명주소의 단지 대표 좌표. 탑승 위치는 기사와 확인.'});
- const name='택시 · 월성로 132 → 대구국제공항';
- const timing=50;
- const segment=connector(pt(origin),pt(airport),origin.name,airport.name,timing);
- Object.assign(segment,{mode:'taxi',line:name,geometrySource:'출발지와 공항을 잇는 개략선 · 실제 주행 경로는 호출 앱 기준',source:addressSource});
- const airportAccess=leg(origin,airport,[segment],fare('KRW',null,airport.source,'호출 시 운임 확인'),timing,name);
- airportAccess.distanceLabel='개략 연결';
- airportAccess.durationLabel='계획 약 50분 · 교통 여유 별도';
- v.stops[0]=origin;
- legs[0]=airportAccess;
- out.note='07:20 월성로 132 출발 · 08:20 대구공항 도착 목표 · 11:10 대구발 TW251';
- daySync(out,legs);
- return bundle;
+ T.publicAirportTransfers(data,routes);
+ return updateReturnJourney(bundle);
 }
 function returnBusFare(){
  return fare('KRW',returnBus.price,returnBus.timetable,'첨부 시간표의 우등 참고 운임 · 실제 결제액은 이용일 예매 화면 확인');
@@ -387,24 +345,13 @@ function updateReturnJourney(bundle){
 
  if(!stops.some(s=>s.uid==='t27-12-d12-dongdaegu-taxi')){
   const stationSource='https://info.korail.com/2007/news/info11.html';
-  const taxiSource='https://car.daegu.go.kr/metro/taxi';
   const station=location('t27-12-d12-dongdaegu-taxi','동대구역 택시 승강장','','station','11:10',
    [35.87901,128.62850],'버스 하차 후 동대구역 택시 승강장으로 이동해 11:10 전후 탑승.',stationSource,{dayOffset:1});
   station.coordinateNote='역 광장 부근 대표 위치 · 승강장은 현장 표지 확인.';
-  const origin=data.days[0].variants[0].stops[0];
-  const destination=location('t27-12-d12-wolseong-arrival',origin.name,'','arrival','11:50',
-   pt(origin),'동대구역에서 택시로 이동. 11:50 전후 도착 목표.',origin.source,{dayOffset:1});
-  destination.area=origin.area;
   const link=connector(pt(dong),pt(station),dong.name,station.name,10);
   Object.assign(link,{source:stationSource,geometrySource:'동대구터미널과 역 광장 연결 개략선 · 현장 안내 표지 참고'});
-  const taxiName='택시 · 동대구역 → '+destination.name;
-  const taxiPart=connector(pt(station),pt(destination),station.name,destination.name,40);
-  Object.assign(taxiPart,{mode:'taxi',line:taxiName,source:taxiSource,geometrySource:'승차장과 도착지를 잇는 개략선 · 실제 주행 경로는 기사·내비 안내'});
-  const taxi=leg(station,destination,[taxiPart],fare('KRW',null,taxiSource,'미터 요금 · 호출 시 확인'),40,taxiName);
-  taxi.distanceLabel='개략 연결';
-  taxi.durationLabel='계획 약 40분';
-  stops.push(station,destination);
-  legs.push(leg(dong,station,[link],noFare(),10),taxi);
+  stops.push(station);
+  legs.push(leg(dong,station,[link],noFare(),10));
  }
  Object.assign(last.travelBookings.find(b=>['airport-bus-back','airport-bus-back-0650'].includes(b.key)),{
   key:'airport-bus-back-0650',date:departure+' → '+returnBus.arrive,url:returnBus.tickets,leg:busIndex+1,

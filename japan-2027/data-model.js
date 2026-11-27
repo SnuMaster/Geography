@@ -54,6 +54,28 @@
   }
   return {data,routes};
  }
+ function publicAirportTransfers(data,routes){
+  if(data?.metadata?.id!=='tokyo-20270108-19')return false;
+  const out=data.days.find(d=>d.n===1),back=data.days.find(d=>d.n===12);
+  const outStops=out?.variants.find(v=>v.id==='main')?.stops,outLegs=routes?.days?.['1-main'];
+  const backStops=back?.variants.find(v=>v.id==='main')?.stops,backLegs=routes?.days?.['12-main'];
+  const changed=[];
+  const airport=outStops?.[1];
+  if(airport?.name==='대구국제공항'&&['departure','home'].includes(outStops[0]?.kind)&&outLegs?.[0]?.parts.some(p=>p.mode==='taxi')){
+   outStops.shift();outLegs.shift();
+   delete airport.modeFromPrevious;delete airport.transportFromPrevious;
+   out.note='08:20 대구공항 도착 목표 · 11:10 대구발 TW251';
+   out.travelBookings=(out.travelBookings||[]).flatMap(b=>b.leg===1?[]:[Number.isInteger(b.leg)?{...b,leg:b.leg-1}:b]);
+   changed.push(out);
+  }
+  if(backStops?.at(-2)?.name==='동대구역 택시 승강장'&&['arrival','home'].includes(backStops.at(-1)?.kind)&&backLegs?.at(-1)?.parts.some(p=>p.mode==='taxi')){
+   backStops.pop();backLegs.pop();changed.push(back);
+  }
+  if(!changed.length)return false;
+  prepare({...data,days:changed},routes);
+  for(const day of changed)day.schedule=day.rows=day.variants.find(v=>v.id==='main').schedule;
+  return true;
+ }
  function counts(data,routes){return {days:data.days.length,variants:data.days.reduce((n,d)=>n+d.variants.length,0),stops:data.days.flatMap(d=>d.variants).reduce((n,v)=>n+v.stops.length,0),legs:Object.values(routes.days).reduce((n,ls)=>n+ls.length,0),railParts:Object.values(routes.days).flat().filter(Boolean).flatMap(l=>l.parts).filter(p=>['rail','metro'].includes(p.mode)).length};}
- return {merge,prepare,interval,minutes,formatTime,setTime,date,geometry,counts};
+ return {merge,prepare,interval,minutes,formatTime,setTime,date,geometry,counts,publicAirportTransfers};
 });

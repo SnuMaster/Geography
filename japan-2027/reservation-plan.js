@@ -83,7 +83,7 @@
    push(ibuki);
   }
   const bebuya=anchor({
-   key:'bebuya-shibuya',group:'food',kind:'사전 예약 권장',name:'BEBU-YA 시부야점',
+   key:'bebuya-shibuya',group:'food',kind:'예약 필요',action:'reserve',name:'BEBU-YA 시부야점',
    note:'시부야 우다가와초 · 야키니쿠 무한리필 4,000엔부터 (세금 포함)',
    url:'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true',
    source:'https://shop.bsp-j.com/detail/Be_shibuya/',
