@@ -5,7 +5,7 @@ test('every named current Spacia X and Revaty piece has only the correct operato
  const parts=Object.values(b.routes.days).flat().flatMap(l=>l.parts);
  for(const p of parts.filter(p=>/스페이시아 X/.test(p.serviceName||''))){assert.match(ctx.railBadge(p),/spacia-x.svg/);assert.equal(ctx.revatyLogo(p),'');}
  for(const p of parts.filter(p=>/Revaty/.test(p.serviceName||''))){assert.match(ctx.railBadge(p),/revaty.png/);assert.equal(ctx.spaciaXLogo(p),'');}
- const leg=b.routes.days['8-main'][5],ride=ctx.railMapParts(leg).find(p=>p.mapSymbol).mapSymbol;assert.match(ctx.railBadge(ride),/spacia-x.svg/);assert.doesNotMatch(ctx.railLegBadges(leg),/revaty.png/);
+ const leg=b.routes.days['8-main'].at(-1),ride=ctx.railMapParts(leg).find(p=>p.mapSymbol).mapSymbol;assert.match(ctx.railBadge(ride),/spacia-x.svg/);assert.doesNotMatch(ctx.railLegBadges(leg),/revaty.png/);
  const plain=leg.parts.find(p=>p.line==='닛코선');assert.equal(ctx.spaciaXLogo(plain),'');assert.equal(ctx.revatyLogo(plain),'');
 });
 test('generic Tobu section identity cannot invent a train brand',()=>{

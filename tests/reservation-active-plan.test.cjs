@@ -27,9 +27,13 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.match(pass.details.join(' '),/기타센주↔도부닛코.*주젠지온센 버스.*스페이시아 X.*별도.*北千住.*1\/15/);
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
- assert.equal(by.ibuki.date,'1/16 · 18:00 입장 목표');
- assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['ibuki','bebuya-shibuya']);
- assert.match(by.ibuki.note,/18,150엔.*음료 별도/);assert.match(by.ibuki.details.join(' '),/1명.*카운터석.*72시간.*100%/);
+ assert.equal(by.ibuki,undefined);
+ assert.equal(by.sushiden.date,'1/16 · 18:00 입장 목표');
+ assert.equal(by.ginzakashiwa.date,'1/16 · 12:20 입장 목표');
+ assert.equal(by.okkon.date,'1/18 · 18:15 입장 목표');
+ assert.match(by.okkon.note,/4,000엔.*1인/);
+ assert.equal(by.goku.date,'1/19 · 19:30 입장 목표');
+ assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['bebuya-shibuya','ginzakashiwa','sushiden','okkon','goku']);
  const bebuya=by['bebuya-shibuya'];
  assert.equal(bebuya.day,10);assert.equal(bebuya.date,'1/17 · 18:40 입장 목표');assert.equal(bebuya.stop,'BEBU-YA 시부야점');
  assert.match(bebuya.note,/야키니쿠.*4,000엔/);
@@ -44,9 +48,9 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert(!by['flight-tokyo']);assert(!by['flight-7c1129-20270108']);assert(!by['airport-bus-out']);assert(!by['flight-return-tokyo']);
 });
 test('booking dates and visit time derive from the plan without editing checklist literals',()=>{
- const c=context();c.metadata={...c.metadata,returnDate:'2027-01-21'};c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='ibuki').time='18:30-20:30';
+ const c=context();c.metadata={...c.metadata,returnDate:'2027-01-21'};c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='sushiden').time='18:30-20:30';
  c.days[9].variants[0].stops.find(s=>s.planKey==='bebuya').time='19:00~20:30';
- const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='ibuki').date,/18:30/);
+ const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='sushiden').date,/18:30/);
  assert.equal(r.find(x=>x.key==='bebuya-shibuya').date,'1/17 · 19:00 입장 목표');
  assert.equal(r.find(x=>x.key==='travel-insurance').date,'출국 전 · 1/8~1/21');
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');
@@ -67,9 +71,9 @@ test('the arrival IC card and local buses are listed as on-site purchases for th
  assert.equal(rows.find(x=>x.name.includes('주젠지온센')).date,'1/15');
  const dining=rows.filter(x=>x.group==='food');
  assert(!dining.some(x=>/무기토로|요로이야|미즈마치/.test(x.name)));
- assert.equal(dining.find(x=>x.name.includes('무테키야')).date,'1/18');
- assert.equal(dining.find(x=>x.name.includes('가야시마')).date,'1/10');
- assert(dining.some(x=>x.name.includes('포니피리카')));
- assert(dining.some(x=>x.name.includes('호토 후도')&&x.note.includes('10명 이상')));
+ assert.equal(dining.find(x=>x.name.includes('왕푸징')).date,'1/18');
+ assert.equal(dining.find(x=>x.name.includes('락칸')).date,'1/10');
+ assert(dining.some(x=>x.name.includes('츠밋코')));
+ assert(!dining.some(x=>/무테키야|가야시마|포니피리카|호토 후도/.test(x.name)));
  assert.deepEqual(P.onSite({days:[]}),[]);
 });

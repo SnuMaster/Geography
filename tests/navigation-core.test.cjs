@@ -48,10 +48,10 @@ test('all source itineraries build usable plans without changing stored geometry
 
 test('active Tokyo walking segments use saved road geometry for guidance',()=>{
  const trip=require('../japan-2027/trip-update.json');
- const source=trip.routes.days['3-main'].find(l=>l.parts.every(p=>p.mode==='walk'&&p.geometryAccuracy==='mapped'&&p.source==='https://www.openstreetmap.org/copyright'));
+ const source=trip.routes.days['3-main'].find(l=>l.parts.every(p=>['walk','transfer'].includes(p.mode))&&l.parts.some(p=>p.mode==='walk'&&p.geometryAccuracy==='mapped'&&p.source.includes('routed-foot')));
  assert.ok(source);
- const plan=Nav.build(source),coords=plan.parts[0].coords,[lat,lng]=coords[Math.floor(coords.length/3)];
- assert.equal(plan.parts[0].walkPath,true);
+ const plan=Nav.build(source),walkPath=plan.parts.find(part=>part.walkPath),coords=walkPath.coords,[lat,lng]=coords[Math.floor(coords.length/3)];
+ assert.equal(walkPath.walkPath,true);
  assert.equal(Nav.guide(plan,{lat,lng,accuracy:6,timestamp:now},null,now).state,'guiding');
  const foot=walk([[0,0],[100,0],[100,100]],{geometrySource:'FOSSGIS',geometryAccuracy:'mapped',source:'https://routing.openstreetmap.de/routed-foot/route/v1/driving/example'});
  assert.equal(Nav.build(leg([foot])).cues.length,1);

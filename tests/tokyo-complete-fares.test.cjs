@@ -15,7 +15,7 @@ test('independent operators retain separate IC components',()=>{
  assert.deepEqual(l.fare.breakdown.map(r=>r.operator),['TokyoMetro','JR-East']);
 });
 test('Spacia X return includes one whole-OD base fare and one actual express ticket',()=>{
- const l=bundle.routes.days['8-main'][5],t=l.fare.breakdown.find(r=>r.operator==='TobuNikko');
+ const l=bundle.routes.days['8-main'][6],t=l.fare.breakdown.find(r=>r.operator==='TobuNikko');
  assert.equal(l.fare.icYen,4091);assert.equal(t.baseIcYen,1393);assert.equal(t.reservedSurchargeYen,2520);assert.equal(t.icYen,3913);assert.equal(t.travelDate,'2027-01-15');assert.equal(t.season,'normal');assert(t.ticketRequired);assert.match(t.ticketLabel,/스페이시아 X 프리미엄/);
  assert(l.parts.some(p=>/Spacia.?X|스페이시아.?X|スペーシア.?X/i.test(p.serviceName||'')));
  const out=bundle.routes.days['8-main'][0],cockpit=out.fare.breakdown.find(r=>r.operator==='TobuNikko');
@@ -23,11 +23,11 @@ test('Spacia X return includes one whole-OD base fare and one actual express tic
 });
 test('bus fares are separate from the Japanese rail-only subtotal and carry stop-level evidence',()=>{
  for(const key of ['5-main','8-main'])for(const l of bundle.routes.days[key].filter(l=>l.parts.some(p=>p.mode==='bus'))){assert(l.fare.breakdown.every(r=>r.mode==='bus'&&r.fromJa&&r.toJa&&r.checkedAt&&r.sources.length));assert.equal(F.summarize([l],{scope:'japan-rail'}).ic,0);assert(l.fare.icYen>0);}
- for(const [key,i,price] of [['5-main',2,570],['5-main',3,280],['5-main',5,370],['8-main',1,1250],['8-main',4,1250]])assert.equal(bundle.routes.days[key][i].fare.icYen,price);
+ for(const [key,i,price] of [['5-main',2,570],['5-main',4,280],['5-main',5,370],['8-main',1,1250],['8-main',5,1250]])assert.equal(bundle.routes.days[key][i].fare.icYen,price);
 });
 test('Yurikamome amounts follow their exact station pairs',()=>{
  assert.equal(bundle.routes.days['7-main'][3].fare.icYen,325);
- assert.equal(bundle.routes.days['7-main'][6].fare.breakdown.find(r=>r.operator==='Yurikamome').icYen,325);
+ assert.equal(bundle.routes.days['7-main'].at(-1).fare.breakdown.find(r=>r.operator==='Yurikamome').icYen,325);
 });
 test('applying evidence again is idempotent and does not fill the Skyliner or overwrite the selected flights',()=>{
  const copy=structuredClone(bundle),before=JSON.stringify(copy.routes),r=complete.apply(copy);assert.deepEqual(r.missing,[]);assert.deepEqual(r.updated,[]);assert.equal(JSON.stringify(copy.routes),before);

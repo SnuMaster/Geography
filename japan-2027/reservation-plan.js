@@ -103,6 +103,20 @@
    bebuya.details.unshift('기존 예약이 있으면 매장 예약 화면에서 새 일정과 날짜가 일치하는지 확인하세요.');
    push(bebuya);
   }
+  const diningBookings=[
+   ['ginzakashiwa','https://ginzakashiwa.com/lunch/','토·일·공휴일 점심 한정 토리마부시. 1인 좌석과 예약 가능 여부를 확인하세요.'],
+   ['sushiden','https://tabelog.com/tokyo/A1301/A130101/13291473/','스시 오마카세. 1인 카운터석과 선택한 코스의 총액·취소 조건을 확인하세요.'],
+   ['okkon','https://www.tablecheck.com/ja/shops/okkon/reserve','베이쿼터 5층 · 흑모와규 스키야키 정식 4,000엔(세금 포함) · 1인 선택 가능.'],
+   ['goku','https://tabelog.com/tokyo/A1311/A131101/13050728/','닭꼬치와 하이볼. 1인 좌석 예약이 가능한지 확인하고 20:10까지 식사를 마쳐요.']
+  ];
+  for(const [key,url,note] of diningBookings){
+   const stop=find(key)?.stop;
+   if(!stop)continue;
+   const item=anchor({key,group:'food',kind:'사전 예약 권장',action:'reserve',name:stop.name,note,url,source:stop.source,details:[stop.address]},key);
+   item.date=item.date.split(/[~-]/)[0]+' 입장 목표';
+   item.confirmDate=item.date;
+   push(item);
+  }
   const skytree=anchor(copy('skytree'),'skytree');
   if(skytree){
    skytree.date=skytree.date.split(/[~-]/)[0]+' 입장 목표';
@@ -196,6 +210,12 @@
   dining('wako','와코 야에스 지하상가점','좌석 예약을 받지 않아요. 현장에서 접수해요.','https://wako-group.co.jp/shop/detai/shop_3064/');
   dining('coco','코코이찌방야 선샤인시티점','알파 지하 1층에서 현장 주문해요.','https://sunshinecity.jp/restaurant/restaurant_list/entry-549.html');
   dining('mutekiya','멘소보 무테키야','이케부쿠로 남동쪽 라멘점에서 현장 주문해요.','https://www.mutekiya.com/en/about/index.html');
+  dining('rakkan','락칸 시모키타자와점','미칸 시모키타 D202. 소금라멘은 메뉴에서 시오(塩) 또는 신주(真珠)를 확인하세요.','https://mikanshimokita.jp/areaguide/detail/?cd=000100');
+  dining('oyama','니쿠노오야마 우에노점','멘치카츠는 매장 앞에서 주문해요.','https://tabelog.com/tokyo/A1311/A131101/13016728/');
+  dining('kukuru','쿠쿠루 오다이바점','덱스 도쿄 비치 4층에서 타코야키를 현장 주문해요.','https://dotonbori-kukuru.com/shop/');
+  dining('tsumikko','게곤폭포 츠밋코','엘리베이터 입구 앞 간식점. 겨울에는 당일 영업을 확인하세요.','https://www.kegon.jp/foods_taxonomy/category_meal/');
+  dining('wangfujing','왕푸징 본점','차이나타운 본점에서 구운 샤오롱바오를 현장 주문해요.','https://www.wangfujing.co.jp/f/shoplist');
+  dining('edosei','에도세이 본점','본점에서 부타만을 포장해요.','https://edosei.co.jp/service/store-guide/');
   return entries;
  }
  return {build,onSite};

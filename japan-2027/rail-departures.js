@@ -62,10 +62,11 @@ const RailDepartures = (() => {
   const saved=routeFares.get(key);
   if(saved)return saved;
   const opposite=profiles[profile.reverseKey];
-  if(!opposite||!profile.lineId?.startsWith('TokyoMetro.')||opposite.lineId!==profile.lineId||
+  const symmetricFare=profile.lineId?.startsWith('TokyoMetro.')||profile.lineId==='Minatomirai.Minatomirai';
+  if(!opposite||!symmetricFare||opposite.lineId!==profile.lineId||
      profile.throughParts||opposite.throughParts||profile.from!==opposite.to||profile.to!==opposite.from)return null;
   const fare=routeFares.get(profile.reverseKey);
-  // Tokyo Metro single-line adult IC fares use the same distance scale in both directions.
+  // These operators use the same single-line adult IC fare in both directions.
   return fare?.rows.length===1?fare:null;
  }
  function supported(day,leg,part){return Number(day)>=1&&Number(day)<=22&&keysFor(leg,part).length>0;}

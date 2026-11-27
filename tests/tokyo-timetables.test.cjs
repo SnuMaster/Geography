@@ -34,9 +34,9 @@ test('all active train cards and reverse directions have measured distances and 
  }
 });
 test('Haneda rail cards use the Yamanote outer loop and the Monorail terminal 3 stop',()=>{
- const leg=bundle.routes.days['12-main'][7];
- const [metro,jr,mono]=ctx.api.keysFor(leg);
- assert.equal(metro,'metro-iriya-ueno');
+ const legs=bundle.routes.days['12-main'];
+ const [jr,mono]=ctx.api.keysFor(legs.at(-1));
+ assert.deepEqual(Array.from(ctx.api.keysFor(legs.find(l=>l.to.includes('야키토리 고쿠')))),['metro-iriya-ueno']);
  assert.equal(jr,'yamanote-ueno-hamamatsucho-outer');
  assert.equal(mono,'monorail-hamamatsucho-haneda-t3');
  for(const [key,counts] of [[jr,[259,254]],[mono,[215,203]]]){

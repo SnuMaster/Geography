@@ -356,6 +356,70 @@
         "Weekday": 30,
         "SaturdayHoliday": 30
       }
+    },
+    {
+      "key": "tokyo27-50ce030891dbfb",
+      "from": "히비야",
+      "to": "이리야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 284,
+        "SaturdayHoliday": 207
+      }
+    },
+    {
+      "key": "tokyo27-f573696ed05477",
+      "from": "요코하마",
+      "to": "모토마치·주카가이",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 297,
+        "SaturdayHoliday": 272
+      }
+    },
+    {
+      "key": "tokyo27-67468cf09a7e12",
+      "from": "요코하마",
+      "to": "우에노",
+      "throughParts": [
+        {
+          "lineId": "JR-East.Tokaido",
+          "from": "요코하마",
+          "to": "도쿄",
+          "line": "도카이도 선"
+        },
+        {
+          "lineId": "JR-East.Takasaki",
+          "from": "도쿄",
+          "to": "우에노",
+          "line": "다카사키 선"
+        }
+      ],
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 53,
+        "SaturdayHoliday": 51
+      }
+    },
+    {
+      "key": "tokyo27-ad36a18b1b54c1",
+      "from": "이리야",
+      "to": "히비야",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 281,
+        "SaturdayHoliday": 206
+      }
+    },
+    {
+      "key": "tokyo27-a23b6e046b00a0",
+      "from": "모토마치·주카가이",
+      "to": "요코하마",
+      "sourceClass": "public-reference",
+      "counts": {
+        "Weekday": 298,
+        "SaturdayHoliday": 272
+      }
     }
   ],
   "unavailable": []

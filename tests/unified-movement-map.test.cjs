@@ -32,15 +32,15 @@ test('every daily and overview movement has one complete hit target and all stro
   assert.equal(JSON.stringify(leg),snapshot);
  }
 });
-test('the Haneda journey includes all three boardings in one selection',()=>{
- const {ctx}=context(),leg=bundle.routes.days['12-main'][7],plan=ctx.movementMapPlan(leg);
- assert(plan.parts.some(p=>p.lineId==='TokyoMonorail.HanedaAirport'));assert.equal(plan.boardings,3);
+test('the Haneda journey includes both boardings after dinner at Ueno',()=>{
+ const {ctx}=context(),leg=bundle.routes.days['12-main'].at(-1),plan=ctx.movementMapPlan(leg);
+ assert(plan.parts.some(p=>p.lineId==='TokyoMonorail.HanedaAirport'));assert.equal(plan.boardings,2);
  assert.equal(leg.parts.filter(p=>p.mode==='walk'&&p.from==='JR 하마마쓰초'&&p.durationMinutes>0).length,1);
- const html=ctx.railHoverHtml(leg,plan.hover);assert.match(html,/환승 2회/);assert.doesNotMatch(html,/직통 열차 · 환승 없이 계속 탑승/);
- const tobu=bundle.routes.days['8-main'][5];assert.equal(ctx.movementMapPlan(tobu).boardings,2,'direct Spacia X followed by Metro uses two boardings');
+ const html=ctx.railHoverHtml(leg,plan.hover);assert.match(html,/환승 1회/);assert.doesNotMatch(html,/직통 열차 · 환승 없이 계속 탑승/);
+ const tobu=bundle.routes.days['8-main'].at(-1);assert.equal(ctx.movementMapPlan(tobu).boardings,2,'direct Spacia X followed by Metro uses two boardings');
 });
 test('walking, rail and schematic segments keep their own colors and dash patterns',()=>{
- const {ctx}=context(),leg=structuredClone(bundle.routes.days['12-main'][7]),p=leg.parts.find(p=>p.mode==='rail');p.geometryAccuracy='schematic';
+ const {ctx}=context(),leg=structuredClone(bundle.routes.days['12-main'].at(-1)),p=leg.parts.find(p=>p.mode==='rail');p.geometryAccuracy='schematic';
  const plan=ctx.movementMapPlan(leg);ctx.drawMapMovement(leg,{symbols:false});
  for(const [i,part]of plan.parts.entries()){
   const visual=ctx.routeVisuals.filter(v=>v.role==='movement-line')[i],style=ctx.routeLineStyles(part).line;
