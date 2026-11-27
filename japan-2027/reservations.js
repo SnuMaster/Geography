@@ -64,7 +64,8 @@
  function isComplete(item){
   const r=records[item.key]||{};
   if(definitions[item.key])return r.status===(item.key==='zutomayo'?'티켓 확보':'예약완료');
-  return r.complete===true&&r.orderSelection===item.orderSelection&&(!item.confirmDate||r.confirmDate===item.confirmDate);
+  if(r.orderSelection===item.orderSelection&&(!item.confirmDate||r.confirmDate===item.confirmDate)&&typeof r.complete==='boolean')return r.complete;
+  return item.diningStatus==='confirmed';
  }
  function checklistContext(){return checklistConfig?.context?.()||{days:[],preferences:{}};}
  function itemVariant(item,context){const day=context.days.find(d=>d.n===item.day);return item.variant||(day?JourneyState.chosen(day,context.preferences):'main');}
@@ -84,6 +85,7 @@
  function itemTiming(item,context){const day=context.days.find(d=>d.n===item.day),variant=day?.variants.find(v=>v.id===itemVariant(item,context));return variant?.stops.find(s=>s.reservationKey===item.key)?.reservationTiming||{};}
  function milestone(item){return item.milestones?.find(([at])=>Date.parse(at)>=Date.now())?.[1]||'';}
  function bookingKind(item){
+  if(item.diningStatus)return isComplete(item)?'예약 완료':item.diningStatus==='confirmed'?'예약 확인 필요':item.kind;
   if(!item.orderSelection)return item.kind;
   if(isComplete(item))return '발권 확인 완료';
   return Date.now()>=Date.parse(item.milestones?.[0]?.[0])?'발권 확인 필요':item.kind;
@@ -132,7 +134,7 @@
   const progress=document.getElementById('bookingChecklistProgress');progress.max=Math.max(model.active.length,1);progress.value=model.done;
   document.getElementById('bookingStorageNote').textContent=storageAvailable?'이 브라우저에 자동 저장 · 실제 예약은 공식 링크에서':'현재 화면에만 반영됨 · 브라우저 저장 실패';
   dialog.querySelectorAll('[data-booking-filter]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.bookingFilter===checklistFilter)));
-  const nextItems=active.filter(item=>!isComplete(item)&&(item.orderSelection||['reserve','purchase'].includes(item.action)));
+  const nextItems=active.filter(item=>!isComplete(item)&&(item.orderSelection||['reserve','purchase','confirm'].includes(item.action)));
   nextItems.sort((a,b)=>(Date.parse(a.milestones?.[0]?.[0])||Infinity)-(Date.parse(b.milestones?.[0]?.[0])||Infinity));
   const next=nextItems.length?`<section class="booking-group" id="bookingNextActions"><h3>다음 할 일</h3><ul class="booking-list">${nextItems.map(item=>checklistRow(item,model.context)).join('')}</ul></section>`:'';
   const groups=Object.entries(checklistGroups).map(([key,title])=>{
@@ -203,5 +205,5 @@
   const previous=structuredClone(records[key]||{}),next={...previous,...values,ticket:{...(previous.ticket||{}),...ticket},updatedAt:Date.now()};records[key]=next;save();if(!storageAvailable){records[key]=previous;return {ok:false,error:'기기 저장에 실패했어요. 다시 저장하세요.'};}renderChecklist();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key,field:'ticket'}}));return {ok:true};
  }
  function confirmTime(key,value){if(!definitions[key]||!ReservationCore.parseTime(value))return false;const r=records[key]??={status:'미신청',time:''};r.time=value;r.updatedAt=Date.now();save();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{key,field:'time'}}));return storageAvailable;}
- window.ReservationUI={html,photoOwners,reloadRecords:()=>{try{records=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(_){records={};}renderChecklist();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{field:'sync'}}));},getRecords,getAssistantBookings:()=>checklistModel().active.map(item=>({key:item.key,day:item.day,name:item.name,status:records[item.key]?.status||(isComplete(item)?'사용자 예약 확인':item.orderSelection||item.action?bookingKind(item):'미확인'),time:records[item.key]?.time||null,confirmed:isComplete(item)})),initChecklist,closeChecklist,renderChecklist,confirmTime,confirmFields,definitions:Object.freeze(Object.fromEntries(Object.entries(definitions).map(([key,d])=>[key,{day:d.day}]))),checklistSummary:()=>{const m=checklistModel();return {total:m.active.length,done:m.done,alternatives:m.alternatives.length};}};
+ window.ReservationUI={html,photoOwners,reloadRecords:()=>{try{records=JSON.parse(localStorage.getItem(STORE)||'{}');}catch(_){records={};}renderChecklist();window.dispatchEvent(new CustomEvent('routebook:reservation-change',{detail:{field:'sync'}}));},getRecords,getAssistantBookings:()=>checklistModel().active.map(item=>({key:item.key,day:item.day,name:item.name,status:records[item.key]?.status||(isComplete(item)?'사용자 예약 확인':item.orderSelection||item.action||item.diningStatus?bookingKind(item):'미확인'),time:records[item.key]?.time||item.diningArrival||null,confirmed:isComplete(item)})),initChecklist,closeChecklist,renderChecklist,confirmTime,confirmFields,definitions:Object.freeze(Object.fromEntries(Object.entries(definitions).map(([key,d])=>[key,{day:d.day}]))),checklistSummary:()=>{const m=checklistModel();return {total:m.active.length,done:m.done,alternatives:m.alternatives.length};}};
 })();

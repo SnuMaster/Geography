@@ -28,14 +28,22 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
  assert.equal(by.ibuki,undefined);
- assert.equal(by.sushiden.date,'1/16 · 18:00 입장 목표');
- assert.equal(by.ginzakashiwa.date,'1/16 · 12:20 입장 목표');
- assert.equal(by.okkon.date,'1/18 · 18:15 입장 목표');
- assert.match(by.okkon.note,/4,000엔.*1인/);
+ const confirmed={luvfish:['1/11 · 12:45','핫페퍼'],ginzakashiwa:['1/16 · 12:30','이큐'],sushiden:['1/16 · 18:00','이큐'],okkon:['1/18 · 18:30','이큐']};
+ for(const [key,[start,provider]] of Object.entries(confirmed)){
+  assert.equal(by[key].date,`${start} · 1인 · ${provider}`);
+  assert.equal(by[key].diningStatus,'confirmed');
+  assert.equal(by[key].action,undefined);
+ }
+ assert.equal(by.kurofunetei.date,'1/13 · 11:30 · 1인 · 핫페퍼');
+ assert.equal(by.kurofunetei.diningStatus,'requested');
+ assert.equal(by.kurofunetei.action,'confirm');
+ assert.equal(by.matsumotoro.date,'1/11 · 18:15 입장 목표');
+ assert.match(by.matsumotoro.note,/12\/11부터/);
  assert.equal(by.goku.date,'1/19 · 19:30 입장 목표');
- assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['bebuya-shibuya','ginzakashiwa','sushiden','okkon','goku']);
+ assert.equal(by.goku.action,undefined);
+ assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['bebuya-shibuya','luvfish','matsumotoro','kurofunetei','ginzakashiwa','sushiden','okkon','goku']);
  const bebuya=by['bebuya-shibuya'];
- assert.equal(bebuya.day,10);assert.equal(bebuya.date,'1/17 · 18:40 입장 목표');assert.equal(bebuya.stop,'BEBU-YA 시부야점');
+ assert.equal(bebuya.day,10);assert.equal(bebuya.date,'1/17 · 18:45 입장 목표');assert.equal(bebuya.stop,'BEBU-YA 시부야점');
  assert.match(bebuya.note,/야키니쿠.*4,000엔/);
  assert.equal(bebuya.url,'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true');
  assert.match(bebuya.details.join(' '),/SHIBUYA 5층.*성인 1명.*90분/);
@@ -51,6 +59,7 @@ test('booking dates and visit time derive from the plan without editing checklis
  const c=context();c.metadata={...c.metadata,returnDate:'2027-01-21'};c.days[4].date='01/13';c.days[7].date='01/16';c.days[8].variants[0].stops.find(s=>s.planKey==='sushiden').time='18:30-20:30';
  c.days[9].variants[0].stops.find(s=>s.planKey==='bebuya').time='19:00~20:30';
  const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='sushiden').date,/18:30/);
+ assert.equal(r.find(x=>x.key==='sushiden').diningStatus,undefined);
  assert.equal(r.find(x=>x.key==='bebuya-shibuya').date,'1/17 · 19:00 입장 목표');
  assert.equal(r.find(x=>x.key==='travel-insurance').date,'출국 전 · 1/8~1/21');
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');

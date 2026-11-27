@@ -104,17 +104,35 @@
    push(bebuya);
   }
   const diningBookings=[
-   ['ginzakashiwa','https://ginzakashiwa.com/lunch/','토·일·공휴일 점심 한정 토리마부시. 1인 좌석과 예약 가능 여부를 확인하세요.'],
-   ['sushiden','https://tabelog.com/tokyo/A1301/A130101/13291473/','스시 오마카세. 1인 카운터석과 선택한 코스의 총액·취소 조건을 확인하세요.'],
-   ['okkon','https://www.tablecheck.com/ja/shops/okkon/reserve','베이쿼터 5층 · 흑모와규 스키야키 정식 4,000엔(세금 포함) · 1인 선택 가능.'],
-   ['goku','https://tabelog.com/tokyo/A1311/A131101/13050728/','닭꼬치와 하이볼. 1인 좌석 예약이 가능한지 확인하고 20:10까지 식사를 마쳐요.']
+   ['luvfish','https://www.hotpepper.jp/strJ003560007/','성인의 날 점심 · 카이센동은 현장에서 주문.'],
+   ['matsumotoro','https://www.tablecheck.com/en/shops/matsumotoro-grill/reserve','12/11부터 공휴일 저녁 1인 실내 좌석 조회 · 1층 그릴.'],
+   ['kurofunetei','https://www.hotpepper.jp/strJ000012146/course_cnod41/','핫페퍼에서 매장 승인 알림을 확인하세요.'],
+   ['ginzakashiwa','https://restaurant.ikyu.com/109864','토·일·공휴일 점심 한정 토리마부시.'],
+   ['sushiden','https://restaurant.ikyu.com/123384','GIRAC GINZA 11층 · 저녁 오마카세.'],
+   ['okkon','https://restaurant.ikyu.com/124794','요코하마 베이쿼터 5층 · 와규 스키야키 정식.'],
+   ['goku','https://tabelog.com/kr/tokyo/A1311/A131101/13050728/','공항 이동일이라 선택 예약 · 좌석만 잡고 20:10까지 식사를 마쳐요.']
   ];
   for(const [key,url,note] of diningBookings){
-   const stop=find(key)?.stop;
-   if(!stop)continue;
+   const match=find(key);
+   if(!match)continue;
+   const {stop,day}=match;
    const item=anchor({key,group:'food',kind:'사전 예약 권장',action:'reserve',name:stop.name,note,url,source:stop.source,details:[stop.address]},key);
-   item.date=item.date.split(/[~-]/)[0]+' 입장 목표';
+   const start=item.date.split(/[~-]/,1)[0];
+   const booking=stop.diningBooking;
+   const tripYear=(context.metadata?.start||'2027-01-08').slice(0,4);
+   const arrival=tripYear+'-'+day.date.replace('/','-')+'T'+start.slice(-5);
+   item.date=start+' 입장 목표';
    item.confirmDate=item.date;
+   if(booking?.arrival===arrival){
+    item.diningStatus=booking.status;
+    item.diningArrival=booking.arrival;
+    item.date=start+' · '+booking.partySize+'인 · '+booking.provider;
+    item.confirmDate=start;
+    item.kind=booking.status==='confirmed'?'예약 완료':'예약 요청 · 승인 대기';
+    item.action=booking.status==='confirmed'?undefined:'confirm';
+    item.details.push(stop.details.reservationNote);
+   }
+   if(key==='goku'){item.kind='선택 예약';item.action=undefined;}
    push(item);
   }
   const skytree=anchor(copy('skytree'),'skytree');

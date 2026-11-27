@@ -119,7 +119,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const item=document.querySelector('[data-booking-item="fuji-excursion"]'),date=item?.querySelector('.booking-date')?.textContent||'';
    if(!date.includes('1/12'))throw Error('Wrong visible Fuji date '+date);
    const next=[...document.querySelectorAll('#bookingNextActions [data-booking-item]')].map(el=>el.dataset.bookingItem);
-   if(next.join(',')!=='fuji-excursion,nikko-express,nikko-maas-chuzenji-kegon,ginzakashiwa,sushiden,bebuya-shibuya,okkon,goku')throw Error('Booking actions out of order: '+next);
+   if(next.join(',')!=='fuji-excursion,nikko-express,matsumotoro,kurofunetei,nikko-maas-chuzenji-kegon,bebuya-shibuya')throw Error('Booking actions out of order: '+next);
    const originalNow=Date.now;
    try{Date.now=()=>Date.parse('2026-12-12T10:01:00+09:00');ReservationUI.renderChecklist();
     if(!document.querySelector('[data-booking-item="fuji-excursion"] .booking-kind').textContent.includes('발권 확인 필요'))throw Error('Opening did not promote the Fuji request to ticket check');
@@ -159,7 +159,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    dining.querySelector('summary').click();
    if(!dining.open||!dining.textContent.includes('왕푸징')||dining.textContent.includes('무기토로')||dining.querySelector('input'))throw Error('Wrong walk-in dining guide');
    const bebuya=document.querySelector('[data-booking-item="bebuya-shibuya"]');
-   if(!bebuya?.textContent.includes('1/17 · 18:40 입장 목표')||!bebuya.querySelector('a[href*="booking.resty.jp"]')||!bebuya.querySelector('[data-booking-jump]')||bebuya.querySelector('[data-booking-complete]').checked)throw Error('Wrong BEBU-YA booking');
+   if(!bebuya?.textContent.includes('1/17 · 18:45 입장 목표')||!bebuya.querySelector('a[href*="booking.resty.jp"]')||!bebuya.querySelector('[data-booking-jump]')||bebuya.querySelector('[data-booking-complete]').checked)throw Error('Wrong BEBU-YA booking');
    if(document.querySelector('[data-booking-item="benoit-aoyama"]'))throw Error('The incorrect restaurant remained in the checklist');
    bebuya.querySelector('[data-booking-complete]').click();
    if(!ReservationUI.getAssistantBookings().find(x=>x.key==='bebuya-shibuya')?.confirmed)throw Error('BEBU-YA checklist completion did not save');
@@ -176,14 +176,18 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261127-tokyo-yokohama-meals-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-dining-bookings-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
    if(bookings.some(x=>/hakone|ishikawa/.test(x.key)))throw Error('Retired booking remains');
    const sushi=document.querySelector('[data-booking-item="sushiden"]'),okkon=document.querySelector('[data-booking-item="okkon"]');
    if(!sushi?.querySelector('.booking-date')?.textContent.includes('1/16 · 18:00')||document.querySelector('[data-booking-item="ibuki"]'))throw Error('Wrong Ginza dinner reservation');
-   if(!okkon?.textContent.includes('1/18 · 18:15')||!okkon.querySelector('a[href*="tablecheck.com"]'))throw Error('Missing Yokohama dinner reservation');
+   if(!okkon?.textContent.includes('1/18 · 18:30')||!okkon.querySelector('a[href*="ikyu.com"]'))throw Error('Missing Yokohama dinner reservation');
+   for(const key of ['luvfish','ginzakashiwa','sushiden','okkon']){
+    if(!by[key]?.confirmed||!document.querySelector('[data-booking-complete="'+key+'"]').checked)throw Error('Confirmed dining reservation missing: '+key);
+   }
+   if(by.kurofunetei?.confirmed||by.kurofunetei?.status!=='예약 요청 · 승인 대기'||by.kurofunetei?.time!=='2027-01-13T11:30')throw Error('Dining request state is wrong');
    const skytree=document.querySelector('[data-booking-item="skytree"]');
    if(skytree||document.querySelector('[data-booking-item="zutomayo"]'))throw Error('Wrong Jan 18 bookings');
    for(const [key,expected] of [['flight-tw251-20270108','TW251'],['flight-mm809-20270120','MM809'],['airport-bus-back-0650','06:50']]){

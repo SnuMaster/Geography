@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and three excursions',()=>{
- assert.equal(b.revision,'20261127-tokyo-yokohama-meals-1');
+ assert.equal(b.revision,'20261127-tokyo-dining-bookings-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8,11].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코','요코하마']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -63,6 +63,13 @@ test('every requested restaurant has its own dated stop, address and menu',()=>{
   for(const s of dining){
    assert(s.jp&&s.address&&s.details.menu&&s.details.mealSlot,s.name);
    assert.equal(b.data.food[s.foodKey].name,s.name);
+   if(s.diningBooking){
+    const v=d.variants[0],i=v.stops.indexOf(s),legs=b.routes.days[d.n+'-main'];
+    assert.equal(s.diningBooking.arrival,T.date(d.n)+'T'+s.start);
+    assert.equal(s.diningBooking.partySize,1);
+    assert(T.minutes(s.start)-T.minutes(v.stops[i-1].end)>=legs[i-1].durationMinutes,s.name);
+    assert(T.minutes(v.stops[i+1].start)-T.minutes(s.end)>=legs[i].durationMinutes,s.name);
+   }
   }
  }
  assert(b.data.days[7].meals.includes('저녁 자유식 · 당일 결정'));
@@ -76,13 +83,13 @@ test('BEBU-YA dinner follows Center Gai and connects to the Iriya hotel',()=>{
  const [centerGai,dinner,hotel]=day.variants[0].stops.slice(-3);
  const [toDinner,toHotel]=b.routes.days['10-main'].slice(-2);
  assert.deepEqual([centerGai.planKey,dinner.planKey,hotel.planKey],['shibuya','bebuya','hotel']);
- assert.equal(dinner.time,'18:40~20:10');
+ assert.equal(dinner.time,'18:45~20:15');
  assert.equal(dinner.details.costMin,4000);
  assert(day.meals.includes(dinner.name));
  assert.equal(toDinner.parts[0].geometryAccuracy,'mapped');
  assert.equal(toDinner.durationMinutes,6);
  assert.deepEqual(toHotel.parts[0].coords.at(-1),toHotel.parts[1].coords[0]);
- assert.equal(hotel.start,'21:10');
+ assert.equal(hotel.start,'21:15');
  assert.equal(b.data.nightRows.find(row=>row[0]===day.date)[2],hotel.time);
 });
 test('airport and Skyliner payments retain the correct local dates and currencies',()=>{
