@@ -31,7 +31,7 @@ function packFixture(){
  const {revision}=require('../japan-2027/offline-manifest.json'),base='https://example.test/japan-2027/',memory=new Map(),files=new Map(),storage=new Map(),nodes=new Map(),events=[];
  const entries=[{path:'index.html',kind:'shell',text:'<!doctype html><title>offline</title>'},{path:'data.json',kind:'json',text:'{"days":[1,22]}'}].map(f=>({...f,bytes:Buffer.byteLength(f.text),sha256:crypto.createHash('sha256').update(f.text).digest('hex')}));
  const manifest={revision,totalBytes:entries.reduce((n,f)=>n+f.bytes,0),files:entries};let fail=false,corrupt=false,finalized=0;
- const node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',disabled:false,hidden:false,value:0});return nodes.get(id);};
+ const node=id=>{if(!nodes.has(id))nodes.set(id,{textContent:'',disabled:false,hidden:false,value:0,setAttribute(name,value){this[name]=value;}});return nodes.get(id);};
  const cache=name=>{if(!files.has(name))files.set(name,new Map());const values=files.get(name);return {match:async id=>values.get(id)?.clone(),put:async(id,r)=>values.set(id,r.clone())};};
  const ctx={window:{frameElement:false,dispatchEvent:e=>events.push(e),addEventListener(){}},document:{baseURI:base,querySelector:node,addEventListener(){}},location:new URL(base),URL,Response,Request,DOMException,AbortController,Event,Date,Map,Set,JSON,Uint8Array,crypto:crypto.webcrypto,setTimeout,clearTimeout,
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},caches:{open:async n=>cache(n)},navigator:{serviceWorker:{register:async()=>({active:{scriptURL:base+'sw.js?v='+revision},update:async()=>{}}),ready:Promise.resolve()}},

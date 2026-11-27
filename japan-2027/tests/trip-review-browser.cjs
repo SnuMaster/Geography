@@ -10,6 +10,22 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
   await page.waitForFunction(()=>window.__routebook.state.routeData.days['13-main'][0].parts[0].flightTrack?.flightNumber==='MM809');
+  assert.equal(await page.locator('#shellMore,#noticeBtn,#ccFilters').count(),0);
+  const settings=page.locator('#shellTools #settingsBtn'),offlineSave=page.locator('#shellTools #offlinePackBtn');
+  for(const button of [settings,offlineSave]){
+   assert.equal(await button.evaluate(el=>{
+    const r=el.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+    return r.width>=44&&r.height>=44&&r.right<=innerWidth&&el.contains(hit);
+   }),true);
+  }
+  await settings.click();
+  assert.equal(await page.locator('#mapSettings').isVisible(),true);
+  await page.keyboard.press('Escape');
+  assert.equal(await settings.evaluate(el=>el===document.activeElement),true);
+  await offlineSave.click();
+  assert.equal(await page.locator('#offlinePackDialog').isVisible(),true);
+  await page.locator('#offlinePackClose').click();
+  assert.equal(await offlineSave.locator('svg').count(),1);
   const sidebar=page.locator('#ccSidebarToggle');
   const sidebarWasClosed=await sidebar.getAttribute('aria-expanded')==='false';
   if(sidebarWasClosed)await sidebar.click();
@@ -49,6 +65,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   assert.equal(await cruiseStation.isVisible(),false);
   await cruiseTrain.locator('summary.itinerary-train-summary').click();
   assert.equal(await cruiseStation.isVisible(),true);
+  assert.equal(await cruiseTrain.getByText('자료 정보',{exact:true}).count(),0);
+  assert.ok(await cruiseTrain.locator('.departure-timetable > summary').count());
   assert.equal(await cruiseTrain.getByRole('link',{name:/Google 지도 대중교통/}).isVisible(),true);
   assert.equal(await page.locator('#itineraryScroll').evaluate(el=>el.scrollWidth<=el.clientWidth+1),true);
   await cruiseTrain.locator('summary.itinerary-train-summary').click();

@@ -584,7 +584,6 @@ function bindEvents(){
   const index=getStops().findIndex(stop=>target.stopKey?stop.reservationKey===target.stopKey:target.stop&&stop.name.includes(target.stop));
   if(index>=0)selectStop(index,false,true,{source:'user'});
  });
- $('#noticeBtn').addEventListener('click',()=>RouteUI.showDialog($('#noticeDialog')));
  $('#closeNotices').addEventListener('click',()=>{$('#noticeDialog').close();RouteUI.release($('#noticeDialog'));});
  document.addEventListener('click',event=>{if(event.target.closest('[data-show-notices]'))RouteUI.showDialog($('#noticeDialog'));});
  window.addEventListener('routebook:online',()=>{refreshTrip();announce('연결 복구 · 새 일정 자료를 확인 중입니다.');});
@@ -632,10 +631,8 @@ function focusRideProfile(key,station,selection={}){
 }
 
 function renderNotices(){
- const items=RailDepartures.noticeItems(state.data.days,state.routeData),button=$('#noticeBtn'),list=$('#noticeList');
- if(!button||!list)return;
- $('#noticeCount').textContent=items.length?String(items.length):'';
- button.setAttribute('aria-label',items.length?`공지사항 · 시간표 확인 ${items.length}건`:'공지사항');
+ const items=RailDepartures.noticeItems(state.data.days,state.routeData),list=$('#noticeList');
+ if(!list)return;
  list.innerHTML=`<p class="notice-note">열차 시각은 시간표 기준이며 실시간 지연은 반영되지 않아요. 교통 요금은 2026년 10월 검색 기준으로 여행 전 확인해 주세요.</p>${items.length?`<h3>시간표 확인 필요</h3>${items.map(item=>`<article class="notice-item"><strong>${esc(item.line)} · ${esc(item.from)} → ${esc(item.to)}</strong><p>여행일 ${esc(item.dates.map(date=>date.slice(5).replace('-','/')).join(', '))} · ${item.validUntil?`기존 시간표 ${esc(item.validUntil)}까지`:'시간표 적용 범위 밖'}</p><p>새 시간표 확인 전에는 열차 시각과 탑승 선택을 표시하지 않아요.</p>${item.url?`<a href="${esc(item.url)}" target="_blank" rel="noopener noreferrer">공식 시간표 ↗</a>`:''}</article>`).join('')}`:'<p class="notice-empty">현재 갱신이 필요한 시간표가 없어요.</p>'}`;
 }
 function preparePersonalTrip(){

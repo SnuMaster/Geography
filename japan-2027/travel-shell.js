@@ -13,15 +13,18 @@
   document.title='KISEKI · JAPAN 2027';
   const header=document.querySelector('.header-actions'),mapViews=[$('#overviewView'),$('#dailyView')];
   const budget=document.createElement('button');budget.id='shellBudget';budget.type='button';title(budget,'경비 정리','wallet');budget.onclick=()=>TravelAssistant.openTool('경비·준비물·저장 조정안');
-  title($('#ccSidebarToggle'),'여행 일정','calendar');title($('#bookingChecklistBtn'),'예약 체크','book');title($('#ccRecords'),'기록·백업','records');title($('#settingsBtn'),'설정','settings');
-  const more=document.createElement('details');more.id='shellMore';more.innerHTML='<summary aria-label="보조 도구">···</summary><div class="shell-more-menu"><strong>여행 도구</strong></div>';
-  for(const id of ['noticeBtn','offlinePackBtn','tripPlanBtn','itineraryToggle','rideToggle','ccAlertsToggle','ccInstall','aboutBtn']){const button=$('#'+id);button.hidden=false;more.querySelector('div').append(button);}
-  more.addEventListener('click',e=>{if(e.target.closest('button'))more.open=false;});document.addEventListener('click',e=>{if(!more.contains(e.target))more.open=false;});document.addEventListener('keydown',e=>{if(e.key==='Escape'&&more.open){more.open=false;more.querySelector('summary').focus();}});
-  header.replaceChildren($('#bookingChecklistBtn'),budget,$('#ccRecords'),$('#settingsBtn'));
-  const alerts=more.querySelector('#ccAlertsToggle');alerts.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>알림</span>';alerts.setAttribute('aria-label','여행 알림 설정');alerts.title='여행 알림 설정';
-  document.querySelector('.topbar').append(alerts,more,document.querySelector('.trip-summary'));
+  title($('#ccSidebarToggle'),'여행 일정','calendar');title($('#bookingChecklistBtn'),'예약 체크','book');title($('#ccRecords'),'기록·백업','records');
+  const offline=$('#offlinePackBtn'),settings=$('#settingsBtn'),alerts=$('#ccAlertsToggle');
+  offline.insertAdjacentHTML('afterbegin','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg>');
+  title(settings,'지도 설정','settings');settings.setAttribute('aria-label','지도 설정');settings.setAttribute('aria-controls','mapSettings');settings.title='지도 설정';
+  const tools=document.createElement('div');tools.id='shellTools';tools.setAttribute('role','group');tools.setAttribute('aria-label','지도 도구');tools.append(offline,settings);
+  const parking=document.createElement('div');parking.id='originalLegacyControls';parking.hidden=true;document.body.append(parking);
+  for(const id of ['tripPlanBtn','itineraryToggle','rideToggle','ccInstall','aboutBtn','shareBtn']){const button=$('#'+id);button.hidden=true;parking.append(button);}
+  alerts.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>알림</span>';alerts.setAttribute('aria-label','여행 알림 설정');alerts.title='여행 알림 설정';
+  document.querySelector('.topbar').append(alerts,tools,document.querySelector('.trip-summary'));
+  header.replaceChildren($('#bookingChecklistBtn'),budget,$('#ccRecords'));
   const map=document.querySelector('.map-panel'),bar=document.createElement('div');bar.className='shell-map-toolbar';bar.setAttribute('aria-label','지도 보기');
-  const views=document.createElement('div');views.className='shell-view-tabs';views.setAttribute('role','group');views.setAttribute('aria-label','지도 범위');views.append(...mapViews);bar.append(views);more.querySelector('.shell-more-menu').append($('#ccFilters'));map.append(bar);$('#overviewView').textContent='전체 여정';$('#dailyView').textContent='오늘 동선';
+  const views=document.createElement('div');views.className='shell-view-tabs';views.setAttribute('role','group');views.setAttribute('aria-label','지도 범위');views.append(...mapViews);bar.append(views);map.append(bar);$('#overviewView').textContent='전체 여정';$('#dailyView').textContent='오늘 동선';
   const mission=document.querySelector('.cc-mission'),hero=document.createElement('div');hero.className='shell-hero';hero.append(mission.querySelector('.cc-kicker'),mission.querySelector('.cc-day-heading'));hero.insertAdjacentHTML('beforeend','<p id="shellDaySummary"></p><span class="shell-hero-caption">JOURNEY NOTES</span>');mission.prepend(hero);
   const selectRow=document.createElement('div');selectRow.className='shell-date-select';selectRow.innerHTML='<button id="shellPrevDay" type="button" aria-label="이전 여행 날짜">‹</button><button id="shellNextDay" type="button" aria-label="다음 여행 날짜">›</button>';selectRow.insertBefore($('#ccDaySelect'),selectRow.lastChild);hero.after(selectRow);
   $('#shellPrevDay').onclick=()=>changeDay(-1);$('#shellNextDay').onclick=()=>changeDay(1);

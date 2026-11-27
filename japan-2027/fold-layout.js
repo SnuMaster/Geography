@@ -34,9 +34,10 @@
   $('#foldNext').onclick=()=>{const api=window.__routebook,c=api.focusedContext(),i=api.focusedIndex(c),uid=c?.variant.stops[i]?.uid;if(!uid)return;api.setDay(c.day.n);api.setVariant(c.variant.id);api.selectStop(api.getStops().findIndex(s=>s.uid===uid),true);};$('#foldCardToggle').onclick=()=>{const expanded=$('#foldCardToggle').getAttribute('aria-expanded')!=='true';card(expanded);cards.set(mode(),expanded);try{localStorage.setItem(layoutKey,JSON.stringify(Object.fromEntries(cards)));}catch(_){}};
   // Request cancellation remains reachable while the keyboard hides voice controls.
   $('#assistantPanel header>div').prepend($('#assistantCancel'));
-  const tile=$('#tileError'),notice=document.createElement('dialog');notice.id='foldMapNoticeDialog';notice.setAttribute('aria-label','배경지도 연결 안내');notice.innerHTML='<header><strong>배경지도 연결 안내</strong><button id="foldMapNoticeClose" type="button" aria-label="지도 연결 안내 닫기">×</button></header><p>배경지도 통신이 불안정해도 장소와 저장된 경로는 사용할 수 있습니다. 지도 설정에서 내장 오프라인 지도를 선택할 수 있습니다.</p>';notice.append(tile);document.body.append(notice);
-  const noticeButton=document.createElement('button');noticeButton.id='foldMapNotice';noticeButton.type='button';noticeButton.textContent='배경지도 연결 안내';noticeButton.hidden=true;$('#shellMore .shell-more-menu').append(noticeButton);noticeButton.onclick=()=>RouteUI.showDialog(notice);$('#foldMapNoticeClose').onclick=()=>{notice.close();RouteUI.release(notice);};
-  const tileStatus=()=>{const failed=!tile.classList.contains('hidden');noticeButton.hidden=!failed;$('#shellMore').dataset.mapError=String(failed);$('#shellMore>summary').setAttribute('aria-label',failed?'보조 도구 · 배경지도 연결 확인 필요':'보조 도구');};new MutationObserver(tileStatus).observe(tile,{attributes:true,attributeFilter:['class']});tileStatus();
+  const tile=$('#tileError'),settings=$('#settingsBtn');
+  $('#mapSettings .dialog-header').after(tile);
+  const tileStatus=()=>{const failed=!tile.classList.contains('hidden');settings.dataset.mapError=String(failed);settings.title=failed?'지도 설정 · 배경지도 연결 확인 필요':'지도 설정';settings.setAttribute('aria-label',settings.title);};
+  new MutationObserver(tileStatus).observe(tile,{attributes:true,attributeFilter:['class']});tileStatus();
   document.addEventListener('focusin',e=>{if(editable(e.target)){if(!focusSize||document.body.dataset.keyboard!=='open'||Math.abs(innerWidth-focusSize.width)>=80)focusSize={width:innerWidth,height:innerHeight};visual();}});
   document.addEventListener('focusout',()=>requestAnimationFrame(()=>{if(!editable(document.activeElement))focusSize=null;visual();}));
   window.addEventListener('resize',sync,true);window.visualViewport?.addEventListener('resize',visual);window.visualViewport?.addEventListener('scroll',visual);

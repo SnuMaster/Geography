@@ -78,12 +78,10 @@ test('explicit contiguous through services keep one boarding number without hidi
  const transfer=render(2,bundle.routes.days['2-main'][0]);assert.doesNotMatch(transfer,/환승 없이 계속 탑승/);assert.match(transfer,/3번째 탑승/);
  const interrupted=structuredClone(bundle.routes.days['4-main'][0]),at=interrupted.parts.findIndex(p=>p.throughService);interrupted.parts.splice(at+1,0,{mode:'transfer',from:'오다와라',to:'오다와라'});assert.match(render(4,interrupted),/4번째 탑승/);
 });
-test('empty fare components and empty activities disappear while meaningful supplements and activities remain',()=>{
- const ordinary=render(3,bundle.routes.days['3-main'][0]);assert.doesNotMatch(ordinary,/<dl class="departure-fare-components">\s*<\/dl>/);
+test('train fares retain ticket requirements and place details omit empty activities',()=>{
  const romance=render(6,bundle.routes.days['6-main'][0]);assert.match(romance,/일반 승차권/);assert.match(romance,/자유석 특급권 별도 구매/);
  const place={kind:'sight',description:'특징',details:{feature:'특징',thingsToDo:['','   ']}};assert.doesNotMatch(ctx.detailHtml(place),/<b>할 것<\/b>|<ul>\s*<\/ul>/);
  place.details.thingsToDo=['정원 산책'];assert.match(ctx.detailHtml(place),/<b>할 것<\/b><ul><li>정원 산책<\/li>/);
- const blank=bundle.routes.days['1-main'].find(l=>l.fare?.displayBlank);assert.doesNotMatch(render(1,blank),/departure-fare-components/);
 });
 
 
@@ -155,12 +153,8 @@ test('collapsed train cards retain visible limitations and move controls and sou
    assert.ok(section.indexOf(status[0])<section.indexOf('<details'),id);
    if(section.includes('data-departure-profile=')){
     assert.match(section,/<details class="departure-timetable">[\s\S]*data-departure-body[\s\S]*data-ride-choose=[\s\S]*<\/details>/,id);
-    assert.match(section,/<details class="departure-reference"><summary>자료 정보<\/summary>[\s\S]*자료 확인/,id);
    }
-   for(const cls of ['departure-fare-basis','departure-fare-components','departure-fare-sources','departure-schedule-source'])if(section.includes('class="'+cls+'"')){
-    const start=section.indexOf('<details class="departure-reference">'),end=section.indexOf('</details>',start);
-    assert.ok(start>=0&&section.indexOf('class="'+cls+'"')>start&&section.indexOf('class="'+cls+'"')<end,id+': '+cls);
-   }
+   assert.doesNotMatch(section,/departure-reference|자료 정보/,id);
    assert.match(section,/<div class="departure-quick-links"><a[^>]+>길찾기 ↗<\/a>/,id);
   }
  }

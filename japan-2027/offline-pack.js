@@ -1,12 +1,13 @@
 'use strict';
 (function(){
- const REVISION='20261127-kiseki-rail-text-1',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261127-kiseki-direct-tools-1',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}
  function render({status=true}={}){const saved=record(),ready=saved?.revision===REVISION&&saved.complete;
-  const button=$('#offlinePackBtn');if(button)button.textContent=running?'오프라인 저장 중':ready?'오프라인 준비됨':'오프라인 저장';
+  const button=$('#offlinePackBtn'),label=$('#offlinePackButtonLabel');
+  if(button&&label){label.textContent=running?'오프라인 저장 중':ready?'오프라인 준비됨':'오프라인 저장';button.setAttribute('aria-label',label.textContent);button.title=label.textContent;}
   const node=$('#offlinePackStatus');if(status&&node&&!running)node.textContent=ready?'이 브라우저에 전체 자료 저장 완료 · '+new Date(saved.savedAt).toLocaleDateString('ko-KR'):'처음 한 번 온라인에서 전체 자료를 저장해 주세요.';
  }
  function validate(value){if(value?.revision!==REVISION||!Array.isArray(value.files)||!value.files.length)throw Error('저장 목록 버전이 맞지 않습니다. 새로고침해 주세요.');
