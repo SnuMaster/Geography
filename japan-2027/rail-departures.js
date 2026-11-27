@@ -180,7 +180,7 @@ const RailDepartures = (() => {
    <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''}${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
    ${metricsHtml(selected)}
-   ${metrics.planFare?`<p class="departure-plan-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
+   ${metrics.planFare?`<p class="departure-plan-total">${esc(metrics.planFareLabel||'전체 이동 총액')} · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
    <p class="departure-data-status">${p.sourceClass==='public-reference'?'공개 시간표 참고 · 여행일 미검증':'저장 시간표 기준'} · 실시간 지연 미반영</p>
    <details class="departure-timetable"><summary>시간표·탑승 선택</summary><div class="departure-timetable-body">
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
@@ -238,13 +238,21 @@ const RailDepartures = (() => {
    byProfile[key]=selected;
   }
   if(leg.fare?.displayBlank){for(const key of Object.keys(byProfile))byProfile[key]={...byProfile[key],displayBlank:true,fare:'',basis:'',components:[],sources:[]};metrics={...metrics,displayBlank:true,fare:'',basis:'',components:[],sources:[]};}
-  metrics={...metrics,byProfile,planFare:Number.isFinite(leg.fare?.min)&&!leg.fare?.displayBlank?metrics.fare:null,planDistance:formatDistance(leg.distanceM)};
+  const purchase=leg.fare?.purchase;
+  if(purchase){
+   const fare=FareCore.format(leg.fare,leg);
+   const paidMetrics={fare,displayBlank:false,components:[],basis:'사용자가 입력한 결제액',
+    fareLabel:purchase.scope==='express'?'특급권 결제 · 기본 운임 별도':'결제액'};
+   for(const key of keys)if(purchase.scope!=='express'||profileByKey[key]?.lineId.startsWith('Tobu.'))byProfile[key]={...byProfile[key],...paidMetrics};
+   metrics={...metrics,...paidMetrics};
+  }
+  metrics={...metrics,byProfile,planFare:(purchase||Number.isFinite(leg.fare?.min)&&!leg.fare?.displayBlank)?metrics.fare:null,planFareLabel:purchase?.scope==='express'?'특급권 결제액 · 기본 운임 별도':null,planDistance:formatDistance(leg.distanceM)};
   const section=(item,scope)=>item.unscheduled?unscheduledSection(item.profile,byProfile[item.key],day):sectionHtml(item.key,scope,day);
   if(keys.length===1)return `${preference}<div class="departure-panel">${section(items[0],metrics)}</div>`;
   // A shared operator OD fare belongs to the whole ride, not to each displayed timetable.
   const shownFares=new Set();for(const key of keys){const quote=FareCore.boardingFare(leg,profileByKey[key]);if(!quote)continue;const id=r=>JSON.stringify([r.from,r.to,r.lineIds,r.icYen]),remaining=quote.rows.filter(r=>!shownFares.has(id(r)));if(remaining.length<quote.rows.length)byProfile[key]={...byProfile[key],fare:remaining.length?money(remaining.reduce((n,r)=>n+r.icYen,0)):money(0),fareLabel:remaining.length?'추가 구간 운임':'환승 운임',components:[],basis:byProfile[key].basis+' · 같은 합산 운임은 한 번만 표시합니다.'};for(const row of quote.rows)shownFares.add(id(row));}
   let boardingOrder=0;
-  return `${preference}<div class="departure-panel departure-sequence" aria-label="타는 순서대로 열차 정보">${items.map(item=>{if(!item.continuation||!boardingOrder)boardingOrder++;const key=item.key,pair=[key,profileByKey[key].reverseKey].filter(k=>byProfile[k]),scope={...metrics,planFare:null,byProfile:Object.fromEntries(pair.map(k=>[k,byProfile[k]]))};return `<div class="departure-sequence-step" data-boarding-order="${boardingOrder}"${item.continuation?' data-through-continuation="true"':''}><p class="departure-sequence-title">${item.continuation?'환승 없이 계속 탑승':boardingOrder+'번째 탑승'}</p>${section(item,scope)}</div>`;}).join('')}<p class="departure-plan-total departure-sequence-total">전체 이동 총액 · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준<br>환승 포함 운임은 중복 합산하지 않습니다.</p></div>`;
+  return `${preference}<div class="departure-panel departure-sequence" aria-label="타는 순서대로 열차 정보">${items.map(item=>{if(!item.continuation||!boardingOrder)boardingOrder++;const key=item.key,pair=[key,profileByKey[key].reverseKey].filter(k=>byProfile[k]),scope={...metrics,planFare:null,byProfile:Object.fromEntries(pair.map(k=>[k,byProfile[k]]))};return `<div class="departure-sequence-step" data-boarding-order="${boardingOrder}"${item.continuation?' data-through-continuation="true"':''}><p class="departure-sequence-title">${item.continuation?'환승 없이 계속 탑승':boardingOrder+'번째 탑승'}</p>${section(item,scope)}</div>`;}).join('')}<p class="departure-plan-total departure-sequence-total">${esc(metrics.planFareLabel||'전체 이동 총액')} · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준<br>환승 포함 운임은 중복 합산하지 않습니다.</p></div>`;
  }
  async function loadData(key,force=false){
   const file=profiles[key]?.file;if(!file)return null;

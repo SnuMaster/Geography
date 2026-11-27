@@ -1,6 +1,9 @@
-// Server-only model allowlist and conservative standard/long-context tariffs. Checked 2026-11-02.
+// Server-only model allowlist and conservative standard/long-context tariffs.
 export const MAX_OUTPUT=1200;
+export const DEFAULT_MODEL='gpt-6.2-sol';
 export const MODELS=Object.freeze([
+ {id:DEFAULT_MODEL,label:'GPT-6.2 Sol',provider:'openai',context:1050000,inputRate:4,outputRate:20,countInput:true},
+ {id:'gpt-6.2-astra',label:'GPT-6.2 Astra',provider:'openai',context:1050000,inputRate:16,outputRate:80,countInput:true},
  {id:'gpt-6-luna',label:'GPT-6 Luna',provider:'openai',context:1050000,inputRate:0.25,outputRate:0.75},
  {id:'gpt-6.1-terra',label:'GPT-6.1 Terra',provider:'openai',context:1050000,inputRate:2,outputRate:7.5,countInput:true},
  {id:'gpt-6-sol',label:'GPT-6 Sol',provider:'openai',context:1050000,inputRate:4,outputRate:15,countInput:true},
@@ -10,10 +13,10 @@ export const MODELS=Object.freeze([
  {id:'claude-opus-5-5',label:'Claude Opus 5.5',provider:'anthropic',context:1000000,inputRate:4,outputRate:20}
 ]);
 export const providerKey=(env,p)=>p==='openai'?env.OPENAI_API_KEY:p==='anthropic'?env.ANTHROPIC_API_KEY:null;
-export function modelFor(env,id=env.MODEL||'gpt-6-luna'){
+export function modelFor(env,id=env.MODEL||DEFAULT_MODEL){
  const model=MODELS.find(m=>m.id===id);if(!model)throw Error('model');
  // Existing higher deployment bounds remain effective for the default model.
- const custom=id===(env.MODEL||'gpt-6-luna');
+ const custom=id===(env.MODEL||DEFAULT_MODEL);
  const input=custom?Math.max(model.context,Number(env.MAX_INPUT_TOKENS||model.context)):model.context,inputRate=custom?Math.max(model.inputRate,Number(env.INPUT_USD_PER_MILLION||model.inputRate)):model.inputRate,outputRate=custom?Math.max(model.outputRate,Number(env.OUTPUT_USD_PER_MILLION||model.outputRate)):model.outputRate;
  if(!Number.isSafeInteger(input)||input>2000000||![inputRate,outputRate].every(n=>Number.isFinite(n)&&n>0))throw Error('config');
  return {...model,input,inputRate,outputRate,reserve:Math.ceil(input*inputRate+MAX_OUTPUT*outputRate)};

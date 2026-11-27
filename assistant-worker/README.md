@@ -16,7 +16,7 @@ Durable Object에는 무작위 16바이트 salt와 PBKDF2-SHA256 100,000회 파�
 
 ## 1. OpenAI 설정
 
-OpenAI 프로젝트에서 제한된 API 키를 생성하고 Responses API와 모델 사용 권한을 확인하세요. 비밀값을 이 저장소, 프런트엔드, 채팅, 명령 인자에 넣지 마세요. 기본 모델 `gpt-6-luna`는 [공식 모델 문서](https://developers.openai.com/api/docs/models/gpt-6-luna)를 확인했습니다. 실제 계정의 모델 접근 권한은 아직 검증하지 않았습니다.
+OpenAI 프로젝트에서 제한된 API 키를 생성하고 Responses API와 모델 사용 권한을 확인하세요. 비밀값을 이 저장소, 프런트엔드, 채팅, 명령 인자에 넣지 마세요. 다음 Worker 배포의 기본 모델은 [GPT-6.2 Sol](https://developers.openai.com/api/docs/models/gpt-6.2-sol)입니다. [GPT-6.2 Astra](https://developers.openai.com/api/docs/models/gpt-6.2-astra)와 비용이 낮은 Luna도 선택할 수 있습니다. 두 6.2 모델은 기존 Responses API의 텍스트·이미지 입력과 구조화 출력을 사용하며, 서버에서 입력 토큰을 계산한 뒤 비용을 예약합니다. 표준 긴 컨텍스트 요율에 맞춰 1M 토큰당 Sol $4 입력/$20 출력, Astra $16 입력/$80 출력을 보수적 계산에 적용합니다. 실제 계정의 6.2 모델 접근 권한은 Worker 배포 후 확인해야 합니다.
 
 `store:false`, 출력 1,200토큰, 질문 2,000자, 컨텍스트 UTF-8 22KB, 사진 2MB 이하를 적용합니다. 사진은 JPEG/PNG/WebP와 낮은 이미지 detail을 사용합니다. [Structured Outputs](https://developers.openai.com/api/docs/guides/structured-outputs)로 답변·지도 제안·추출 후보를 분리합니다. 거절·불완전 응답은 오류로 처리하고 자동 재시도하지 않습니다.
 
@@ -45,7 +45,7 @@ Wrangler는 SQLite Durable Object `BudgetGate`를 마이그레이션으로 생�
 
 각 요청 전에 모델 전체 입력 상한 1,050,000토큰과 출력 상한에 대한 **보수적 최대 비용 $0.2634를 우선 예약**합니다. 성공 응답의 실제 `usage`를 받으면 보수적 단가로 정산합니다. 캐시 할인은 계산하지 않습니다. 화면의 토큰 수는 API 사용량이며 비용은 설정 단가에 따른 상한 추정입니다. 실제 청구서는 OpenAI에서 확인하세요.
 
-2026-10-29 확인한 Luna 표준 요금은 입력 $0.10 / 출력 $0.50 per 1M tokens입니다. 코드의 입력 $0.25 / 출력 $0.75는 긴 컨텍스트·캐시 쓰기 단가를 고려한 보수적 상한입니다. 예산 잔액이 요청 예약액보다 작으면 실제 예상 사용액이 작더라도 차단합니다. 예산을 이 예약액보다 작게 설정하면 호출이 막히는 것이 정상입니다. 가격이 오르거나 모델이 바뀌면 먼저 상한을 다시 검증해야 합니다. [공식 가격·모델](https://developers.openai.com/api/docs/models/gpt-6-luna)
+선택 모델인 Luna의 2026-10-29 표준 요금은 입력 $0.10 / 출력 $0.50 per 1M tokens입니다. 코드의 입력 $0.25 / 출력 $0.75는 긴 컨텍스트·캐시 쓰기 단가를 고려한 보수적 상한입니다. 예산 잔액이 요청 예약액보다 작으면 실제 예상 사용액이 작더라도 차단합니다. 예산을 이 예약액보다 작게 설정하면 호출이 막히는 것이 정상입니다. 가격이 오르거나 모델이 바뀌면 먼저 상한을 다시 검증해야 합니다. [공식 가격·모델](https://developers.openai.com/api/docs/models/gpt-6-luna)
 
 시간 초과·API 오류·사용량 누락은 과금 여부가 불명확하므로 예약액을 유지합니다. 재시도는 사용자 실행으로만 합니다. 예약액 해제를 위한 공개 API는 없습니다. 운영자가 OpenAI 사용량을 대조한 뒤 관리해야 하며, 객체를 삭제해 예산을 우회하면 안 됩니다. Worker 재시작·탭 재열기로 한도가 초기화되지 않습니다.
 

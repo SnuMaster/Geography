@@ -25,7 +25,9 @@ test('all active train cards and reverse directions have measured distances and 
    const {byProfile}=JSON.parse(data.replace(/&quot;|&lt;|&gt;|&amp;|&#39;/g,c=>({'&quot;':'"','&lt;':'<','&gt;':'>','&amp;':'&','&#39;':"'"}[c])));
    for(const [key,quote] of Object.entries(byProfile)){
     assert.match(quote.distance,/^\d+\.\d km$/,key);
-    if(leg.fare.displayBlank){assert.equal(quote.fare,'');assert.equal(quote.displayBlank,true);}
+    const payment=leg.fare.purchase;
+    if(payment&&ctx.api.keysFor(leg).includes(key)&&(payment.scope==='full'||manifest.profiles[key]?.lineId.startsWith('Tobu.')))assert.equal(quote.fare,F.format(leg.fare,leg),key);
+    else if(leg.fare.displayBlank){assert.equal(quote.fare,'');assert.equal(quote.displayBlank,true);}
     else assert.match(quote.fare,/^[\d,]+ JP¥$/,key);
    }
   }

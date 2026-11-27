@@ -18,6 +18,25 @@
  // A stay is one payment. Distribute integer currency units over its nights without losing the remainder.
  function expenseOnDay(x,day){const a=stayRange(x);if(!a)return x.day===day?x.amount:0;if(day<a.startDay||day>=a.endDay)return 0;const nights=a.endDay-a.startDay;return Math.floor(x.amount/nights)+(day-a.startDay<x.amount%nights?1:0);}
  function dayExpenses(items,day){return items.filter(x=>{const a=stayRange(x);return a?day>=a.startDay&&day<a.endDay:x.day===day;}).map(x=>({...x,amount:expenseOnDay(x,day),...(stayRange(x)?{paymentAmount:x.amount}:{} )}));}
+ function tripExpenses(data,routes,recorded,selectedVariant){
+  const paid=(data.prepaidCosts||[]).filter(item=>!recorded.some(saved=>{
+   if(saved.category!==item.category||saved.currency!==item.currency)return false;
+   const range=stayRange(item),savedRange=stayRange(saved);
+   if(range)return savedRange?.startDay===range.startDay&&savedRange.endDay===range.endDay&&saved.amount===item.amount;
+   return saved.day===item.day&&saved.amount===item.amount&&saved.memo===item.memo;
+  })).map(item=>({...item,tripPayment:true})),estimates=[];
+  const hasItineraryRecord=(day,variant,uid)=>recorded.some(item=>item.day===day&&item.itinerary?.variant===variant&&item.itinerary.type==='leg'&&item.itinerary.uid===uid);
+  for(const day of data.days){
+   const variant=selectedVariant(day);
+   for(const leg of routes?.days?.[day.n+'-'+variant]||[]){
+    if(!leg||hasItineraryRecord(day.n,variant,leg.legId))continue;
+    const fare=leg.fare,purchase=fare?.purchase;
+    if(purchase)paid.push({id:'trip-paid-'+leg.legId,day:day.n,amount:purchase.amount,currency:purchase.currency,category:purchase.category,memo:purchase.label,tripPayment:true});
+    else if(fare?.status==='publishedTariff'&&leg.parts.some(part=>part.mode==='bus'))estimates.push({day:day.n,memo:leg.summary,amount:fare.min,currency:fare.currency});
+   }
+  }
+  return {items:[...paid,...recorded],estimates};
+ }
  function expenses(items,day,budget={}){const sums={JPY:0,KRW:0},daily={JPY:0,KRW:0};for(const x of items)if(['JPY','KRW'].includes(x.currency)&&Number.isFinite(x.amount)&&x.amount>=0){sums[x.currency]+=x.amount;daily[x.currency]+=expenseOnDay(x,day);}return {total:sums,daily,remaining:{JPY:(budget.JPY||0)-sums.JPY,KRW:(budget.KRW||0)-sums.KRW}};}
  function lodgingExpense(startDay,endDay,currency,amount,memo=''){if(!Number.isInteger(endDay)||endDay>23||endDay<=startDay)throw Error('체크아웃은 체크인 다음 날짜부터 선택하세요.');const entry=expense(startDay,currency,amount,'숙박비',memo);entry.allocation={startDay,endDay};return entry;}
  function expense(day,currency,amount,category,memo=''){amount=Number(amount);if(!Number.isInteger(day)||day<1||day>22||!['JPY','KRW'].includes(currency)||!Number.isSafeInteger(amount)||amount<=0||amount>100000000||!categories.includes(category))throw Error('날짜·통화·정수 금액·분류를 확인하세요.');if(typeof memo!=='string'||memo.trim().length>200)throw Error('지출 메모는 200자 이하로 입력하세요.');memo=memo.trim();return {id:globalThis.crypto.randomUUID(),day,currency,amount,category,...(memo?{memo}:{})};}
@@ -58,5 +77,5 @@
   return {href:u.href,label:special==='flight'?'도착 공항 지도':special==='ferry'?'도착 항구 지도':directions?'Google Maps 길찾기':'목적지 지도',directions,special};
  }
  function validAction(action,days){return action?.type==='open_place_on_map'&&days.some(d=>d.n===action.day&&d.variants.some(v=>v.id===action.variant&&v.stops.some(s=>s.uid===action.placeId)));}
- return {STORE,categories,packing,load,save,dayBudget,visitKey,progress,next,publicStop,route,context,expenses,expense,expenseOnDay,dayExpenses,stayRange,lodgingExpense,itineraryExpense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
+ return {STORE,categories,packing,load,save,dayBudget,visitKey,progress,next,publicStop,route,context,expenses,tripExpenses,expense,expenseOnDay,dayExpenses,stayRange,lodgingExpense,itineraryExpense,adjustments,rest,uber,uberOptions,googleMapsOptions,validAction};
 });

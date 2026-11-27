@@ -19,6 +19,8 @@
   return {currency,baseAmount,amount,maxAmount:finite(f.max)?f.max:amount,variable,simulation:applied&&simulation,passEligible:eligible,passUncertain:eligible&&!!pass.enabled&&boundaryUncertain,passApplied:applied,paymentStatus:prepaid?'prepaid':'unconfirmed',status};
  }
  function format(fare,leg,options){
+  const purchase=fare?.purchase;
+  if(purchase)return `${purchase.scope==='express'?'특급권 결제':'결제액'} · ${purchase.amount.toLocaleString('ko-KR')}${purchase.currency==='KRW'?'원':'엔'}`;
   if(fare?.displayBlank===true)return '';
   const q=quote(fare,leg,options),unit=q.currency==='KRW'?'원':q.currency==='JPY'?'엔':q.currency?` ${q.currency}`:'';
   if(q.status==='unknown')return '요금 미확인';
@@ -28,6 +30,7 @@
   if(q.status==='range')return `${q.amount.toLocaleString('ko-KR')}~${q.maxAmount.toLocaleString('ko-KR')}${unit} 예상`;
   if(q.status==='pass-zero')return prefix+'패스 적용으로 추가부담 0엔';
   if(q.status==='pass-partial')return prefix+`패스 외 ${amount}`;
+  if(fare?.status==='publishedTariff')return '공개 운임 · '+amount;
   return (q.passUncertain?'패스 경계 · 승차 시각 확인 필요 · ':'')+(fare?.label||amount);
  }
  function summarize(legs,options={}){
@@ -35,12 +38,21 @@
   for(const l of legs){if(!l)continue;const f=l.fare,parts=l.parts||[];
    // The sidebar's Japanese rail subtotal counts each railway OD fare once, including its walking transfers.
    if(options.scope==='japan-rail'&&!japanRail(l))continue;
-   const q=quote(f,l,options);
+   const purchase=f?.purchase;
+   if(purchase)sum.prepaid[purchase.currency]+=purchase.amount;
+   if(purchase?.scope==='full')continue;
+   // A purchased express ticket leaves the base operator fare and local rail payable.
+   const remaining=purchase?.scope==='express'?f.breakdown.reduce((total,row)=>total+(row.baseIcYen??row.icYen),0):null;
+   const difference=remaining===null?0:f.min-remaining;
+   const payable=remaining===null?f:{...f,min:remaining,max:remaining,icYen:remaining,
+    paperTicketYen:Math.max(0,(f.paperTicketYen??f.min)-difference),
+    passExtraMin:finite(f.passExtraMin)?Math.max(0,f.passExtraMin-difference):null};
+   const q=quote(payable,l,options);
    if(options.scope!=='japan-rail'&&(l.travel||['selectedQuote','publishedTariff'].includes(f?.status))){sum.extras.push(l);continue;}
    if(q.status==='unknown'||!['JPY','KRW'].includes(q.currency)){sum.unknown++;continue;}
    if(q.status==='prepaid'){sum.prepaid[q.currency]+=q.baseAmount;continue;}
    if(q.variable){const r=sum['variable'+q.currency];r.min+=q.amount;r.max+=q.maxAmount;continue;}
-   if(q.currency==='KRW')sum.krw+=q.amount;else{sum.ic+=q.amount;sum.paper+=q.passApplied?q.amount:(f.paperTicketYen??q.baseAmount);}
+   if(q.currency==='KRW')sum.krw+=q.amount;else{sum.ic+=q.amount;sum.paper+=q.passApplied?q.amount:(payable.paperTicketYen??q.baseAmount);}
   }
   if(options.includePass&&options.pass?.purchased)sum.passCost=PASS_PRICE;
   return sum;

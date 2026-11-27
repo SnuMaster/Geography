@@ -45,7 +45,7 @@
     date:'출국 전'+coverageDates,note:'출국 전에 가입하고 한국 귀국까지 보장되는지 확인',
     url:'https://e-insmarket.or.kr/',
     source:'https://www.0404.go.kr/bbs/bbsPst/MST0000000000026/ATC0000000047498/detail',
-    details:['보험 시작·종료 시각을 실제 출발과 귀국 일정에 맞추고, 해외 의료비 보장 한도와 제외 항목을 확인하세요.','가입증명서와 긴급지원 연락처를 휴대폰에 저장하세요.']
+    details:[...(context.prepaidCosts||[]).filter(item=>item.id==='trip-paid-insurance').map(item=>'보험료 결제액 '+krw(item.amount)), '보험 시작·종료 시각을 실제 출발과 귀국 일정에 맞추고, 해외 의료비 보장 한도와 제외 항목을 확인하세요.','가입증명서와 긴급지원 연락처를 휴대폰에 저장하세요.']
    },{
     key:'japan-travel-sim',group:'prep',kind:'구매·설치 확인',name:'일본 유심·eSIM',day:departure.n,
     date:date(departure)+' 일본 도착 전 준비',note:'기기 호환 여부와 여행 기간에 맞는 데이터 용량·유효기간 확인',
@@ -57,19 +57,23 @@
     const stationIndex=variant.stops.findIndex((stop,index)=>stop.name==='공항제2빌딩역'&&variant.stops[index+1]?.name==='게이세이우에노역');
     if(stationIndex<0)continue;
     const backup=variant.stops[stationIndex].connectionBackup;
+    const purchase=context.routeData?.days?.[departure.n+'-'+variant.id]?.[stationIndex]?.fare?.purchase;
     items.push({
      key:'narita-skyliner-outbound',group:'rail',kind:'지정석 구매',name:'나리타 스카이라이너 편도',
      day:departure.n,variant:variant.id,leg:stationIndex+1,
      date:date(departure)+' · 나리타 T2 → 게이세이우에노',note:'전 좌석 지정석 · 공항 도착 후 나리타 제2터미널 지하 1층에서 구매 가능',
      url:'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/skyliner/purchase.php',
      source:backup?.source||'https://www.keisei.co.jp/keisei/tetudou/skyliner/us/findus/skyliner.php',
-     details:['입국 수속과 수하물 수령을 마치고 지하 1층 스카이라이너 매표소 또는 게이세이 안내센터에서 게이세이우에노행 좌석을 선택하세요.','온라인으로 먼저 구매했다면 구매 경로의 교환·좌석 지정 안내를 확인하세요. 승차권과 지정석이 준비되면 완료로 체크하세요.',...(backup?[backup.text]:[])]
+     details:[...(purchase?['스카이라이너 결제액 '+krw(purchase.amount)]:[]),'입국 수속과 수하물 수령을 마치고 지하 1층 스카이라이너 매표소 또는 게이세이 안내센터에서 게이세이우에노행 좌석을 선택하세요.','온라인으로 먼저 구매했다면 구매 경로의 교환·좌석 지정 안내를 확인하세요. 승차권과 지정석이 준비되면 완료로 체크하세요.',...(backup?[backup.text]:[])]
     });
     break;
    }
   }
   if(outbound?.length)items.push(...outbound);else push(copy('flight-tokyo'));
-  push(copy('hotel-tokyo'));
+  const hotel=copy('hotel-tokyo');
+  const stay=(context.prepaidCosts||[]).find(item=>item.id==='trip-paid-hotel');
+  if(hotel&&stay)hotel.details=['숙소 결제액 '+stay.amount.toLocaleString('ko-KR')+'엔 · 11박',...(hotel.details||[])];
+  push(hotel);
   const ibuki=anchor(copy('ibuki'),'ibuki');
   if(ibuki){
    ibuki.date=ibuki.date.split(/[~-]/)[0]+' 입장 목표';

@@ -88,7 +88,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261127-tokyo-preferences-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-costs-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -209,6 +209,13 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   assert.equal(result.length,13);assert.deepEqual(errors,[]);
   await page.waitForFunction(()=>[...document.querySelectorAll('.operator-spacia-x')].some(img=>img.complete&&img.naturalWidth>0));
   await page.screenshot({path:'qa-trip-review-'+width+'.png',fullPage:false});
+  await page.evaluate(()=>{window.__routebook.map.closePopup();document.getElementById('shellBudget').click();});
+  await page.locator('#expenseAllTab').click();
+  const costs=(await page.locator('#expenseOverviewBody').innerText()).replace(/\s*JP¥/g,'엔');
+  for(const value of ['118,038엔','528,852원','89,808엔','28,230엔','359,000원','18,400원','39,016원','23,900원','23,200원','26,320원','발권 전 참고 경비','45,200원']){
+   assert(costs.includes(value),'Missing trip cost '+value);
+  }
+  await page.locator('#expenseClose').click();
   await page.evaluate(async()=>{
    window.__routebook.setDay(8);
    const previous=await TravelStore.snapshot();

@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,'20261127-tokyo-preferences-1');
+ assert.equal(b.revision,'20261127-tokyo-costs-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -76,12 +76,13 @@ test('BEBU-YA dinner follows Center Gai and connects to the Iriya hotel',()=>{
  assert.equal(hotel.start,'21:10');
  assert.equal(b.data.nightRows.find(row=>row[0]===day.date)[2],hotel.time);
 });
-test('Skyliner stays blank, and airport selections use the correct local dates',()=>{
+test('airport and Skyliner payments retain the correct local dates and currencies',()=>{
  const sky=b.routes.days['1-main'].find(l=>l.fare?.displayBlank);
  assert(sky);assert.equal(sky.fare.icYen,null);assert.equal(sky.fare.min,null);
  const [flightOut]=b.routes.days['1-main'];
  assert(!b.routes.days["1-main"].some(l=>l.parts.some(p=>p.mode==="bus")));
- assert.equal(flightOut.fare.min,null);
+ assert.equal(flightOut.fare.min,359000);
+ assert.equal(sky.fare.purchase.amount,18400);
  assert.match(flightOut.summary,/TW251/);
  assert.equal(flightOut.departureAt,Date.parse("2027-01-08T11:10:00+09:00"));assert.equal(flightOut.arrivalAt,Date.parse("2027-01-08T13:20:00+09:00"));
  const [flightBack,busBack,walkToTaxi]=b.routes.days['13-main'];
@@ -93,6 +94,8 @@ test('Skyliner stays blank, and airport selections use the correct local dates',
  assert.equal(local.variants[0].stops.at(-1).name,returnDay.variants[0].stops[0].name);
  assert(returnDay.variants[0].stops.every(s=>!s.dayOffset));
  assert.match(flightBack.summary,/MM809/);
+ assert.equal(flightBack.fare.currency,'JPY');
+ assert.equal(flightBack.fare.min,28230);
  assert.equal(flightBack.departureAt,Date.parse('2027-01-20T01:55:00+09:00'));
  assert.equal(flightBack.arrivalAt,Date.parse('2027-01-20T04:40:00+09:00'));
  assert.equal(busBack.departureAt,Date.parse('2027-01-20T06:50:00+09:00'));
@@ -174,4 +177,20 @@ test('active routes retain continuous public endpoints and explicit reference-on
  assert.deepEqual(b.routes.days['8-main'][1].busTimetable.trips[0],['12:15','13:00']);
  assert.match(b.routes.days['8-main'][4].connectionBackup.text,/기본 15:50 → 16:26 · 대체 16:30 → 17:06.*17:44.*38분/);
  assert.doesNotMatch(JSON.stringify(b.data.days[11]),/보관함|multiecube/);
+});
+
+test('recorded payments and the reference bus fare use separate totals',()=>{
+ const Core=require('../japan-2027/assistant-core'),Fare=require('../japan-2027/fare-core');
+ const {items,estimates}=Core.tripExpenses(b.data,b.routes,[],()=> 'main');
+ assert.deepEqual(Core.expenses(items,1).total,{KRW:528852,JPY:118038});
+ assert.equal(estimates.length,1);
+ assert.equal(estimates[0].amount,45200);
+ assert.equal(estimates[0].currency,'KRW');
+ assert.equal(items.filter(row=>row.category==='숙박비').length,1);
+ assert.equal(b.data.days.reduce((total,day)=>total+Core.dayExpenses(items,day.n).filter(item=>item.category==='숙박비').reduce((sum,item)=>sum+item.amount,0),0),89808);
+ const saved=Core.itineraryExpense([],{day:1,variant:'main',type:'leg',uid:'d1-main-leg-1'},'KRW',359000,'항공료');
+ assert.deepEqual(Core.expenses(Core.tripExpenses(b.data,b.routes,saved,()=> 'main').items,1).total,Core.expenses(items,1).total);
+ const [out]=b.routes.days['8-main'];
+ assert.equal(Fare.summarize([out],{scope:'japan-rail'}).ic,1571);
+ assert.equal(Fare.format(out.fare,out),'특급권 결제 · 23,200원');
 });
