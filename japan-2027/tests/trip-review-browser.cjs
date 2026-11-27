@@ -88,7 +88,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261127-tokyo-return-day-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261127-tokyo-venue-updates-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -153,9 +153,21 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const busPicker=r.map._popup.getElement().querySelector('[data-connection-choice]');
    busPicker.value='08:00';busPicker.dispatchEvent(new Event('change',{bubbles:true}));
    const busImpact=document.querySelector('#stopList [data-connection-impact]').textContent;
-   if(!busImpact.includes('08:00 동대구 직통')||!busImpact.includes('발권 화면')||!busImpact.includes('10:56')||!busImpact.includes('11:10'))throw Error('Return backup hid the affected arrival and taxi');
+   if(!busImpact.includes('08:00 동대구 직통')||!busImpact.includes('발권 화면')||!busImpact.includes('10:56')||!busImpact.includes('버스 도착·짐 수령 후')||busImpact.includes('11:10'))throw Error('Return backup did not distinguish the relative taxi time');
+   const taxiCard=document.querySelector('#stopList [data-stop="3"]');
+   if(!taxiCard?.querySelector('.stop-time')?.textContent.includes('버스 도착·짐 수령 후')||!taxiCard?.textContent.includes('도보 약 10분'))throw Error('Missing relative taxi pickup and walk on the itinerary');
    const station=r.getStops().at(-1),walk=b.routeData.days['13-main'].at(-1);
    if(station.name!=='동대구역 택시 승강장'||station.dayOffset!==0||walk.parts[0].mode!=='walk')throw Error('Private destination remains in the public itinerary');
+   for(const [day,name,place] of [[7,'건담 베이스 도쿄','7층'],[8,'주젠지 관광센터 식당','15:00'],[10,'우메이야(宇明家) 도쿄타워점','2층']]){
+    r.setDay(day);
+    const index=r.getStops().findIndex(stop=>stop.name===name);
+    const card=document.querySelector('#stopList [data-stop="'+index+'"]');
+    if(!card||!card.textContent.includes(place))throw Error('Missing revised destination '+name);
+    card.click();
+    const detail=r.map._popup?.getElement()||document.querySelector('#detailSheet[open]');
+    if(!detail?.textContent.includes(name))throw Error('Missing map details for '+name);
+    r.map.closePopup();
+   }
    r.setDay(4);
    const holiday=document.querySelector('.day-public-holiday')?.textContent||'';
    if(!holiday.includes('성년의 날')||!holiday.includes('공휴일 열차 시간표'))throw Error('Missing holiday in the itinerary');

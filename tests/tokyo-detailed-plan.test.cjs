@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and two excursions',()=>{
- assert.equal(b.revision,require('../scripts/apply-tokyo-return-day.cjs').revision);
+ assert.equal(b.revision,'20261127-tokyo-venue-updates-1');
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
  assert.deepEqual(b.data.days.filter(d=>[5,8].includes(d.n)).map(d=>d.cityLabel),['가와구치코','닛코']);
  assert.equal(b.data.days[1].title,'일정 없음');assert.deepEqual(b.data.days[1].variants[0].stops,[]);assert.deepEqual(b.routes.days['2-main'],[]);
@@ -28,6 +28,12 @@ test('the public itinerary begins at Daegu Airport and ends at Dongdaegu Station
  const walk=b.routes.days['13-main'].at(-1);
  assert.equal(airport.name,'대구국제공항');
  assert.equal(station.name,'동대구역 택시 승강장');
+ assert.equal(station.time,'버스 도착·짐 수령 후');
+ assert.match(station.description,/도보 약 10분/);
+ assert.equal(station.start,null);
+ assert.equal(walk.departureAt,null);
+ assert.equal(walk.arrivalAt,null);
+ assert.equal(b.data.nightRows.at(-1)[2],station.time);
  assert.deepEqual(flight.parts[0].coords[0],[airport.lat,airport.lng]);
  assert.deepEqual(walk.parts.at(-1).coords.at(-1),[station.lat,station.lng]);
  assert(!['1-main','12-main','13-main'].some(key=>b.routes.days[key].some(leg=>leg.parts.some(part=>part.mode==='taxi'))));
@@ -117,6 +123,25 @@ test('single Iriya stay, daily breakfasts and lakeshore scenery',()=>{
  const nikko=b.data.days[7].variants[0].stops;
  assert(nikko.some(s=>s.planKey==='kegon'));assert(nikko.some(s=>s.planKey==='chuzenji'));assert(!nikko.some(s=>s.planKey==='sanbon'));
  assert(!nikko.some(s=>/도쇼구/.test(s.name)));
+});
+test('the Gundam shop and both restaurant pins replace the retired or generic stops',()=>{
+ const [odaiba,nikko,tower]=[6,7,9].map(i=>b.data.days[i]);
+ const gundam=odaiba.variants[0].stops.find(stop=>stop.planKey==='diver');
+ assert.equal(gundam.name,'건담 베이스 도쿄');
+ assert.match(gundam.address,/7F/);
+ assert.doesNotMatch(JSON.stringify([odaiba,b.routes.days['7-main']]),/유니콘 건담|15:00 변신/);
+ for(const [day,index,expectedName] of [[nikko,3,'주젠지 관광센터 식당'],[tower,7,'우메이야(宇明家) 도쿄타워점']]){
+  const stops=day.variants[0].stops,meal=stops[index];
+  const [inbound,outbound]=b.routes.days[day.n+'-main'].slice(index-1,index+1);
+  assert(day.meals.includes(expectedName));
+  assert.equal(b.data.food[meal.foodKey].name,expectedName);
+  assert.deepEqual(inbound.parts.at(-1).coords.at(-1),[meal.lat,meal.lng]);
+  assert.deepEqual(outbound.parts[0].coords[0],[meal.lat,meal.lng]);
+  assert(T.minutes(meal.start)-T.minutes(stops[index-1].end)>=inbound.durationMinutes);
+  assert(T.minutes(stops[index+1].start)-T.minutes(meal.end)>=outbound.durationMinutes);
+ }
+ assert.equal(tower.variants[0].stops[7].time,'18:00~18:50');
+ assert(b.routes.days['10-main'][7].parts.some(part=>part.mode==='walk'&&part.to==='가미야초'&&part.geometryAccuracy==='mapped'));
 });
 test('mapped geometry has actual intermediate vertices and no airport route is invented',()=>{
  for(const legs of Object.values(b.routes.days))for(const l of legs)for(const p of l.parts){

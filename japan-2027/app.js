@@ -71,6 +71,7 @@ function connectionImpact(leg,depart){
  const checkpoints=backup.checkpoints.map(uid=>stops.find(stop=>stop.uid===uid)).filter(Boolean);
  const timing=service.arrive?'공개 시간표 도착 '+service.arrive:'예상 도착은 해당 편 발권 화면에서 확인';
  return `<p><strong>${esc(service.label)}</strong> · ${esc(timing)}</p><ul>${checkpoints.map(stop=>{
+  if(!stop.start)return `<li>${esc(stop.name)} · ${esc(stop.time)}</li>`;
   const passed=service.arrive&&TripData.minutes(stop.start)<TripData.minutes(service.arrive);
   return `<li>${esc(stop.name)} ${esc(stop.start)} 기준 · ${passed?'열차 도착 전이므로 다시 잡기':'시각 다시 확인'}</li>`;
  }).join('')}</ul>`;

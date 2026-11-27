@@ -42,9 +42,10 @@
     const from=v.stops[i]||{},to=v.stops[i+1]||{};
     const depart=interval(from),arrival=interval(to);
     const fromDate=date(d.n,from.dayOffset||0),toDate=date(d.n,to.dayOffset||0);
-    const departure=l.departureLocal||(depart.unknownEnd?null:depart.end&&fromDate+'T'+depart.end);
+    const relative=to.timeConfidence==='relative';
+    const departure=l.departureLocal||(relative||depart.unknownEnd?null:depart.end&&fromDate+'T'+depart.end);
     l.dayNumber=d.n;l.variant=v.id;l.legIndex=i+1;l.legId='d'+d.n+'-'+v.id+'-leg-'+(i+1);
-    l.serviceDate=departure?.slice(0,10)||fromDate;l.departureBasis='일정 예정 시각';
+    l.serviceDate=departure?.slice(0,10)||fromDate;l.departureBasis=relative&&!departure?to.time:'일정 예정 시각';
     l.departureTimeKnown=!!departure;
     l.departureAt=departure?Date.parse(departure+':00+09:00'):null;
     l.arrivalAt=arrival.start?Date.parse(toDate+'T'+arrival.start+':00+09:00'):null;
