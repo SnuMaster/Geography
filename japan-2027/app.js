@@ -253,7 +253,6 @@ function renderStops(){
      <div class="stop-name">${esc(stopLabel(s))}</div>
      ${s.reservationTiming?.applied||isNight(s)?`<div class="stop-status">${s.reservationTiming?.applied?'<span class="reservation-time-pill">사용자 확인 시각</span>':''}${isNight(s)?'<span class="night-pill">노을·야경</span>':''}</div>`:''}
      <div class="stop-desc">${esc(cleanDesc(s))}</div>${s.kind!=='hotel'?placeFacts(s,true):''}
-     ${s.kind!=='hotel'&&s.details?`<details class="place-expand"><summary aria-label="방문·메뉴·예약 상세">상세 보기</summary>${detailHtml(s)}${f?`<div class="food-detail"><strong>${esc(f.budget)}</strong><br>${esc(f.order)}<br>${esc(f.hours)}</div>`:''}</details>`:''}
      <div class="stop-links">${mapUrl(s)?`<a href="${mapUrl(s)}" target="_blank" rel="noopener noreferrer" class="place-map">장소 보기 ${icon('arrowUpRight')}</a>`:''}${f?`<a href="${esc(f.url)}" target="_blank" rel="noopener">매장 안내 ${icon('arrowUpRight')}</a>`:''}</div>
      ${s.kind==='food'?ReservationPhotos.button(s):''}
     </div>

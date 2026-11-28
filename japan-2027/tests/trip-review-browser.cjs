@@ -78,6 +78,10 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   }
   await page.locator('#ccDaySelect').selectOption('7');
   const timetable=page.locator('#stopList');
+  const dinner=timetable.locator('.stop-card').filter({hasText:'츠루하시 후게츠 오다이바점'});
+  assert.equal(await dinner.locator('.place-map').isVisible(),true);
+  assert.equal(await dinner.locator('[data-reservation-photos]').isVisible(),true);
+  assert.equal(await dinner.locator('details').count(),0);
   const firstTime=timetable.locator('.stop-time').first(),firstPlace=timetable.locator('.stop-name').first();
   const [timeBox,placeBox]=await Promise.all([firstTime.boundingBox(),firstPlace.boundingBox()]);
   assert.ok(timeBox.x<placeBox.x&&Math.abs(timeBox.y-placeBox.y)<2,'Time and place share a timetable row');
@@ -309,6 +313,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
     if(ss.length!==d.variants[0].stops.length)throw Error('Missing day stops '+d.n);
     if(d.n>2&&d.n<13&&!document.querySelector('.day-breakfast')?.textContent.includes('08:00'))throw Error('Missing morning plan');
     if(document.querySelectorAll('#stopList .stop-card').length!==ss.length)throw Error('Missing rendered cards '+d.n);
+    if(document.querySelector('#stopList .stop-card details'))throw Error('An itinerary stop still has an expandable detail panel '+d.n);
     const panel=document.querySelector('#itineraryScroll');if(panel.scrollWidth>panel.clientWidth+2)throw Error('Sidebar overflow '+d.n);
     const legs=b.routeData.days[d.n+'-main'];for(let i=0;i<legs.length;i++)r.selectLeg(i+1);
     for(const [i,l]of legs.entries())if(l.busRoute){r.selectLeg(i+1);const box=r.map._popup?.getElement()?.querySelector('.bus-boarding-info');if(!box||!box.textContent.includes(l.busRoute.boarding.name)||!box.textContent.includes(l.busRoute.alighting.name))throw Error('Missing bus boarding details '+l.legId);if(l.busTimetable&&!box.querySelector('.bus-timetable')?.textContent.includes(l.busTimetable.trips[0][0]))throw Error('Missing official bus schedule '+l.legId);r.map.closePopup();}
