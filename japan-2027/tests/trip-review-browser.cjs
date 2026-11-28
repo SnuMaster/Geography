@@ -99,6 +99,25 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    await page.setViewportSize(fullSize);
    await page.waitForSelector('body[data-viewport="desktop"]');
   }
+  await page.locator('#ccDaySelect').selectOption('1');
+  const dailyRows=page.locator('#stopList :is([data-itinerary-stop],[data-expense-leg])');
+  assert.equal(await dailyRows.count(),17);
+  assert.equal(await dailyRows.locator(':scope > .itinerary-expense input:visible').count(),17);
+  const firstDayRail='[data-expense-leg="5"] > .itinerary-expense';
+  assert.equal(await page.locator(firstDayRail).getAttribute('data-currency'),'JPY');
+  assert.equal(await page.locator('[data-expense-leg="1"] > .itinerary-expense').getAttribute('data-currency'),'KRW');
+  assert.equal(await page.locator('[data-expense-leg="3"] > .itinerary-expense').getAttribute('data-currency'),'KRW');
+  const hotelCost=page.locator('#stop-6 > .itinerary-expense');
+  await hotelCost.locator('input').fill('980');
+  await hotelCost.locator('[type=submit]').click();
+  assert.match(await hotelCost.locator('.itinerary-expense-saved').innerText(),/980 JP¥/);
+  await page.locator('#shellBudget').click();
+  await page.locator('#expenseDailyBody [data-edit-expense]').click();
+  assert.equal(await page.locator('#expenseStayRange').isVisible(),false);
+  await page.locator('#expenseAmount').fill('0');
+  await page.locator('#kisekiRecordExpense').click();
+  assert.deepEqual(await page.evaluate(()=>TravelAssistant.getPersonal().expenses.map(e=>[e.day,e.category,e.amount,e.allocation])),[[1,'숙박비',0,undefined]]);
+  await page.locator('#expenseClose').click();
   await page.locator('#ccDaySelect').selectOption('7');
   const timetable=page.locator('#stopList');
   const dinner=timetable.locator('.stop-card').filter({hasText:'츠루하시 후게츠 오다이바점'});
@@ -128,11 +147,24 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   const plannedTimes=await page.evaluate(()=>__routebook.state.data.days.map(day=>MapPlan.variant(day,__routebook.state.selectedVariantByDay).stops.map(stop=>stop.time)));
   assert.deepEqual(overviewTimes,plannedTimes);
   assert.equal(await dates.first().locator('summary').first().isVisible(),true);
+  const firstDay=dates.first();
+  await firstDay.locator(':scope>summary').click();
+  const overviewRailCost=firstDay.locator(firstDayRail);
+  await overviewRailCost.locator('input').fill('400');
+  await overviewRailCost.locator('[type=submit]').click();
+  assert.match(await overviewRailCost.locator('.itinerary-expense-saved').innerText(),/400 JP¥/);
+  assert.match(await firstDay.locator('[data-itinerary-stop="6"] .itinerary-expense-saved').innerText(),/0 JP¥/);
+  assert.equal(await firstDay.evaluate(el=>el.open),true);
+  assert.equal(await page.evaluate(()=>__routebook.state.day),7);
   const emptyDay=dates.nth(1),odaibaDay=dates.nth(6),returnDay=dates.last();
   await emptyDay.locator(':scope>summary').click();
   assert.equal(await emptyDay.getByText('이날은 비워뒀어요.').isVisible(),true);
+  assert.equal(await emptyDay.locator('.itinerary-expense').count(),0);
   await returnDay.locator(':scope>summary').click();
   assert.match(await returnDay.locator('.overview-timetable-stop').first().textContent(),/00:00~01:55/);
+  const returnWalkCost=returnDay.locator('[data-expense-leg="3"] > .itinerary-expense');
+  await returnWalkCost.waitFor();
+  assert.equal(await returnWalkCost.getAttribute('data-currency'),'KRW');
   await odaibaDay.locator(':scope>summary').click();
   const [overviewTimeBox,overviewPlaceBox]=await Promise.all(['.stop-time','.stop-name'].map(selector=>odaibaDay.locator(selector).first().boundingBox()));
   assert.ok(overviewTimeBox.x<overviewPlaceBox.x&&Math.abs(overviewTimeBox.y-overviewPlaceBox.y)<2,'Overview time and place share a timetable row');
@@ -146,6 +178,12 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await odaibaDay.getByRole('button',{name:'이 날짜 전체 일정 열기'}).click();
   await page.waitForFunction(()=>__routebook.state.view==='daily'&&__routebook.state.day===7);
   await page.locator('#ccDaySelect').selectOption('1');
+  const dailyRailCost=page.locator(firstDayRail);
+  assert.match(await dailyRailCost.locator('.itinerary-expense-saved').textContent(),/400 JP¥/);
+  await dailyRailCost.locator('[data-expense-edit]').click();
+  await dailyRailCost.locator('input').fill('500');
+  await dailyRailCost.locator('[type=submit]').click();
+  assert.deepEqual(await page.evaluate(()=>TravelAssistant.getPersonal().expenses.filter(e=>e.itinerary?.type==='leg').map(e=>[e.day,e.amount,e.currency])),[[1,500,'JPY']]);
   if(sidebarWasClosed)await sidebar.click();
   const geo=await page.evaluate(()=>{
    const [a,b]=__routebook.getLeg(2).parts[0].coords;
@@ -337,6 +375,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
     if(ss.length!==d.variants[0].stops.length)throw Error('Missing day stops '+d.n);
     if(d.n>2&&d.n<13&&!document.querySelector('.day-breakfast')?.textContent.includes('08:00'))throw Error('Missing morning plan');
     if(document.querySelectorAll('#stopList .stop-card').length!==ss.length)throw Error('Missing rendered cards '+d.n);
+    const expenseRows=[...document.querySelectorAll('#stopList :is([data-itinerary-stop],[data-expense-leg])')];
+    if(expenseRows.some(row=>row.querySelectorAll(':scope > .itinerary-expense input').length!==1))throw Error('Missing or duplicated cost input on day '+d.n);
     if(document.querySelector('#stopList .stop-card details'))throw Error('An itinerary stop still has an expandable detail panel '+d.n);
     const panel=document.querySelector('#itineraryScroll');if(panel.scrollWidth>panel.clientWidth+2)throw Error('Sidebar overflow '+d.n);
     const legs=b.routeData.days[d.n+'-main'];for(let i=0;i<legs.length;i++)r.selectLeg(i+1);
@@ -373,7 +413,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.evaluate(()=>{window.__routebook.map.closePopup();document.getElementById('shellBudget').click();});
   await page.locator('#expenseAllTab').click();
   const costs=(await page.locator('#expenseOverviewBody').innerText()).replace(/\s*JP¥/g,'엔');
-  for(const value of ['118,038엔','528,852원','89,808엔','28,230엔','359,000원','18,400원','39,016원','23,900원','23,200원','26,320원','발권 전 참고 경비','45,200원']){
+  for(const value of ['118,538엔','528,852원','89,808엔','28,230엔','359,000원','18,400원','39,016원','23,900원','23,200원','26,320원','발권 전 참고 경비','45,200원']){
    assert(costs.includes(value),'Missing trip cost '+value);
   }
   await page.locator('#expenseClose').click();
@@ -385,6 +425,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   });
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>document.querySelector('#kisekiHeroPhoto')?.src.endsWith('/nikko.jpg'));
+  assert.deepEqual(await page.evaluate(()=>TravelAssistant.getPersonal().expenses.map(e=>[e.day,e.itinerary?.type,e.amount])),[[1,'stop',0],[1,'leg',500]]);
   assert.deepEqual(await page.evaluate(keys=>keys.map(key=>CommandCenter.bookingNumber(key)),sampleNumbers.map(([key])=>key)),sampleNumbers.map(([,number])=>number));
   const context=page.context();
   const externalStreet=[];

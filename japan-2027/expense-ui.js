@@ -26,7 +26,17 @@
  function estimates(rows){
   return rows.length?`<section class="expense-section"><h3>발권 전 참고 경비</h3><ul class="expense-entry-list">${rows.map(row=>`<li><span><strong>${h(row.memo)}</strong><small>${h(TripData.date(row.day))} · 예매 시 최종 운임 확인</small></span><b>${h(number(row.amount)+unit(row.currency))}</b></li>`).join('')}</ul></section>`:'';
  }
- function stayFields(reset=false){const enabled=$('#expenseCategory').value==='숙박비';$('#expenseStayRange').hidden=!enabled;for(const id of ['expenseStayStart','expenseStayEnd'])$('#'+id).disabled=!enabled;if(reset){$('#expenseStayStart').value=String(dayNumber);$('#expenseStayEnd').value=String(dayNumber+1);}$('#expenseEntryDayField').hidden=enabled||scope!=='all';if(!editingId)$('#kisekiRecordExpense').textContent=enabled?'숙박 총액 기록':'이 날짜에 기록';$('#expenseStayHint').textContent=enabled?`${Math.max(0,Number($('#expenseStayEnd').value)-Number($('#expenseStayStart').value))}박 총 결제금액을 입력하세요. 날짜별 균등 배분 · 전체 합계에는 한 번만 포함해요.`:'';}
+ function stayFields(reset=false){
+  const entry=editingId&&api.personal().expenses.find(item=>item.id===editingId);
+  const linked=entry?.itinerary&&!entry.allocation;
+  const enabled=$('#expenseCategory').value==='숙박비'&&!linked;
+  $('#expenseAmount').min=linked?'0':'1';$('#expenseStayRange').hidden=!enabled;
+  for(const id of ['expenseStayStart','expenseStayEnd'])$('#'+id).disabled=!enabled;
+  if(reset){$('#expenseStayStart').value=String(dayNumber);$('#expenseStayEnd').value=String(dayNumber+1);}
+  $('#expenseEntryDayField').hidden=enabled||!!linked;
+  const nights=Number($('#expenseStayEnd').value)-Number($('#expenseStayStart').value);
+  $('#expenseStayHint').textContent=nights>0?nights+'박 · 결제는 한 건으로 기록하고 여행 날짜별로 나눠 표시해요.':'체크인 다음 날짜부터 체크아웃을 선택하세요.';
+ }
  function resetEditor(){editingId=null;$('#expenseAmount').value='';$('#expenseMemo').value='';$('#expenseEditorTitle').textContent='지출 추가';$('#kisekiRecordExpense').textContent='이 날짜에 기록';$('#expenseEditCancel').hidden=true;stayFields(true);}
  function editEntry(id){const e=api.personal().expenses.find(x=>x.id===id);if(!e)return;editingId=id;dayNumber=e.day;$('#expenseAmount').value=String(e.amount);$('#expenseCurrency').value=e.currency;$('#expenseCategory').value=e.category;$('#expenseMemo').value=e.memo||'';$('#expenseEditorTitle').textContent='지출 수정';$('#kisekiRecordExpense').textContent='수정 저장';$('#expenseEditCancel').hidden=false;render();$('#expenseStayStart').value=String(e.allocation?.startDay||e.day);$('#expenseStayEnd').value=String(e.allocation?.endDay||e.day+1);stayFields();$('#expenseStatus').textContent='';$('#expenseAmount').focus();}
  function render(){
@@ -50,7 +60,34 @@
   $('#kisekiCostsDialog').addEventListener('click',e=>{const edit=e.target.closest('[data-edit-expense]');if(edit){editEntry(edit.dataset.editExpense);return;}const tab=e.target.closest('[data-expense-scope]'),date=e.target.closest('[data-expense-day]'),currency=e.target.closest('[data-expense-currency]');if(tab){scope=tab.dataset.expenseScope;render();}if(date){dayNumber=Number(date.dataset.expenseDay);scope='day';resetEditor();render();$('#expenseDate').focus();}if(currency){chartCurrency=currency.dataset.expenseCurrency;render();$(`[data-expense-currency="${chartCurrency}"]`).focus({preventScroll:true});}});
   $('#kisekiCostsDialog').addEventListener('focusin',e=>{if(e.target.matches('[data-expense-day]'))e.target.scrollIntoView({block:'nearest',inline:'nearest'});});
   for(const tab of document.querySelectorAll('[data-expense-scope]'))tab.onkeydown=e=>{if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;e.preventDefault();scope=e.key==='Home'?'day':e.key==='End'?'all':scope==='day'?'all':'day';render();$(scope==='day'?'#expenseDayTab':'#expenseAllTab').focus();};
-  $('#expenseAddForm').onsubmit=e=>{e.preventDefault();try{const old=editingId&&api.personal().expenses.find(x=>x.id===editingId);if(editingId&&!old)throw Error('이 지출은 다른 곳에서 삭제됐어요. 새로 열어 확인하세요.');const lodging=$('#expenseCategory').value==='숙박비',entry=lodging?TravelAssistantCore.lodgingExpense(Number($('#expenseStayStart').value),Number($('#expenseStayEnd').value),$('#expenseCurrency').value,$('#expenseAmount').value,$('#expenseMemo').value):TravelAssistantCore.expense(dayNumber,$('#expenseCurrency').value,$('#expenseAmount').value,$('#expenseCategory').value,$('#expenseMemo').value);if(old){entry.id=old.id;if(old.itinerary)entry.itinerary=old.itinerary;}const saved=TravelAssistant.updatePersonal(p=>{const i=old?p.expenses.findIndex(x=>x.id===old.id):-1;if(i>=0)p.expenses[i]=entry;else p.expenses.push(entry);});chartCurrency=entry.currency;dayNumber=entry.day;if(saved!==false)resetEditor();else{editingId=entry.id;$('#expenseEditorTitle').textContent='지출 수정';$('#kisekiRecordExpense').textContent='수정 저장';$('#expenseEditCancel').hidden=false;}render();$('#expenseStatus').textContent=saved===false?'기기 저장에 실패했어요. 현재 화면에만 반영됐으니 새로고침 전에 저장 공간을 확인하세요.':(lodging?TripData.date(entry.allocation.startDay)+' → '+TripData.date(entry.allocation.endDay)+' 숙박 총액':day().date+'에')+' '+number(entry.amount)+unit(entry.currency)+' 기록했어요.';}catch(error){$('#expenseStatus').textContent=error.message;}};
+  $('#expenseAddForm').onsubmit=e=>{
+   e.preventDefault();
+   try{
+    const currency=$('#expenseCurrency').value,amount=$('#expenseAmount').value;
+    const category=$('#expenseCategory').value,memo=$('#expenseMemo').value;
+    let entry;
+    const saved=TravelAssistant.updatePersonal(p=>{
+     const index=editingId?p.expenses.findIndex(item=>item.id===editingId):-1,old=p.expenses[index];
+     if(editingId&&!old)throw Error('이 지출은 다른 곳에서 삭제됐어요. 새로 열어 확인하세요.');
+     if(old?.itinerary&&!old.allocation){
+      p.expenses=TravelAssistantCore.itineraryExpense(p.expenses,{day:old.day,...old.itinerary},currency,amount,category,memo);
+      entry=p.expenses.at(-1);
+      return;
+     }
+     entry=category==='숙박비'
+      ?TravelAssistantCore.lodgingExpense(Number($('#expenseStayStart').value),Number($('#expenseStayEnd').value),currency,amount,memo)
+      :TravelAssistantCore.expense(dayNumber,currency,amount,category,memo);
+     if(old){entry.id=old.id;if(old.itinerary)entry.itinerary=old.itinerary;p.expenses[index]=entry;}
+     else p.expenses.push(entry);
+    });
+    chartCurrency=entry.currency;dayNumber=entry.day;
+    if(saved!==false)resetEditor();
+    else{editingId=entry.id;$('#expenseEditorTitle').textContent='지출 수정';$('#kisekiRecordExpense').textContent='수정 저장';$('#expenseEditCancel').hidden=false;}
+    render();
+    const range=entry.allocation,label=range?TripData.date(range.startDay)+' → '+TripData.date(range.endDay)+' 숙박 총액':day().date+'에';
+    $('#expenseStatus').textContent=saved===false?'기기 저장에 실패했어요. 현재 화면에만 반영됐으니 새로고침 전에 저장 공간을 확인하세요.':label+' '+number(entry.amount)+unit(entry.currency)+' 기록했어요.';
+   }catch(error){$('#expenseStatus').textContent=error.message;}
+  };
   $('#expenseBudgetForm').onsubmit=e=>{e.preventDefault();const values=[$('#expenseBudgetJPY').value,$('#expenseBudgetKRW').value].map(Number);if(!values.every(n=>Number.isSafeInteger(n)&&n>=0&&n<=100000000))return;const saved=TravelAssistant.updatePersonal(p=>p.budget={JPY:values[0],KRW:values[1]});render();$('#expenseStatus').textContent=saved===false?'기기 저장 실패 · 새로고침 전에 저장 공간을 확인하세요.':'전체 여행 예산을 저장했어요.';};
   window.addEventListener('routebook:personal-change',()=>{if($('#kisekiCostsDialog').open)render();});
  }

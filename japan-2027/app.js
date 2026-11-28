@@ -243,7 +243,7 @@ function renderStops(){
   const route=getLeg(i),prev=stops[i-1],gap=prev&&s.start&&prev.end?TripData.minutes(s.start)-TripData.minutes(prev.end):0,plannedTravel=route?.durationMin||Number((route?.durationLabel||'').match(/(\d+)/)?.[1])||0;
   const buffer=gap-plannedTravel>=60?`<div class="schedule-buffer">${gap}분 간격 · 이동 및 ${['airport','port','station'].includes(s.kind)?'수속·승차 여유':'자유시간·주변 산책·대기·지연 흡수'} (새 방문지 추가 없음)</div>`:'';
   const transport=itineraryTransport(s,prev,route,i);
-  return section+buffer+transport+`<div class="stop-row" id="stop-${i}">
+  return section+buffer+transport+`<div class="stop-row" id="stop-${i}" data-itinerary-stop="${i}">
    <div class="stop-card ${i===state.selected?'active':''} ${state.night&&isNight(s)?'night-focus':''}" data-stop="${i}" tabindex="0" role="button" aria-label="${i+1}. ${esc(s.time)} ${esc(stopLabel(s))} 지도에서 보기" aria-pressed="${i===state.selected}">
     <div class="stop-time">${itineraryClock(s.time)}</div>
     <div class="stop-content">
@@ -428,7 +428,7 @@ function renderOverviewTimetable(){
    const privatePlace=stop.kind==='home'||stop.privateLocation;
    const timeAndPlace=`<span class="stop-time">${itineraryClock(stop.time)}</span><span class="stop-name">${esc(privatePlace?'비공개 출발·도착지':stopLabel(stop))}</span>`;
    const row=privatePlace?`<div class="stop-card overview-timetable-stop">${timeAndPlace}</div>`:`<button type="button" class="stop-card overview-timetable-stop" data-overview-timetable-place="${i}">${timeAndPlace}</button>`;
-   return itineraryTransport(stop,stops[i-1],getLeg(i),i)+`<div class="stop-row">${row}</div>`;
+   return itineraryTransport(stop,stops[i-1],getLeg(i),i)+`<div class="stop-row" data-itinerary-stop="${i}">${row}</div>`;
   }).join(''));
   return `<details class="overview-timetable-day" data-overview-timetable-day="${day.n}" data-overview-timetable-variant="${esc(variant.id)}">
    <summary class="overview-timetable-heading"><strong>${esc(day.date)} ${esc(day.weekday)}</strong><span>${esc(label.city)}<small>${esc(stops.length?label.places:'등록된 일정 없음')}</small></span></summary>
