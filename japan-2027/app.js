@@ -98,7 +98,7 @@ function connectionImpact(leg,depart){
  if(!service)return '';
  const stops=state.data.days.find(day=>day.n===leg.dayNumber)?.variants.find(v=>v.id===leg.variant)?.stops||[];
  const checkpoints=backup.checkpoints.map(uid=>stops.find(stop=>stop.uid===uid)).filter(Boolean);
- const timing=service.arrive?'공개 시간표 도착 '+service.arrive:'예상 도착은 해당 편 발권 화면에서 확인';
+ const timing=service.arrive?'예정 도착 '+service.arrive:'예상 도착은 해당 편 발권 화면에서 확인';
  return `<p><strong>${esc(service.label)}</strong> · ${esc(timing)}</p><ul>${checkpoints.map(stop=>{
   if(!stop.start)return `<li>${esc(stop.name)} · ${esc(stop.time)}</li>`;
   const passed=service.arrive&&TripData.minutes(stop.start)<TripData.minutes(service.arrive);
@@ -109,7 +109,7 @@ function connectionBackupHtml(leg,showGuide=true){
  const backup=leg?.connectionBackup;
  if(!backup)return '';
  const selected=connectionChoices.get(leg.fromUid)||'';
- const guide=showGuide?`<p>${esc(backup.text)} <a href="${esc(backup.source)}" target="_blank" rel="noopener noreferrer">공개 시간표 ↗</a></p>`:'';
+ const guide=showGuide?`<p>${esc(backup.text)} <a href="${esc(backup.source)}" target="_blank" rel="noopener noreferrer">운행 시간표 ↗</a></p>`:'';
  return `<section class="connection-backup" data-connection-key="${esc(leg.fromUid)}">${guide}${backup.options?.length?
   `<label>대체편 고르기<select data-connection-choice aria-label="대체편 고르기"><option value="">기본 일정</option>${backup.options.map(({depart,label})=>`<option value="${esc(depart)}"${selected===depart?' selected':''}>${esc(label)}</option>`).join('')}</select></label><div data-connection-impact aria-live="polite">${connectionImpact(leg,selected)}</div>`:''
  }</section>`;

@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and three excursions',()=>{
- assert.equal(b.revision,'20261128-tokyo-kashiwa-contact-1');
+ assert.equal(b.revision,'20261128-tokyo-timetable-copy-1');
  assert.equal(b.data.version,b.revision);
  assert.equal(b.routes.version,b.revision);
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
@@ -122,7 +122,7 @@ test('airport and Skyliner payments retain the correct local dates and currencie
  assert.equal(busBack.arrivalAt,Date.parse('2027-01-20T10:56:00+09:00'));
  assert.equal(busBack.fare.min,45200);
  assert.match(busBack.travel.notice,/10B-3.*동대구터미널 1층 하차장.*중간 승하차 정류장 없음/);
- assert.match(busBack.travel.notice,/동대구 직통 07:20편 또는 08:00편.*공개 시간표 기준/);
+ assert.match(busBack.travel.notice,/동대구 직통 07:20편 또는 08:00편.*이용일 운행과 좌석은 예매 화면에서 확인/);
  assert.equal(busBack.parts[0].geometryAccuracy,'stop-verified-reference');
  assert.deepEqual(busBack.parts[0].coords,require('../scripts/tokyo-airport-geometry.json').rows.returnAirportBus.coords);
  assert.equal(returnDay.travelBookings.find(item=>item.key==='airport-bus-back-0650').leg,2);

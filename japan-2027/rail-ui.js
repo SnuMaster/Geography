@@ -313,12 +313,12 @@ function drawMapMovement(leg,{overview=false,local=false,symbols=true,index=leg.
 function busTimetableHtml(schedule){
  if(!schedule)return '';
  const journeys=trips=>'<ol>'+trips.map(([depart,arrive])=>'<li><b>'+esc(depart)+' → '+esc(arrive)+'</b></li>').join('')+'</ol>';
- return '<section class="bus-timetable"><h4>버스 출발 → 도착</h4>'+journeys(schedule.trips)+(schedule.skip?'<p><b>'+esc(schedule.skip.label)+'</b></p>'+journeys(schedule.skip.trips):'')+'<p class="geometry-note">'+(schedule.period?'동절기 '+esc(schedule.period)+' · ':'')+'공표 시간표 참고 · 실시간 미반영</p><a href="'+esc(schedule.source)+'" target="_blank" rel="noopener noreferrer">공식 시간표 ↗</a></section>';
+ return '<section class="bus-timetable"><h4>버스 출발 → 도착</h4>'+journeys(schedule.trips)+(schedule.skip?'<p><b>'+esc(schedule.skip.label)+'</b></p>'+journeys(schedule.skip.trips):'')+(schedule.period?'<p class="geometry-note">동절기 '+esc(schedule.period)+'</p>':'')+'<a href="'+esc(schedule.source)+'" target="_blank" rel="noopener noreferrer">공식 시간표 ↗</a></section>';
 }
 
 function busRouteDetails(leg){
  const b=leg.busRoute;if(!b)return '';
- return '<section class="bus-boarding-info"><h3>버스 승하차</h3><p><b>'+esc(b.boarding.name)+'</b> → <b>'+esc(b.alighting.name)+'</b></p><p>승차 정류장까지 도보 '+b.accessMinutes+'분 · 하차 후 도보 '+b.egressMinutes+'분 · 대기 여유 '+b.waitMinutes+'분</p>'+busTimetableHtml(leg.busTimetable)+'<details><summary>경유 정류장 '+b.stops.length+'곳</summary><ol>'+b.stops.map(s=>'<li>'+esc(s.name)+'</li>').join('')+'</ol></details><p class="geometry-note">'+esc(b.geometryBasis)+' · 확인 '+esc(b.checkedAt)+'</p>'+(b.winterTimetable?'<p class="geometry-note">동절기 공표 시간표 '+esc(b.winterTimetable.from)+'~'+esc(b.winterTimetable.through)+' 참고 · 실시간 지연·운휴 미반영</p>':'<p class="geometry-note">공개 정류장 자료 기준 · 여행일 운행·시각은 공식 안내에서 재확인</p>')+'<div class="popup-links">'+b.sources.filter(s=>/^https:\/\//.test(s)).slice(0,2).map((s,i)=>'<a href="'+esc(s)+'" target="_blank" rel="noopener noreferrer">'+(i?'정류장·자료':'노선 안내')+' ↗</a>').join('')+'</div></section>';
+ return '<section class="bus-boarding-info"><h3>버스 승하차</h3><p><b>'+esc(b.boarding.name)+'</b> → <b>'+esc(b.alighting.name)+'</b></p><p>승차 정류장까지 도보 '+b.accessMinutes+'분 · 하차 후 도보 '+b.egressMinutes+'분 · 대기 여유 '+b.waitMinutes+'분</p>'+busTimetableHtml(leg.busTimetable)+'<details><summary>경유 정류장 '+b.stops.length+'곳</summary><ol>'+b.stops.map(s=>'<li>'+esc(s.name)+'</li>').join('')+'</ol></details><p class="geometry-note">'+esc(b.geometryBasis)+' · 확인 '+esc(b.checkedAt)+'</p>'+(b.winterTimetable?'<p class="geometry-note">동절기 운행 '+esc(b.winterTimetable.from)+'~'+esc(b.winterTimetable.through)+'</p>':'<p class="geometry-note">공개 정류장 자료 기준 · 여행일 운행·시각은 공식 안내에서 재확인</p>')+'<div class="popup-links">'+b.sources.filter(s=>/^https:\/\//.test(s)).slice(0,2).map((s,i)=>'<a href="'+esc(s)+'" target="_blank" rel="noopener noreferrer">'+(i?'정류장·자료':'노선 안내')+' ↗</a>').join('')+'</div></section>';
 }
 
 function railOrderDetails(leg){

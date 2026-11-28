@@ -116,7 +116,7 @@ const RailDepartures = (() => {
  }
  function travelDate(day){return DepartureCore.japanDate(Date.parse('2027-01-08T00:00:00+09:00')+(Number(day)-1)*86400000);}
  function validityFor(key,date){return DepartureCore.validity(calendarOptions(key),date);}
- function warning(key,date){const p=profiles[key],v=validityFor(key,date);return !v.usable?`<p class="timetable-warning" role="status">여행일 시간표 갱신 필요 · ${esc(date)}<br>${p.validUntil?`기존 자료 유효 종료 ${esc(p.validUntil)} · `:''}공식 개정 자료 확인 전 열차 시각·탑승 선택을 표시하지 않아요.</p>`:`<p class="timetable-confidence">${esc(v.label)} · ${esc(date)}<br>예정 시각 · 실시간 지연 미반영</p>`;}
+ function warning(key,date){const p=profiles[key],v=validityFor(key,date);return !v.usable?`<p class="timetable-warning" role="status">여행일 시간표 갱신 필요 · ${esc(date)}<br>${p.validUntil?`기존 자료 유효 종료 ${esc(p.validUntil)} · `:''}공식 개정 자료 확인 전 열차 시각·탑승 선택을 표시하지 않아요.</p>`:'';}
  function notice(day,leg){return keysFor(leg).map(key=>warning(key,travelDate(day))).join('');}
  function noticeItems(days,routes){
   const found=new Map();
@@ -164,10 +164,9 @@ const RailDepartures = (() => {
    ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
    ${metricsHtml(selected)}
    ${metrics.planFare?`<p class="departure-plan-total">${esc(metrics.planFareLabel||'전체 이동 총액')} · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
-   <p class="departure-data-status">${p.sourceClass==='public-reference'?'공개 시간표 참고 · 여행일 미검증':'저장 시간표 기준'} · 실시간 지연 미반영</p>
    <details class="departure-timetable"><summary>시간표·탑승 선택</summary><div class="departure-timetable-body">
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
-   <div class="departure-date-basis">${itineraryDate?`<span>여행 계획 날짜 <b>${esc(itineraryDate)}</b> · 아래 열차는 현재 날짜 기준</span>`:''}<span data-departure-query-date>현재 날짜 기준 저장 시간표 조회 · 실시간 지연 미반영</span></div>
+   <div class="departure-date-basis">${itineraryDate?`<span>여행 계획 날짜 <b>${esc(itineraryDate)}</b> · 아래 열차는 현재 날짜 기준</span>`:''}<span data-departure-query-date></span></div>
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
    <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button></div></div></details>
    <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>`;
@@ -180,7 +179,6 @@ const RailDepartures = (() => {
    <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
    <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
    ${metricsHtml(metrics)}
-   <p class="departure-data-status">${esc(info?.label||'저장 시간표 없음')} · 실시간 정보 미지원</p>
    ${info?.notice?`<p class="departure-service-notice">${esc(info.notice)}</p>`:''}
    <details class="departure-timetable"><summary>운행 안내</summary><div class="departure-timetable-body">
    <p class="departure-date-basis">여행 계획 날짜 ${esc(travelDate(day))}</p>
@@ -377,7 +375,7 @@ window.TripPlanTransport=(()=>{
  }
  function prune(){const needed=new Set([...visible].flatMap(row=>neededKeys(contextLeg(row)||{parts:[]})));for(const key of schedules.keys())if(!needed.has(key)){schedules.delete(key);for(const id of normalized.keys())if(id.startsWith(key+'|'))normalized.delete(id);}}
  function tick(){
-  if(!dialog?.open||document.hidden)return;const now=Date.now(),clockNode=dialog.querySelector('[data-plan-transport-clock]');if(clockNode)clockNode.textContent='지금 기준 · '+new Date(now+32400000).toISOString().slice(5,19).replace('-','/').replace('T',' ')+' · 시간표 기준·지연 미반영';
+  if(!dialog?.open||document.hidden)return;const now=Date.now(),clockNode=dialog.querySelector('[data-plan-transport-clock]');if(clockNode)clockNode.textContent='지금 기준 · '+new Date(now+32400000).toISOString().slice(5,19).replace('-','/').replace('T',' ')+' KST/JST';
   for(const row of visible){const leg=contextLeg(row);if(!leg)continue;paintRow(row,now);const missing=neededKeys(leg).filter(k=>!schedules.has(k));if(missing.length){const epoch=generation;Promise.all(missing.map(load)).then(()=>{if(epoch===generation&&visible.has(row)&&dialog?.open&&!document.hidden)paintRow(row,Date.now());}).catch(()=>{});}}
  }
  function stop(){generation++;clearInterval(timer);timer=null;observer?.disconnect();observer=null;visible.clear();rows=[];schedules.clear();requests.clear();normalized.clear();}

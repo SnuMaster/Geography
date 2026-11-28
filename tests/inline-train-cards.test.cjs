@@ -15,7 +15,7 @@ test('Toyosu transfer renders three full station boards and charges the shared M
  const values=[...html.matchAll(/<small>(?:환승 포함 운임|환승 운임|선택 구간 IC 요금)<\/small><b>([\d,]+) JP¥<\/b>/g)].map(m=>Number(m[1].replaceAll(',','')));
  assert.deepEqual(values,[209,0,189]);assert.equal(values.reduce((a,b)=>a+b,0),398);
  assert.doesNotMatch(html,/<select|시간표 확인 필요/);
- assert.equal((html.match(/data-departure-profile=/g)||[]).length,3);assert.match(html,/공개 시간표 참고 · 여행일 미검증/);
+ assert.equal((html.match(/data-departure-profile=/g)||[]).length,3);
 });
 test('every active rail leg has a detailed board, including unknown timetables in mixed legs',()=>{
  let mixed=0;
@@ -46,7 +46,6 @@ test('explicitly named Revaty boards retain separate station codes and a plannin
   assert.equal((html.match(/assets\/operators\/revaty.png/g)||[]).length,1);
   assert.match(html,/Revaty · 계획 열차/);
   for(const code of index===0?['TS09','TN23','TN25']:['TN25','TS09'])assert.ok(html.includes('역 번호 '+code));
-  assert.match(html,/공개 시간표 참고 · 여행일 미검증/);
  }
 });
 
@@ -142,15 +141,13 @@ test('JR numbers use the official stacked frame and station abbreviations while 
  assert.equal(ctx.jrStationAbbreviation({from:'이케부쿠로',to:'우에노'},'to'),'UEN');
 });
 
-test('collapsed train cards retain visible limitations and move controls and sources into separate disclosures',()=>{
+test('collapsed train cards omit timetable caveats and keep boarding controls inside the disclosure',()=>{
  for(const [id,legs]of Object.entries(bundle.routes.days))for(const leg of legs){
   const html=render(Number(id.split('-')[0]),leg);
   for(const section of html.match(/<section class="station-departures[\s\S]*?<\/section>/g)||[]){
    assert.match(section,/<details class="departure-timetable"><summary>(?:시간표·탑승 선택|운행 안내)<\/summary>/,id);
    assert.doesNotMatch(section,/<details[^>]*\bopen(?:[ =>]|$)/,id);
-   const status=section.match(/<p class="departure-data-status">([^<]+)<\/p>/);
-   assert.ok(status&&/실시간 (지연 미반영|정보 미지원)/.test(status[1]),id);
-   assert.ok(section.indexOf(status[0])<section.indexOf('<details'),id);
+   assert.doesNotMatch(section,/departure-data-status|공개 시간표 참고|여행일 미검증|지연 미반영|실시간 정보 미지원/,id);
    if(section.includes('data-departure-profile=')){
     assert.match(section,/<details class="departure-timetable">[\s\S]*data-departure-body[\s\S]*data-ride-choose=[\s\S]*<\/details>/,id);
    }

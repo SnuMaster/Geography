@@ -75,11 +75,10 @@
       <div class="ride-picker-tools"><label class="ride-field">운행일<input id="rideDate" type="date" value="${h(selectedDate)}" aria-label="열차 운행일"></label><button type="button" class="ride-today" data-ride-today>지금 시간대</button></div>
       <label class="ride-field ride-search-label">열차 찾기<input id="rideSearch" type="search" value="${h(filter)}" placeholder="출발 시각 · 열차번호 · 행선지" aria-label="출발 시각 열차번호 행선지 검색" autocomplete="off"></label>
       <div class="ride-list-toolbar"><strong id="rideListCount">시간표를 불러오는 중…</strong><button type="button" id="rideAllDay" aria-pressed="${allDay}" data-ride-all>${allDay ? '지금 전후 보기' : '하루 전체 보기'}</button></div>
-      <p class="ride-service-note">시간표 기준 · 실시간 지연 미반영. 운행일은 오전 3시 기준이에요.</p>
+      <p class="ride-service-note">운행일은 오전 3시 기준이에요.</p>
       ${RailDepartures.disruptionHtml(p)}
       <div id="rideTrainList" class="ride-train-list" aria-busy="true"></div>
-      <p id="rideStatus" class="ride-status" role="status" aria-live="polite">${h(savedMessage)}</p>
-      <p class="ride-footnote">${h(p?.line || '')} · 시간표 기준 · 지연·운휴 자동 수신 없음</p>`;
+      <p id="rideStatus" class="ride-status" role="status" aria-live="polite">${h(savedMessage)}</p>`;
   }
   function renderList() {
     if (mode !== 'picker'||panel.hidden) return;
@@ -194,7 +193,7 @@
       ${RailDepartures.disruptionHtml(p,train.stops)}
       <details class="ride-correction"><summary>현재 역·지연 시간 맞추기</summary><p>현장 안내와 다르면 도착한 역을 직접 확인하거나 시간을 보정하세요. 보정은 내가 고른 열차에만 적용돼요.</p><button type="button" class="ride-departed" data-ride-departed>지금 출발역에서 출발했어요</button><form id="rideDelayForm"><label>추가 시간 보정 <span><input id="rideDelay" type="number" min="-120" max="240" step="1" value="${active.delaySeconds/60}" aria-label="열차 추가 지연 시간 분"> 분</span></label><button type="submit">적용</button></form><small>늦으면 양수, 빠르면 음수 · 역 확인 뒤 추가 보정도 가능</small><button type="button" class="ride-reset" data-ride-reset>원래 시간표로 초기화</button></details>
       <details class="ride-stop-details" open><summary>정차역과 예정 시각 <span>${train.stops.length}개 역</span></summary><ol id="rideStopList" class="ride-stop-list">${train.stops.map((stop,index)=>`<li data-ride-stop-row="${index}"><span class="ride-stop-dot"></span><div><strong>${h(stop.name)}</strong>${stop.nameJa&&stop.nameJa!==stop.name?`<small>${h(stop.nameJa)}</small>`:''}<span data-ride-stop-time="${index}"></span></div><button type="button" data-ride-confirm="${index}" aria-label="현재 ${h(stop.name)}역 확인">이 역 확인</button></li>`).join('')}</ol></details>
-      <div class="ride-data-note"><b>시간표에 따른 위치예요.</b> 지연·운휴는 자동으로 반영되지 않아요. 출발 시각만 제공된 역은 구간 이동으로 표시해요.${train.stopTimeNote?`<p>${h(train.stopTimeNote)}</p>`:''}</div>
+      <div class="ride-data-note"><b>시간표에 따른 위치예요.</b> 출발 시각만 제공된 역은 구간 이동으로 표시해요.${train.stopTimeNote?`<p>${h(train.stopTimeNote)}</p>`:''}</div>
       <div class="ride-footer"><span id="rideClock"></span><button type="button" class="ride-finish" data-ride-finish>하차 완료 · 추적 종료</button></div>
       <p class="ride-footnote">열차 선택과 시간 보정은 이 브라우저에 저장돼요. 새로고침해도 이어집니다. GPS 좌표는 저장하지 않아요.</p>`;
     RouteUI.ensureFocus(panel);paint(); resume();

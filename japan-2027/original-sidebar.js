@@ -40,7 +40,6 @@
     <span class="cc-sr">열차 상세</span>
    </summary>
    ${board}
-   <p class="itinerary-train-basis">저장된 여행 계획 · 실시간 지연 미반영</p>
    ${railGoogleLink(leg)}
    <button type="button" class="itinerary-train-detail" data-leg="${index}">지도·열차 정보 보기</button>
   </details>`;
