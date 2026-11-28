@@ -99,6 +99,12 @@ body.command-center.travel-shell :is(.booking-filters button[aria-pressed=true],
 .dining-table tr:last-child :is(th,td){border-bottom:0}
 .dining-table td:first-child,.dining-table td:nth-child(2),.dining-reservation small:not(.dining-confirmation){white-space:nowrap}
 .dining-reservation small{display:block;color:#5b554c;font-size:.8125rem}
+.booking-number-import:not(:has(button:not([hidden]),small:not(:empty))){display:none}
+.booking-number-import{display:flex;align-items:center;flex-wrap:wrap;gap:.35rem .65rem;margin-top:.35rem}
+.booking-numbers{display:flex;flex-wrap:wrap;gap:.35rem;margin-top:.35rem}
+.booking-number{display:inline-flex;align-items:center;flex-wrap:wrap;gap:.25rem .45rem;padding:.35rem .5rem;min-height:2.25rem;max-width:100%;border:1px solid #d8cbbb;border-radius:5px;background:#fcfaf5;color:#235747;text-align:left;font-size:.8125rem}
+.booking-number b{overflow-wrap:anywhere;font-variant-numeric:tabular-nums}
+.dining-reservation .booking-number{margin-top:.35rem}
 @media(max-width:560px){.dining-status-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.dining-table{min-width:29rem}}
 body.command-center.travel-shell :is(.booking-details,.cc-dialog-body details){border-color:#d8cbbb}
 body.command-center.travel-shell .cc-dialog-body p{color:#635c52}

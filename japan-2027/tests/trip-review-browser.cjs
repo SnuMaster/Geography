@@ -7,9 +7,26 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   const page=await browser.newPage({viewport:{width,height:1000}}),errors=[];
   await page.addInitScript(()=>{if(!localStorage.getItem('routebook-reservations-v1'))localStorage.setItem('routebook-reservations-v1',JSON.stringify({'flight-tokyo':{complete:true,ticket:{flight:'TW251'}},'flight-return-tokyo':{complete:true},'fuji-excursion':{complete:true,memo:'열차표 메모'},'nikko-pass-all-area':{complete:true}}));});
   page.on('pageerror',e=>errors.push(e.message));
-  await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main');
+  const sampleNumbers=[['fugetsu','DEMO-DINNER-1'],['fuji-excursion:outbound','DEMO-RAIL-1'],['fuji-excursion:return','DEMO-RAIL-2']];
+  const numberFragment=Buffer.from(JSON.stringify(sampleNumbers)).toString('base64url');
+  await page.goto('http://127.0.0.1:'+server.address().port+'/japan-2027/?day=1&variant=main#booking-numbers='+numberFragment);
   await page.waitForFunction(()=>window.__routebook,null,{timeout:15000}).catch(async err=>{throw Error((await page.locator('#mapLoading').textContent().catch(()=>''))+' '+errors.join(' / '),{cause:err});});
   await page.waitForFunction(()=>window.__routebook.state.routeData.days['13-main'][0].parts[0].flightTrack?.flightNumber==='MM809');
+  const saveNumbers=page.locator('#saveBookingNumberImport');
+  await saveNumbers.waitFor();
+  assert.equal(new URL(page.url()).hash,'');
+  assert.equal(await page.evaluate(()=>CommandCenter.bookingNumber('fugetsu')),undefined);
+  await saveNumbers.click();
+  const mealNumber=page.locator('#bookingDiningTable [data-booking-number="fugetsu"]');
+  assert.equal(await mealNumber.locator('b').innerText(),'DEMO-DINNER-1');
+  await page.context().grantPermissions(['clipboard-read','clipboard-write']);
+  await mealNumber.click();
+  await page.locator('#bookingNumberStatus').filter({hasText:'예약번호를 복사했어요.'}).waitFor();
+  assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'DEMO-DINNER-1');
+  await page.locator('[data-booking-filter="all"]').click();
+  assert.deepEqual(await page.locator('[data-booking-item="fuji-excursion"] .booking-number b').allTextContents(),['DEMO-RAIL-1','DEMO-RAIL-2']);
+  assert.equal(await page.locator('[data-booking-complete="fuji-excursion"]').isChecked(),false);
+  await page.locator('#closeBookingChecklist').click();
   assert.equal(await page.locator('#shellMore,#noticeBtn,#ccFilters').count(),0);
   const settings=page.locator('#shellTools #settingsBtn'),offlineSave=page.locator('#shellTools #offlinePackBtn');
   for(const button of [settings,offlineSave]){
@@ -335,6 +352,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   });
   await page.reload({waitUntil:'domcontentloaded'});
   await page.waitForFunction(()=>document.querySelector('#kisekiHeroPhoto')?.src.endsWith('/nikko.jpg'));
+  assert.deepEqual(await page.evaluate(keys=>keys.map(key=>CommandCenter.bookingNumber(key)),sampleNumbers.map(([key])=>key)),sampleNumbers.map(([,number])=>number));
   const context=page.context();
   const externalStreet=[];
   await context.route(/overpass/,route=>{externalStreet.push(route.request().url());return route.abort();});
