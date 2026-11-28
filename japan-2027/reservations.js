@@ -53,7 +53,6 @@
  ];
  const checklistGroups={prep:'출국 전 준비',priority:'신청 일정 먼저 확인',rail:'일본 열차·교통 패스',travel:'항공·숙소·교통',visit:'체험·입장권',food:'식당·카페'};
  let checklistConfig=null,checklistFilter='all';
- const numberHash='#booking-numbers=';
  let records={},storageAvailable=true;try{records=JSON.parse(localStorage.getItem(STORE)||'{}');if(!records||typeof records!=='object'||Array.isArray(records))records={};}catch(_){}
  function getRecords(){return JSON.parse(JSON.stringify(records));}
  function html(key,{popup=false,timing={}}={}){
@@ -190,13 +189,6 @@
   if(focusId){const target=document.getElementById(focusId)||dialog.querySelector('[data-booking-filter][aria-pressed=true]');target?.focus({preventScroll:true});}
  }
  function closeChecklist(){const dialog=document.getElementById('bookingChecklistDialog');if(dialog?.open){dialog.close();RouteUI.release(dialog);}}
- function takeNumberImport(){
-  if(!location.hash.startsWith(numberHash))return null;
-  const encoded=location.hash.slice(numberHash.length);
-  history.replaceState(history.state,'',location.pathname+location.search);
-  return encoded;
- }
- let startupImport=takeNumberImport();
  function parseNumberImport(encoded){
   if(!/^[A-Za-z0-9_-]{1,3072}$/.test(encoded))return null;
   let pairs;
@@ -207,28 +199,28 @@
  }
  function initChecklist(config){
   checklistConfig=config;const dialog=document.getElementById('bookingChecklistDialog'),button=document.getElementById('bookingChecklistBtn');if(!dialog||!button)return;
+  const importer=document.getElementById('bookingNumberImport'),numberInput=document.getElementById('bookingNumberInput');
   const importButton=document.getElementById('saveBookingNumberImport'),numberStatus=document.getElementById('bookingNumberStatus');
-  let importCandidate=null;
   const open=()=>{renderChecklist();if(!dialog.open)RouteUI.showDialog(dialog);};
-  function showNumberImport(encoded){
-   if(encoded===null)return;
-   importCandidate=parseNumberImport(encoded);
-   importButton.hidden=!importCandidate;
-   numberStatus.textContent=importCandidate?`링크에 담긴 예약번호 ${importCandidate.length}개를 개인 기록에 저장할 수 있어요.`:'이 일정에 가져올 수 있는 예약번호 링크인지 확인해 주세요.';
+  function showNumberImport(){
+   if(location.hash!=='#booking-numbers')return;
    checklistFilter='food';
+   importer.open=true;
    open();
+   numberInput.focus({preventScroll:true});
   }
   button.addEventListener('click',open);
   document.getElementById('closeBookingChecklist').addEventListener('click',closeChecklist);
   importButton.addEventListener('click',()=>{
-   if(!importCandidate)return;
-   if(!window.CommandCenter?.storeBookingNumbers?.(importCandidate)){
+   const pairs=parseNumberImport(numberInput.value.trim());
+   if(!pairs){numberStatus.textContent='이 일정의 예약번호 가져오기 코드를 확인해 주세요.';return;}
+   if(!window.CommandCenter?.storeBookingNumbers?.(pairs)){
     numberStatus.textContent='예약번호를 저장하지 못했어요. 브라우저 저장 설정을 확인해 주세요.';
     return;
    }
-   numberStatus.textContent=`예약번호 ${importCandidate.length}개를 저장했어요.`;
-   importCandidate=null;
-   importButton.hidden=true;
+   numberStatus.textContent=`예약번호 ${pairs.length}개를 저장했어요.`;
+   numberInput.value='';
+   importer.open=false;
    numberStatus.focus({preventScroll:true});
   });
   dialog.addEventListener('click',event=>{
@@ -245,8 +237,12 @@
   });
   window.addEventListener('routebook:reservation-change',()=>{if(dialog.open)queueMicrotask(renderChecklist);});
   window.addEventListener('routebook:booking-numbers-change',()=>{if(dialog.open)renderChecklist();});
-  window.addEventListener('hashchange',()=>showNumberImport(takeNumberImport()));
-  queueMicrotask(()=>{showNumberImport(startupImport);startupImport=null;});
+  dialog.addEventListener('close',()=>{
+   numberInput.value='';importer.open=false;
+   if(location.hash==='#booking-numbers')history.replaceState(history.state,'',location.pathname+location.search);
+  });
+  window.addEventListener('hashchange',showNumberImport);
+  queueMicrotask(showNumberImport);
  }
  document.addEventListener('input',event=>{
   const key=event.target.dataset.bookingMemo;if(!checklistItem(key))return;
