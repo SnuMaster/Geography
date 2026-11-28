@@ -50,10 +50,33 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   const sidebar=page.locator('#ccSidebarToggle');
   const sidebarWasClosed=await sidebar.getAttribute('aria-expanded')==='false';
   if(sidebarWasClosed)await sidebar.click();
+  assert.equal(await page.locator('#daySearch,#cityFilters,#shellTabMemo,#ccCalendar').count(),0);
+  assert.deepEqual(await page.locator('.shell-side-tabs [role="tab"]').allTextContents(),['원본 일정','주요 정보']);
+  const originalTab=page.locator('#shellTabToday'),infoTab=page.locator('#shellTabInfo');
+  await originalTab.press('ArrowRight');
+  assert.equal(await infoTab.getAttribute('aria-selected'),'true');
+  assert.equal(await page.locator('#shellInfo').isVisible(),true);
+  await infoTab.press('ArrowRight');
+  assert.equal(await originalTab.getAttribute('aria-selected'),'true');
+  assert.equal(await page.locator('#shellDateDock [data-day]').count(),13);
+  const airportDescription=page.locator('#stopList .stop-card').filter({hasText:'대구국제공항'}).first().locator('.stop-desc');
+  const airportLayout=()=>airportDescription.evaluate(el=>{
+   const style=getComputedStyle(el);
+   const range=document.createRange();
+   range.selectNodeContents(el);
+   return {clamp:style.webkitLineClamp,lines:range.getClientRects().length,scrollHeight:el.scrollHeight,height:el.clientHeight};
+  });
+  async function assertAirportTextFits(){
+   const {clamp,lines,scrollHeight,height}=await airportLayout();
+   assert.equal(clamp,'none');
+   assert.ok(lines>=2&&scrollHeight<=height+1,`Airport description at ${page.viewportSize().width}px has ${lines} lines and ${height}px for ${scrollHeight}px of text`);
+  }
+  await assertAirportTextFits();
   if(width===1440){
    const fullSize=page.viewportSize();
    await page.setViewportSize({width:816,height:620});
    await page.waitForSelector('body[data-viewport="fold"]');
+   await assertAirportTextFits();
    await page.locator('#ccDaySelect').selectOption('3');
    const rail=page.locator('#stopList [data-itinerary-train-leg="1"]');
    const wrapCount=nodes=>nodes.map(node=>{

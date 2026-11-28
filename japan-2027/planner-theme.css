@@ -51,7 +51,6 @@ body.command-center.travel-shell #dayList .day-item{background:#fffdf8;border-co
 body.command-center.travel-shell #dayList .day-item.active{background:#ede5d8;border-color:#94613f;box-shadow:inset 0 -2px #94613f}
 body.command-center.travel-shell #dayList .day-item.active:after,
 body.command-center.travel-shell #dayList .day-item.active .day-date{color:#805334}
-body.command-center.travel-shell .city-filters button.active{background:#10202e;color:#faf8f2}
 
 /* Floating map tools use the same paper, rules and selected navy state. */
 body.command-center.travel-shell :is(.shell-view-tabs,.map-title-card,.map-playbar,#shellContextCard,#routeFocusPanel,.location-card,.navigation-card,.ride-panel,.ride-mini){background:#faf8f2f5;color:#253440;border-color:#c7b8a4;border-radius:6px;box-shadow:0 8px 26px #10202e16}
@@ -62,7 +61,7 @@ body.command-center.travel-shell .shell-view-tabs button[aria-pressed=false]{bac
 body.command-center.travel-shell .map-action{background:#faf8f2;color:#10202e;border-color:#d8cbbb;border-radius:5px}
 body.command-center.travel-shell .cc-next>small{color:#805334}
 body.command-center.travel-shell :is(.route-focus-buttons button,.kiseki-external-links a,.navigation-controls button){background:#f3eee5;color:#253440;border-color:#d3c4b1;border-radius:4px}
-body.command-center.travel-shell :is(#routeNavigationStart,#shellSaveMemo,#kisekiRecordExpense){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
+body.command-center.travel-shell :is(#routeNavigationStart,#kisekiRecordExpense){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
 body.command-center.travel-shell :is(.leaflet-popup-content-wrapper,.leaflet-popup-tip){background:#faf8f2;color:#253440}
 body.command-center.travel-shell .leaflet-popup-content-wrapper{border:1px solid #c7b8a4;border-radius:6px}
 body.command-center.travel-shell .leaflet-popup-content a{color:#805334}

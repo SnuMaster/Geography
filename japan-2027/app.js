@@ -28,7 +28,7 @@ const icon=n=>`<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${ICON_P
 function icons(root=document){root.querySelectorAll('[data-icon]').forEach(el=>{el.innerHTML=icon(el.dataset.icon);});}
 icons();
 const MODE={walk:{label:'도보',color:'#78b995',icon:'walk'},metro:{label:'지하철',color:'#477b95',icon:'rail'},rail:{label:'철도',color:'#477b95',icon:'rail'},bus:{label:'버스',color:'#477b95',icon:'bus'},taxi:{label:'Uber Taxi',color:'#b9a7e8',icon:'taxi'},flight:{label:'비행기',color:'#c97a4c',icon:'flight'},ferry:{label:'배',color:'#73cdd2',icon:'ferry'}};
-const state={selectedVariantByDay:{},data:null,day:1,variant:'main',view:'daily',filter:'all',search:'',night:false,selected:-1,playing:null,routeData:null,passEnabled:false,pass:{enabled:false,kind:'physical',startAt:null,purchased:false}};
+const state={selectedVariantByDay:{},data:null,day:1,variant:'main',view:'daily',night:false,selected:-1,playing:null,routeData:null,passEnabled:false,pass:{enabled:false,kind:'physical',startAt:null,purchased:false}};
 let screenGeneration=0;
 // One atomic revision: never mix the former 22-day itinerary with the new trip.
 const tripFiles=['trip-update.json'];
@@ -184,17 +184,14 @@ function showItineraryLeg(index){
  return button;
 }
 function renderDays(){
- const results=JourneyState.search(state.data.days,state.search,state.selectedVariantByDay,state.filter,state.routeData.days);
- if(state.search){
-  $('#dayList').innerHTML=results.map((r,index)=>{const d=state.data.days.find(d=>d.n===r.day),v=d.variants.find(v=>v.id===r.variant);return `<button class="day-item search-result" data-search-result="${index}" data-result-day="${r.day}" data-result-variant="${esc(r.variant)}" data-place-id="${esc(r.placeId||'')}" aria-label="${esc(d.date+' '+(v.label||v.title)+' '+r.time+' '+r.label)}"><div class="day-date">${d.date.slice(3)}<small>JAN · ${d.weekday}</small></div><div><div class="day-caption">${esc(r.label)}</div><div class="day-city">${esc(r.time===d.date?d.date:d.date+' · '+r.time)}<br>${esc(v.label||v.title)}</div></div></button>`;}).join('')||'<div class="empty-search">검색한 일정이 없어요.<br>날짜나 장소 이름으로 찾아보세요.</div>';
-  $$('#dayList [data-search-result]').forEach(b=>b.addEventListener('click',()=>{const r=results[Number(b.dataset.searchResult)];navigateScreen({day:r.day,variant:r.variant,view:'daily',placeId:r.placeId},{revealPlace:true});if(r.type==='leg'){selectLeg(r.legIndex);showItineraryLeg(r.legIndex)?.scrollIntoView({block:'center',behavior:'instant'});}}));
- }else{
-  const days=state.data.days.filter(d=>state.filter==='all'||d.group===state.filter||d.n===state.day);let prev='';
-  $('#dayList').innerHTML=days.map(d=>{let h='';const v=d.variants.find(v=>v.id===JourneyState.chosen(d,state.selectedVariantByDay)),label=MapPlan.label(d,v);return h+`<button class="day-item ${d.n===state.day&&state.view==='daily'?'active':''}" data-day="${d.n}" aria-label="1월 ${d.date.slice(3)}일 ${esc(label.city+' · '+label.places)}" ${d.n===state.day&&state.view==='daily'?'aria-current="date"':''}><div class="day-date">${d.date.slice(3)}<small>JAN · ${d.weekday}</small></div><div><div class="day-caption">${esc(label.city)}</div><div class="day-city">${esc(label.places)}</div></div></button>`;}).join('');
-  $$('#dayList [data-day]').forEach(b=>b.addEventListener('click',()=>setDay(Number(b.dataset.day))));
- }
- if(!state.search&&innerWidth<=740&&state.view==='daily'){const list=$('#dayList'),active=list.querySelector('.day-item.active');if(active){const a=active.getBoundingClientRect(),b=list.getBoundingClientRect();list.scrollLeft+=a.left-b.left-(b.width-a.width)/2;}}
- $$('#cityFilters button').forEach(b=>(b.classList.toggle('active',b.dataset.city===state.filter),b.setAttribute('aria-pressed',String(b.dataset.city===state.filter))));
+ const list=$('#dayList');
+ list.innerHTML=state.data.days.map(day=>{
+  const variant=day.variants.find(v=>v.id===JourneyState.chosen(day,state.selectedVariantByDay));
+  const label=MapPlan.label(day,variant),active=day.n===state.day&&state.view==='daily',date=day.date.slice(3);
+  return `<button class="day-item ${active?'active':''}" data-day="${day.n}" aria-label="1월 ${date}일 ${esc(label.city+' · '+label.places)}" ${active?'aria-current="date"':''}><div class="day-date">${date}<small>JAN · ${day.weekday}</small></div><div><div class="day-caption">${esc(label.city)}</div><div class="day-city">${esc(label.places)}</div></div></button>`;
+ }).join('');
+ for(const button of list.querySelectorAll('[data-day]'))button.addEventListener('click',()=>setDay(Number(button.dataset.day)));
+ if(innerWidth<=740&&state.view==='daily'){const active=list.querySelector('.day-item.active');if(active){const a=active.getBoundingClientRect(),b=list.getBoundingClientRect();list.scrollLeft+=a.left-b.left-(b.width-a.width)/2;}}
 }
 function reservationWarningsHtml(v){return v.reservationWarnings?.length?`<section class="reservation-alert" role="status"><strong>예약 시각·연결 일정 확인 필요</strong><ul>${v.reservationWarnings.map(w=>`<li><b>${esc(w.name)}</b> · ${esc(w.message)}</li>`).join('')}</ul></section>`:'';}
 function renderHeader(){
@@ -384,7 +381,7 @@ function startPlay(){
  };run.tick();renderPlayback();
 }
 function selectedPlaceId(){const i=state.selected;return i>=0?JourneyState.placeId(getDay(),getVariant(),getStops()[i],i):null;}
-function screenSnapshot(){return {routebook:2,day:state.day,variant:state.variant,view:state.view,placeId:state.view==='daily'?selectedPlaceId():null,search:state.search,filter:state.filter,night:state.night,passEnabled:state.passEnabled,itineraryOpen:!!window.ItineraryDrawer?.isOpen(),scroll:{itinerary:$('#itineraryScroll').scrollTop,days:$('#dayList').scrollTop,x:window.scrollX,y:window.scrollY}};}
+function screenSnapshot(){return {routebook:2,day:state.day,variant:state.variant,view:state.view,placeId:state.view==='daily'?selectedPlaceId():null,night:state.night,passEnabled:state.passEnabled,itineraryOpen:!!window.ItineraryDrawer?.isOpen(),scroll:{itinerary:$('#itineraryScroll').scrollTop,days:$('#dayList').scrollTop,x:window.scrollX,y:window.scrollY}};}
 function updateUrl(mode='replace'){
  const snapshot=screenSnapshot(),url=JourneyState.url(location.href,snapshot,state.data.days);
  if(mode==='push'&&url!==location.href)history.pushState(snapshot,'',url);else history.replaceState(snapshot,'',url);
@@ -403,7 +400,6 @@ function navigateScreen(target,options={}){
  window.RouteLocation?.pauseFollow();stopPlay();map.stop();
  state.day=d.n;state.variant=variant;state.view=target.view==='overview'?'overview':'daily';state.selected=-1;
  if(options.snapshot)state.night=!!options.snapshot.night;state.passEnabled=!!state.pass.enabled;
- if(options.snapshot){state.search=options.snapshot.search||'';state.filter=options.snapshot.filter||'all';$('#daySearch').value=state.search;}
  $('#itineraryScroll').scrollTop=0;
  if(state.view==='overview')renderOverview({fit:!options.preserveMapView});else{renderDays();renderHeader();renderStops();renderMap(!options.preserveMapView);}renderPlayback();
  if(state.view==='daily'&&target.placeId){const stops=getStops(),index=stops.findIndex((stop,i)=>JourneyState.placeId(d,getVariant(),stop,i)===target.placeId);if(index>=0&&stops[index].kind!=='home'){selectStop(index,false,false,{history:false});const stop=stops[index];if(!options.preserveMapView)map.setView([stop.lat,stop.lng],15,{animate:false});if(options.restorePopup!==false&&!options.snapshot?.itineraryOpen)markers[index]?.bindPopup(popupHtml(stop,index),DetailView.options('place-info-popup',{routeStopIndex:index,interactionSource:'restore'})).openPopup();}}
@@ -414,7 +410,6 @@ function navigateScreen(target,options={}){
  requestAnimationFrame(()=>{
   if(generation!==screenGeneration)return;
   if(snapshot?.scroll){$('#itineraryScroll').scrollTop=snapshot.scroll.itinerary||0;$('#dayList').scrollTop=snapshot.scroll.days||0;window.scrollTo({left:snapshot.scroll.x||0,top:snapshot.scroll.y||0,behavior:'instant'});}
-  else if(options.revealPlace&&state.selected>=0){const el=$(`#stop-${state.selected}`);if(window.innerWidth>1024&&el){const scroller=$('#itineraryScroll');scroller.scrollTop=Math.max(0,scroller.scrollTop+el.getBoundingClientRect().top-scroller.getBoundingClientRect().top-35);}else el?.scrollIntoView({block:'center',behavior:'instant'});}
   else if(options.scrollNav)$('#dayList .day-item.active')?.scrollIntoView({block:'nearest',inline:'center',behavior:'instant'});
   if(options.history!=='none')updateUrl('replace');
  });
@@ -601,7 +596,6 @@ function bindEvents(){
  $('.brand').addEventListener('click',event=>{event.preventDefault();navigateScreen({day:1,variant:'main',view:'daily'});});
  window.addEventListener('popstate',event=>{const target=JourneyState.read(location.href,state.data.days,state.selectedVariantByDay);navigateScreen(target,{history:'none',snapshot:event.state?.routebook===2?event.state:null});});
  window.addEventListener('pagehide',()=>{screenGeneration++;if(state.data)try{sessionStorage.setItem('routebook-screen-snapshot-v1',JSON.stringify({url:location.href,snapshot:screenSnapshot()}));}catch(_){} });
- $('#cityFilters').addEventListener('click',e=>{const b=e.target.closest('[data-city]');if(!b)return;state.filter=b.dataset.city;renderDays();updateUrl('replace');});$('#daySearch').addEventListener('input',e=>{state.search=e.target.value.trim();renderDays();updateUrl('replace');});
  $('#dailyView').addEventListener('click',()=>setDay(state.day));$('#overviewView').addEventListener('click',showOverview);
  $('#prevDay').addEventListener('click',()=>setDay(state.day-1,{scrollNav:true}));$('#nextDay').addEventListener('click',()=>setDay(state.day+1,{scrollNav:true}));
  $('#fitBtn').addEventListener('click',()=>{pausePlay();window.FlightPlayback?.pause();window.RouteLocation?.pauseFollow();map.closePopup();routeAll=true;applyRouteFocus();fitRoute();});$('#focusBtn').addEventListener('click',()=>{pausePlay();window.FlightPlayback?.pause();window.RouteLocation?.pauseFollow();map.closePopup();fitRoute(true);});
@@ -612,7 +606,7 @@ function bindEvents(){
  $('#aboutBtn').addEventListener('click',()=>RouteUI.showDialog($('#aboutDialog')));$('#closeAbout').addEventListener('click',()=>{$('#aboutDialog').close();RouteUI.release($('#aboutDialog'));});$('#aboutDialog').addEventListener('click',e=>{if(e.target===$('#aboutDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom){e.target.close();RouteUI.release(e.target);}}});
  $('#alternateTiles').addEventListener('click',()=>{failedTileProviders.clear();setTiles(tileProvider==='world'?'topo':'world',{temporary:true,force:true});});
  $('#retryTiles').addEventListener('click',()=>{const provider=tileProvider;failedTileProviders.clear();setTiles(provider,{force:true,temporary:true});$('#tileError').classList.add('hidden');});
- document.addEventListener('keydown',e=>{if(e.defaultPrevented||e.target.closest('input,textarea,select,[contenteditable=true]')||RouteUI.hasLayer())return;if(e.key==='/'){e.preventDefault();$('#daySearch').focus();}else if(e.altKey&&e.shiftKey&&e.key==='ArrowRight'){e.preventDefault();setDay(state.day+1,{scrollNav:true});}else if(e.altKey&&e.shiftKey&&e.key==='ArrowLeft'){e.preventDefault();setDay(state.day-1,{scrollNav:true});}});
+ document.addEventListener('keydown',e=>{if(e.defaultPrevented||e.target.closest('input,textarea,select,[contenteditable=true]')||RouteUI.hasLayer())return;if(e.altKey&&e.shiftKey&&e.key==='ArrowRight'){e.preventDefault();setDay(state.day+1,{scrollNav:true});}else if(e.altKey&&e.shiftKey&&e.key==='ArrowLeft'){e.preventDefault();setDay(state.day-1,{scrollNav:true});}});
 }
 
 function focusRideProfile(key,station,selection={}){
