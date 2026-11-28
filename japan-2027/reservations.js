@@ -85,7 +85,12 @@
  function itemTiming(item,context){const day=context.days.find(d=>d.n===item.day),variant=day?.variants.find(v=>v.id===itemVariant(item,context));return variant?.stops.find(s=>s.reservationKey===item.key)?.reservationTiming||{};}
  function milestone(item){return item.milestones?.find(([at])=>Date.parse(at)>=Date.now())?.[1]||'';}
  function bookingKind(item){
-  if(item.diningStatus)return isComplete(item)?'예약 완료':item.diningStatus==='confirmed'?'예약 확인 필요':item.kind;
+  if(item.diningStatus){
+   if(isComplete(item))return '예약 완료';
+   if(item.diningStatus==='confirmed')return '예약 확인 필요';
+   if(item.diningOpensOn&&Date.now()>=Date.parse(item.diningOpensOn+'T00:00:00+09:00'))return '예약 가능 여부 확인';
+   return item.kind;
+  }
   if(!item.orderSelection)return item.kind;
   if(isComplete(item))return '발권 확인 완료';
   return Date.now()>=Date.parse(item.milestones?.[0]?.[0])?'발권 확인 필요':item.kind;
@@ -121,6 +126,29 @@
     <a href="${h(url)}" target="_blank" rel="noopener noreferrer" aria-label="${h(name)} 안내">안내 ↗</a></p></li>`).join('')}</ul>
    </details>`;
  }
+ function diningOverview(context,items){
+  const counts={'예약 완료':0,'승인 대기':0,'예약 개시 대기':0,'현장 방문':0};
+  const bookings=new Map(items.map(item=>[diningStop(item,context)?.uid,item]));
+  const rows=context.days.flatMap(day=>{
+   const variant=day.variants.find(v=>v.id===JourneyState.chosen(day,context.preferences));
+   const meals=(variant?.stops||[]).filter(stop=>stop.kind==='food').map(stop=>{
+    const item=bookings.get(stop.uid);
+    const kind=item?bookingKind(item):'현장 방문';
+    const status=kind==='예약 요청 · 승인 대기'?'승인 대기':kind;
+    if(Object.hasOwn(counts,status))counts[status]++;
+    return {slot:stop.details?.mealSlot,name:stop.name,menu:stop.details?.menu,status,booking:stop.diningBooking,item};
+   });
+   return [...meals,...(day.mealNotes||[])].map(row=>({...row,date:day.date}));
+  });
+  const table=(id,title,headers,body)=>`<div class="dining-table-wrap" role="region" aria-label="${title}" tabindex="0"><table class="dining-table" id="${id}"><thead><tr>${headers.map(label=>`<th scope="col">${label}</th>`).join('')}</tr></thead><tbody>${body}</tbody></table></div>`;
+  const visits=rows.map(({date,slot,name,menu,status,booking,item})=>{
+   const state=status==='예약 완료'?'confirmed':status?.includes('대기')?'waiting':'';
+   const metadata=item?.diningArrival&&booking?`${item.diningArrival.slice(11)} · ${booking.partySize}인 · ${booking.provider}`:'';
+   return `<tr><td>${h(date)}</td><td>${h(slot||'—')}</td><th scope="row">${h(name)}</th><td>${h(menu||'—')}</td><td class="dining-reservation" data-dining-state="${state}">${h(status||'—')}${metadata?`<small>${h(metadata)}</small>`:''}${item?.diningOpensOn?`<small>${h(item.diningOpensOn.slice(5).replace('-','/'))}부터 조회</small>`:''}</td></tr>`;
+  }).join('');
+  const cancellations=items.filter(item=>item.cancellation).map(item=>`<tr><th scope="row">${h(item.name)}</th><td>${h(item.cancellation.deadline)}</td><td>${h(item.cancellation.fee)}</td></tr>`).join('');
+  return `<section class="booking-group dining-overview"><h3>전체 식당 일정</h3><dl class="dining-status-summary">${Object.entries(counts).map(([label,count])=>`<div><dt>${label}</dt><dd>${count}곳</dd></div>`).join('')}</dl>${table('bookingDiningTable','전체 식당 일정',['날짜','구분','식당','메뉴','예약 현황'],visits)}${cancellations?`<h3>취소 조건</h3>${table('bookingDiningCancellation','식당 취소 조건',['식당','취소 권장 기한','수수료 안내'],cancellations)}`:''}</section>`;
+ }
  function renderChecklist(){
   const dialog=document.getElementById('bookingChecklistDialog'),list=document.getElementById('bookingChecklistList');if(!list||!checklistConfig)return;
   const model=checklistModel(),focusId=dialog.contains(document.activeElement)?document.activeElement.id:null,scroll=dialog.querySelector('.booking-dialog-body').scrollTop;
@@ -129,7 +157,7 @@
   const diningGuide=onSiteGuide(onSiteItems.filter(item=>item.group==='food'),'bookingWalkInDining','예약 없이 가는 식당',list.querySelector('#bookingWalkInDining[open]'));
   const otherGuide=onSiteGuide(onSiteItems.filter(item=>item.group!=='food'),'bookingOnSite','현장 구매·예약 없이 이용',list.querySelector('#bookingOnSite[open]'));
   const alternativeOpen=!!list.querySelector('[data-booking-alternatives][open]');
-  const visible=item=>checklistFilter==='all'||(checklistFilter==='done')===isComplete(item),active=model.active.filter(visible),alternatives=model.alternatives.filter(visible);
+  const visible=item=>checklistFilter==='food'?item.group==='food':checklistFilter==='all'||(checklistFilter==='done')===isComplete(item),active=model.active.filter(visible),alternatives=model.alternatives.filter(visible);
   document.getElementById('bookingChecklistCount').textContent=`${model.done} / ${model.active.length} 완료`;
   const progress=document.getElementById('bookingChecklistProgress');progress.max=Math.max(model.active.length,1);progress.value=model.done;
   document.getElementById('bookingStorageNote').textContent=storageAvailable?'이 브라우저에 자동 저장 · 실제 예약은 공식 링크에서':'현재 화면에만 반영됨 · 브라우저 저장 실패';
@@ -143,7 +171,8 @@
    const checklist=items.length?`<ul class="booking-list">${items.map(item=>checklistRow(item,model.context)).join('')}</ul>`:'';
    return `<section class="booking-group"><h3>${title}</h3>${checklist}${guide}</section>`;
   }).join('');
-  list.innerHTML=next+groups+(active.length?'':'<p class="booking-empty">이 조건에 맞는 예약이 없어요.</p>')+otherGuide+(alternatives.length?`<details data-booking-alternatives class="booking-alternatives"${alternativeOpen?' open':''}><summary>대체 일정의 예약 ${alternatives.length}개</summary><p>현재 선택한 일정의 완료 수에는 포함하지 않아요.</p><ul class="booking-list">${alternatives.map(item=>checklistRow(item,model.context,true)).join('')}</ul></details>`:'');
+  const overview=checklistFilter==='food'?diningOverview(model.context,active):'';
+  list.innerHTML=overview+next+groups+(active.length||overview?'':'<p class="booking-empty">이 조건에 맞는 예약이 없어요.</p>')+otherGuide+(alternatives.length?`<details data-booking-alternatives class="booking-alternatives"${alternativeOpen?' open':''}><summary>대체 일정의 예약 ${alternatives.length}개</summary><p>현재 선택한 일정의 완료 수에는 포함하지 않아요.</p><ul class="booking-list">${alternatives.map(item=>checklistRow(item,model.context,true)).join('')}</ul></details>`:'');
   for(const key of openKeys){const el=[...list.querySelectorAll('[data-booking-details]')].find(el=>el.dataset.bookingDetails===key);if(el)el.open=true;}
   dialog.querySelector('.booking-dialog-body').scrollTop=scroll;
   if(focusId){const target=document.getElementById(focusId)||dialog.querySelector('[data-booking-filter][aria-pressed=true]');target?.focus({preventScroll:true});}

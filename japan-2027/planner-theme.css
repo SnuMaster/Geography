@@ -85,6 +85,21 @@ body.command-center.travel-shell :is(.cc-dialog-body,#bookingChecklistDialog,#ac
 body.command-center.travel-shell :is(.cc-dialog-body .cc-primary,#accountDialog button[type=submit],#accountLogout){background:#10202e;color:#faf8f2;border-color:#10202e;border-radius:4px}
 body.command-center.travel-shell :is(.booking-summary,.booking-item,.account-tabs){background:#f3eee5;border-color:#d8cbbb;border-radius:5px}
 body.command-center.travel-shell :is(.booking-filters button[aria-pressed=true],.variant-tabs button.active,.account-tabs button[aria-selected=true]){background:#10202e;color:#faf8f2;border-color:#10202e}
+.dining-overview h3{margin-block:1rem .65rem}
+.dining-status-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:.4rem;margin:0 0 .8rem}
+.dining-status-summary div{min-width:0;padding:.6rem;border:1px solid #d8d1c5;border-radius:.45rem;background:#fcfaf5}
+.dining-status-summary dt{font-size:.875rem;overflow-wrap:break-word}
+.dining-status-summary dd{margin:.25rem 0 0;font-size:1.15rem;font-weight:700}
+.dining-status-summary div:first-child dd,.dining-reservation[data-dining-state="confirmed"]{color:#235747}
+.dining-reservation[data-dining-state="waiting"]{color:#805221}
+.dining-table-wrap{overflow:auto;border:1px solid #d8d1c5;border-radius:.45rem}
+.dining-table{width:100%;border-collapse:collapse;text-align:left;font-size:.875rem;line-height:1.45}
+.dining-table :is(th,td){padding:.55rem .65rem;border-bottom:1px solid #e3ddd1;vertical-align:top}
+.dining-table thead{background:#eee9de}
+.dining-table tr:last-child :is(th,td){border-bottom:0}
+.dining-table td:first-child,.dining-table td:nth-child(2),.dining-reservation small{white-space:nowrap}
+.dining-reservation small{display:block;color:#5b554c;font-size:.8125rem}
+@media(max-width:560px){.dining-status-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.dining-table{min-width:29rem}}
 body.command-center.travel-shell :is(.booking-details,.cc-dialog-body details){border-color:#d8cbbb}
 body.command-center.travel-shell .cc-dialog-body p{color:#635c52}
 body.command-center.travel-shell :is(.cc-dialog-body h3,.booking-item-title){color:#10202e}

@@ -28,25 +28,26 @@ test('booking checklist follows the actual itinerary dates and removes retired t
  assert.equal(pass.url,'https://www.tobu-maas.jp/traffic-tickets/1562/details');
  assert.equal(by['nikko-pass-all-area'],undefined);
  assert.equal(by.ibuki,undefined);
- const confirmed={luvfish:['1/11 · 12:45','핫페퍼'],ginzakashiwa:['1/16 · 12:30','이큐'],sushiden:['1/16 · 18:00','이큐'],okkon:['1/18 · 18:30','이큐']};
- for(const [key,[start,provider]] of Object.entries(confirmed)){
-  assert.equal(by[key].date,`${start} · 1인 · ${provider}`);
+ const confirmed={luvfish:['1/11 · 12:45','핫페퍼'],ikinoya:['1/14 · 13:00','TableCheck'],fugetsu:['1/14 · 18:00','타베로그'],ginzakashiwa:['1/16 · 12:30','이큐'],sushiden:['1/16 · 18:00','이큐'],'bebuya-shibuya':['1/17 · 18:45','타베로그',3],okkon:['1/18 · 18:30','이큐']};
+ for(const [key,[start,provider,partySize=1]] of Object.entries(confirmed)){
+  assert.equal(by[key].date,`${start} · ${partySize}인 · ${provider}`);
   assert.equal(by[key].diningStatus,'confirmed');
   assert.equal(by[key].action,undefined);
+  assert(by[key].cancellation?.deadline && by[key].cancellation?.fee);
  }
  assert.equal(by.kurofunetei.date,'1/13 · 11:30 · 1인 · 핫페퍼');
  assert.equal(by.kurofunetei.diningStatus,'requested');
  assert.equal(by.kurofunetei.action,'confirm');
- assert.equal(by.matsumotoro.date,'1/11 · 18:15 입장 목표');
+ assert.equal(by.matsumotoro.date,'1/11 · 18:15 · 1인 · TableCheck');
+ assert.equal(by.matsumotoro.diningOpensOn,'2026-12-11');
+ assert.equal(by.matsumotoro.kind,'예약 개시 대기');
  assert.match(by.matsumotoro.note,/12\/11부터/);
- assert.equal(by.goku.date,'1/19 · 19:30 입장 목표');
- assert.equal(by.goku.action,undefined);
- assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['bebuya-shibuya','luvfish','matsumotoro','kurofunetei','ginzakashiwa','sushiden','okkon','goku']);
+ assert.equal(by.goku,undefined);
+ assert.deepEqual(rows.filter(x=>x.group==='food').map(x=>x.key),['luvfish','matsumotoro','kurofunetei','ikinoya','fugetsu','ginzakashiwa','sushiden','bebuya-shibuya','okkon']);
  const bebuya=by['bebuya-shibuya'];
- assert.equal(bebuya.day,10);assert.equal(bebuya.date,'1/17 · 18:45 입장 목표');assert.equal(bebuya.stop,'BEBU-YA 시부야점');
- assert.match(bebuya.note,/야키니쿠.*4,000엔/);
- assert.equal(bebuya.url,'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true');
- assert.match(bebuya.details.join(' '),/SHIBUYA 5층.*성인 1명.*90분/);
+ assert.equal(bebuya.day,10);assert.equal(bebuya.stop,'BEBU-YA 시부야점');
+ assert.equal(bebuya.url,'https://tabelog.com/tokyo/A1303/A130301/13249575/');
+ assert.match(bebuya.details.join(' '),/SHIBUYA 5층.*친구 포함 3인/);
  assert.equal(by.skytree,undefined);assert.equal(by.zutomayo,undefined);
  assert(!rows.some(r=>/hakone|ishikawa|osaka|fukuoka|yamazaki/.test(r.key)));
  assert.equal(by['hotel-dome'],undefined);assert.equal(by['flight-tw251-20270108'].leg,1);

@@ -4,7 +4,7 @@ const T=require('../japan-2027/data-model');
 const b=JSON.parse(fs.readFileSync(__dirname+'/../japan-2027/trip-update.json'));
 T.prepare(b.data,b.routes);
 test('approved calendar with Jan 9 empty and three excursions',()=>{
- assert.equal(b.revision,'20261127-tokyo-dining-bookings-1');
+ assert.equal(b.revision,'20261128-tokyo-dining-overview-1');
  assert.equal(b.data.version,b.revision);
  assert.equal(b.routes.version,b.revision);
  assert.deepEqual(b.data.days.map(d=>d.n),Array.from({length:13},(_,i)=>i+1));
@@ -57,7 +57,7 @@ test('public map stops have unique new IDs, sources and one connected leg per in
 });
 test('every requested restaurant has its own dated stop, address and menu',()=>{
  const all=b.data.days.flatMap(d=>d.variants[0].stops);
- const expected=[['tarekatsu','rakkan'],['luvfish','matsumotoro'],['kobaiya','mentsudan'],['kurofunetei','oyama','aona'],['kagura','kukuru','fugetsu'],['tsumikko','katsura'],['ginzakashiwa','sushiden'],['negishi','bebuya'],['santon','wangfujing','edosei','okkon'],['noboritei','goku','isomaru']];
+ const expected=[['tarekatsu','rakkan'],['luvfish','matsumotoro'],['kobaiya','mentsudan'],['kurofunetei','aona'],['ikinoya','kukuru','fugetsu'],['tsumikko','katsura'],['ginzakashiwa','sushiden'],['negishi','bebuya'],['santon','wangfujing','edosei','okkon'],['noboritei']];
  const days=b.data.days.slice(2,12);
  for(const [i,d] of days.entries()){
   const dining=d.variants[0].stops.filter(s=>s.kind==='food');
@@ -68,12 +68,14 @@ test('every requested restaurant has its own dated stop, address and menu',()=>{
    if(s.diningBooking){
     const v=d.variants[0],i=v.stops.indexOf(s),legs=b.routes.days[d.n+'-main'];
     assert.equal(s.diningBooking.arrival,T.date(d.n)+'T'+s.start);
-    assert.equal(s.diningBooking.partySize,1);
+    assert.equal(s.diningBooking.partySize,s.planKey==='bebuya'?3:1);
     assert(T.minutes(s.start)-T.minutes(v.stops[i-1].end)>=legs[i-1].durationMinutes,s.name);
     assert(T.minutes(v.stops[i+1].start)-T.minutes(s.end)>=legs[i].durationMinutes,s.name);
    }
   }
  }
+ assert(!b.data.days[0].variants[0].stops.some(s=>s.kind==='food'));
+ assert.deepEqual(b.data.days[11].mealNotes,[{slot:'저녁',name:'미정'}]);
  assert(b.data.days[7].meals.includes('저녁 자유식 · 당일 결정'));
  assert(!all.some(s=>/도쿄 돔 호텔|스시노미도리/.test(s.name)));
  assert(all.some(s=>s.name==='도쿄 기프트 팔레트'));
@@ -130,9 +132,9 @@ test('airport and Skyliner payments retain the correct local dates and currencie
  const last=b.data.days[11].variants[0].stops;
  assert.equal(last[6].time,'18:30~19:00');
  assert.match(last[6].name,/짐 수령/);
- assert.equal(last[7].planKey,'goku');
- assert.equal(last[8].end,'20:55');
- assert.equal(last[9].start,'22:15');
+ assert.equal(last[7].name,'하네다공항 제3터미널');
+ assert.equal(last[7].start,'22:15');
+ assert.equal(b.routes.days['12-main'].at(-1).departureLocal,'2027-01-19T20:50');
  const airportStation=b.data.days[0].variants[0].stops.find(s=>s.uid===sky.fromUid);
  assert.match(airportStation.description,/38호 14:42 출발 → 15:23.*40호 .*15:02 → 게이세이우에노 15:43/);
  assert.equal(sky.connectionBackup.text,airportStation.connectionBackup.text);

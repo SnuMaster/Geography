@@ -86,37 +86,22 @@
    ];
    push(ibuki);
   }
-  const bebuya=anchor({
-   key:'bebuya-shibuya',group:'food',kind:'예약 필요',action:'reserve',name:'BEBU-YA 시부야점',
-   note:'시부야 우다가와초 · 야키니쿠 무한리필 4,000엔부터 (세금 포함)',
-   url:'https://booking.resty.jp/webrsv/search/s014205602/28188?isfixshop=true',
-   source:'https://shop.bsp-j.com/detail/Be_shibuya/',
-   details:[
-    '시부야구 우다가와초 31-1, HULIC & New SHIBUYA 5층이에요.',
-    '공식 예약 화면에서 성인 1명을 선택할 수 있어요. 날짜와 시각을 고르면 예약 가능한 코스가 표시돼요.',
-    '무한리필은 90분이고 주문 마감은 시작 70분 후예요. 원하는 코스의 와규 포함 여부와 음료 요금을 확인하세요.'
-   ]
-  },'bebuya');
-  if(bebuya){
-   bebuya.date=bebuya.date.split(/[~-]/)[0]+' 입장 목표';
-   bebuya.confirmDate=bebuya.date;
-   bebuya.details.unshift('기존 예약이 있으면 매장 예약 화면에서 새 일정과 날짜가 일치하는지 확인하세요.');
-   push(bebuya);
-  }
   const diningBookings=[
    ['luvfish','https://www.hotpepper.jp/strJ003560007/','성인의 날 점심 · 카이센동은 현장에서 주문.'],
    ['matsumotoro','https://www.tablecheck.com/en/shops/matsumotoro-grill/reserve','12/11부터 공휴일 저녁 1인 실내 좌석 조회 · 1층 그릴.'],
    ['kurofunetei','https://www.hotpepper.jp/strJ000012146/course_cnod41/','핫페퍼에서 매장 승인 알림을 확인하세요.'],
+   ['ikinoya','https://www.tablecheck.com/ja/uogashi-ikinoya','도요스 시장 수산중도매동 3층 · 생선조림 정식.'],
+   ['fugetsu','https://tabelog.com/tokyo/A1313/A131306/13017917/','아쿠아시티 오다이바 서관 6층 · 오코노미야키. 예약번호는 확인 메일에서 확인하세요.'],
    ['ginzakashiwa','https://restaurant.ikyu.com/109864','토·일·공휴일 점심 한정 토리마부시.'],
    ['sushiden','https://restaurant.ikyu.com/123384','GIRAC GINZA 11층 · 저녁 오마카세.'],
-   ['okkon','https://restaurant.ikyu.com/124794','요코하마 베이쿼터 5층 · 와규 스키야키 정식.'],
-   ['goku','https://tabelog.com/kr/tokyo/A1311/A131101/13050728/','공항 이동일이라 선택 예약 · 좌석만 잡고 20:10까지 식사를 마쳐요.']
+   ['bebuya','https://tabelog.com/tokyo/A1303/A130301/13249575/','HULIC & New SHIBUYA 5층 · 친구 포함 3인 와규 무한리필.'],
+   ['okkon','https://restaurant.ikyu.com/124794','요코하마 베이쿼터 5층 · 와규 스키야키 정식.']
   ];
   for(const [key,url,note] of diningBookings){
    const match=find(key);
    if(!match)continue;
    const {stop,day}=match;
-   const item=anchor({key,group:'food',kind:'사전 예약 권장',action:'reserve',name:stop.name,note,url,source:stop.source,details:[stop.address]},key);
+   const item=anchor({key:key==='bebuya'?'bebuya-shibuya':key,group:'food',kind:'사전 예약 권장',action:'reserve',name:stop.name,note,url,source:stop.source,details:[stop.address,note]},key);
    const start=item.date.split(/[~-]/,1)[0];
    const booking=stop.diningBooking;
    const tripYear=(context.metadata?.start||'2027-01-08').slice(0,4);
@@ -126,13 +111,18 @@
    if(booking?.arrival===arrival){
     item.diningStatus=booking.status;
     item.diningArrival=booking.arrival;
+    item.diningOpensOn=booking.opensOn;
+    item.cancellation=booking.cancellation;
     item.date=start+' · '+booking.partySize+'인 · '+booking.provider;
     item.confirmDate=start;
-    item.kind=booking.status==='confirmed'?'예약 완료':'예약 요청 · 승인 대기';
-    item.action=booking.status==='confirmed'?undefined:'confirm';
+    if(booking.status==='confirmed'){item.kind='예약 완료';item.action=undefined;}
+    if(booking.status==='requested'){item.kind='예약 요청 · 승인 대기';item.action='confirm';}
+    if(booking.status==='opening')item.kind='예약 개시 대기';
     item.details.push(stop.details.reservationNote);
+    if(item.cancellation){
+     item.details.push('취소 권장 기한 · '+item.cancellation.deadline,'취소 수수료 · '+item.cancellation.fee);
+    }
    }
-   if(key==='goku'){item.kind='선택 예약';item.action=undefined;}
    push(item);
   }
   const skytree=anchor(copy('skytree'),'skytree');
