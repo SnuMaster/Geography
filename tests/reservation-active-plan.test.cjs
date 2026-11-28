@@ -35,6 +35,16 @@ test('booking checklist follows the actual itinerary dates and removes retired t
   assert.equal(by[key].action,undefined);
   assert(by[key].cancellation?.deadline && by[key].cancellation?.fee);
  }
+ const confirmations={
+  fugetsu:['예약 메뉴 · 좌석만 예약','좌석 · 금연 테이블석','당일 현장 결제','최대 2시간 이용','별도 룸 요금 없음'],
+  ginzakashiwa:['예약 메뉴 · 히나이 토종닭 토리마부시 + 샐러드 + 차완무시','좌석 · 카운터석'],
+  sushiden:['예약 메뉴 · 디너 【上】 덴 오마카세 코스','좌석 · 카운터석'],
+  okkon:['예약 메뉴 · 흑모와규 스키야키 정식 (저녁 한정)','좌석 · 테이블석']
+ };
+ for(const [key,details] of Object.entries(confirmations)){
+  assert.deepEqual(by[key].diningDetails,details);
+  assert(details.every(detail=>by[key].details.includes(detail)));
+ }
  assert.equal(by.kurofunetei.date,'1/13 · 11:30 · 1인 · 핫페퍼');
  assert.equal(by.kurofunetei.diningStatus,'requested');
  assert.equal(by.kurofunetei.action,'confirm');
@@ -61,6 +71,7 @@ test('booking dates and visit time derive from the plan without editing checklis
  c.days[9].variants[0].stops.find(s=>s.planKey==='bebuya').time='19:00~20:30';
  const r=P.build(c,legacy);assert.match(r.find(x=>x.key==='fuji-excursion').date,/1\/13/);assert.match(r.find(x=>x.key==='fuji-excursion').milestones[0][0],/^2026-12-13/);assert.match(r.find(x=>x.key==='sushiden').date,/18:30/);
  assert.equal(r.find(x=>x.key==='sushiden').diningStatus,undefined);
+ assert.equal(r.find(x=>x.key==='sushiden').diningDetails,undefined);
  assert.equal(r.find(x=>x.key==='bebuya-shibuya').date,'1/17 · 19:00 입장 목표');
  assert.equal(r.find(x=>x.key==='travel-insurance').date,'출국 전 · 1/8~1/21');
  assert.equal(r.find(x=>x.key==='nikko-express').milestones[0][0],'2026-12-16T09:00:00+09:00');

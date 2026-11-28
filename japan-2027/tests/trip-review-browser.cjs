@@ -176,7 +176,7 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
   await page.waitForFunction(()=>window.__routebook.state.day===5);
   await page.locator('#bookingChecklistBtn').evaluate(el=>el.click());
   const result=await page.evaluate(()=>{const r=window.__routebook,b=r.state;
-   if(b.data.version!=='20261128-tokyo-dining-overview-1')throw Error('Old snapshot loaded');
+   if(b.data.version!=='20261128-tokyo-dining-confirmations-1')throw Error('Old snapshot loaded');
    const bookings=ReservationUI.getAssistantBookings(),by=Object.fromEntries(bookings.map(x=>[x.key,x]));
    if(by['fuji-excursion']?.day!==5||by['nikko-express']?.day!==8)throw Error('Wrong booking dates');
    if(by['fuji-excursion'].status!=='공식 판매 대기 중'||by['nikko-express'].status!=='공식 판매 대기 중')throw Error('Wrong rail request status');
@@ -193,6 +193,17 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    const lastDinner=[...diningTable.querySelectorAll('tbody tr')].find(row=>row.cells[0].textContent==='01/19'&&row.cells[1].textContent==='저녁');
    if(lastDinner?.cells[2].textContent!=='미정'||!cancellations.textContent.includes('1/13 13:00 이전'))throw Error('Missing dining overview or cancellation terms');
    if(diningTable.querySelectorAll('[data-dining-state="confirmed"]').length!==7)throw Error('Dining overview did not count the confirmed bookings');
+   const confirmedDetails=[
+    ['fugetsu','츠루하시 후게츠 오다이바점',['금연 테이블석','당일 현장 결제','최대 2시간 이용']],
+    ['ginzakashiwa','긴자 카시와',['샐러드 + 차완무시','카운터석']],
+    ['sushiden','긴자 스시 덴',['【上】 덴 오마카세 코스','카운터석']],
+    ['okkon','웃콘',['흑모와규 스키야키 정식 (저녁 한정)','테이블석']]
+   ];
+   for(const [key,name,expected] of confirmedDetails){
+    const row=[...diningTable.tBodies[0].rows].find(row=>row.cells[2].textContent===name);
+    const card=document.querySelector(`[data-booking-details="${key}"] .booking-details`);
+    if(!expected.every(text=>row?.cells[4].textContent.includes(text)&&card?.textContent.includes(text)))throw Error('Missing confirmation details: '+key);
+   }
    document.querySelector('[data-booking-filter="all"]').click();
    const skytree=document.querySelector('[data-booking-item="skytree"]');
    if(skytree||document.querySelector('[data-booking-item="zutomayo"]'))throw Error('Wrong Jan 18 bookings');
@@ -234,7 +245,8 @@ const server=http.createServer((req,res)=>{if(new URL(req.url,'http://localhost'
    r.setDay(12);
    const lastDay=document.querySelector('#stopList')?.textContent||'';
    if(!lastDay.includes('야나카 긴자')||!lastDay.includes('18:30부터 숙소 프런트')||lastDay.includes('보관함'))throw Error('Wrong last city day or baggage arrangement');
-   if(r.getStops().at(-1).uid!=='t27-12-hanedaT3'||!r.getLeg(9)||r.getLeg(10))throw Error('January 19 did not end at Haneda');
+   const airportLeg=r.getStops().length-1;
+   if(r.getStops().at(-1).uid!=='t27-12-hanedaT3'||r.getLeg(airportLeg)?.toUid!=='t27-12-hanedaT3'||r.getLeg(airportLeg+1))throw Error('January 19 did not end at Haneda');
    document.querySelector('#nextDay').click();
    if(r.state.day!==13||r.getStops()[0].time!=='00:00~01:55'||document.querySelector('#ccDaySelect').value!=='13'||!document.querySelector('.trip-summary').textContent.includes('13 DAYS'))throw Error('January 20 is missing from the day navigation');
    if(!document.querySelector('#stopList [data-leg="1"] .airline-peach')||!r.map.getContainer().querySelector('.airline-map-symbol .airline-peach'))throw Error('Missing Peach logo on itinerary or map');

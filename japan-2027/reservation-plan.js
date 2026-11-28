@@ -119,6 +119,11 @@
     if(booking.status==='requested'){item.kind='예약 요청 · 승인 대기';item.action='confirm';}
     if(booking.status==='opening')item.kind='예약 개시 대기';
     item.details.push(stop.details.reservationNote);
+    if(booking.confirmation){
+     const {plan,seat,conditions=[]}=booking.confirmation;
+     item.diningDetails=['예약 메뉴 · '+plan,'좌석 · '+seat,...conditions];
+     item.details.push(...item.diningDetails);
+    }
     if(item.cancellation){
      item.details.push('취소 권장 기한 · '+item.cancellation.deadline,'취소 수수료 · '+item.cancellation.fee);
     }

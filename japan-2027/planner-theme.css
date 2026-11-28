@@ -97,7 +97,7 @@ body.command-center.travel-shell :is(.booking-filters button[aria-pressed=true],
 .dining-table :is(th,td){padding:.55rem .65rem;border-bottom:1px solid #e3ddd1;vertical-align:top}
 .dining-table thead{background:#eee9de}
 .dining-table tr:last-child :is(th,td){border-bottom:0}
-.dining-table td:first-child,.dining-table td:nth-child(2),.dining-reservation small{white-space:nowrap}
+.dining-table td:first-child,.dining-table td:nth-child(2),.dining-reservation small:not(.dining-confirmation){white-space:nowrap}
 .dining-reservation small{display:block;color:#5b554c;font-size:.8125rem}
 @media(max-width:560px){.dining-status-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.dining-table{min-width:29rem}}
 body.command-center.travel-shell :is(.booking-details,.cc-dialog-body details){border-color:#d8cbbb}

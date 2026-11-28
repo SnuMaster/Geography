@@ -144,7 +144,8 @@
   const visits=rows.map(({date,slot,name,menu,status,booking,item})=>{
    const state=status==='예약 완료'?'confirmed':status?.includes('대기')?'waiting':'';
    const metadata=item?.diningArrival&&booking?`${item.diningArrival.slice(11)} · ${booking.partySize}인 · ${booking.provider}`:'';
-   return `<tr><td>${h(date)}</td><td>${h(slot||'—')}</td><th scope="row">${h(name)}</th><td>${h(menu||'—')}</td><td class="dining-reservation" data-dining-state="${state}">${h(status||'—')}${metadata?`<small>${h(metadata)}</small>`:''}${item?.diningOpensOn?`<small>${h(item.diningOpensOn.slice(5).replace('-','/'))}부터 조회</small>`:''}</td></tr>`;
+   const details=(item?.diningDetails||[]).map(line=>`<small class="dining-confirmation">${h(line)}</small>`).join('');
+   return `<tr><td>${h(date)}</td><td>${h(slot||'—')}</td><th scope="row">${h(name)}</th><td>${h(menu||'—')}</td><td class="dining-reservation" data-dining-state="${state}">${h(status||'—')}${metadata?`<small>${h(metadata)}</small>`:''}${item?.diningOpensOn?`<small>${h(item.diningOpensOn.slice(5).replace('-','/'))}부터 조회</small>`:''}${details}</td></tr>`;
   }).join('');
   const cancellations=items.filter(item=>item.cancellation).map(item=>`<tr><th scope="row">${h(item.name)}</th><td>${h(item.cancellation.deadline)}</td><td>${h(item.cancellation.fee)}</td></tr>`).join('');
   return `<section class="booking-group dining-overview"><h3>전체 식당 일정</h3><dl class="dining-status-summary">${Object.entries(counts).map(([label,count])=>`<div><dt>${label}</dt><dd>${count}곳</dd></div>`).join('')}</dl>${table('bookingDiningTable','전체 식당 일정',['날짜','구분','식당','메뉴','예약 현황'],visits)}${cancellations?`<h3>취소 조건</h3>${table('bookingDiningCancellation','식당 취소 조건',['식당','취소 권장 기한','수수료 안내'],cancellations)}`:''}</section>`;
