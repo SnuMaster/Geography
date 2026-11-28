@@ -1,0 +1,98 @@
+#assistantToggle{position:fixed;right:16px;bottom:calc(18px + env(safe-area-inset-bottom));z-index:750;border:1px solid #bbccc2;background:#193e3a;color:#fff;border-radius:24px;padding:12px 18px;box-shadow:0 3px 14px #193e3a22;font:inherit}
+#assistantPanel{position:fixed;z-index:790;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));width:min(390px,calc(100vw - 24px));height:min(720px,calc(var(--assistant-height,90dvh) - 70px));background:#fafbf8;border:1px solid #cbd6ce;border-radius:16px;box-shadow:0 10px 50px #193e3a33;display:flex;flex-direction:column;color:#193e3a;font-size:14px;line-height:1.6;font-family:inherit;overflow:hidden}
+#assistantPanel[hidden]{display:none}#assistantPanel header{display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #dce3da}#assistantPanel button{font:inherit;cursor:pointer;border:1px solid #bfcdc3;background:#fff;border-radius:8px;padding:7px 10px;color:#193e3a;min-height:38px}#assistantPanel button:disabled{opacity:.5}#assistantPanel :focus-visible{outline:3px solid #c97a4c;outline-offset:2px}.assistant-body{padding:12px 16px;overflow:auto;overscroll-behavior:contain;flex:1;min-height:0;touch-action:pan-y}#assistantPanel details{border-top:1px solid #dce3da;padding:10px 0}#assistantPanel summary{cursor:pointer;font-weight:600}#assistantPanel label{display:block;margin:8px 0}#assistantPanel input:not([type=checkbox]),#assistantPanel select,#assistantPanel textarea{max-width:100%;width:100%;font:inherit;border:1px solid #c3d0c6;border-radius:7px;background:white;padding:7px;box-sizing:border-box}#assistantPanel input[type=checkbox]{margin-right:8px}.assistant-quick{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.assistant-message{padding:10px 12px;border:1px solid #dce3da;border-radius:10px;margin:12px 0;background:#fff;overflow-wrap:anywhere}.assistant-message p{white-space:pre-wrap;margin:0 0 8px}.assistant-message.user{background:#eaf0e8;margin-left:28px}#assistantPanel pre{white-space:pre-wrap}#assistantPanel footer{padding:10px 14px;background:#f1f4ef;border-top:1px solid #cbd6ce}#assistantPanel footer>div{display:flex;gap:5px;margin-bottom:6px}#assistantForm{display:grid;grid-template-columns:1fr auto;gap:6px}#assistantForm select,#assistantForm label{grid-column:1/-1}#assistantForm label{margin:0;font-size:12px}#assistantForm textarea{resize:none}#assistantSensor{display:block;font-size:12px}#assistantContext{margin:0;font-weight:600}
+@media(max-width:740px){#assistantToggle{right:12px;bottom:calc(78px + env(safe-area-inset-bottom));padding:9px 13px;font-size:12px}body:has(.map-panel.location-active) #assistantToggle,body:has(.navigation-card:not([hidden])) #assistantToggle{bottom:calc(12px + env(safe-area-inset-bottom))}#assistantPanel{right:6px;left:6px;width:auto;bottom:var(--assistant-bottom,0px);height:min(76dvh,var(--assistant-height,76dvh));border-radius:16px 16px 0 0}#assistantPanel input,#assistantPanel textarea,#assistantPanel select{font-size:16px}#assistantPanel footer{padding-bottom:calc(10px + env(safe-area-inset-bottom))}}
+#assistantPanel .assistant-message.notice{background:#f3f5f1;color:#4f6259;border-style:dashed}
+#assistantAuthNotice{margin:0 0 8px;display:flex;align-items:center;gap:8px;font-size:12px;line-height:1.5}
+#assistantAuthNotice[hidden]{display:none}
+#assistantAuthNotice span{flex:1}#assistantAuthNotice button{flex:none}
+#assistantSpeechStatus{display:block;font-size:11px;line-height:1.45;color:#52685b;margin-bottom:7px}
+#assistantLoginStatus:empty{display:none}
+/* Chat first; optional tools have their own view. */
+#assistantPanel :is(#assistantChat,#assistantToolsPane,#assistantTranslation,#assistantEmpty,#assistantCancel,footer)[hidden]{display:none!important}
+#assistantPanel header{align-items:center;gap:8px}#assistantPanel header>strong{font-size:17px;font-weight:600}#assistantPanel header>div{display:flex;align-items:center;gap:6px}#assistantPanel header button{min-width:44px;min-height:44px;font-size:12px;padding:7px 10px}#assistantPanel #assistantCancel{color:#a44929;background:#fff0e4}
+#assistantPanel #assistantContext{font-size:12px;font-weight:500;color:#7e786e;line-height:1.5;margin:0 0 12px}#assistantEmpty{padding:16px 0 8px}#assistantEmpty strong{font-size:20px;color:#28383f;line-height:1.5;font-weight:600}#assistantEmpty p{font-size:12px;color:#81796d;margin:8px 0 14px;line-height:1.7}
+#assistantChat .assistant-quick{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:4px 0 20px}#assistantChat .assistant-quick button{font-size:12px;min-height:44px;background:#fff9ee;border-color:#e7d9c6;color:#634e3a;padding:10px 8px}#assistantPanel .assistant-message{font-size:13px;line-height:1.75;margin:12px 0;padding:12px;border-color:#e8dfd0}#assistantPanel .assistant-message.user{margin-left:30px}#assistantPanel .assistant-message [data-assistant-speech]{min-height:32px;font-size:11px;padding:5px 8px;background:transparent}#assistantPanel [data-assistant-speech]:disabled{display:none}
+#assistantPanel footer{padding:12px 14px}#assistantPanel #assistantForm{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:8px}#assistantPanel .assistant-input-label{position:absolute;width:1px;height:1px;padding:0;margin:-1px!important;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}#assistantPanel #assistantInput{font-size:14px;min-height:56px;padding:10px 12px;line-height:1.5;border-color:#dfd3c0;background:#fffdf9}#assistantPanel #assistantSend{min-height:48px;min-width:58px;padding:10px 12px;font-size:12px}#assistantPanel #assistantAuthNotice{font-size:11px;margin:0 0 8px;gap:7px}#assistantPanel #assistantAuthNotice button{font-size:11px;min-height:36px;padding:5px 9px}
+#assistantTranslation{grid-column:1/-1;display:flex;align-items:center;gap:6px;margin-bottom:2px}#assistantPanel #assistantTranslation select{flex:1;min-width:0;font-size:12px;min-height:40px}#assistantPanel #assistantModeExit{flex:none;min-height:40px;font-size:11px;padding:7px 9px}
+/* Compact tools: two columns, one expanded section, settings kept separate. */
+#assistantPanel[data-tools=true],.command-center #assistantPanel[data-tools=true]{height:auto;max-height:min(720px,calc(var(--assistant-height,90dvh) - 70px))}
+#assistantPanel #assistantToolsPane{padding:2px 0 4px}
+#assistantPanel .assistant-tool-shortcuts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 0 14px}
+#assistantPanel .assistant-tool-shortcuts button{min-height:44px;font-size:12px;background:#f9f2e6;border-color:#e6d7c1;color:#74573e}
+#assistantPanel .assistant-tool-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+#assistantPanel .assistant-tool-grid>details{min-width:0;margin:0;padding:0 12px;border:1px solid #e6dfd3;border-radius:10px;background:#fffdf8;overflow-wrap:anywhere}
+#assistantPanel .assistant-tool-grid>details>summary{display:flex;align-items:center;justify-content:space-between;gap:8px;list-style:none;min-height:52px;padding:0;font-size:13px;font-weight:500;color:#3d4b4c}
+#assistantPanel .assistant-tool-grid>details>summary::-webkit-details-marker{display:none}
+#assistantPanel .assistant-tool-grid>details>summary:after{content:'+';font-size:18px;font-weight:400;color:#a08b74}
+#assistantPanel .assistant-tool-grid>details[open]{grid-column:1/-1;padding-bottom:12px;border-color:#d6ad86;background:#fffcf6}
+#assistantPanel .assistant-tool-grid>details[open]>summary{color:#a9512b}
+#assistantPanel .assistant-tool-grid>details[open]>summary:after{content:'−'}
+#assistantPanel .assistant-tool-grid>#assistantConnectionDetails{grid-column:1/-1;background:transparent;border-width:1px 0 0;border-radius:0;padding-left:2px;padding-right:2px;margin-top:6px}
+#assistantPanel #assistantToolsPane p,#assistantPanel #assistantToolsPane label,#assistantPanel #assistantToolsPane small{font-size:12px;line-height:1.7}
+#assistantPanel #assistantToolsPane button{min-height:44px}
+.assistant-extra-quick{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:4px}.assistant-extra-quick button{font-size:12px!important}#assistantContextDetails{font-size:11px!important;color:#8a8071}#assistantAudioTools>button{font-size:12px;margin:0 5px 8px 0}
+@media(max-width:740px){#assistantPanel[data-tools=true],.command-center #assistantPanel[data-tools=true]{max-height:min(76dvh,var(--assistant-height,76dvh))}}
+@media(max-width:740px){#assistantPanel #assistantInput{font-size:16px}#assistantPanel .assistant-body{padding:12px 14px}#assistantPanel #assistantTranslation select{font-size:16px}#assistantEmpty strong{font-size:20px}}
+
+#assistantModelControls{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 8px;align-items:center;margin:8px 0 12px}#assistantPanel #assistantModelControls label{margin:0;font-size:12px}#assistantPanel #assistantModel{margin:0;min-height:44px;padding:6px 8px;width:100%;min-width:0}#assistantModelStatus{grid-column:1/-1;font-size:11px;color:#6b6d62;line-height:1.4}#assistantBudgetLine{margin-bottom:8px;color:#526359;font-size:11px;line-height:1.4}#assistantBudgetLine>div{display:flex;align-items:center;justify-content:space-between;gap:8px}#assistantPanel #assistantModelRefresh{min-width:44px;min-height:44px;padding:2px 8px;font-size:20px}#assistantBudgetNote{display:block;font-size:10px}#assistantModelBreakdown p{font-size:12px}.assistant-model-result{display:block;margin-top:8px;font-size:10px;color:#6a756d}
+
+#assistantBudgetLine{grid-column:1/-1;margin:0;padding-top:4px;border-top:1px solid #e4dfd3}
+
+/* KISEKI stationery: warm paper, quiet icons and a clear conversation hierarchy. */
+.command-center #assistantPanel.assistant-polished{background:#fffdf9;color:#293c40;border-color:#e5d8c7;box-shadow:0 18px 64px #43332026}
+#assistantPanel.assistant-polished header{background:#fcf6ed;border-bottom-color:#eadfce;padding:14px 16px;gap:10px;flex:none}
+#assistantPanel.assistant-polished header>strong{flex:1;line-height:1.4;letter-spacing:-.4px}
+#assistantPanel.assistant-polished header>strong:before{content:'KISEKI / CONCIERGE';display:block;font-size:8px;font-weight:500;letter-spacing:1.2px;color:#916c52;margin-bottom:3px}
+#assistantPanel .assistant-emblem{width:34px;height:34px;display:grid;place-items:center;border-radius:12px;background:#f4dfcb;color:#a95130;flex:none}
+#assistantPanel .assistant-emblem svg{width:18px;height:18px}
+#assistantPanel.assistant-polished header button{background:#fffaf3;border-color:#e4d7c5;color:#665342;border-radius:10px}
+#assistantPanel.assistant-polished .assistant-body{padding:16px;background:#fffdf9;scrollbar-width:thin;scrollbar-color:#d8c6b1 transparent}
+#assistantPanel.assistant-polished #assistantContext{display:flex;align-items:center;gap:7px;font-size:11px;color:#655b4f;margin-bottom:14px}
+#assistantPanel.assistant-polished #assistantContext:before{content:'';width:6px;height:6px;border-radius:50%;background:#bc714a;flex:none}
+#assistantPanel.assistant-polished #assistantEmpty{position:relative;padding:20px 16px 18px;border:1px solid #efdfcb;border-radius:16px;background:radial-gradient(ellipse at 100% 0,#f5e0cb80,transparent 70%),#fdf7ed;margin-bottom:14px}
+#assistantPanel #assistantEmpty>small{display:block;font-size:8px;letter-spacing:1.4px;color:#8a664f;margin-bottom:12px}
+#assistantPanel.assistant-polished #assistantEmpty strong{display:block;font-size:19px;letter-spacing:-.6px;color:#334447;max-width:90%}
+#assistantPanel.assistant-polished #assistantEmpty p{font-size:12px;line-height:1.7;color:#756554;margin:8px 0 0;max-width:92%}
+#assistantPanel .assistant-welcome-mark{position:absolute;right:14px;top:15px;width:24px;height:24px;color:#bd7c55;opacity:.75}
+#assistantPanel .assistant-welcome-mark svg{width:22px;height:22px}
+#assistantPanel.assistant-polished .assistant-quick{gap:8px;margin-bottom:14px}
+#assistantPanel.assistant-polished .assistant-quick button{display:flex;align-items:center;gap:8px;text-align:left;padding:12px 10px;background:#fffdf9;color:#50483f;border:1px solid #e9dfd1;border-radius:12px;font-size:12px}
+#assistantPanel.assistant-polished .assistant-quick svg{width:17px;height:17px;color:#b46c46;flex:none}
+#assistantPanel.assistant-polished #assistantModelControls{padding:12px;background:#f6f2eb;border:1px solid #ebe2d5;border-radius:12px;gap:5px 10px;margin:0 0 16px}
+#assistantPanel.assistant-polished #assistantModel{border-color:#e1d6c7;background:#fffdfa;font-size:12px;color:#3e4b4e;border-radius:9px}
+#assistantPanel.assistant-polished #assistantModelStatus,#assistantPanel.assistant-polished #assistantBudgetNote{color:#716355}
+#assistantPanel.assistant-polished #assistantBudgetLine{border-top-color:#e4d9cb}
+#assistantPanel.assistant-polished #assistantModelRefresh{background:transparent;border-color:transparent;color:#8d674b}
+#assistantPanel.assistant-polished .assistant-message{background:#fffdf9;border:1px solid #eadfce;border-radius:4px 16px 16px 16px;padding:14px;color:#354345;box-shadow:0 3px 9px #6e4c2205}
+#assistantPanel.assistant-polished .assistant-message.user{background:#f9e8d9;border-color:#efd7c0;border-radius:16px 4px 16px 16px;color:#5b402e}
+#assistantPanel.assistant-polished .assistant-message.notice{background:#f7f4ee;border-style:dashed;color:#655c50}
+#assistantPanel.assistant-polished footer{background:#fcf8f1;border-top-color:#eadfce;padding:12px 14px}
+#assistantPanel.assistant-polished #assistantInput{border-color:#e3d6c5;background:#fffdfa;border-radius:13px;color:#334447;min-height:56px}
+#assistantPanel.assistant-polished #assistantInput::placeholder{color:#827466}
+#assistantPanel.assistant-polished #assistantSend{background:#af512d;border-color:#af512d;color:#fff;border-radius:12px;box-shadow:0 3px 8px #9c4c241a}
+#assistantPanel.assistant-polished .assistant-tool-shortcuts button{display:flex;align-items:center;justify-content:center;gap:7px;background:#f7edde;border-color:#e8d7c0;border-radius:11px;color:#76563a}
+#assistantPanel .assistant-tool-shortcuts svg{width:16px;height:16px;flex:none}
+#assistantPanel.assistant-polished .assistant-tool-grid>details{border-color:#eadfce;border-radius:12px;background:#fffdf9;padding:0 10px}
+#assistantPanel.assistant-polished .assistant-tool-grid>details>summary{min-height:58px;gap:8px;font-size:12px}
+#assistantPanel .assistant-tool-icon{display:grid;place-items:center;width:28px;height:28px;background:#f7eee1;border-radius:9px;color:#a66a43;flex:none}
+#assistantPanel .assistant-tool-icon svg{width:16px;height:16px}
+#assistantPanel.assistant-polished .assistant-tool-grid>details>summary>span:nth-child(2){flex:1}
+#assistantPanel.assistant-polished .assistant-tool-grid>details[open]{border-color:#d9b38e;background:#fffbf3;padding-bottom:12px}
+#assistantPanel.assistant-polished .assistant-tool-grid>#assistantConnectionDetails{border-width:1px 0 0;border-radius:0;background:transparent}
+#assistantPanel #assistantConnectionDetails>summary{min-height:48px}
+#assistantPanel #assistantConnectionDetails .assistant-tool-icon{background:transparent}
+.command-center #assistantToggle{display:flex;align-items:center;justify-content:center;gap:7px}
+#assistantToggle svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+@media(hover:hover){#assistantPanel.assistant-polished .assistant-quick button:hover,#assistantPanel.assistant-polished .assistant-tool-grid>details:not([open]):hover{background:#fbf2e5;border-color:#d8b797}#assistantPanel.assistant-polished #assistantSend:hover{background:#964321}}
+@media(max-width:740px){#assistantPanel.assistant-polished #assistantInput,#assistantPanel.assistant-polished #assistantModel{font-size:16px}}
+@media(max-height:760px){
+ #assistantPanel.assistant-polished .assistant-body{padding:12px}
+ #assistantPanel.assistant-polished #assistantContext{margin-bottom:8px}
+ #assistantPanel.assistant-polished #assistantEmpty{padding:14px 14px 12px;margin-bottom:10px}
+ #assistantPanel.assistant-polished #assistantEmpty>small{margin-bottom:6px}
+ #assistantPanel.assistant-polished #assistantEmpty p{margin-top:6px}
+ #assistantPanel.assistant-polished .assistant-quick{margin:0 0 10px}
+ #assistantPanel.assistant-polished .assistant-quick button{padding:8px 10px}
+ #assistantPanel.assistant-polished #assistantModelControls{padding:10px;gap:3px 8px;margin-bottom:0}
+}

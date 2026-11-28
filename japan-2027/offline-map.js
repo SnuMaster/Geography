@@ -2,10 +2,9 @@
 (function(){
  let layer=null,roads=null,loading=null,owner=null,landReady=false,loadedDay=null,request=0,roadRenderer=null;
  const roadStyle=t=>{const k=t?.highway||'';return {color:/^(motorway|trunk|primary|secondary)/.test(k)?'#c3a88e':/^(footway|path|steps|pedestrian)/.test(k)?'#c8bfb0':'#c6c6b7',weight:/^(motorway|trunk|primary)/.test(k)?3:1.8,opacity:.85};};
- function currentDay(){return Number(window.__routebook?.state?.day||document.querySelector('#routeFocusPanel')?.dataset.day)||1;}
  async function refresh(){
-  if(!owner||!roads||!owner.hasLayer(layer))return;const day=currentDay();if(day===loadedDay)return;
-  const serial=++request;loadedDay=day;roads.clearLayers();const data=await window.OfflineRoads?.get(day);if(serial!==request||!data)return;
+  if(!owner||!roads||!owner.hasLayer(layer))return;const trip=window.__routebook?.state,day=trip?.data?.days.find(d=>d.n===trip.day);if(!day||day===loadedDay)return;
+  const serial=++request;loadedDay=day;roads.clearLayers();const data=await window.OfflineRoads?.get(day,trip.routeData);if(serial!==request||!data)return;
   const renderer=roadRenderer||(roadRenderer=L.canvas({padding:.3,pane:'offlineRoads'}));let labelCount=0,labels=[];
   for(const item of data.elements||[]){const tags=item.tags||{};
    if(item.type==='way'&&item.geometry?.length>1){const pts=item.geometry.map(p=>[p.lat,p.lon]).filter(p=>p.every(Number.isFinite));if(pts.length<2)continue;

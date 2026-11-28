@@ -1,0 +1,645 @@
+{
+  "revision": "20261118-complete-fares-2",
+  "checkedAt": "2026-11-18",
+  "rail": [
+    {
+      "operator": "Minatomirai",
+      "fromJa": "みなとみらい",
+      "toJa": "横浜",
+      "icYen": 193,
+      "paperTicketYen": 200,
+      "sources": [
+        "https://www.mm21railway.co.jp/station/minatomirai/fare.html?mode=pc"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "운영사 역간 운임표 · 성인 IC 편도"
+    },
+    {
+      "operator": "Keio",
+      "fromJa": "吉祥寺",
+      "toJa": "下北沢",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "sources": [
+        "https://www.keio.co.jp/train/ticket/fare_chart/passenger_fare.pdf",
+        "https://www.keio.co.jp/train/ticket/fare_chart/fare_chart_km.html",
+        "https://www.jorudan.co.jp/norikae/route/%E5%90%89%E7%A5%A5%E5%AF%BA_%E4%B8%8B%E5%8C%97%E6%B2%A2.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "2023-10-01 개정 · 9.7km 구간 성인 IC 운임"
+    },
+    {
+      "operator": "Toei",
+      "fromJa": "岩本町",
+      "toJa": "新宿三丁目",
+      "icYen": 220,
+      "paperTicketYen": 220,
+      "sources": [
+        "https://www.kotsu.metro.tokyo.jp/subway/fare/regular.html",
+        "https://www.jorudan.co.jp/norikae/route/%E5%B2%A9%E6%9C%AC%E7%94%BA_%E6%96%B0%E5%AE%BF%E4%B8%89%E4%B8%81%E7%9B%AE.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "도에이 신주쿠선 7.5km · 메트로와의 지정 환승 할인은 별도 계산"
+    },
+    {
+      "operator": "JR-East",
+      "fromJa": "渋谷",
+      "toJa": "鶯谷",
+      "icYen": 253,
+      "paperTicketYen": 260,
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/pamphlet.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E6%B8%8B%E8%B0%B7_%E9%B6%AF%E8%B0%B7.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "2026-03-14 개정 · 도쿄 근교 구간 특례에 따른 동일 OD 통합 운임, 선택한 야마노테선 이동 유지"
+    },
+    {
+      "operator": "JR-East",
+      "fromJa": "上野",
+      "toJa": "新宿",
+      "icYen": 253,
+      "paperTicketYen": 260,
+      "sources": [
+        "https://www.jreast.co.jp/en/2026unchin-kaitei/assets/pdf/dentoku_yamate.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E4%B8%8A%E9%87%8E_%E6%96%B0%E5%AE%BF.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "JR 공식 주요 구간 개정표 · 간다에서 열차를 갈아타도 같은 개찰 내 JR 통합 운임"
+    },
+    {
+      "operator": "Yurikamome",
+      "fromJa": "市場前",
+      "toJa": "東京国際クルーズターミナル",
+      "icYen": 325,
+      "paperTicketYen": 330,
+      "sources": [
+        "https://www.yurikamome.co.jp/company/news/b405570a69e5124744dcf7b90db48d69.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E5%B8%82%E5%A0%B4%E5%89%8D_%E6%9D%B1%E4%BA%AC%E5%9B%BD%E9%9A%9B%E3%82%AF%E3%83%AB%E3%83%BC%E3%82%BA%E3%82%BF%E3%83%BC%E3%83%9F%E3%83%8A%E3%83%AB.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "유리카모메 5.1km 구간 IC 운임"
+    },
+    {
+      "operator": "TobuNikko",
+      "fromJa": "東武日光",
+      "toJa": "北千住",
+      "icYen": 3333,
+      "paperTicketYen": 3340,
+      "sources": [
+        "https://www.tobu.co.jp/pdf/transit_fare/2026/spacia_nikko.pdf",
+        "https://www.tobu.co.jp/spaciax/assets/pdf/20241213_news.pdf",
+        "https://www.tobu.co.jp/railway/special_express/transit_fare/seasonal_calendar.pdf?202609="
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "2027-01-15 공식 달력상 통상기. 도부닛코–기타센주 기본 IC 1,393 + 시모이마이치–기타센주 스페이시아 X 스탠더드 특급권 1,940. 도부닛코–시모이마이치는 일반열차로 연결; 특급권 중복 합산 없음.",
+      "baseIcYen": 1393,
+      "basePaperTicketYen": 1400,
+      "reservedSurchargeYen": 1940,
+      "ticketRequired": true,
+      "ticketLabel": "스페이시아 X 스탠더드 특급권 · 기본 승차운임 별도",
+      "servicePattern": "Spacia.?X|스페이시아.?X|スペーシア.?X",
+      "travelDate": "2027-01-15",
+      "season": "normal"
+    },
+    {
+      "operator": "TokyoMetro",
+      "fromJa": "新橋",
+      "toJa": "銀座",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "sources": [
+        "https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E6%96%B0%E6%A9%8B_%E9%8A%80%E5%BA%A7.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "메트로 긴자선 성인 IC 기본운임"
+    },
+    {
+      "operator": "JR-East",
+      "fromJa": "上野",
+      "toJa": "鎌倉",
+      "icYen": 1034,
+      "paperTicketYen": 1040,
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/pamphlet.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E4%B8%8A%E9%87%8E_%E9%8E%8C%E5%80%89.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "2026-03-14 개정 · JR 내 환승을 포함한 상위 OD 단일 기본운임 · 그린차 제외"
+    },
+    {
+      "operator": "Enoden",
+      "fromJa": "和田塚",
+      "toJa": "鎌倉高校前",
+      "icYen": 260,
+      "paperTicketYen": 260,
+      "sources": [
+        "https://www.enoden.co.jp/tc/train/station/wadazuka/"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "에노덴 공식 역별 운임표 · 성인 편도, IC·현금 동일"
+    },
+    {
+      "operator": "Enoden",
+      "fromJa": "鎌倉高校前",
+      "toJa": "江ノ島",
+      "icYen": 200,
+      "paperTicketYen": 200,
+      "sources": [
+        "https://www.enoden.co.jp/tc/train/station/kamakurakokomae/"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "에노덴 공식 역별 운임표 · 성인 편도, IC·현금 동일"
+    },
+    {
+      "operator": "Enoden",
+      "fromJa": "腰越",
+      "toJa": "藤沢",
+      "icYen": 220,
+      "paperTicketYen": 220,
+      "sources": [
+        "https://www.enoden.co.jp/tc/train/station/koshigoe/"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "에노덴 공식 역별 운임표 · 성인 편도, IC·현금 동일"
+    },
+    {
+      "operator": "JR-East",
+      "fromJa": "藤沢",
+      "toJa": "秋葉原",
+      "icYen": 1034,
+      "paperTicketYen": 1040,
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/pamphlet.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E8%97%A4%E6%B2%A2_%E7%A7%8B%E8%91%89%E5%8E%9F.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "2026-03-14 개정 · 신바시 환승 포함 JR 56.5km 통합 기본운임 · 그린차 제외"
+    },
+    {
+      "operator": "JR-East",
+      "fromJa": "飯田橋",
+      "toJa": "水道橋",
+      "icYen": 155,
+      "paperTicketYen": 160,
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/pamphlet.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E9%A3%AF%E7%94%B0%E6%A9%8B_%E6%B0%B4%E9%81%93%E6%A9%8B.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "2026-03-14 개정 · 주오·소부 각역정차 한 구간 성인 IC"
+    },
+    {
+      "operator": "Toei",
+      "fromJa": "水道橋",
+      "toJa": "日比谷",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "sources": [
+        "https://www.kotsu.metro.tokyo.jp/subway/fare/regular.html",
+        "https://www.jorudan.co.jp/norikae/route/%E6%B0%B4%E9%81%93%E6%A9%8B_%E6%97%A5%E6%AF%94%E8%B0%B7.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "도에이 1–4km 기본운임 · 메트로 환승 할인은 합산 때 반영"
+    },
+    {
+      "operator": "TokyoMetro",
+      "fromJa": "日比谷",
+      "toJa": "乃木坂",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "sources": [
+        "https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E6%97%A5%E6%AF%94%E8%B0%B7_%E4%B9%83%E6%9C%A8%E5%9D%82.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "치요다선 3.8km 성인 IC · 도에이 지정 환승 시 70 JP¥ 할인 별도 반영"
+    },
+    {
+      "operator": "Toei",
+      "fromJa": "御成門",
+      "toJa": "水道橋",
+      "icYen": 220,
+      "paperTicketYen": 220,
+      "sources": [
+        "https://www.kotsu.metro.tokyo.jp/subway/fare/regular.html",
+        "https://www.jorudan.co.jp/norikae/route/%E5%BE%A1%E6%88%90%E9%96%80_%E6%B0%B4%E9%81%93%E6%A9%8B.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "미타선 5.3km 성인 IC"
+    },
+    {
+      "operator": "Toei",
+      "fromJa": "水道橋",
+      "toJa": "大手町",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "sources": [
+        "https://www.kotsu.metro.tokyo.jp/subway/fare/regular.html",
+        "https://www.jorudan.co.jp/norikae/route/%E6%B0%B4%E9%81%93%E6%A9%8B_%E5%A4%A7%E6%89%8B%E7%94%BA%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "미타선 성인 IC 기본운임 · 왕복 방향 동일"
+    },
+    {
+      "operator": "TokyoMetro",
+      "fromJa": "大手町",
+      "toJa": "三越前",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "sources": [
+        "https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E5%A4%A7%E6%89%8B%E7%94%BA%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89_%E4%B8%89%E8%B6%8A%E5%89%8D.html"
+      ],
+      "checkedAt": "2026-11-18",
+      "basis": "한조몬선 0.7km 성인 IC 기본운임"
+    },
+    {
+      "operator": "Enoden",
+      "mode": "rail",
+      "fromJa": "長谷",
+      "toJa": "江ノ島",
+      "icYen": 260,
+      "paperTicketYen": 260,
+      "baseIcYen": 260,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.enoden.co.jp/train/fare/"
+      ]
+    },
+    {
+      "operator": "Enoden",
+      "mode": "rail",
+      "fromJa": "江ノ島",
+      "toJa": "藤沢",
+      "icYen": 220,
+      "paperTicketYen": 220,
+      "baseIcYen": 220,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.enoden.co.jp/train/fare/"
+      ]
+    },
+    {
+      "operator": "JR-East",
+      "mode": "rail",
+      "fromJa": "藤沢",
+      "toJa": "上野",
+      "icYen": 1034,
+      "paperTicketYen": 1040,
+      "baseIcYen": 1034,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/pamphlet.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E8%97%A4%E6%B2%A2_%E4%B8%8A%E9%87%8E.html"
+      ]
+    },
+    {
+      "operator": "Yurikamome",
+      "mode": "rail",
+      "fromJa": "お台場海浜公園",
+      "toJa": "新橋",
+      "icYen": 325,
+      "paperTicketYen": 330,
+      "baseIcYen": 325,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.yurikamome.co.jp/ride-guidance/fare.html"
+      ]
+    },
+    {
+      "operator": "TokyoMetro",
+      "mode": "metro",
+      "fromJa": "新橋",
+      "toJa": "入谷",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "baseIcYen": 209,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.tokyometro.jp/info/files/20260414_jp.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E6%96%B0%E6%A9%8B_%E5%85%A5%E8%B0%B7%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89.html"
+      ]
+    },
+    {
+      "operator": "JR-East",
+      "mode": "rail",
+      "fromJa": "上野",
+      "toJa": "東京",
+      "icYen": 199,
+      "paperTicketYen": 200,
+      "baseIcYen": 199,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/dentoku_yamate.pdf"
+      ]
+    },
+    {
+      "operator": "Toei",
+      "mode": "metro",
+      "fromJa": "大手町",
+      "toJa": "御成門",
+      "icYen": 178,
+      "paperTicketYen": 180,
+      "baseIcYen": 178,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 · 동일 개찰 내 환승·직통 포함 · 공표 운임",
+      "sources": [
+        "https://www.kotsu.metro.tokyo.jp/toei-guide/guide2026.pdf"
+      ]
+    },
+    {
+      "operator": "TokyoMetro",
+      "mode": "metro",
+      "fromJa": "入谷",
+      "toJa": "築地",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "baseIcYen": 209,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 도쿄메트로 공표 운임",
+      "sources": [
+        "https://www.tokyometro.jp/ticket/terms/pdf/ic_card_260314.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E5%85%A5%E8%B0%B7%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89_%E7%AF%89%E5%9C%B0.html"
+      ]
+    },
+    {
+      "operator": "TokyoMetro",
+      "mode": "metro",
+      "fromJa": "神谷町",
+      "toJa": "入谷",
+      "icYen": 209,
+      "paperTicketYen": 210,
+      "baseIcYen": 209,
+      "checkedAt": "2026-11-24",
+      "basis": "성인 편도 도쿄메트로 공표 운임",
+      "sources": [
+        "https://www.tokyometro.jp/ticket/terms/pdf/ic_card_260314.pdf",
+        "https://www.jorudan.co.jp/norikae/route/%E7%A5%9E%E8%B0%B7%E7%94%BA_%E5%85%A5%E8%B0%B7%EF%BC%88%E6%9D%B1%E4%BA%AC%EF%BC%89.html"
+      ]
+    }
+  ],
+  "bus": [
+    {
+      "signature": [
+        [
+          "bus",
+          "Fujikyu.Kawaguchiko.Red",
+          "가와구치코역",
+          "오이시공원"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "mode": "bus",
+          "from": "가와구치코역",
+          "to": "가와구치코 자연생활관",
+          "fromJa": "河口湖駅",
+          "toJa": "河口湖自然生活館",
+          "lineIds": [
+            "Fujikyu.Kawaguchiko.Red"
+          ],
+          "icYen": 570,
+          "paperTicketYen": 570,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-18",
+          "sources": [
+            "https://bus.fujikyu.co.jp/rosen/gtfs/",
+            "https://gtfs-jp.buskita.com/fjb/gtfs.zip",
+            "https://bus.fujikyu.co.jp/pdf/omni_map_202604.pdf"
+          ],
+          "basis": "공식 GTFS 河口湖周遊バス route 80611 · zone 0025 → 1857",
+          "sourceSha256": "3b364f6f5ba71eb9ee16fd92101de892193619792e6f55c62cb247b72beec121"
+        }
+      ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "Fujikyu.Kawaguchiko.Red",
+          "오이시공원",
+          "호토 후도 가와구치코 북본점"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "mode": "bus",
+          "from": "가와구치코 자연생활관",
+          "to": "가와구치코 미술관",
+          "fromJa": "河口湖自然生活館",
+          "toJa": "河口湖美術館",
+          "lineIds": [
+            "Fujikyu.Kawaguchiko.Red"
+          ],
+          "icYen": 280,
+          "paperTicketYen": 280,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-18",
+          "sources": [
+            "https://bus.fujikyu.co.jp/rosen/gtfs/",
+            "https://gtfs-jp.buskita.com/fjb/gtfs.zip",
+            "https://bus.fujikyu.co.jp/pdf/omni_map_202604.pdf"
+          ],
+          "basis": "공식 GTFS 河口湖周遊バス route 80611 · zone 1857 → 1837 · 호토 후도 북본점 접근 도보",
+          "sourceSha256": "3b364f6f5ba71eb9ee16fd92101de892193619792e6f55c62cb247b72beec121"
+        }
+      ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "Fujikyu.Kawaguchiko.Red",
+          "가와구치코 북쪽 호숫가",
+          "가와구치코 파노라마 로프웨이"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "mode": "bus",
+          "from": "가와구치코 미술관",
+          "to": "유람선·로프웨이 입구",
+          "fromJa": "河口湖美術館",
+          "toJa": "遊覧船ロープウェイ入口",
+          "lineIds": [
+            "Fujikyu.Kawaguchiko.Red"
+          ],
+          "icYen": 230,
+          "paperTicketYen": 230,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-18",
+          "sources": [
+            "https://bus.fujikyu.co.jp/rosen/gtfs/",
+            "https://gtfs-jp.buskita.com/fjb/gtfs.zip",
+            "https://bus.fujikyu.co.jp/pdf/omni_map_202604.pdf"
+          ],
+          "basis": "공식 GTFS 河口湖周遊バス route 80611 · zone 1837 → 0039",
+          "sourceSha256": "3b364f6f5ba71eb9ee16fd92101de892193619792e6f55c62cb247b72beec121"
+        }
+      ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "TobuBus.Nikko.C",
+          "도부닛코",
+          "게곤폭포"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "TobuBus",
+          "mode": "bus",
+          "from": "도부닛코역",
+          "to": "주젠지온천",
+          "fromJa": "東武日光駅",
+          "toJa": "中禅寺温泉",
+          "lineIds": [
+            "TobuBus.Nikko.C"
+          ],
+          "icYen": 1250,
+          "paperTicketYen": 1250,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-18",
+          "sources": [
+            "https://www.tobu-bus.com/uploads/files/%25E6%2597%25A5%25E5%2585%2589%25E9%2581%258B%25E8%25B3%2583%25E6%2594%25B9%25E5%25AE%259A%25EF%25BC%2593.pdf"
+          ],
+          "basis": "도부버스 닛코 공식 개정 운임표 · 게곤폭포 접근 도보",
+          "sourceSha256": "d36d8be1a09962a7e22cf161068ea47a5b21b01b37d9799566734fa1af39dd99"
+        }
+      ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "TobuBus.Nikko.Y",
+          "주젠지호 동쪽 호숫가",
+          "산본마쓰 찻집·설경 전망"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "TobuBus",
+          "mode": "bus",
+          "from": "후타라산 신사 주구시",
+          "to": "산본마쓰",
+          "fromJa": "二荒山神社中宮祠",
+          "toJa": "三本松",
+          "lineIds": [
+            "TobuBus.Nikko.Y"
+          ],
+          "icYen": 650,
+          "paperTicketYen": 650,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-18",
+          "sources": [
+            "https://www.tobu-bus.com/uploads/files/%25E6%2597%25A5%25E5%2585%2589%25E9%2581%258B%25E8%25B3%2583%25E6%2594%25B9%25E5%25AE%259A%25EF%25BC%2593.pdf"
+          ],
+          "basis": "도부버스 공식 운임표 · 郵便局 운임구간 → 三本松 · 호숫가에서 승차 정류장까지 도보",
+          "sourceSha256": "d36d8be1a09962a7e22cf161068ea47a5b21b01b37d9799566734fa1af39dd99"
+        }
+      ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "TobuBus.Nikko.Y",
+          "산본마쓰 찻집·설경 전망",
+          "도부닛코"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "TobuBus",
+          "mode": "bus",
+          "from": "산본마쓰",
+          "to": "도부닛코역",
+          "fromJa": "三本松",
+          "toJa": "東武日光駅",
+          "lineIds": [
+            "TobuBus.Nikko.Y"
+          ],
+          "icYen": 1750,
+          "paperTicketYen": 1750,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-18",
+          "sources": [
+            "https://www.tobu-bus.com/uploads/files/%25E6%2597%25A5%25E5%2585%2589%25E9%2581%258B%25E8%25B3%2583%25E6%2594%25B9%25E5%25AE%259A%25EF%25BC%2593.pdf"
+          ],
+          "basis": "도부버스 닛코 공식 개정 운임표 · 성인 편도",
+          "sourceSha256": "d36d8be1a09962a7e22cf161068ea47a5b21b01b37d9799566734fa1af39dd99"
+        }
+      ]
+    },
+    {
+      "signature": [
+        [
+          "bus",
+          "Fujikyu.Kawaguchiko.Red",
+          "河口湖美術館",
+          "河口湖駅"
+        ]
+      ],
+      "components": [
+        {
+          "operator": "FujikyuBus",
+          "mode": "bus",
+          "from": "가와구치코 미술관",
+          "to": "가와구치코역",
+          "fromJa": "河口湖美術館",
+          "toJa": "河口湖駅",
+          "lineIds": [
+            "Fujikyu.Kawaguchiko.Red"
+          ],
+          "icYen": 370,
+          "paperTicketYen": 370,
+          "currency": "JPY",
+          "status": "exact",
+          "checkedAt": "2026-11-27",
+          "sources": [
+            "https://bus.fujikyu.co.jp/rosen/gtfs/",
+            "https://gtfs-jp.buskita.com/fjb/gtfs.zip",
+            "https://bus.fujikyu.co.jp/pdf/omni_map_202604.pdf"
+          ],
+          "basis": "공식 GTFS 河口湖周遊バス route 80611 · zone 1837 → 0025",
+          "sourceSha256": "3b364f6f5ba71eb9ee16fd92101de892193619792e6f55c62cb247b72beec121"
+        }
+      ]
+    }
+  ],
+  "transferDiscountSource": "https://www.kotsu.metro.tokyo.jp/subway/fare/discount.html",
+  "ropewaySource": "https://www.mtfujiropeway.jp/guide/",
+  "policy": "Current published adult fares; future January 2027 services/fares remain subject to revision. Skyliner deliberately unpriced.",
+  "sourceSnapshots": [
+    {
+      "url": "https://gtfs-jp.buskita.com/fjb/gtfs.zip",
+      "publisher": "富士急バス株式会社",
+      "feedVersion": "202610161800",
+      "feedStartDate": "2026-01-05",
+      "feedEndDate": "2026-12-31",
+      "routeId": "80611",
+      "sha256": "3b364f6f5ba71eb9ee16fd92101de892193619792e6f55c62cb247b72beec121",
+      "validityNote": "Current published fare evidence; January 2027 timetable not guaranteed."
+    }
+  ]
+}

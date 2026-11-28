@@ -1,0 +1,16 @@
+name: Review transport source audit
+on:
+  push:
+    branches: [codex/trip-review-fixes-20261118]
+    paths: ['scripts/audit-review-sources.cjs', '.github/workflows/review-source-audit.yml']
+permissions:
+  contents: read
+jobs:
+  sources:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22}
+      - run: node scripts/audit-review-sources.cjs

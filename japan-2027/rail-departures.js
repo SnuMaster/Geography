@@ -4,7 +4,9 @@ const RailDepartures = (() => {
  const VERSION=TravelStore.VERSION;
  const manifest=globalThis.RailDepartureProfiles||{profiles:{},holidays:[]},profiles=manifest.profiles;
  const entries=Object.entries(profiles),loaded=new BoundedCache.LRU(6,16*1024*1024),pending=new Map(),failed=new Set(),attached=new WeakSet();
+ const routeFares=new Map(),routeDistances=new Map();
  let active=null,interval=null;
+ const inlineViews=new Map();
  const firstTrains=new WeakMap();
  function isFirstTrain(key,schedules,train,now){
   if(!schedules||!train)return false;
@@ -31,36 +33,90 @@ const RailDepartures = (() => {
   if(part.throughService){const original=leg.parts.find(p=>p.lineId==='Special.Direct'&&p.line===part.throughService);if(original)return match(original);}
   const through=entries.find(([,p])=>{
    if(!p.throughParts?.length||!p.throughParts.some(m=>samePart(m,part)))return false;
-   const sequence=(leg.parts||[]).filter(railPart);
+   // Walking or transferring between parts never counts as staying on board.
+   const sequence=leg.parts||[];
    return sequence.some((_,i)=>p.throughParts.every((m,j)=>samePart(m,sequence[i+j])));
   });
   return through?.[0]||match(part);
  }
  function keysFor(leg,part){return [...new Set((part?[part]:leg?.parts||[]).map(p=>keyFor(leg,p)).filter(Boolean))];}
+ function mappedDistance(leg,part){
+  const key=keyFor(leg,part);
+  const parts=key?leg.parts.filter(p=>keyFor(leg,p)===key):[part];
+  return parts.every(p=>Number.isFinite(p.distanceM))?parts.reduce((sum,p)=>sum+p.distanceM,0):null;
+ }
+ function setRouteReferences(routes){
+  routeFares.clear();routeDistances.clear();
+  const conflicting=new Set();
+  for(const legs of Object.values(routes.days))for(const leg of legs)for(const key of keysFor(leg)){
+   const profile=profiles[key],part=leg.parts.find(p=>keyFor(leg,p)===key),distance=mappedDistance(leg,part);
+   if(distance!==null)routeDistances.set(key,distance);
+   const quote=FareCore.boardingFare(leg,profile);
+   if(!quote||quote.joined||leg.fare?.displayBlank||conflicting.has(key))continue;
+   const saved=routeFares.get(key);
+   if(!saved)routeFares.set(key,quote);
+   else if(saved.amount!==quote.amount){routeFares.delete(key);conflicting.add(key);}
+  }
+ }
+ function referenceFare(key,profile){
+  const saved=routeFares.get(key);
+  if(saved)return saved;
+  const opposite=profiles[profile.reverseKey];
+  const symmetricFare=profile.lineId?.startsWith('TokyoMetro.')||profile.lineId==='Minatomirai.Minatomirai';
+  if(!opposite||!symmetricFare||opposite.lineId!==profile.lineId||
+     profile.throughParts||opposite.throughParts||profile.from!==opposite.to||profile.to!==opposite.from)return null;
+  const fare=routeFares.get(profile.reverseKey);
+  // These operators use the same single-line adult IC fare in both directions.
+  return fare?.rows.length===1?fare:null;
+ }
  function supported(day,leg,part){return Number(day)>=1&&Number(day)<=22&&keysFor(leg,part).length>0;}
  function safeUrl(value){try{const u=new URL(value);return u.protocol==='https:'?u.href:null;}catch(_){return null;}}
+ function stationMapUrl(p,stop){
+  if(p?.country!=='JP'||!stop)return null;
+  const name=String(stop.nameJa||stop.name||'').trim();if(!name)return null;
+  const region=p.lineId==='West.FK'?'福岡市':p.lineId?.startsWith('West.')?'関西':'';
+  // Mixed Korean line names can make Maps autocorrect Japanese station names.
+  const query=[name.replace(/駅$/,'')+'駅',region,'日本'].filter(Boolean).join(' ');
+  const url=new URL('https://www.google.com/maps/search/');url.search=new URLSearchParams({api:'1',query}).toString();return url.href;
+ }
+ function departureMapUrl(p){
+  if(p?.country!=='JP')return null;
+  const fallback=stationMapUrl(p,{name:p.from,nameJa:p.fromJa});if(!fallback)return null;
+  const query=new URL(fallback).searchParams.get('query'),verified=globalThis.RailStationDepartures?.links?.[query];
+  try{const url=new URL(verified);if(url.protocol==='https:'&&url.hostname==='www.google.com'&&url.pathname.startsWith('/maps/place/')&&url.pathname.includes('!6m1!1v2'))return url.href;}catch{}
+  return fallback;
+ }
+ function disruptionHtml(p){
+  const url=departureMapUrl(p);if(!url)return '';
+  const name=window.TripPersonal.station(p.from,p.fromJa,'JP');
+  return '<div class="rail-disruption-links"><a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer" data-rail-station-map aria-label="'+esc(name+' 출발역 Google Maps 운행 정보 · 새 창')+'" title="Google Maps 출발역 운행 정보 · 팝업 창으로 열기 (모바일에서는 새 탭으로 열릴 수 있습니다)">지연 현황 확인하기 ↗</a></div>';
+ }
+ function openDepartureWindow(event){
+  if(event.defaultPrevented||event.button!==0||event.ctrlKey||event.metaKey||event.shiftKey||event.altKey)return;
+  const link=event.target.closest?.('a[data-rail-station-map]');if(!link)return;
+  let url;try{url=new URL(link.href);if(url.origin!=='https://www.google.com'||!/^\/maps\/(place|search)\//.test(url.pathname))return;}catch{return;}
+  const width=Math.max(320,Math.min(520,(window.screen?.availWidth||window.innerWidth)-32)),height=Math.max(360,Math.min(800,(window.screen?.availHeight||window.innerHeight)-64));
+  const left=Math.max(0,Math.round((window.screenX||0)+((window.outerWidth||width)-width)/2)),top=Math.max(0,Math.round((window.screenY||0)+((window.outerHeight||height)-height)/2));
+  try{
+   // A real destination URL also works in browsers that do not display about:blank windows.
+   // noreferrer implies noopener; a null handle may mean success, so never open a second window automatically.
+   const popup=window.open(url.href,'_blank',`popup=yes,width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes,noopener,noreferrer`);
+   event.preventDefault();
+   if(!popup&&!link.parentElement.querySelector('[data-rail-popup-fallback]')){
+    const help=document.createElement('small'),fallback=document.createElement('a');fallback.href=url.href;fallback.target='_blank';fallback.rel='noopener noreferrer';fallback.referrerPolicy='no-referrer';fallback.dataset.railPopupFallback='';fallback.textContent='새 탭으로 열기 ↗';fallback.setAttribute('aria-label',link.getAttribute('aria-label')+' · 새 탭으로 열기');help.append(document.createElement('br'),fallback);link.parentElement.append(help);
+   }
+  }catch{/* If window.open is unavailable, let the original noreferrer link open normally. */}
+ }
+ document.addEventListener('click',openDepartureWindow,true);
  function links(p){
   const directions=new URL('https://www.google.com/maps/dir/'),station=p.country==='KR'?'역':'駅';
   const stationQuery=name=>`${String(name).replace(/(?:역|駅)$/,'')}${station} ${p.operator||''}`;
   directions.search=new URLSearchParams({api:'1',origin:p.originQuery||stationQuery(p.fromJa||p.from),destination:p.destinationQuery||stationQuery(p.toJa||p.to),travelmode:'transit',hl:'ko'}).toString();
   return {directions:directions.href,timetable:safeUrl(p.officialTimetableUrl),status:safeUrl(p.statusUrl)};
  }
- function sourceHtml(p){
-  const m=p.metadata||{},facts=[];
-  if(m.scheduleRevision)facts.push(`시간표 개정 ${m.scheduleRevision}`);
-  if(m.retrievedAt)facts.push(`자료 취득 ${m.retrievedAt}`);
-  if(m.verifiedSourceDate)facts.push(`자료 확인 기준 ${m.verifiedSourceDate}`);
-  facts.push(p.validFrom?`자료 적용 시작 ${p.validFrom}`:'자료 적용 시작일 미공개');
-  facts.push(p.validUntil?`자료 유효 종료 ${p.validUntil}`:'자료 유효 종료일 미공개 · 여행일 확정 아님');
-  if(p.calendarThrough)facts.push(`계산 지원 ${p.calendarThrough}까지`);
-  const policy=p.country==='KR'?'열차별 운행 요일·적용일을 확인해 계산해요.':'평일·토요일·일요일·일본 공휴일에 맞는 시간표를 사용해요.';
-  const urls=value=>typeof value==='string'?[value]:Array.isArray(value)?value.flatMap(urls):value&&typeof value==='object'?Object.values(value).flatMap(urls):[];
-  const sources=[...new Set(urls([m.sourceUrl,m.sourceUrls]))].filter(safeUrl);
-  return `${esc(facts.join(' · ')||'공개된 운영사·노선 시간표를 사용해요.')}<br>${esc(m.note||p.sourceNote||'')}${m.note||p.sourceNote?'<br>':''}${policy} 여행일의 확정 운행·좌석을 보장하지 않으며, 개정·임시 운행은 공식 안내가 우선이에요.${sources.slice(0,3).map((url,i)=>`<a class="departure-source-link" href="${esc(url)}" target="_blank" rel="noopener noreferrer">${sources.length===1?'시간표 자료':`시간표 자료 ${i+1}`} ↗</a>`).join('')}`;
- }
  function travelDate(day){return DepartureCore.japanDate(Date.parse('2027-01-08T00:00:00+09:00')+(Number(day)-1)*86400000);}
  function validityFor(key,date){return DepartureCore.validity(calendarOptions(key),date);}
- function warning(key,date){const p=profiles[key],v=validityFor(key,date);return !v.usable?`<p class="timetable-warning" role="status">여행일 시간표 갱신 필요 · ${esc(date)}<br>${p.validUntil?`기존 자료 유효 종료 ${esc(p.validUntil)} · `:''}공식 개정 자료 확인 전 열차 시각·탑승 선택을 표시하지 않아요.</p>`:`<p class="timetable-confidence">${esc(v.label)} · ${esc(date)}<br>예정 시각 · 실시간 지연 미반영</p>`;}
+ function warning(key,date){const p=profiles[key],v=validityFor(key,date);return !v.usable?`<p class="timetable-warning" role="status">여행일 시간표 갱신 필요 · ${esc(date)}<br>${p.validUntil?`기존 자료 유효 종료 ${esc(p.validUntil)} · `:''}공식 개정 자료 확인 전 열차 시각·탑승 선택을 표시하지 않아요.</p>`:'';}
  function notice(day,leg){return keysFor(leg).map(key=>warning(key,travelDate(day))).join('');}
  function noticeItems(days,routes){
   const found=new Map();
@@ -77,25 +133,99 @@ const RailDepartures = (() => {
   const label=window.TripPersonal.station(name,japanese,country),match=country==='KR'?null:/^(.*?)[(（]([^()（）]+)[)）]$/.exec(label);
   return {korean:match?match[1]:label,japanese:match?'('+match[2]+')':''};
  }
- function stationName(parts,side){return `<strong class="departure-station-name departure-${side}"><span class="departure-station-korean">${esc(parts.korean)}</span>${parts.japanese?`<small class="departure-station-japanese" lang="ja">${esc(parts.japanese)}</small>`:''}</strong>`;}
- function shell(key,serviceDate,metrics={}){
-  const p=profiles[key],u=links(p),info=typeof RAIL_LINES==='object'?RAIL_LINES[p.lineId]:null;
-  const reverse=p.reverseKey&&profiles[p.reverseKey]?p.reverseKey:null,code=p.country==='KR'?'KTX':p.fromCode||info?.code||'철도';
+ // UI sign adaptation, not a station-number system. Names/romanization:
+ // https://railway.jr-central.co.jp/station-guide/shinkansen/{tokyo,odawara,atami}/
+ const shinkansenSigns={'東京':{reading:'とうきょう',roman:'Tokyo'},'小田原':{reading:'おだわら',roman:'Odawara'},'熱海':{reading:'あたみ',roman:'Atami'}};
+ function stationName(parts,side,p){
+  const endpoint=side==='destination'?'to':'from',number=typeof railStationNumber==='function'?railStationNumber(p,endpoint):{code:p[endpoint+'Code'],lineId:p.lineId};
+  const japanese=p[endpoint+'Ja']||parts.japanese.replace(/^[（(]|[）)]$/g,''),sign=p.lineId==='JR-Central.TokaidoShinkansen'&&shinkansenSigns[japanese];
+  if(sign)return `<strong class="departure-station-name departure-${side} shinkansen-station"><span class="shinkansen-station-sign"><span class="shinkansen-station-reading" lang="ja">${esc(sign.reading)}</span><span class="shinkansen-station-kanji" lang="ja">${esc(japanese)}</span><span class="shinkansen-station-roman" lang="en">${esc(sign.roman)}</span></span><span class="departure-station-korean">${esc(parts.korean)}</span></strong>`;
+  const info=typeof railInfo==='function'?railInfo({lineId:number.lineId}):null,code=number.code||'';
+  const jr=number.lineId?.startsWith('JR-East.')&&/^([A-Z]{2})(\d{2})$/.exec(code),shortCode=jr&&typeof jrStationAbbreviation==='function'?jrStationAbbreviation(p,endpoint):null;
+  const keio=number.lineId==='Keio.Inokashira'&&/^IN(\d{2})$/.exec(code);
+  const operator=info?.stationLayout&&/^([A-Z]+)(\d{2})$/.exec(code);
+  const content=jr?`<span class="jr-station-tab" aria-hidden="true">${esc(shortCode||'')}</span><span class="jr-station-frame" aria-hidden="true"><span class="jr-station-line">${esc(jr[1])}</span><span class="jr-station-digits">${esc(jr[2])}</span></span>`:keio?`<span class="keio-station-line">IN</span><span class="keio-station-digits">${esc(keio[1])}</span>`:operator?`<span class="operator-station-line">${esc(operator[1])}</span><span class="operator-station-digits">${esc(operator[2])}</span>`:esc(code);
+  const badge=number.code?`<span class="departure-endpoint-code endpoint-${info?.stationShape||info?.shape||'circle'}${jr?' jr-station-number':''}${keio?' keio-station-number':''}${operator?' operator-station-number operator-'+info.stationLayout:''}${shortCode?' has-station-abbreviation':''}" style="--station-color:${esc(info?.color||'#9ca59a')}" aria-label="${esc(number.code?'역 번호 '+code+(shortCode?' · '+shortCode:''):'공식 역 번호 미확인')}" title="${esc(number.code?'역 번호 '+code+(shortCode?' · '+shortCode:''):'공식 역 번호 미확인')}">${content}</span>`:'';
+  return `<strong class="departure-station-name departure-${side}">${badge}<span class="departure-station-korean">${esc(parts.korean)}</span>${parts.japanese?`<small class="departure-station-japanese" lang="ja">${esc(parts.japanese)}</small>`:''}</strong>`;}
+ function metricsHtml({distance,distanceLabel,fare,fareLabel}){
+  const distanceField=distance?`<span><small>${esc(distanceLabel||'거리')}</small><b>${esc(distance)}</b></span>`:'';
+  const fareField=fare?`<span><small>${esc(fareLabel||'요금')}</small><b>${esc(fare)}</b></span>`:'';
+  return distanceField||fareField?`<div class="compact-metrics">${distanceField}${fareField}</div>`:'';
+ }
+ function shell(key,itineraryDate,metrics={}){
+  const p=profiles[key],u=links(p);
+  const selected=metrics.byProfile?.[key]||metrics;
+  const reverse=p.reverseKey&&profiles[p.reverseKey]?p.reverseKey:null;
   const from=stationParts(p.from,p.fromJa,p.country),to=stationParts(p.to,p.toJa,p.country),length=s=>[...s].length;
   const long=Math.max(length(from.korean),length(to.korean))>9||Math.max(length(from.japanese),length(to.japanese))>10||length(from.korean)+length(to.korean)>(reverse?10:12);
-  return `<div class="compact-line"><span class="departure-station-code${info?.shape==='square'?' departure-jr-code':''}"${info?` style="border-color:${esc(info.color)}"`:''}>${esc(code)}</span><strong>${esc(p.line)}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
-   <div class="departure-stations departure-stations-aligned${long?' has-long-names':''}">${stationName(from,'origin')}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination')}</div>
-   <div class="compact-metrics"><span><small>${esc(metrics.distanceLabel||'거리')}</small><b>${esc(metrics.distance||'—')}</b></span><span><small>${esc(metrics.fareLabel||'요금')}</small><b>${esc(metrics.fare||'요금 미확인')}</b></span></div>
+  const mark={...p,mode:'rail',serviceName:selected.plannedServiceName||p.serviceName},badge=typeof railLineBadge==='function'?railLineBadge(mark,'departure-line-mark'):typeof railBadge==='function'?railBadge(mark):'';
+  return `<div class="compact-line">${badge}<strong>${esc(p.line)}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?'<small class="departure-service-name" lang="en">FUJI EXCURSION</small>':typeof spaciaXLogo==='function'&&spaciaXLogo(mark)?'<small class="departure-service-name">SPACIA X · 계획 열차</small>':typeof revatyLogo==='function'&&revatyLogo(mark)?'<small class="departure-service-name">Revaty · 계획 열차</small>':''}</strong>${reverse?`<button type="button" class="departure-reverse" data-departure-direction="${esc(reverse)}" aria-label="반대 방향 ${esc(p.to)}에서 ${esc(p.from)} 열차 보기" title="반대 방향">↔</button>`:''}</div>
+   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''}${long?' has-long-names':''}">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
+   ${p.throughParts?.length>1?'<p class="departure-through-note">직통 열차 · 환승 없이 계속 탑승</p>':''}
+   ${metricsHtml(selected)}
+   ${metrics.planFare?`<p class="departure-plan-total">${esc(metrics.planFareLabel||'전체 이동 총액')} · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준</p>`:''}
+   <details class="departure-timetable"><summary>시간표·탑승 선택</summary><div class="departure-timetable-body">
    <div class="departure-heading"><strong>다음 열차</strong><span class="departure-clock" data-departure-clock></span></div>
+   <div class="departure-date-basis">${itineraryDate?`<span>여행 계획 날짜 <b>${esc(itineraryDate)}</b> · 아래 열차는 현재 날짜 기준</span>`:''}<span data-departure-query-date></span></div>
    <div data-departure-body aria-busy="true"><p class="departure-loading" role="status">불러오는 중…</p></div>
-   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}">전체 시간표</button><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a></div>`;
+   <div class="compact-actions"><button type="button" data-ride-open="${esc(key)}" data-ride-choose="${esc(key)}">탑승 열차 선택</button></div></div></details>
+   <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>`;
  }
- function sectionHtml(key,metrics){const p=profiles[key];return `<section class="station-departures compact-station" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,null,metrics)}</section>`;}
- function html(day,leg,part,metrics){
-  if(!supported(day,leg,part))return '';
-  const keys=keysFor(leg,part);
-  const select=keys.length>1?`<label class="departure-select-label">열차 구간<select data-departure-select aria-label="열차를 확인할 승차 구간">${keys.map(key=>{const p=profiles[key];return `<option value="${esc(key)}">${esc(p.line+' · '+window.TripPersonal.station(p.from,p.fromJa,p.country)+' → '+window.TripPersonal.station(p.to,p.toJa,p.country))}</option>`;}).join('')}</select></label>`:'';
-  return `<div class="departure-panel">${select}${sectionHtml(keys[0],metrics)}</div>`;
+ function sectionHtml(key,metrics,day){const p=profiles[key],date=travelDate(day);return `<section class="station-departures compact-station" data-itinerary-date="${esc(date)}" data-compact-metrics="${esc(JSON.stringify(metrics||{}))}" data-query-mode="current" data-service-date="${esc(globalThis.RideCore?.serviceDateForNow(Date.now())||DepartureCore.japanDate(Date.now()))}" data-departure-profile="${esc(key)}" aria-label="${esc(p.line+' '+p.from)} 출발역 열차 정보">${shell(key,date,metrics)}</section>`;}
+ function unscheduledSection(part,metrics,day){
+  const country=part.lineId?.startsWith('KORAIL.')?'KR':'JP',p={...part,country},u=links(p),from=stationParts(p.from,p.fromJa,country),to=stationParts(p.to,p.toJa,country);
+  const badge=typeof railLineBadge==='function'?railLineBadge(part,'departure-line-mark'):typeof railBadge==='function'?railBadge(part):'',info=part.departureInfo||manifest.serviceInfo?.[part.lineId];
+  return `<section class="station-departures compact-station departure-unscheduled" aria-label="${esc(part.line+' '+part.from)} 구간 정보">
+   <div class="compact-line">${badge}<strong>${esc(part.line)}</strong></div>
+   <div class="departure-stations departure-stations-aligned departure-stations-numbered${p.lineId==='JR-Central.TokaidoShinkansen'?' shinkansen-stations':''}${typeof fujiExcursionLogo==='function'&&fujiExcursionLogo(p)?' fuji-excursion-stations':''} has-long-names">${stationName(from,'origin',p)}<span class="departure-arrow" aria-label="에서">→</span>${stationName(to,'destination',p)}</div>
+   ${metricsHtml(metrics)}
+   ${info?.notice?`<p class="departure-service-notice">${esc(info.notice)}</p>`:''}
+   <details class="departure-timetable"><summary>운행 안내</summary><div class="departure-timetable-body">
+   <p class="departure-date-basis">여행 계획 날짜 ${esc(travelDate(day))}</p>
+   <div class="departure-unavailable"><strong>${esc(info?.label||'출발역 운행 안내')}</strong><p>${esc(info?.description||'출발역 안내에서 운행 시각을 볼 수 있어요.')}</p>${info?.hours?`<p>${esc(info.hours)}</p>`:''}${safeUrl(info?.source)?`<a href="${esc(info.source)}" target="_blank" rel="noopener noreferrer">공식 운행·시간표 확인 ↗</a>`:''}</div></div></details>
+   <div class="departure-quick-links"><a href="${esc(u.directions)}" target="_blank" rel="noopener noreferrer">길찾기 ↗</a>${disruptionHtml(p)}</div>
+  </section>`;
+ }
+ function html(day,leg,part,metrics={},complete=false){
+  if(!(Number(day)>=1&&Number(day)<=22)||(!complete&&!supported(day,leg,part)))return '';
+  const seen=new Set(),items=(part?[part]:leg?.parts||[]).filter(railPart).flatMap((p,index)=>{const key=keyFor(leg,p);if(key&&seen.has(key))return [];if(key)seen.add(key);const previous=leg.parts[leg.parts.indexOf(p)-1],continuation=!!(railPart(previous)&&p.throughService&&p.throughService===previous.throughService&&previous.to===p.from);return key?[{key,profile:profiles[key],continuation}]:complete?[{key:'unscheduled-'+index,profile:p,unscheduled:true,continuation}]:[];});
+  if(!items.length)return '';
+  const comparison=leg.timeComparison,clock=n=>String(Math.floor(n/60)%24).padStart(2,'0')+':'+String(n%60).padStart(2,'0');
+  const preference=comparison?`<aside class="departure-route-choice"><b>최단시간 우선 · 약 ${esc(comparison.totalMinutes)}분</b><small>도보·환승·대기 포함 · 참고 시간표 기준</small><details><summary>계산 기준</summary><p>${esc(comparison.departureDate)} ${esc(clock(comparison.departureMinutes))} 출발 기준<br>도보 ${esc(comparison.walkingMinutes)}분 · 환승 여유 ${esc(comparison.transferMinutes)}분 · 대기 ${esc(comparison.waitingMinutes||0)}분</p><p>등록된 노선·저장 보행로 범위에서 비교했습니다. 환승·보행 시간은 추정이며, 여행일 확정 시간표·실시간 최단 경로는 아닙니다.</p><p>확인 ${esc(comparison.sourceCheckedAt)} · 열차 변경 시 다시 확인하세요.</p></details></aside>`:leg.routePreferenceNotice?`<p class="departure-data-status">${esc(leg.routePreferenceNotice)}</p>`:'';
+  const keys=items.map(item=>item.key),itemByKey=Object.fromEntries(items.map(item=>[item.key,item]));
+  const profileByKey=Object.fromEntries(items.map(item=>[item.key,item.profile]));
+  const money=n=>n.toLocaleString('ko-KR')+' JP¥',formatDistance=n=>Number.isFinite(n)?(n/1000).toFixed(1)+' km':'',byProfile={};
+  for(const key of new Set(keys.flatMap(k=>[k,profileByKey[k].reverseKey]).filter(Boolean))){
+   const p=profileByKey[key]||profiles[key],planned=FareCore.boardingFare(leg,p),q=planned||referenceFare(key,p);
+   const part=itemByKey[key]?.unscheduled?p:leg.parts.find(s=>keyFor(leg,s)===key);
+   const metres=(part?mappedDistance(leg,part):null)??routeDistances.get(key)??routeDistances.get(p.reverseKey)??p.distanceM;
+   let selected={distanceLabel:'선택 구간 지도 거리',distance:formatDistance(metres)};
+   if(q){
+    const reserved=q.rows.some(r=>r.reservedSurchargeYen>0),ticket=q.rows.some(r=>r.ticketRequired);
+    const separateLimitedExpress=q.rows.some(r=>r.baseTicketYen!=null&&r.reservedSurchargeYen>0);
+    selected={...selected,fare:money(q.amount),
+     fareLabel:separateLimitedExpress?'일반 승차권 + 자유석 특급권 별도 구매':q.joined?'환승 포함 운임':ticket?'승차권·별도 티켓 기준':reserved?'기본 + 특급·지정석':planned?'선택 구간 IC 요금':'이 방향 단독 IC 운임'};
+   }
+   if(p.country==='KR'&&part&&Number.isFinite(leg.fare?.min))selected={...metrics,fareLabel:'저장된 계획 운임'};
+   selected.plannedServiceName=[...new Set(leg.parts.filter(s=>railPart(s)&&keyFor(leg,s)===key).map(s=>s.serviceName).filter(Boolean))].join(' / ');
+   byProfile[key]=selected;
+  }
+  if(leg.fare?.displayBlank){for(const key of Object.keys(byProfile))byProfile[key]={...byProfile[key],displayBlank:true,fare:''};metrics={...metrics,displayBlank:true,fare:''};}
+  const purchase=leg.fare?.purchase;
+  if(purchase){
+   const fare=FareCore.format(leg.fare,leg);
+   const paidMetrics={fare,displayBlank:false,
+    fareLabel:purchase.scope==='express'?'특급권 결제 · 기본 운임 별도':'결제액'};
+   for(const key of keys)if(purchase.scope!=='express'||profileByKey[key]?.lineId.startsWith('Tobu.'))byProfile[key]={...byProfile[key],...paidMetrics};
+   metrics={...metrics,...paidMetrics};
+  }
+  metrics={...metrics,byProfile,planFare:(purchase||Number.isFinite(leg.fare?.min)&&!leg.fare?.displayBlank)?metrics.fare:null,planFareLabel:purchase?.scope==='express'?'특급권 결제액 · 기본 운임 별도':null,planDistance:formatDistance(leg.distanceM)};
+  const section=(item,scope)=>item.unscheduled?unscheduledSection(item.profile,byProfile[item.key],day):sectionHtml(item.key,scope,day);
+  if(keys.length===1)return `${preference}<div class="departure-panel">${section(items[0],metrics)}</div>`;
+  // A shared operator OD fare belongs to the whole ride, not to each displayed timetable.
+  const shownFares=new Set();for(const key of keys){const quote=FareCore.boardingFare(leg,profileByKey[key]);if(!quote)continue;const id=r=>JSON.stringify([r.from,r.to,r.lineIds,r.icYen]),remaining=quote.rows.filter(r=>!shownFares.has(id(r)));if(remaining.length<quote.rows.length)byProfile[key]={...byProfile[key],fare:remaining.length?money(remaining.reduce((n,r)=>n+r.icYen,0)):money(0),fareLabel:remaining.length?'추가 구간 운임':'환승 운임'};for(const row of quote.rows)shownFares.add(id(row));}
+  let boardingOrder=0;
+  return `${preference}<div class="departure-panel departure-sequence" aria-label="타는 순서대로 열차 정보">${items.map(item=>{if(!item.continuation||!boardingOrder)boardingOrder++;const key=item.key,pair=[key,profileByKey[key].reverseKey].filter(k=>byProfile[k]),scope={...metrics,planFare:null,byProfile:Object.fromEntries(pair.map(k=>[k,byProfile[k]]))};return `<div class="departure-sequence-step" data-boarding-order="${boardingOrder}"${item.continuation?' data-through-continuation="true"':''}><p class="departure-sequence-title">${item.continuation?'환승 없이 계속 탑승':boardingOrder+'번째 탑승'}</p>${section(item,scope)}</div>`;}).join('')}<p class="departure-plan-total departure-sequence-total">${esc(metrics.planFareLabel||'전체 이동 총액')} · ${esc(metrics.planFare)}<br>전체 이동 거리 ${esc(metrics.planDistance)} · 원래 이동 방향 기준<br>환승 포함 운임은 중복 합산하지 않습니다.</p></div>`;
  }
  async function loadData(key,force=false){
   const file=profiles[key]?.file;if(!file)return null;
@@ -118,6 +248,7 @@ const RailDepartures = (() => {
  const calendarNames={Weekday:'평일',SaturdayHoliday:'토·일·공휴일',Saturday:'토요일',SundayHoliday:'일·공휴일',Daily:'운행 요일·날짜별'};
  const trainTypes={Local:'보통',Rapid:'쾌속',Express:'급행',LimitedExpress:'특급',SemiExpress:'준급',RapidExpress:'쾌속급행',SpecialRapid:'신쾌속',CommuterRapid:'통근쾌속',CommuterExpress:'통근급행',AirportRapid:'공항쾌속',HanedaExpress:'공항쾌속',SectionRapid:'구간쾌속',SectionExpress:'구간급행',CommuterSemiExpress:'통근준급',CommuterLimitedExpress:'통근특급',SpecialRapidService:'신쾌속',ChuoSpecialRapid:'주오특쾌',OmeSpecialRapid:'오메특쾌',Skyliner:'스카이라이너',FujiExcursion:'후지회유'};
  Object.assign(trainTypes,{RapidLimitedExpress:'쾌특',AirportRapidLimitedExpress:'에어포트쾌특',AccessExpress:'액세스특급',KawagoeLimitedExpress:'가와고에특급',CommuterSpecialRapid:'통근특쾌','普通':'보통','快速':'쾌속','新快速':'신쾌속','急行':'급행','準急':'준급','区間準急':'구간준급','快速急行':'쾌속급행','快速特急':'쾌속특급','準特急':'준특급','特急':'특급','通勤快急':'통근쾌속급행','通勤準急':'통근준급','通勤特急':'통근특급','新快速（Aシート連結）':'신쾌속 · A시트 연결','新快速（一部区間Aシート連結）':'신쾌속 · 일부 A시트 연결','新快速（京都から快速）':'신쾌속 · 교토부터 쾌속','Ａ新快速（うれしート連結）':'신쾌속 · 우레시트 연결','A快速（うれしート連結）':'쾌속 · 우레시트 연결','Dみやこ路快速（うれしート連結）':'미야코지쾌속 · 우레시트 연결','D区間快速（うれしート連結）':'구간쾌속 · 우레시트 연결','E快速（うれしート連結）':'쾌속 · 우레시트 연결','普通A快速（うれしート連結）':'보통·쾌속 · 우레시트 연결','快速（島本・山崎・向日町・桂川・西大路通過）':'쾌속 · 일부 역 통과'});
+ trainTypes.Cable='케이블카';
  function stateMessage(body,state,message,retry=false){
   setServiceEnded(body.closest?.('[data-departure-profile]'),false);
   if(body.dataset.signature===state)return;
@@ -131,6 +262,7 @@ const RailDepartures = (() => {
   section.dataset.queryMode='current';section.dataset.serviceDate=globalThis.RideCore?.serviceDateForNow(now)||DepartureCore.japanDate(now);
   const body=section.querySelector('[data-departure-body]'),clock=section.querySelector('[data-departure-clock]'),local=new Date(now+9*3600000);
   clock.textContent='지금 '+local.toISOString().slice(11,19);
+  const basis=section.querySelector('[data-departure-query-date]'),today=DepartureCore.japanDate(now);if(basis)basis.textContent='현재 조회 날짜 '+today+' · KST/JST';
   if(!validityFor(key,section.dataset.serviceDate).usable){body.setAttribute('aria-busy','false');stateMessage(body,'travel-invalid','열차 시각 없음');return;}
   const data=loaded.get(p.file),schedules=data?.profiles?.[key];
   if(!schedules){body.setAttribute('aria-busy',String(!failed.has(p.file)));if(failed.has(p.file))stateMessage(body,'error','시간표를 불러오지 못했어요.',true);return;}
@@ -143,6 +275,7 @@ const RailDepartures = (() => {
   if(!trains.length){stateMessage(body,'empty',p.unavailableReason||(calendarThrough&&date>calendarThrough?'해당 날짜에 적용할 시간표 자료가 없어요. 공식 시간표를 확인해 주세요.':'현재 적용할 다음 열차 시각을 확인할 수 없어요. 공식 시간표를 확인해 주세요.'));return;}
   section._rideTrains=trains;
   const first=trains[0],eventAt=first.departureAt,ended=isFirstTrain(key,schedules,first,now);
+  if(basis&&first.serviceDate!==today)basis.textContent+=' · 표시 열차 운행일 '+first.serviceDate;
   setServiceEnded(section,ended);
   const signature=DepartureCore.renderSignature(trains,now,ended);
   if(body.dataset.signature!==signature){
@@ -151,41 +284,44 @@ const RailDepartures = (() => {
   }
   body.querySelectorAll('[data-departure-countdown]').forEach(el=>{el.textContent=(ended?'첫차까지 ':'출발까지 ')+DepartureCore.formatCountdown(Number(el.dataset.departureCountdown)-now);});
  }
- function paint(){if(!active?.element.isConnected||document.hidden)return;const now=Date.now();active.element.querySelectorAll('[data-departure-profile]').forEach(section=>renderTrains(section,now));}
- function resumeTimer(){clearInterval(interval);interval=null;if(active&&!document.hidden){paint();interval=setInterval(paint,1000);}}
- function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active.element.removeEventListener('change',active.change);active=null;clearInterval(interval);interval=null;}
- function mount(popup){
-  unmount();const element=popup.getElement();if(!element?.querySelector('[data-departure-profile]'))return;
+ function paint(){if(document.hidden)return;const now=Date.now();for(const view of [active,...inlineViews.values()]){if(!view?.element.isConnected)continue;const sections=view.visible||view.element.querySelectorAll('[data-departure-profile]');for(const section of sections)if(section.isConnected&&view.element.contains(section))renderTrains(section,now);}}
+ function resumeTimer(){clearInterval(interval);interval=null;if((active||inlineViews.size)&&!document.hidden){paint();interval=setInterval(paint,1000);}}
+ function unmount(popup){if(!active||(popup&&active.popup!==popup))return;active.element.removeEventListener('click',active.click);active.element.removeEventListener('toggle',active.toggle,true);active=null;resumeTimer();}
+ function mount(popup,inline=false){
+  const element=popup.getElement();if(inline&&inlineViews.has(element)){inlineViews.get(element).sync();return;}if(!inline)unmount();if(!element?.querySelector('[data-departure-profile]'))return;
   // Retain live DOM when Leaflet remeasures the popup after async data loads.
   if(!popup.getContent()?.nodeType){const content=element.querySelector('.leaflet-popup-content'),node=document.createElement('div');while(content.firstChild)node.appendChild(content.firstChild);popup.setContent(node);}
-  const refresh=async(key,force=false)=>{await loadData(key,force);if(active?.popup===popup){paint();popup.update();}};
+  const refresh=async(key,force=false)=>{await loadData(key,force);if((inline?inlineViews.get(element)?.popup:active?.popup)===popup){paint();popup.update();}};
   const selectProfile=(section,key)=>{
    if(!profiles[key]||!section)return;
-   const content=shell(key,section.dataset.serviceDate,JSON.parse(section.dataset.compactMetrics||'{}'));
-   const select=section.closest('.departure-panel')?.querySelector('[data-departure-select]');
-   if(select){
-    select.querySelectorAll('[data-reverse-option]').forEach(option=>{if(option.value!==key)option.remove();});
-    if(!Array.from(select.options).some(option=>option.value===key)){const option=document.createElement('option');option.value=key;option.dataset.reverseOption='true';option.textContent=`반대 방향 · ${profiles[key].line} · ${profiles[key].from} → ${profiles[key].to}`;select.appendChild(option);}
-    select.value=key;
-   }
-   section.dataset.departureProfile=key;section.setAttribute('aria-label',`${profiles[key].line} ${profiles[key].from} 출발역 열차 정보`);section.innerHTML=content;paint();popup.update();refresh(key);
+   const expanded=[...section.querySelectorAll('details[open]')].map(el=>el.className);
+   const content=shell(key,section.dataset.itineraryDate,JSON.parse(section.dataset.compactMetrics||'{}'));
+   section.dataset.departureProfile=key;section.setAttribute('aria-label',`${profiles[key].line} ${profiles[key].from} 출발역 열차 정보`);section.innerHTML=content;for(const el of section.querySelectorAll('details'))if(expanded.includes(el.className))el.open=true;paint();popup.update();refresh(key);
   };
   const click=event=>{
-   const ride=event.target.closest('[data-ride-open],[data-ride-next]');
+   const ride=event.target.closest('[data-ride-open],[data-ride-next],[data-ride-choose]');
    if(ride){event.stopPropagation();const section=ride.closest('[data-departure-profile]'),key=section?.dataset.departureProfile;if(ride.hasAttribute('data-ride-next')){const train=section?._rideTrains?.[Number(ride.dataset.rideNext)];if(train&&train.departureAt>Date.now())window.RideTracker?.board(key,train.id,train.serviceDate,train.departureAt);else paint();}else window.RideTracker?.open(key);return;}
    const reverse=event.target.closest('[data-departure-direction]');
    if(reverse&&element.contains(reverse)){event.stopPropagation();const section=reverse.closest('[data-departure-profile]');selectProfile(section,reverse.dataset.departureDirection);section?.querySelector('[data-departure-direction]')?.focus({preventScroll:true});}
    const retry=event.target.closest('[data-departure-retry]');
    if(retry){event.stopPropagation();retry.disabled=true;retry.textContent='불러오는 중…';const body=retry.closest('[data-departure-body]');body.dataset.signature='retrying';body.setAttribute('aria-busy','true');refresh(retry.closest('[data-departure-profile]').dataset.departureProfile,true);}
   };
-  const change=event=>{if(event.target.matches('[data-departure-select]'))selectProfile(event.target.closest('.departure-panel').querySelector('[data-departure-profile]'),event.target.value);};
-  active={popup,element,click,change};element.addEventListener('click',click);element.addEventListener('change',change);resumeTimer();
-  element.querySelectorAll('[data-departure-profile]').forEach(section=>refresh(section.dataset.departureProfile));
+  const toggle=event=>{if(event.target.matches?.('.departure-timetable')){paint();popup.update();}};
+  const view={popup,element,click,toggle};element.addEventListener('click',click);element.addEventListener('toggle',toggle,true);
+  if(inline){
+   view.visible=new Set();let sections=[];
+   view.observer=typeof IntersectionObserver==='function'?new IntersectionObserver(entries=>{for(const entry of entries){if(!element.contains(entry.target))continue;if(entry.isIntersecting){view.visible.add(entry.target);refresh(entry.target.dataset.departureProfile);}else view.visible.delete(entry.target);}paint();},{rootMargin:'160px 0px'}):null;
+   view.sync=()=>{const next=[...element.querySelectorAll('[data-departure-profile]')];if(next.length===sections.length&&next.every((section,i)=>section===sections[i]))return;sections=next;view.observer?.disconnect();view.visible.clear();for(const section of sections){if(view.observer)view.observer.observe(section);else{view.visible.add(section);refresh(section.dataset.departureProfile);}}paint();};
+   inlineViews.set(element,view);view.sync();
+  }else{active=view;element.querySelectorAll('[data-departure-profile]').forEach(section=>refresh(section.dataset.departureProfile));}
+  resumeTimer();
  }
- function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else unmount();});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
+ function mountInline(element){if(element)mount({getElement:()=>element,getContent:()=>element,update:()=>{}},true);}
+ function unmountInline(){for(const view of inlineViews.values()){view.observer?.disconnect();view.element.removeEventListener('click',view.click);view.element.removeEventListener('toggle',view.toggle,true);}inlineViews.clear();resumeTimer();}
+ function attach(map){if(attached.has(map))return;attached.add(map);map.on('popupopen',event=>mount(event.popup));map.on('popupclose',event=>unmount(event.popup));document.addEventListener('visibilitychange',resumeTimer);window.addEventListener('pagehide',event=>{if(event.persisted){clearInterval(interval);interval=null;}else{unmount();unmountInline();}});window.addEventListener('pageshow',event=>{if(event.persisted)resumeTimer();});}
  function calendarOptions(key){const p=profiles[key]||{};return {holidays:manifest.holidays,yearEndHoliday:true,calendarFrom:p.calendarFrom||manifest.calendarFrom,calendarThrough:p.calendarThrough||manifest.calendarThrough,validFrom:p.validFrom,validUntil:p.validUntil,sourceDate:p.sourceDate,sourceClass:p.sourceClass,...p.calendarOptions};}
  async function getSchedule(key){const data=await loadData(key);return data?.profiles?.[key]||null;}
- return {notice,noticeItems,validityFor,travelDate,supported,html,attach,keysFor,keyFor,calendarOptions,getSchedule,isFirstTrain,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
+ return {notice,noticeItems,validityFor,travelDate,supported,html,attach,mountInline,keysFor,keyFor,setRouteReferences,calendarOptions,getSchedule,isFirstTrain,stationMapUrl,departureMapUrl,disruptionHtml,cacheInfo:()=>({entries:loaded.size,bytes:loaded.weight,pending:pending.size}),typeLabel:type=>trainTypes[type]||type||'보통'};
 })();
 
 // A reading-view departure board. It never changes an itinerary or a boarded train.
@@ -239,7 +375,7 @@ window.TripPlanTransport=(()=>{
  }
  function prune(){const needed=new Set([...visible].flatMap(row=>neededKeys(contextLeg(row)||{parts:[]})));for(const key of schedules.keys())if(!needed.has(key)){schedules.delete(key);for(const id of normalized.keys())if(id.startsWith(key+'|'))normalized.delete(id);}}
  function tick(){
-  if(!dialog?.open||document.hidden)return;const now=Date.now(),clockNode=dialog.querySelector('[data-plan-transport-clock]');if(clockNode)clockNode.textContent='지금 기준 · '+new Date(now+32400000).toISOString().slice(5,19).replace('-','/').replace('T',' ')+' · 시간표 기준·지연 미반영';
+  if(!dialog?.open||document.hidden)return;const now=Date.now(),clockNode=dialog.querySelector('[data-plan-transport-clock]');if(clockNode)clockNode.textContent='지금 기준 · '+new Date(now+32400000).toISOString().slice(5,19).replace('-','/').replace('T',' ')+' KST/JST';
   for(const row of visible){const leg=contextLeg(row);if(!leg)continue;paintRow(row,now);const missing=neededKeys(leg).filter(k=>!schedules.has(k));if(missing.length){const epoch=generation;Promise.all(missing.map(load)).then(()=>{if(epoch===generation&&visible.has(row)&&dialog?.open&&!document.hidden)paintRow(row,Date.now());}).catch(()=>{});}}
  }
  function stop(){generation++;clearInterval(timer);timer=null;observer?.disconnect();observer=null;visible.clear();rows=[];schedules.clear();requests.clear();normalized.clear();}

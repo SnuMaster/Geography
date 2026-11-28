@@ -1,6 +1,6 @@
 (function(root,factory){const api=factory(typeof module==='object'&&module.exports?require('./location-core'):root.RouteMatch);if(typeof module==='object'&&module.exports)module.exports=api;else root.OfflineRoads=api;})(typeof globalThis!=='undefined'?globalThis:this,function(GPS){
  'use strict';
- const CACHE='trip-street-data-v1',ENDPOINTS=['https://overpass.private.coffee/api/interpreter','https://overpass-api.de/api/interpreter'],RADIUS=800;
+ const CACHE='trip-street-data-v1',BUNDLE='assets/offline-streets/tokyo-12/',ENDPOINTS=['https://overpass.private.coffee/api/interpreter','https://overpass-api.de/api/interpreter'],RADIUS=800;
  const validPoint=p=>Array.isArray(p)&&p.length===2&&p.every(Number.isFinite)&&Math.abs(p[0])<=90&&Math.abs(p[1])<=180;
  const pointKey=p=>p.map(n=>n.toFixed(2)).join(',');
  function covers(data,points){
@@ -15,6 +15,7 @@
     if(part.mode!=='walk')continue;let last=null;for(const p of part.coords||[])if(validPoint(p)&&(!last||GPS.distance(last,p)>500)){add(p);last=p;}
    }
   }
+  if(!result.length)add(day?.mapCenter);
   if(result.length>45)throw Error('지도 범위가 너무 넓어요. 구간별로 저장해야 합니다.');
   return result;
  }
@@ -24,10 +25,15 @@
   return `[out:json][timeout:90][maxsize:134217728];(${clauses});out body geom;`;
  }
  function id(day){return new URL('offline-streets/day-'+Number(day)+'.json',document.baseURI).href;}
- async function get(day){try{const cache=await caches.open(CACHE),r=await cache.match(id(day));if(!r)return null;const value=await r.json();return value?.version===1&&value.day===Number(day)&&Array.isArray(value.elements)&&value.elements.length?value:null;}catch(_){return null;}}
+ async function get(day,routeData){
+  if(!day)return null;
+  try{const cache=await caches.open(CACHE),r=await cache.match(id(day.n));if(!r)return null;
+   const value=await r.json();return value?.version===1&&value.day===day.n&&covers(value,centres(day,routeData))&&Array.isArray(value.elements)&&value.elements.length?value:null;
+  }catch(_){return null;}
+ }
  let bundleManifest=null;
  async function getBundleManifest(signal){
-  if(!bundleManifest){const response=await fetch(new URL('assets/offline-streets/manifest.json',document.baseURI),{signal,cache:'no-cache'});if(!response.ok)return null;const manifest=await response.json();if(manifest?.version!==1||typeof manifest.days!=='object')return null;bundleManifest=manifest;}
+  if(!bundleManifest){const response=await fetch(new URL(BUNDLE+'manifest.json',document.baseURI),{signal,cache:'no-cache'});if(!response.ok)return null;const manifest=await response.json();if(manifest?.version!==1||typeof manifest.days!=='object')return null;bundleManifest=manifest;}
   return bundleManifest;
  }
  async function bundleInfo(){
@@ -42,7 +48,7 @@
   try{
    const manifest=await getBundleManifest(signal),entry=manifest?.days?.[String(day.n)];
    if(!entry||entry.path!==`day-${Number(day.n)}.json.gz`||!/^[a-f0-9]{64}$/.test(entry.sha256)||!covers(entry,points))return null;
-   const url=new URL('assets/offline-streets/'+entry.path,document.baseURI);url.searchParams.set('v',entry.sha256.slice(0,16));
+   const url=new URL(BUNDLE+entry.path,document.baseURI);url.searchParams.set('v',entry.sha256.slice(0,16));
    const response=await fetch(url,{signal,cache:'no-cache'});if(!response.ok)return null;
    const bytes=await response.arrayBuffer(),digest=await crypto.subtle.digest('SHA-256',bytes);
    if([...new Uint8Array(digest)].map(b=>b.toString(16).padStart(2,'0')).join('')!==entry.sha256)return null;

@@ -5,6 +5,7 @@
  const HOME=Object.freeze({name:'비공개 출발·도착지',kind:'home',lat:null,lng:null,address:'',privateLocation:true});
 
  const EXTRA_JA={
+  '스이도바시':'水道橋','고라쿠엔':'後楽園','가스가':'春日','도부닛코':'東武日光','도부동물공원':'東武動物公園','기타센주':'北千住','오차노미즈':'御茶ノ水','하라주쿠':'原宿','기치조지':'吉祥寺','시모키타자와':'下北沢','이케부쿠로':'池袋','긴자':'銀座','시부야':'渋谷','시조마에':'市場前','다이바':'台場','요코하마':'横浜','모토마치주카가이':'元町・中華街','사쿠라기초':'桜木町','오다와라':'小田原','하코네유모토':'箱根湯本','고라':'強羅','아타미':'熱海','기노미야':'来宮','진보초':'神保町','바쿠로요코야마':'馬喰横山','히가시니혼바시':'東日本橋',
   '공항제2빌딩':'空港第２ビル','게이세이우에노':'京成上野','신바시':'新橋',
   '모토마치주카가이':'元町・中華街','간나이':'関内','하세':'長谷',
   '가타세에노시마':'片瀬江ノ島','후지사와':'藤沢','센다기':'千駄木',
@@ -27,6 +28,7 @@
    .replace(/역(?:\s*·.*|\s+.*)?$/,'').replace(/\s+/g,'').trim();
  }
  function japanese(name){
+  if(EXTRA_JA[String(name||'').trim()])return EXTRA_JA[String(name||'').trim()];
   if(EXTRA_JA[normalized(name)])return EXTRA_JA[normalized(name)];
   const profiles=globalThis.RailDepartureProfiles?.profiles;
   for(const p of Object.values(profiles||{})){
@@ -35,6 +37,7 @@
   }
   return null;
  }
+ function registerStations(names={}){for(const [ko,ja] of Object.entries(names))if(typeof ja==='string'&&ja.length<80&&ko.length<80&&/^[\u3040-\u30ff\u3400-\u9fffー・（）()\s\dＡ-Ｚａ-ｚ]+$/.test(ja)){EXTRA_JA[ko]=ja;if(!EXTRA_JA[normalized(ko)])EXTRA_JA[normalized(ko)]=ja;}}
  const JA_TO_KO={
   '三ノ宮':'산노미야','中書島':'주쇼지마','中洲川端':'나카스카와바타','京都':'교토',
   '伏見桃山':'후시미모모야마','伏見稲荷':'후시미이나리','住吉':'스미요시','元町':'모토마치',
@@ -67,7 +70,20 @@
  function stopName(stop){
   if(!stop||stop.kind!=='station')return stop?.name||'';
   const country=['대구','부산'].includes(stop.area)||(stop.lat>35&&stop.lng<129.7&&stop.lng>128.2)?'KR':'JP';
-  return station(stop.name,null,country);
+  const name=station(stop.name,null,country);
+  return stop.visitLabel?`${name} · ${stop.visitLabel}`:name;
+ }
+ // Named Maps searches open place information; coordinate-only searches open a bare pin.
+ function placeMapUrl(stop){
+  if(!stop||stop.kind==='home'||stop.privateLocation||!String(stop.name||'').trim())return null;
+  const url=new URL('https://www.google.com/maps/search/');url.searchParams.set('api','1');
+  // Event viewing zones deliberately retain their verified reference point, not the mountain summit.
+  if(stop.event&&Number.isFinite(stop.lat)&&Number.isFinite(stop.lng)&&Math.abs(stop.lat)<=90&&Math.abs(stop.lng)<=180){url.searchParams.set('query',stop.lat+','+stop.lng);return url.href;}
+  const korean=['대구','부산'].includes(stop.area)||(stop.lat>34&&stop.lng<130),label=stopName(stop),parenthetical=label.match(/[（(]([^()（）]*[\u3040-\u30ff\u3400-\u9fff][^()（）]*)[)）]/)?.[1];
+  let name=korean?stop.name:stop.jp||parenthetical||stop.name;
+  if(!korean&&stop.kind==='station'&&!/[가-힣]/.test(name))name=name.replace(/駅$/,'')+'駅';
+  const region=String(stop.address||stop.area||'').split(/\s*\/\s*/)[0].trim(),query=[name,region,korean?'대한민국':'日本'].filter(Boolean).join(' ');
+  url.searchParams.set('query',query);return url.href;
  }
  function distance(a,b){
   const rad=Math.PI/180,dl=(b.lat-a.lat)*rad,dn=(b.lng-a.lng)*rad;
@@ -98,7 +114,7 @@
   }
   for(const legs of Object.values(routes?.days||{}))for(const leg of legs||[]){if(!leg)continue;for(const part of leg.parts||[])if(part.mode==='taxi'&&part.line&&!/Uber/i.test(part.line))part.line=part.line.replace(/택시/g,'Uber Taxi');if(leg.parts?.some(p=>p.mode==='taxi')&&leg.summary&&!/Uber/i.test(leg.summary))leg.summary=leg.summary.replace(/택시/g,'Uber Taxi');}
   const firstVariant=data?.days?.find(d=>d.n===1)?.variants?.find(v=>v.id==='main'),first=firstVariant?.stops?.[0],airport=firstVariant?.stops?.[1];
-  if(first&&airport){Object.assign(first,HOME,{time:'07:10-07:20',modeFromPrevious:'walk',transportFromPrevious:'비공개 출발지 · Uber Taxi 호출 준비'});airport.transportFromPrevious='비공개 출발지 → 대구국제공항 · Uber Taxi (호출 시 소요시간 확인)';}
+  if(first&&first.kind!=='departure'&&airport?.name==='대구국제공항'){Object.assign(first,HOME,{time:'07:10-07:20',modeFromPrevious:'walk',transportFromPrevious:'비공개 출발지 · Uber Taxi 호출 준비'});airport.transportFromPrevious='비공개 출발지 → 대구국제공항 · Uber Taxi (호출 시 소요시간 확인)';}
   const last=data?.days?.find(d=>d.n===22)?.variants?.find(v=>v.id==='main'),lastLegs=routes?.days?.['22-main'];
   if(last&&lastLegs?.length){const station=last.stops.find(s=>s.uid==='d22-main-6');if(station)station.transportFromPrevious='부산 → 서대구 KTX-산천330 직통 · 현재표 참고';if(!last.stops.some(s=>s.uid==='d22-main-home')&&last.stops.at(-1)?.uid==='d22-main-6'){const from=last.stops.at(-1),home={...HOME,uid:'d22-main-home',id:'d22-main-home',area:'대구',time:'서대구역 하차 후 · 귀가 시각 미확정',modeFromPrevious:'taxi',transportFromPrevious:'서대구역 → 비공개 도착지 · Uber Taxi 호출'};last.stops.push(home);lastLegs.push({fromUid:from.uid,toUid:home.uid});}}
   // Redact old offline snapshots as well as newly loaded files, without dropping place UIDs or visit records.
@@ -108,5 +124,5 @@
   function scrub(value){if(!value||typeof value!=='object')return;for(const key of Object.keys(value)){if(typeof value[key]==='string'){for(const text of privateStrings)value[key]=value[key].split(text).join(HOME.name);}else scrub(value[key]);}}
   scrub(data);scrub(routes);return {data,routes};
  }
- return {HOME,station,stopName,japanese,patch,distance,displayParts};
+ return {HOME,station,stopName,japanese,registerStations,placeMapUrl,patch,distance,displayParts};
 });

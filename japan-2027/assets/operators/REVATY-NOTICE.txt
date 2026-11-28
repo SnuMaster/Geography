@@ -1,0 +1,19 @@
+Revaty / Tobu Limited Express wordmark
+Rights holder: Tobu Railway Co., Ltd. All rights reserved.
+Source: Tobu Railway official seat-reserved train guidance, page 8.
+https://www.tobu.co.jp/cms-pdf/important_news/20230307111009rhzu__0lOio5P35--6iBug.pdf
+The embedded Im2 logo image was extracted without redrawing or recoloring.
+CSS controls display dimensions while preserving the original proportions.
+The full source document and its historical service schedules are not deployed.
+
+Current service identity checked on 2026-11-11:
+https://www.tobu.co.jp/railway/special_express/vehicle/revaty/
+https://www.tobu.co.jp/pdf/timetable/time-table_01_kudari.pdf?202603=
+https://www.tobu.co.jp/pdf/timetable/time-table_01_nobori.pdf?202603=
+The saved Nikko outbound and inbound planning candidates correspond to Revaty
+Kinu 105 and Revaty Kegon 42 in the March 2026 timetable. The outbound Kinu
+requires a change at Shimo-Imaichi for Tobu-Nikko; the inbound Kegon is direct.
+These are planning references, not bookings or confirmed future operation.
+Generic Tobu limited-express labels outside these reviewed route pairs are not
+assigned this logo, and ordinary Tobu trains retain their TS/TN/TJ symbols.
+No operator endorsement or artwork redistribution license is implied.

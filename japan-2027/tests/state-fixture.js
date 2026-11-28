@@ -9,7 +9,7 @@
  if(qa.mockOrientation){Object.defineProperty(window,'DeviceOrientationEvent',{configurable:true,value:{requestPermission:absolute=>{qa.orientationCalls=(qa.orientationCalls||0)+1;qa.absolutePermission=absolute;return qa.orientationResult==='pending'?new Promise(resolve=>qa.resolveOrientation=resolve):Promise.resolve(qa.orientationResult||'granted');}}});}
  Object.defineProperty(document,'hidden',{configurable:true,get:()=>!!qa.hidden});
  const nativeFetch=window.fetch.bind(window);
- window.fetch=async(url,options)=>{if(qa.networkBlocked)throw Error('QA offline');if(qa.delayFile&&String(url).startsWith(qa.delayFile))await new Promise(resolve=>setTimeout(resolve,qa.delayMs||1800));return nativeFetch(url,options);};
+ window.fetch=async(url,options)=>{if(qa.networkBlocked)throw Error('QA offline');if(new URL(String(url),document.baseURI).hostname==='api.frankfurter.dev')return new Response(JSON.stringify({date:'2026-10-23',base:'JPY',quote:'KRW',rate:8.5}));if(qa.delayFile&&String(url).startsWith(qa.delayFile))await new Promise(resolve=>setTimeout(resolve,qa.delayMs||1800));return nativeFetch(url,options);};
  window.addEventListener('error',e=>qa.errors?.push(e.message));window.addEventListener('unhandledrejection',e=>qa.errors?.push(String(e.reason)));
  const response=await nativeFetch('../index.html'),html=await response.text();document.open();document.write(html.replace('<head>','<head><base href="../">'+(Number.isFinite(qa.safeBottom)?'<style>:root{--safe-bottom:'+qa.safeBottom+'px!important}</style>':'')));document.close();
 })();

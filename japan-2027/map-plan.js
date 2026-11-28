@@ -10,6 +10,7 @@
   19:['후쿠오카','오호리공원 · 성터 · 타워'],20:['후쿠오카','백년장 · 히라마츠 · 나카강'],21:['후쿠오카·부산','뉴 카멜리아 · 부산항'],22:['부산·서대구','초량 · 브라운핸즈 · 귀가']
  };
  function label(day,variant){
+  if(day.mapLabel)return variant.id==='brewery'?{city:'후사',places:'이시카와 주조 · 악천후 대체안'}:variant.id==='concert'?{city:'도쿄·이치카와',places:'공연 티켓 확보 시 · 이치카와'}:day.mapLabel;
   if(day.n===8&&variant.id==='brewery')return {city:'후사',places:'이시카와 주조'};
   if(day.n===11&&variant.id==='no-concert')return {city:'도쿄',places:'진보초 · 구라마에 · 국립신미술관'};
   if(day.n===14&&variant.id==='no-yamazaki')return {city:'우지·교토',places:'뵤도인 · 아라시야마'};

@@ -1,0 +1,10 @@
+Official provider marks used only to identify the selected API provider.
+OpenAI Blossom black/white: https://cdn.openai.com/brand/OpenAI-Logos-2025.zip
+Guidelines: https://openai.com/brand/
+Claude: https://claude.ai/favicon.svg
+Guidelines: https://www.anthropic.com/legal/trademark-guidelines
+Checked 2026-11-03. Marks belong to their respective owners.
+
+Japanese headings: Noto Serif JP, Google Fonts subset, 400 weight, SIL Open Font License in OFL.txt.
+Source: https://fonts.google.com/noto/specimen/Noto+Serif+JP
+The local subset contains only static Japanese interface labels. Dynamic text uses system fallback.

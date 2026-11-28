@@ -1,0 +1,70 @@
+'use strict';
+// A presentation adapter over the existing journey, reservations and personal store.
+(function(){
+ const $=s=>document.querySelector(s);
+ let api,lastDay=0;
+ const icons={map:'<path d="m3 6 6-3 6 3 6-3v15l-6 3-6-3-6 3zM9 3v15M15 6v15"/>',calendar:'<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M8 3v4m8-4v4M4 11h16"/>',book:'<path d="M8 5H5v16h14V5h-3M9 3h6v4H9zM8 12h8m-8 4h6"/>',wallet:'<rect x="3" y="5" width="18" height="15" rx="2"/><path d="M3 8h18m-5 5h5m-4 0v3"/>',records:'<path d="M3 6h7l2 2h9v12H3zM7 14l3-3 4 4 3-2"/>',settings:'<path d="m12 3 2 3 4-1 1 4 3 3-3 2-1 4-4-1-2 4-2-4-4 1-1-4-3-2 3-3 1-4 4 1z"/><circle cx="12" cy="12" r="3"/>'};
+ const icon=k=>`<svg viewBox="0 0 24 24" aria-hidden="true">${icons[k]||icons.map}</svg>`;
+ function title(button,text,key){button.innerHTML=icon(key)+`<span>${text}</span>`;}
+ function selectTab(id){for(const b of document.querySelectorAll('[data-shell-tab]')){const selected=b.dataset.shellTab===id;b.setAttribute('aria-selected',String(selected));b.tabIndex=selected?0:-1;}for(const p of document.querySelectorAll('[data-shell-pane]'))p.hidden=p.dataset.shellPane!==id;}
+ function init(value){
+  api=value;document.body.classList.add('travel-shell');document.querySelector('meta[name=theme-color]').content='#10202e';
+  const brand=document.querySelector('.brand');brand.innerHTML='<span class="brandmark" aria-hidden="true"><img src="assets/kiseki-crest.svg" width="61" height="61" alt="" decoding="async"></span><span>KISEKI<small class="brand-year">日本旅行プランナー</small></span>';brand.setAttribute('aria-label','KISEKI · 일본 여행 1일차로 이동');
+  document.title='KISEKI · JAPAN 2027';
+  const header=document.querySelector('.header-actions'),mapViews=[$('#overviewView'),$('#dailyView')];
+  const budget=document.createElement('button');budget.id='shellBudget';budget.type='button';title(budget,'경비 정리','wallet');budget.onclick=()=>TravelAssistant.openTool('경비·준비물·저장 조정안');
+  title($('#ccSidebarToggle'),'여행 일정','calendar');title($('#bookingChecklistBtn'),'예약 체크','book');title($('#ccRecords'),'기록·백업','records');
+  const offline=$('#offlinePackBtn'),settings=$('#settingsBtn'),alerts=$('#ccAlertsToggle');
+  offline.insertAdjacentHTML('afterbegin','<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v4h16v-4"/></svg>');
+  title(settings,'지도 설정','settings');settings.setAttribute('aria-label','지도 설정');settings.setAttribute('aria-controls','mapSettings');settings.title='지도 설정';
+  const tools=document.createElement('div');tools.id='shellTools';tools.setAttribute('role','group');tools.setAttribute('aria-label','지도 도구');tools.append(offline,settings);
+  const parking=document.createElement('div');parking.id='originalLegacyControls';parking.hidden=true;document.body.append(parking);
+  for(const id of ['tripPlanBtn','itineraryToggle','rideToggle','ccInstall','aboutBtn','shareBtn']){const button=$('#'+id);button.hidden=true;parking.append(button);}
+  alerts.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg><span>알림</span>';alerts.setAttribute('aria-label','여행 알림 설정');alerts.title='여행 알림 설정';
+  document.querySelector('.topbar').append(alerts,tools,document.querySelector('.trip-summary'));
+  header.replaceChildren($('#bookingChecklistBtn'),budget,$('#ccRecords'));
+  const map=document.querySelector('.map-panel'),bar=document.createElement('div');bar.className='shell-map-toolbar';bar.setAttribute('aria-label','지도 보기');
+  const views=document.createElement('div');views.className='shell-view-tabs';views.setAttribute('role','group');views.setAttribute('aria-label','지도 범위');views.append(...mapViews);bar.append(views);map.append(bar);$('#overviewView').textContent='전체 여정';$('#dailyView').textContent='오늘 동선';
+  const mission=document.querySelector('.cc-mission'),hero=document.createElement('div');hero.className='shell-hero';hero.append(mission.querySelector('.cc-kicker'),mission.querySelector('.cc-day-heading'));hero.insertAdjacentHTML('beforeend','<p id="shellDaySummary"></p><span class="shell-hero-caption">JOURNEY NOTES</span>');mission.prepend(hero);
+  const selectRow=document.createElement('div');selectRow.className='shell-date-select';selectRow.innerHTML='<button id="shellPrevDay" type="button" aria-label="이전 여행 날짜">‹</button><button id="shellNextDay" type="button" aria-label="다음 여행 날짜">›</button>';selectRow.insertBefore($('#ccDaySelect'),selectRow.lastChild);hero.after(selectRow);
+  $('#shellPrevDay').onclick=()=>changeDay(-1);$('#shellNextDay').onclick=()=>changeDay(1);
+  const tabs=document.createElement('div');tabs.className='shell-side-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','선택 날짜 정보');tabs.innerHTML='<button type="button" role="tab" id="shellTabToday" data-shell-tab="today" aria-controls="shellToday" aria-selected="true">오늘 일정</button><button type="button" role="tab" id="shellTabInfo" data-shell-tab="info" aria-controls="shellInfo" aria-selected="false">주요 정보</button>';
+  const today=document.createElement('section');today.id='shellToday';today.dataset.shellPane='today';today.setAttribute('role','tabpanel');today.setAttribute('aria-labelledby','shellTabToday');today.append(document.querySelector('.cc-timeline-heading'),$('#ccPlanStatus'),$('#ccTimeline'));
+  const info=document.createElement('section');info.id='shellInfo';info.dataset.shellPane='info';info.setAttribute('role','tabpanel');info.setAttribute('aria-labelledby','shellTabInfo');info.hidden=true;info.innerHTML='<p class="shell-eyebrow">DAY INFORMATION</p><h2>오늘 여행의 기준</h2><dl id="shellFacts"></dl><p class="shell-information">저장된 여행 계획입니다. 열차 운행·영업시간과 현장 안내는 방문 전에 확인해 주세요.</p>';
+  $('#ccSidebar').append(tabs,today,info);
+  selectTab('today');
+  tabs.onclick=e=>{const b=e.target.closest('[data-shell-tab]');if(b)selectTab(b.dataset.shellTab);};
+  tabs.onkeydown=e=>{
+   if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
+   e.preventDefault();
+   const buttons=[...tabs.querySelectorAll('[data-shell-tab]')],index=buttons.indexOf(document.activeElement);
+   const step=e.key==='ArrowRight'?1:-1;
+   const next=e.key==='Home'?0:e.key==='End'?buttons.length-1:(index+step+buttons.length)%buttons.length;
+   selectTab(buttons[next].dataset.shellTab);buttons[next].focus();
+  };
+  const dock=document.createElement('nav');dock.id='shellDateDock';dock.setAttribute('aria-label',api.app.state.data.days.length+'일 전체 여행 날짜');dock.innerHTML='<div class="shell-dock-title"><span>전체 일정</span><strong>' + api.app.state.data.days.length + ' DAYS</strong></div><button type="button" id="shellDatesPrevious" aria-label="이전 날짜 카드 보기">‹</button><button type="button" id="shellDatesNext" aria-label="다음 날짜 카드 보기">›</button>';dock.insertBefore($('#dayList'),dock.lastChild);document.querySelector('.workspace').append(dock);
+  $('#shellDatesPrevious').onclick=()=>$('#dayList').scrollBy({left:-350,behavior:reducedMotion()?'instant':'smooth'});$('#shellDatesNext').onclick=()=>$('#dayList').scrollBy({left:350,behavior:reducedMotion()?'instant':'smooth'});
+  const card=document.createElement('section');card.id='shellContextCard';card.setAttribute('aria-label','다음 방문과 선택 구간');card.append(document.querySelector('.cc-next'),$('#routeFocusPanel'));map.append(card);document.querySelector('.cc-next>small').insertAdjacentHTML('afterend','<span id="shellNextCount"></span>');
+  RouteViewport.init();
+  RouteAccount.init();
+  KisekiUI.init(api);
+  OriginalSidebar.init(api);
+  DailyExchange.init();
+  new ResizeObserver(()=>{api.app.map.invalidateSize();alignDates();}).observe(document.querySelector('.route-workspace'));
+ }
+ const reducedMotion=()=>matchMedia('(prefers-reduced-motion:reduce)').matches;
+ function alignDates(){const list=$('#dayList'),card=list?.querySelector('.day-item.active');if(!card)return;const r=card.getBoundingClientRect(),b=list.getBoundingClientRect();if(r.left<b.left||r.right>b.right)list.scrollLeft+=r.left-b.left-(b.width-r.width)/2;}
+ function changeDay(delta){const days=api.app.state.data.days,index=days.findIndex(d=>d.n===api.app.state.day),next=days[index+delta];if(next)api.app.setDay(next.n);}
+ function render(c,rows,next){if(!api)return;
+  const days=api.app.state.data.days,index=days.findIndex(d=>d.n===c.day.n);$('#shellPrevDay').disabled=index===0;$('#shellNextDay').disabled=index===days.length-1;
+  $('#shellDateDock').setAttribute('aria-label',days.length+'일 전체 여행 날짜');$('#shellDateDock .shell-dock-title strong').textContent=days.length+' DAYS';
+  const summary=MapPlan.label(c.day,c.variant);$('#shellDaySummary').textContent=summary.places||c.variant.label||c.variant.title||'선택한 날짜의 여행 기록';
+  $('#shellFacts').replaceChildren();for(const [key,val]of [['여행 날짜',TripData.date(c.day.n)+' · '+c.day.weekday],['선택한 일정',c.variant.label||c.variant.title||c.variant.id],['방문 장소',c.stops.length+'곳'],['계획 교통비',api.app.dailyCost().ic+'엔 · 저장 계획 기준']]){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=val;$('#shellFacts').append(dt,dd);}
+  $('#shellNextCount').textContent=next?String(c.stops.indexOf(next)+1).padStart(2,'0')+' / '+c.stops.length:'완료';
+  for(const button of $('#dayList').querySelectorAll('[data-day]')){const d=days.find(d=>d.n===Number(button.dataset.day));if(!d)continue;button.dataset.dayNumber=String(d.n).padStart(2,'0');if(d.n===c.day.n)button.setAttribute('aria-current','date');else button.removeAttribute('aria-current');}
+  RouteViewport.refreshCard();
+  KisekiUI.render(c);
+  if(lastDay!==c.day.n){lastDay=c.day.n;requestAnimationFrame(()=>{const card=$('#dayList .day-item.active');if(card)$('#dayList').scrollLeft=card.offsetLeft-$('#dayList').offsetLeft-20;});}
+ }
+ window.TravelShell={init,render};
+})();

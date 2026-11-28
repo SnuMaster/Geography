@@ -1,16 +1,15 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),zlib=require('node:zlib');
-const root=path.join(__dirname,'../japan-2027'),directory=path.join(root,'assets/offline-streets');
-const T=require(path.join(root,'data-model')),P=require(path.join(root,'personal-trip')),Roads=require(path.join(root,'offline-roads'));
+const root=path.join(__dirname,'../japan-2027'),directory=path.join(root,'assets/offline-streets/tokyo-12');
+const Roads=require(path.join(root,'offline-roads'));
 
 test('all prebuilt street maps match the current itinerary and their compressed hashes',{
  skip:process.env.OFFLINE_BUNDLE_OPTIONAL==='1'&&!fs.existsSync(path.join(directory,'manifest.json'))
 },()=>{
- const read=f=>JSON.parse(fs.readFileSync(path.join(root,f))),tokyo=read('tokyo-routes.json'),west=read('west-routes.json');
- const trip=P.patch(T.merge(read('data.json'),read('tokyo-data.json'),read('west-data.json')),{...tokyo,days:{...tokyo.days,...west.days}});
+ const trip=require(path.join(root,'trip-update.json'));
  const manifest=JSON.parse(fs.readFileSync(path.join(directory,'manifest.json')));
- assert.equal(manifest.version,1);assert.equal(Object.keys(manifest.days).length,22);
+ assert.equal(manifest.version,1);assert.equal(Object.keys(manifest.days).length,trip.data.days.length);
  for(const day of trip.data.days){
   const entry=manifest.days[day.n],points=Roads.centres(day,trip.routes);assert.ok(entry,'missing day '+day.n);assert.deepEqual(entry.points,points);
   const bytes=fs.readFileSync(path.join(directory,entry.path));assert.equal(bytes.length,entry.bytes);

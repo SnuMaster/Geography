@@ -25,7 +25,7 @@ const DayOneDepartures = (() => {
  }
  function shell(key) {
   const p=profiles[key],u=links(p);
-  return `<div class="departure-heading"><strong>다음 열차</strong><span class="departure-source-badge">시간표 기준 · 지연 미반영</span></div>
+  return `<div class="departure-heading"><strong>다음 열차</strong></div>
    <div class="departure-stations"><span class="departure-station-code${p.jr?' departure-jr-code':''}">${p.fromCode}</span><strong>${p.from}<small>${p.fromJa}</small></strong><span class="departure-arrow">→</span><strong>${p.to}<small>${p.toJa} · ${p.toCode}</small></strong><button type="button" class="departure-reverse" data-departure-direction="${p.reverse}" aria-label="반대 방향 ${p.to}에서 ${p.from} 열차 보기" title="반대 방향">↔</button></div>
    <div class="departure-direction">${p.line} · <b>${p.direction}</b><span>${p.directionJa}${p.jr?' · 다카사키·우쓰노미야선 직통':''}</span></div>
    <div class="departure-clock" data-departure-clock>현재 일본 시각으로 계산 중…</div>

@@ -45,3 +45,16 @@ test('all source itineraries build usable plans without changing stored geometry
  const fs=require('node:fs');for(const file of ['tokyo-routes','west-routes']){const data=JSON.parse(fs.readFileSync(require.resolve('../japan-2027/'+file+'.json'),'utf8')),before=JSON.stringify(data);for(const [key,legs] of Object.entries(data.days))for(const source of legs){const plan=Nav.build(source);assert.ok(Number.isFinite(plan.totalM),key);assert.ok(plan.cues.every(c=>c.atM>=0&&c.atM<=plan.totalM),key);}assert.equal(JSON.stringify(data),before);}
  assert.equal(Nav.guide(Nav.build(null),null,null,now).state,'unavailable');
 });
+
+test('active Tokyo walking segments use saved road geometry for guidance',()=>{
+ const trip=require('../japan-2027/trip-update.json');
+ const source=trip.routes.days['3-main'].find(l=>l.parts.every(p=>['walk','transfer'].includes(p.mode))&&l.parts.some(p=>p.mode==='walk'&&p.geometryAccuracy==='mapped'&&p.source.includes('routed-foot')));
+ assert.ok(source);
+ const plan=Nav.build(source),walkPath=plan.parts.find(part=>part.walkPath),coords=walkPath.coords,[lat,lng]=coords[Math.floor(coords.length/3)];
+ assert.equal(walkPath.walkPath,true);
+ assert.equal(Nav.guide(plan,{lat,lng,accuracy:6,timestamp:now},null,now).state,'guiding');
+ const foot=walk([[0,0],[100,0],[100,100]],{geometrySource:'FOSSGIS',geometryAccuracy:'mapped',source:'https://routing.openstreetmap.de/routed-foot/route/v1/driving/example'});
+ assert.equal(Nav.build(leg([foot])).cues.length,1);
+ assert.equal(Nav.build(leg([{...foot,geometryAccuracy:'schematic'}])).cues.length,0);
+ assert.equal(Nav.build(leg([{...foot,source:foot.source.replace('routed-foot','routed-car')}])).cues.length,0);
+});

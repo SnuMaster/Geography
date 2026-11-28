@@ -1,0 +1,166 @@
+// Frozen Nov 11 scenario: retain legacy fare/geometry regressions after the
+// active schedule changes. Current Nov 18 plan contracts are tested separately.
+'use strict';
+const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const bundle=require('./fixtures/tokyo-plan-20261111.json'),source=require('../scripts/tokyo-rail-geometry.json'),G=require('../japan-2027/location-core');
+const parts=Object.values(bundle.routes.days).flat().flatMap(l=>l.parts);
+test('Tokyo–Atami follows the official Shinkansen through Shin-Yokohama and Odawara in both directions',()=>{
+ const legs=parts.filter(p=>p.lineId==='JR-Central.TokaidoShinkansen'&&(p.from==='아타미'||p.to==='아타미'));assert.equal(legs.length,2);
+ for(const p of legs){assert.equal(p.geometryAccuracy,'mapped');assert.equal(p.source,source.source);assert.ok(p.coords.length>1000);assert.ok(p.distanceM>94000&&p.distanceM<98000);
+  for(const station of [[35.507,139.617],[35.256,139.155]])assert.ok(p.coords.some(c=>G.distance(c,station)<500),'verified intermediate station');
+  for(let i=1;i<p.coords.length;i++)assert.ok(G.distance(p.coords[i-1],p.coords[i])<1500,'no invented long straight gap');
+ }
+ assert.deepEqual(legs[0].coords,legs[1].coords.toReversed());assert.match(legs[0].geometrySource,/N02-25/);assert.equal(source.license,'CC BY 4.0');
+});
+test('Hakone cable and ropeway both use sourced track geometry',()=>{
+ const cable=parts.filter(p=>p.lineId==='Hakone.Cable'),rope=parts.filter(p=>p.lineId==='Hakone.Ropeway');assert.equal(cable.length,2);assert.equal(rope.length,2);
+ for(const p of cable){assert.equal(p.geometryAccuracy,'mapped');assert.ok(p.coords.length>10);assert.equal(p.source,source.source);}
+ for(const p of rope){assert.equal(p.geometryAccuracy,'mapped');assert.ok(p.coords.length>=7);assert.match(p.source,/openstreetmap.org\/way\/26776732/);}
+});
+const ui={MODE:{rail:{color:'#123456'},walk:{color:'#abc'},transfer:{color:'#def'},flight:{color:'#333'}},esc:String,icon:x=>x};vm.createContext(ui);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ui);
+test('schematic, transfer and flight dashes remain visible through both strokes at each map scope',()=>{
+ for(const overview of [false,true])for(const part of [{mode:'rail',geometryAccuracy:'schematic'},{mode:'transfer',geometryAccuracy:'schematic'},{mode:'flight',geometryAccuracy:'mapped'}]){
+  const styles=ui.routeLineStyles(part,{overview});assert.ok(styles.line.dashArray);assert.equal(styles.casing.dashArray,styles.line.dashArray);assert.equal(styles.casing.interactive,false);
+  if(part.geometryAccuracy==='schematic'){assert.ok(styles.line.opacity<1);assert.ok(styles.casing.opacity<.6);}
+ }
+ const mapped=ui.routeLineStyles({mode:'rail',lineId:'JR-Central.TokaidoShinkansen',geometryAccuracy:'mapped'});assert.equal(mapped.line.dashArray,null);assert.equal(mapped.line.color,'#0068b7');
+});
+test('Shinkansen badge is available consistently and its static asset is in the offline shell',()=>{
+ const p={mode:'rail',lineId:'JR-Central.TokaidoShinkansen',line:'도카이도 신칸센'};
+ assert.ok(ui.railInfo(p));assert.match(ui.railBadge(p),/assets\/operators\/shinkansen.svg/);assert.match(ui.operatorLogo(p),/신칸센 로고/);
+ assert.doesNotMatch(ui.operatorLogo({mode:'rail',lineId:'JR-East.Yamanote'}),/shinkansen/);
+ assert.match(fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8'),/assets\/operators\/shinkansen.svg/);
+});
+
+test('bus company marks identify only verified bus operators and remain available offline',()=>{
+ const services=parts.filter(p=>p.mode==='bus'),sw=fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8');
+ for(const [match,brand]of [[p=>p.lineId==='TobuBus.Nikko.C','tobu-bus.svg'],[p=>p.line==='가와구치코 관광버스 레드라인','fujikyu-bus.png']]){
+  const buses=services.filter(match);assert.ok(buses.length);for(const p of buses){assert.ok(ui.busCompanyFor(p));for(const html of [ui.railBadge(p),ui.railLineBadge(p)]){assert.ok(html.includes('assets/operators/'+brand));assert.match(html,/vehicle-bus/);}}
+  assert.ok(sw.includes('assets/operators/'+brand));assert.ok(fs.statSync(require.resolve('../japan-2027/assets/operators/'+brand)).size>1000);
+ }
+ for(const p of [{mode:'bus',line:'Unknown red bus'},{mode:'rail',lineId:'TobuBus.Nikko.C'},{mode:'bus',lineId:'Atami.FuuaShuttle',line:'Fuua 무료 셔틀'}]){assert.equal(ui.busCompanyFor(p),null);assert.equal(ui.busCompanyLogo(p),'');}
+ const unknown={mode:'bus',line:'Unknown bus'};assert.match(ui.railBadge(unknown),/vehicle-bus/);assert.doesNotMatch(ui.railBadge(unknown),/bus-company-logo/);
+});
+test('airline and airport bus logos identify each active return service and are cached offline',()=>{
+ const {routes}=require('../japan-2027/trip-update.json');
+ const [peach,bus]=routes.days['13-main'];
+ assert.match(ui.travelLogo(routes.days['1-main'][0].parts[0],'leg'),/trinity\.svg/);
+ assert.match(ui.travelLogo(peach.parts[0],'popup'),/peach\.svg.*피치항공 로고/);
+ assert.match(ui.travelLogo(bus.parts[0],'popup'),/kyungbuk-express\.png.*경북고속 로고/);
+ assert.match(ui.railLineBadge(bus.parts[0]),/kyungbuk-express\.png/);
+ assert.deepEqual(ui.busCompanyFor({mode:'bus',line:'동대구 직통'}),null);
+ const manifest=require('../japan-2027/offline-manifest.json');
+ for(const path of ['assets/airlines/peach.svg','assets/operators/kyungbuk-express.png'])assert(manifest.files.some(f=>f.path===path));
+});
+test('every active rail, metro and bus service has a visible mark, including split through services',()=>{
+ ui.L={latLng:p=>({point:p,distanceTo:q=>G.distance(p,q.point)})};
+ for(const leg of Object.values(bundle.routes.days).flat())for(const p of ui.railParts(leg).filter(p=>['rail','metro','bus'].includes(p.mode))){assert.ok(ui.railInfo(p),p.lineId+' '+p.line);assert.match(ui.railBadge(p),/role="img"|operator-logo/,p.line);}
+ for(const id of ['Yurikamome.Yurikamome','Minatomirai.Minatomirai','JR-East.KeihinTohokuNegishi','JR-East.Ito','Tobu.TobuSkytree','Tobu.Nikko','OdakyuHakone.HakoneTozan','Hakone.Cable','Hakone.Ropeway'])assert.ok(ui.railInfo({lineId:id}).source,id);
+});
+
+test('Fuji service artwork is deduplicated across operators without branding ordinary trains',()=>{
+ const leg=bundle.routes.days['8-main'].find(l=>l.parts.some(p=>p.lineId==='Special.Direct'&&/후지회유/.test(p.line))),before=JSON.stringify(leg);
+ const shown=ui.railLegBadges(leg);assert.equal((shown.match(/fuji-excursion.svg/g)||[]).length,1);assert.equal(JSON.stringify(leg),before);
+ for(const p of [{mode:'rail',lineId:'JR-East.ChuoRapid',line:'주오선 쾌속'},{mode:'rail',lineId:'Fujikyu.Fujikyu',line:'후지급행선'},{mode:'bus',lineId:'Special.Direct',line:'후지회유'}])assert.equal(ui.fujiExcursionLogo(p),'');
+ const sw=fs.readFileSync(require.resolve('../japan-2027/sw.js'),'utf8');assert.match(sw,/assets\/operators\/fuji-excursion.svg/);assert.match(sw,/FUJI-EXCURSION-NOTICE.txt/);
+});
+test('all formerly long straight walking gaps now follow a walking graph; internal shortcuts are not painted',()=>{
+ assert.deepEqual(parts.filter(p=>p.mode==='walk'&&p.geometryAccuracy==='schematic'&&p.distanceM>80),[]);
+ const corrected=parts.filter(p=>p.mode==='walk'&&p.responseSha256&&/OSRM foot/.test(p.geometrySource));assert.equal(corrected.length,20);
+ for(const p of corrected){assert.ok(p.coords.length>2);assert.equal(G.quality(p),'mapped');for(let i=1;i<p.coords.length;i++)assert.ok(G.distance(p.coords[i-1],p.coords[i])<1000);}
+ assert.equal(ui.mapPartVisible({mode:'transfer',geometryAccuracy:'schematic'}),false);assert.equal(ui.mapPartVisible({mode:'walk',geometryAccuracy:'mapped'}),true);
+ assert.equal(ui.mapPartVisible({mode:'transfer',geometrySource:'역내 통로 대표 연결(개략)'}),false);
+});
+test('Nikko bus stops at Nishisando and walks to the mapped front entrance instead of driving through the shrine',()=>{
+ const stops=bundle.data.days.find(d=>d.n===10).variants[0].stops,entrance=require('../scripts/tokyo-transit-corrections.json').toshoguEntrance;
+ assert.ok(G.distance([stops[2].lat,stops[2].lng],entrance.point)<1);assert.match(stops[2].coordinateSource,/699013021/);
+ for(const index of [1,4]){const leg=bundle.routes.days['10-main'][index],bus=leg.parts.find(p=>p.mode==='bus');assert.equal(bus.lineId,'TobuBus.Nikko.C');assert.equal(bus.geometryAccuracy,'mapped');assert.ok(bus.coords.length>70);assert.ok(leg.parts.some(p=>p.mode==='walk'&&p.distanceM>400));assert.match(bus.from+' '+bus.to,/니시산도입구/);assert.equal(leg.fare.icYen,350);}
+});
+test('Fuua shuttle uses a road-shaped reference and never claims a verified bus alignment',()=>{
+ const shuttle=parts.filter(p=>p.lineId==='Atami.FuuaShuttle');assert.equal(shuttle.length,2);
+ for(const p of shuttle){assert.ok(p.coords.length>100);assert.equal(p.geometryAccuracy,'schematic');assert.match(p.geometrySource,/실제 셔틀 경유로 미확인/);assert.ok(p.distanceM>2500);assert.equal(ui.railInfo(p).vehicle,'bus');}
+});
+
+
+test('station detail badges retain the exact departure station number in either direction',()=>{
+ let checked=0;
+ for(const p of parts.filter(p=>/^(TokyoMetro|Toei)\./.test(p.lineId)))for(const q of [p,{...p,from:p.to,fromJa:p.toJa,to:p.from,toJa:p.fromJa}]){
+  const code=ui.metroStationCode(q);assert.match(code,/^[A-Z]\d{2}$/);assert.ok(ui.railBadge(q).includes('>'+code+'</span>'));checked++;
+ }
+ assert.ok(checked>40);
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'긴자'}),'H09');
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Ginza',from:'긴자'}),'G09');
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'우에노'}),'H18');
+ assert.equal(ui.metroStationCode({lineId:'Toei.Oedo',from:'롯폰기'}),'E23');
+ assert.equal(ui.metroStationCode({lineId:'TokyoMetro.Hibiya',from:'미확인 역'}),null);
+ assert.equal(ui.metroStationCode({lineId:'JR-East.Yamanote',from:'우에노'}),null);
+});
+
+test('map markers show line letters without station numbers and preserve JR through-service marks',()=>{
+ const marks=[],ctx={MODE:{...ui.MODE,taxi:{color:'#111'},ferry:{color:'#123'}},esc:String,icon:x=>x,window:{TripPersonal:{displayParts:l=>l.parts}},routeLayer:{},L:{latLng:p=>({point:p,distanceTo:q=>G.distance(p,q.point)}),divIcon:o=>o,marker:(point,o)=>{marks.push(o.icon.html);const m={addTo:()=>m,getElement:()=>null,on:()=>m,setTooltipContent:()=>m};return m;}}};
+ vm.createContext(ctx);vm.runInContext(fs.readFileSync(require.resolve('../japan-2027/rail-ui.js'),'utf8'),ctx);vm.runInContext(fs.readFileSync(require.resolve('./fixtures/rail-departure-profiles-20261111.js'),'utf8'),ctx);
+ for(const leg of Object.values(bundle.routes.days).flat())for(const p of ctx.railMapParts(leg))ctx.addRailMapSymbol(p,leg);
+ assert.ok(marks.length>50);assert.ok(marks.some(h=>/>H<\/span>/.test(h)));assert.ok(marks.some(h=>/>Y<\/span>/.test(h)));assert.ok(marks.some(h=>/>JR<\/span>/.test(h)));
+ for(const h of marks)assert.doesNotMatch(h,/>[A-Z]{1,3}\d{2}<\/span>/,'station number leaked into map marker');
+ const detail=ctx.railBadge({lineId:'TokyoMetro.Hibiya',line:'히비야선',from:'이리야'});assert.match(detail,/>H19<\/span>/);
+});
+
+
+test('verified through rides use one complete map symbol without changing tracks or hiding actual transfers',()=>{
+ vm.runInContext(fs.readFileSync(require.resolve('./fixtures/rail-departure-profiles-20261111.js'),'utf8'),ui);ui.window={TripPersonal:{displayParts:leg=>leg.parts}};
+ for(const [day,index]of [[4,0],[4,5],[10,0],[10,5]]){
+  const leg=bundle.routes.days[day+'-main'][index],snapshot=JSON.stringify(leg),shown=ui.railMapParts(leg),symbol=shown.find(p=>p.mapSymbol);assert.ok(symbol,leg.legId);assert.equal(shown.filter(p=>p.mapSymbol).length,1);assert.equal(shown.filter(p=>p.suppressSymbol).length,1);
+  assert.equal(JSON.stringify(leg),snapshot);for(let i=0;i<shown.length;i++)assert.equal(shown[i].coords,leg.parts[i].coords);
+  assert.equal(symbol.mapSymbol.from,day===4?(index===0?'우에노':'요코하마'):symbol.from);assert.ok(symbol.mapSymbol.coords.length>symbol.coords.length);assert.match(symbol.mapSymbol.line,/직통/);
+  if(day===4)assert.match(ui.railBadge(symbol.mapSymbol),/>JR<\/span>/);
+ }
+ const leg=bundle.routes.days['4-main'][0],i=leg.parts.findIndex(p=>p.lineId==='JR-East.Takasaki'),transfer={mode:'transfer',from:'도쿄',to:'도쿄',coords:[leg.parts[i].coords.at(-1)],distanceM:0};
+ const interrupted={...leg,parts:[...leg.parts.slice(0,i+1),transfer,...leg.parts.slice(i+1)]};assert.ok(!ui.railMapParts(interrupted).some(p=>p.mapSymbol));
+ const broken=structuredClone(leg);broken.parts[i+1].coords[0][0]+=.001;assert.ok(!ui.railMapParts(broken).some(p=>p.mapSymbol));
+ const out=ui.railMapParts(leg).find(p=>p.mapSymbol).mapSymbol,back=ui.railMapParts(bundle.routes.days['4-main'][5]).find(p=>p.mapSymbol).mapSymbol;assert.equal(out.mapSymbolKey,back.mapSymbolKey);assert.ok(G.distance(ui.railMidpoint(out.coords),ui.railMidpoint(back.coords))<.1);
+});
+
+test('a through ride retains every line color and uses one service symbol in either direction',()=>{
+ for(const [day,index,reverse]of [[4,0,5],[10,0,5]]){
+  const leg=bundle.routes.days[day+'-main'][index],before=JSON.stringify(leg),mapped=ui.railMapDrawParts(leg),ride=mapped.find(p=>p.mapSymbol)?.mapSymbol;
+  assert.ok(ride);assert.equal(mapped.length,leg.parts.length);
+  assert.equal(mapped.filter(p=>p.mapSymbol).length,1);assert.equal(mapped.filter(p=>p.suppressSymbol).length,1);
+  const profile=Object.values(ui.RailDepartureProfiles.profiles).find(p=>p.throughParts?.length&&p.line===ride.line&&p.from===ride.from&&p.to===ride.to);assert.ok(profile);
+  const first=profile.throughParts[0],start=leg.parts.findIndex(p=>p.lineId===first.lineId&&p.from===first.from&&p.to===first.to);
+  assert.ok(start>=0);const run=leg.parts.slice(start,start+profile.throughParts.length);
+  assert.equal(JSON.stringify(ride.coords),JSON.stringify(run.flatMap((p,i)=>i?p.coords.slice(1):p.coords)),'every surveyed point remains in order');
+  assert.equal(ride.distanceM,run.reduce((n,p)=>n+p.distanceM,0));
+  assert.equal(ride.from,profile.from);assert.equal(ride.to,profile.to);
+  for(const parts of [mapped,ui.railMapDrawParts(bundle.routes.days[day+'-main'][reverse])]){
+   const first=parts.findIndex(p=>p.mapSymbol),sections=parts.slice(first,first+2);
+   assert.notEqual(sections[0].lineId,sections[1].lineId);
+   for(const section of sections)assert.equal(ui.routeLineStyles(section).line.color,ui.railInfo(section).color);
+  }
+  assert.equal(JSON.stringify(leg),before,'drawing projection cannot mutate itinerary, fare or source tracks');
+ }
+});
+
+test('map grouping never joins a transfer, an unknown boundary or a schematic track',()=>{
+ const leg=bundle.routes.days['10-main'][0],at=leg.parts.findIndex(p=>p.lineId==='Tobu.TobuSkytree');
+ for(const mutate of [l=>l.parts.splice(at+1,0,{mode:'transfer',coords:[l.parts[at].coords.at(-1)],distanceM:0}),l=>l.parts[at+1].coords[0][0]+=.001,l=>l.parts[at+1].geometryAccuracy='schematic']){
+  const changed=structuredClone(leg);mutate(changed);assert.equal(ui.railMapDrawParts(changed).length,changed.parts.length);assert.ok(!ui.railMapDrawParts(changed).some(p=>p.mapSymbol));
+ }
+ const ordinary=bundle.routes.days['2-main'][0];assert.equal(ui.railMapDrawParts(ordinary).length,ordinary.parts.length,'separate Metro and Yurikamome boardings stay separate');
+});
+
+test('named Revaty services have their own mark while generic and Spacia trains stay unbranded',()=>{
+ for(const part of [
+  {mode:'rail',lineId:'Tobu.Nikko',line:'리버티 게곤',from:'도부닛코',to:'기타센주'},
+  {mode:'rail',lineId:'Tobu.TobuSkytree',line:'도부 특급',serviceName:'Revaty 게곤 1',from:'기타센주',to:'가스카베'}
+ ])assert(ui.railBadge(part).includes('assets/operators/revaty.png'));
+ for(const part of [
+  {mode:'rail',lineId:'Tobu.TobuSkytree',line:'도부 특급',from:'가스카베',to:'기타센주'},
+  {mode:'rail',lineId:'Tobu.Nikko',line:'도부 특급',serviceName:'스페이시아 X 8',from:'시모이마이치',to:'가스카베'},
+  {mode:'rail',lineId:'Tobu.Nikko',line:'닛코선',from:'도부닛코',to:'시모이마이치'},
+  {mode:'bus',lineId:'Tobu.Nikko',line:'리버티'},
+  {mode:'rail',lineId:'JR-East.ChuoRapid',line:'리버티'}
+ ])assert.equal(ui.revatyLogo(part),'');
+});
+
+// Whole-movement daily/overview interactions are audited against every active
+// itinerary leg in unified-movement-map.test.cjs. Legacy geometry checks above remain.

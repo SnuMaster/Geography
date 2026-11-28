@@ -1,0 +1,44 @@
+name: Complete and verify Tokyo fares
+on:
+  push:
+    branches: [codex/tokyo-complete-fares-20261118]
+    paths:
+      - 'scripts/complete-tokyo-fares.cjs'
+      - 'scripts/tokyo-complete-fare-evidence.json'
+      - 'tests/tokyo-complete-fares.test.cjs'
+      - '.github/workflows/complete-tokyo-fares.yml'
+permissions:
+  contents: write
+jobs:
+  fares:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply exact operator fares and refresh offline hashes
+        run: |
+          node scripts/complete-tokyo-fares.cjs
+          node scripts/build-assistant-offline.cjs
+      - name: All regression and fare-specific checks
+        run: node --test tests/*.test.cjs
+      - name: Mobile and desktop map interactions
+        run: |
+          npm ci --prefix japan-2027/tests
+          node japan-2027/tests/detailed-plan-browser.cjs
+      - name: Commit verified fare bundle
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add japan-2027/trip-update.json japan-2027/offline-manifest.json scripts/tokyo-complete-fare-report.json
+          git diff --cached --quiet || git commit -m "Fill remaining public transport fares while keeping Skyliner blank"
+          git push origin HEAD:codex/tokyo-complete-fares-20261118
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: completed-fare-report
+          path: |
+            scripts/tokyo-complete-fare-report.json
+            qa-detailed-plan-*.png

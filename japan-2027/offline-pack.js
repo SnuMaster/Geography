@@ -1,12 +1,13 @@
 'use strict';
 (function(){
- const REVISION='20261102-main-private-1',RECORD='routebook-offline-pack-v1';
+ const REVISION='20261128-kiseki-actual-costs-1',RECORD='routebook-offline-pack-v1';
  let manifest=null,running=null,finalize=null,streetRunning=null;
  const $=s=>document.querySelector(s),format=n=>(n/1048576).toFixed(1)+' MB';
  const streetDate=map=>map.generatedAt?Date.parse(map.generatedAt):Number(map.savedAt);
  function record(){try{return JSON.parse(localStorage.getItem(RECORD)||'null');}catch(_){return null;}}
  function render({status=true}={}){const saved=record(),ready=saved?.revision===REVISION&&saved.complete;
-  const button=$('#offlinePackBtn');if(button)button.textContent=running?'오프라인 저장 중':ready?'오프라인 준비됨':'오프라인 저장';
+  const button=$('#offlinePackBtn'),label=$('#offlinePackButtonLabel');
+  if(button&&label){label.textContent=running?'오프라인 저장 중':ready?'오프라인 준비됨':'오프라인 저장';button.setAttribute('aria-label',label.textContent);button.title=label.textContent;}
   const node=$('#offlinePackStatus');if(status&&node&&!running)node.textContent=ready?'이 브라우저에 전체 자료 저장 완료 · '+new Date(saved.savedAt).toLocaleDateString('ko-KR'):'처음 한 번 온라인에서 전체 자료를 저장해 주세요.';
  }
  function validate(value){if(value?.revision!==REVISION||!Array.isArray(value.files)||!value.files.length)throw Error('저장 목록 버전이 맞지 않습니다. 새로고침해 주세요.');
@@ -49,8 +50,6 @@
     await Promise.all([worker(),worker(),worker()]);
     if(controller.signal.aborted)throw new DOMException('중단','AbortError');
     if(failures.length)throw Error(failures.length+'개 자료 저장 실패 · 다시 저장하면 이어서 확인합니다.');
-    // The navigation fallback uses index.html; './' is an additional convenience entry.
-    const index=await shell.match(new URL('index.html',document.baseURI).href);if(index)await shell.put(new URL('./',document.baseURI).href,index);
     if(!finalize)throw Error('일정 자료가 준비된 다음 다시 저장해 주세요.');await finalize();
     localStorage.setItem(RECORD,JSON.stringify({revision:REVISION,complete:true,savedAt:Date.now(),files:state.done,bytes:state.bytes}));
     $('#offlinePackStatus').textContent='저장 완료 · 인터넷을 꺼도 전체 일정·장소·경로·길 안내·시간표·간략 지도를 사용할 수 있어요.';
@@ -66,7 +65,7 @@
   try{for(const day of days){
    if(controller.signal.aborted)break;
    $('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} 처리 중`;
-   const existing=await OfflineRoads.get(day.n);if(existing&&Date.now()-existing.savedAt<30*86400000&&OfflineRoads.covers(existing,OfflineRoads.centres(day,trip.routeData))){ok++;const date=streetDate(existing);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);continue;}
+   const existing=await OfflineRoads.get(day,trip.routeData);if(existing&&Date.now()-existing.savedAt<30*86400000){ok++;const date=streetDate(existing);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);continue;}
    try{const saved=await OfflineRoads.save(day,trip.routeData,{signal:controller.signal,progress:(part,total)=>{$('#offlineStreetStatus').textContent=`상세 지도 ${ok}/${days.length}일 저장 · ${day.date} ${part}/${total}구역 완료`;}});ok++;const date=streetDate(saved);if(Number.isFinite(date))oldest=Math.min(oldest??date,date);if(!saved.generatedAt)await new Promise(resolve=>setTimeout(resolve,2000));}catch(e){if(controller.signal.aborted)break;fail.push({date:day.date||String(day.n),message:e.name==='AbortError'?'지도 서버 응답 시간 초과':e.message});break;}
   }
   if(controller.signal.aborted)$('#offlineStreetStatus').textContent=`상세 지도 저장 중단 · ${ok}/${days.length}일 저장됨. 다시 누르면 이어서 저장해요.`;
@@ -76,7 +75,7 @@
   }finally{streetRunning=null;$('#offlineStreetStart').disabled=false;$('#offlineStreetCancel').hidden=true;}
  }
  async function show(){RouteUI.showDialog($('#offlinePackDialog'));render();try{const list=await getManifest();$('#offlinePackSize').textContent='약 '+format(list.totalBytes)+' · 전체 '+list.files.length+'개 자료';}catch(e){$('#offlinePackSize').textContent=e.message;}
-  const info=await window.OfflineRoads?.bundleInfo();const size=$('#offlineStreetSize');if(size)size.textContent=info?.days===22?`상세 지도 전체 약 ${format(info.storedBytes)} 저장 공간 · 다운로드 약 ${format(info.downloadBytes)}`:'';
+  const info=await window.OfflineRoads?.bundleInfo();const size=$('#offlineStreetSize');if(size)size.textContent=info?.days===(window.__routebook?.state.data.days.length||15)?`상세 지도 전체 약 ${format(info.storedBytes)} 저장 공간 · 다운로드 약 ${format(info.downloadBytes)}`:'';
  }
  document.addEventListener('DOMContentLoaded',()=>{
   $('#offlineStreetStart').addEventListener('click',saveStreets);$('#offlineStreetCancel').addEventListener('click',()=>streetRunning?.abort());

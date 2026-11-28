@@ -1,0 +1,373 @@
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const T=require('../japan-2027/data-model');
+const {points,rows}=require('./tokyo-airport-geometry.json');
+const revision='20261126-tokyo-pasmo-1';
+const date='2026-11-25';
+const kobus='https://www.kobus.co.kr/';
+const returnBus={
+ depart:'06:50',arrive:'10:56',minutes:246,price:45200,
+ boarding:'인천 T1 1층 10B-3 승차장',alighting:'동대구터미널 1층 하차장',
+ timetable:'https://airportbus.or.kr/bus/schedule.php?area=regional',
+ tickets:'https://www.bustago.or.kr/newweb/kr/index.do',
+ terminal:'https://apps.apple.com/kr/app/%EB%8F%99%EB%8C%80%EA%B5%AC%EC%97%AD%EB%B3%B5%ED%95%A9%ED%99%98%EC%8A%B9%EC%84%BC%ED%84%B0/id1479159843'
+};
+const jeju='https://www.jejuair.net/ko/prepare/flight/viewScheduleInfo.do';
+const narita='https://www.narita-airport.jp/en/access/train/railway-route-3/';
+const peach='https://www.flypeach.com/en/lm/ai/airports/airportguide_international/hnd';
+const metro='https://www.tokyometro.jp/support/guide/operation/pdf/fare_202603.pdf';
+const jr='https://www.jreast.co.jp/2026unchin-kaitei/assets/pdf/kansen.pdf';
+const mono='https://www.tokyo-monorail.co.jp/english/guidance/train_info.html';
+const tokyo='https://www.gotokyo.org/en/destinations/northern-tokyo/yanaka-and-nezu/index.html';
+const roads='https://www.openstreetmap.org/copyright';
+const copy=structuredClone;
+const pt=s=>[s.lat,s.lng];
+const start=p=>p.coords[0],end=p=>p.coords.at(-1);
+function distance([a,b],[c,d]){
+ const rad=Math.PI/180,value=Math.sin((c-a)*rad/2)**2+Math.cos(a*rad)*Math.cos(c*rad)*Math.sin((d-b)*rad/2)**2;
+ return 12742000*Math.asin(Math.sqrt(value));
+}
+function fare(currency,value,source,basis='성인 편도 IC · 현재 공표 운임 기준',breakdown=[]){
+ return {min:value,max:value,icYen:currency==='JPY'?value:null,paperTicketYen:null,currency,
+  status:value===null?'unverified':currency==='KRW'?'selectedQuote':'exact',
+  checkedAt:date,basis,confidence:currency==='KRW'?'user-reference':'source-verified',passEligible:false,sources:[source],breakdown};
+}
+const noFare=()=>fare('JPY',0,roads,'도보 추가 운임 없음');
+function location(uid,name,jp,kind,time,coords,description,source,opt={}){
+ const [lat,lng]=coords;
+ const {dayOffset=0,thingsToDo=[],costMin=null,costMax=null,reservationTiming}=opt;
+ return {uid,id:uid,name,jp,kind,time,lat,lng,area:'',description,source,dayOffset,coordinateAccuracy:'map-reference',
+  timeConfidence:'planned',reservationTiming,
+  details:{feature:description,thingsToDo,stayLabel:'계획 시각 기준',costMin,costMax,costCurrency:'JPY',
+   costKind:kind==='food'?'food':kind==='shopping'?'shopping':'admission',costConfidence:costMin===null?'unknown':'estimate',
+   reservationNote:reservationTiming||'실제 운영시간은 이용일 기준',sources:[source],sourceCheckedAt:date}};
+}
+function update(s,time,description,opt={}){
+ delete s.start;delete s.end;
+ Object.assign(s,{time,description,...opt});
+ if(s.details)Object.assign(s.details,{feature:description});
+ return s;
+}
+function part(key,a,b,mode,line,source,minutes,reverse=false){
+ const p=copy(rows[key]);if(reverse)p.coords.reverse();
+ return {...p,mode,line,source:p.source||source,from:a.name,to:b.name,durationMinutes:minutes??p.durationMinutes,
+  geometryAccuracy:'mapped',geometrySource:p.geometrySource||(mode==='bus'?'OpenStreetMap 도로 참고 경로 · 실제 버스 운행 경로와 다를 수 있음':'OpenStreetMap · 보행 경로 참고')};
+}
+function walk(key,a,b,minutes){return part(key,a,b,'walk','도보',roads,minutes);}
+function connector(a,b,from,to,minutes){
+ return {mode:'walk',line:'역내·출입구 연결',from,to,coords:[a,b],distanceM:Math.round(distance(a,b)),durationMinutes:minutes,
+  source:mono,geometryAccuracy:'schematic',geometrySource:'역내·출입구 연결 개략선 · 실제 통로는 현장 안내'};
+}
+function flight(a,b,operator,source,minutes){
+ const p=pt(a),q=pt(b);
+ return {mode:'flight',line:operator,source,from:a.name,to:b.name,coords:[p,q],distanceM:Math.round(distance(p,q)),
+  durationMinutes:minutes,geometryAccuracy:'schematic',geometrySource:'공항 간 개략 항로 · 실제 비행 경로는 운항편마다 달라질 수 있음'};
+}
+function leg(a,b,parts,amount,minutes,summary='도보',travel){
+ b.modeFromPrevious=parts.find(p=>p.mode!=='walk')?.mode||'walk';
+ b.transportFromPrevious=summary;
+ const distanceM=parts.reduce((n,p)=>n+p.distanceM,0);
+ return {fromUid:a.uid,toUid:b.uid,from:a.name,to:b.name,parts,fare:amount,private:false,distanceM,
+  walkDistanceM:parts.filter(p=>p.mode==='walk').reduce((n,p)=>n+p.distanceM,0),durationMinutes:minutes,
+  durationLabel:minutes>=60?Math.floor(minutes/60)+'시간 '+(minutes%60?minutes%60+'분':''):minutes+'분',
+  summary,note:'계획 이동 · 실제 운행과 소요시간은 이용일에 확인',...(travel&&{travel})};
+}
+function travel(depart,arrive,operator,source,notice){return {depart,arrive,operator,source,notice};}
+function daySync(day,legs){
+ const v=day.variants[0];let last=-1;
+ for(const s of v.stops)last=Math.max(last,s.selectionId??-1);
+ v.stops.forEach(s=>{if(s.selectionId==null)s.selectionId=++last;});
+ v.schedule=v.stops.map(s=>[s.time,s.name,s.description]);
+ day.schedule=v.schedule;day.rows=v.schedule;
+ legs.forEach((l,i)=>{const a=v.stops[i],b=v.stops[i+1];Object.assign(l,{from:a.name,to:b.name,fromUid:a.uid,toUid:b.uid});});
+}
+function booking(key,day,name,when,url,details){
+ return {key,group:'travel',kind:'필수',name,day,variant:'main',date:when,url,note:'선택 일정 · 예매 및 발권 상태 확인',details};
+}
+function apply(bundle){
+ if(bundle.revision===revision)return bundle;
+ const updated=applyAirportPlan(bundle);
+ const {data,routes}=updated,out=data.days[0];
+ const railLeg=routes.days['1-main'].find(l=>l.fare?.displayBlank);
+ const station=out.variants[0].stops.find(s=>s.uid===railLeg.fromUid);
+ const floorMap='https://www.pasmo.co.jp/kr/assets/images/touristpasmo/img_map_narita_2-3sta.webp';
+ const pasmo='https://www.pasmo.co.jp/kr/tourist-pasmo/';
+ const counter='https://www.keisei.co.jp/keisei/tetudou/skyliner/kr/findus/index.php';
+ station.visitLabel='TOURIST PASMO 구매';
+ const description='나리타 T2 본관 B1의 SKYLINER & KEISEI INFORMATION CENTER에서 TOURIST PASMO(2,000엔 충전 포함)를 구입한다. '+station.description.replace(/^나리타 T2 지하 1층 /,'');
+ update(station,station.time,description);
+ Object.assign(station.details,{
+  floorMapUrl:floorMap,
+  hours:'게이세이 안내센터 07:00~21:00',
+  costLabel:'2,000엔 전액 충전',
+  costNote:'게이세이 스카이라이너 지정석권은 별도.',
+  thingsToDo:[
+   '입국장에서 철도 표지를 따라 B1로 내려가 게이세이 개찰구 밖 안내센터에서 TOURIST PASMO를 산다.',
+   '2,000엔 전액 충전 · 보증금 없음 · 발행일 포함 28일 사용 · 잔액 환불 불가. 카드와 함께 받은 안내지를 보관한다.',
+   '스카이라이너 지정석권도 확인한다. 구매 대기 때문에 14:42 열차가 빠듯하면 다음 편을 확인한다.'
+  ],
+  sources:[...new Set([floorMap,pasmo,counter,...station.details.sources])],
+  sourceCheckedAt:'2026-11-26'
+ });
+ daySync(out,routes.days['1-main']);
+ return updated;
+}
+function applyAirportPlan(bundle){
+ const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
+ if(out.travelBookings?.some(b=>b.key==='flight-tw251-20270108')){
+  T.publicAirportTransfers(data,routes);
+  return updateReturnJourney(bundle);
+ }
+ if(out.travelBookings?.some(b=>b.key==='airport-bus-out'))return finalize(bundle);
+ const ov=out.variants[0],ol=routes.days['1-main'];
+ const lv=last.variants[0],ll=routes.days['12-main'];
+ const [checkout,market,lunch,pickup]=lv.stops;
+ const [fromBus,icn,nrt]=[
+  location(ov.stops[0].uid,'동대구터미널','東大邱バスターミナル','bus','03:30~03:55',points.bus,'03:30까지 터미널 도착. 03:55 인천공항 T1행 심야 프리미엄 탑승. 70,600원.',kobus),
+  location(ov.stops[1].uid,'인천국제공항 제1터미널','仁川国際空港 第1ターミナル','airport','08:15~11:30',points.icn,'08:15 버스 도착 예정. 국제선 수속 및 수하물 위탁 후 제주항공 7C1129 11:30 출발.',jeju),
+  location(ov.stops[2].uid,'나리타공항 제3터미널','成田空港 第3ターミナル','airport','14:10~15:20',points.nrt,'14:10 도착. 입국심사·수하물·세관을 통과한 뒤 T2 철도역으로 이동.',narita)
+ ];
+ [fromBus,icn,nrt].forEach((s,i)=>s.selectionId=ov.stops[i].selectionId);
+ ov.stops.splice(0,3,fromBus,icn,nrt);
+ update(ov.stops[3],'15:35~15:50','제2터미널 지하 1층 공항제2빌딩역. 입국 수속이 끝난 뒤 탑승 가능한 스카이라이너 지정석 선택. 15:50은 계획 시각.');
+ update(ov.stops[4],'16:40','스카이라이너 하차 목표. 도쿄메트로 우에노역으로 이동.');
+ update(ov.stops[5],'16:50','히비야선 기타센주 방향 플랫폼으로 이동.');
+ update(ov.stops[6],'17:05','이리야역 하차 후 숙소로 도보 이동.');
+ update(ov.stops[7],'17:15~17:45','숙소 체크인과 짐 정리.');
+ update(ov.stops[8],'18:00~18:45',ov.stops[8].description);
+ const outbound='제주항공 7C1129 · 인천 T1 → 나리타 T3';
+ const busOut='공항버스 · 동대구 → 인천 T1';
+ ol[0]=leg(fromBus,icn,[part('airportBus',fromBus,icn,'bus',busOut,kobus,260)],fare('KRW',70600,kobus,'첨부 화면 · 심야 프리미엄 선택 요금'),260,busOut,
+  travel('1/8 03:55','1/8 08:15',busOut,kobus,'심야 프리미엄. 08:15는 인천 T1 도착 예정 시각. 실제 예매와 터미널은 승차권 확인.'));
+ ol[1]=leg(icn,nrt,[flight(icn,nrt,outbound,jeju,160)],fare('KRW',null,jeju,'출국편 운임 미입력'),160,outbound,
+  travel('1/8 11:30','1/8 14:10',outbound,jeju,'첨부 화면 기준 위탁수하물 15 kg · 737 MAX 8 예정. 최종 운항 조건은 전자항공권 확인.'));
+ ol[2]=leg(nrt,ov.stops[3],[walk('naritaWalk',nrt,ov.stops[3],15)],noFare(),15,'T3 → T2 철도역 도보');
+ ol[2].distanceLabel='터미널 연결 통로';ol[2].note='T3 도착층 안내소에서 T2역 개찰구까지 공식 약 13분. 연결 통로 표지를 따라간다.';
+ out.note='03:55 동대구 출발 · 11:30 인천발 7C1129 · 14:10 나리타 T3 도착 · 스카이라이너 요금 입력 보류';
+ out.travelBookings=[
+  booking('airport-bus-out',1,'동대구 → 인천공항 T1 공항버스','1/8 03:55 → 08:15',kobus,['심야 프리미엄 · 70,600원 · 03:30까지 터미널 도착']),
+  booking('flight-tokyo',1,'제주항공 7C1129 · 인천 T1 → 나리타 T3','1/8 11:30 → 14:10',jeju,['위탁수하물 안내 15 kg · 최종 조건은 전자항공권 확인','11:30 출발 기준 버스 도착 예정 시각과 3시간 15분 간격'])
+ ];
+ daySync(out,ol);
+ const loc=(key,name,jp,kind,time,geo,note,source,opt)=>location('t27-12-'+key,name,jp,kind,time,points[geo],note,source,opt);
+ const yanaka=loc('yanaka','야나카 긴자','谷中ぎんざ','shopping','14:00~14:45','yanaka','유야케단단 계단과 상점가 산책. 소형 기념품이나 센베 한두 개만 가볍게 본다.',tokyo);
+ const nezu=loc('nezu','네즈 신사','根津神社','sight','15:05~16:00','nezu','도리이 길·연못을 한 바퀴. 이른 일몰을 고려해 카페보다 먼저 방문.', 'https://www.gotokyo.org/en/spot/70/');
+ const park=loc('uenoPark','우에노 공원','上野恩賜公園','sight','16:30~17:15','park','우에노 공원 산책. 추우면 우에노역 주변 카페에서 휴식.', 'https://www.gotokyo.org/en/spot/482/');
+ const dinner=loc('dinner','마쓰야 이리야점','松屋 入谷店','food','18:00~19:00','dinner','규메시나 정식으로 이른 저녁. 대기가 있으면 이리야역 주변 가게나 편의점으로 전환.',ov.stops[8].source||tokyo,{costMin:500,costMax:1200});
+ const hnd=loc('hanedaT3','하네다공항 제3터미널','羽田空港 第3ターミナル','airport','22:15~23:55','hnd','22:15 T3 도착 목표. 23:25 피치 카운터 수속 개시 기준. MM809는 다음 날인 1/20 01:55 출발, 수속 마감 01:05 기준.',peach);
+ const arrival=loc('incheonT1','인천국제공항 제1터미널 · 1/20','仁川国際空港 第1ターミナル','airport','04:40~06:50','icn','04:40 도착. 입국심사와 수하물 수령 후 동대구행 공항버스 승차장으로 이동.',returnBus.timetable,{dayOffset:1});
+ const dong=loc('dongdaegu','동대구터미널 · 1/20','東大邱バスターミナル','bus',returnBus.arrive,'bus','동대구터미널 하차.',returnBus.timetable,{dayOffset:1});
+ update(checkout,'08:00~10:00','08:00 기상 후 근처 편의점 또는 맥도날드에서 간단히 아침. 10:00까지 체크아웃하고 당일 짐 보관 가능 여부 확인.');
+ update(market,'11:00~12:00','아메요코에서 선물용 과자·소품을 구경. 짐이 늘지 않게 소량 구매.');
+ update(pickup,'19:45~20:45','숙소에서 짐을 찾고 수하물 무게와 여권을 확인한 뒤 20:45 하네다로 출발.');
+ pickup.name='이리야 숙소 · 짐 수령';
+ pickup.details.thingsToDo=['짐을 찾고 수하물 무게와 여권을 확인한다. 20:45까지 공항으로 출발한다.'];
+ const metroHome=copy(ll[0].parts.slice(0,3));
+ const yamanote=copy(rows.yamanote),monorail=copy(rows.monorail);
+ const hndParts=[...metroHome,
+  connector(end(metroHome.at(-1)),start(yamanote),'도쿄메트로 우에노','JR 우에노',8),
+  yamanote,connector(end(yamanote),start(monorail),'JR 하마마쓰초','모노레일 하마마쓰초',8),
+  monorail,connector(end(monorail),pt(hnd),'하네다 T3역','하네다 T3 출국층',8)];
+ const breakdown=[
+  {operator:'TokyoMetro',from:'이리야',to:'우에노',icYen:178,paperTicketYen:180,lineIds:['TokyoMetro.Hibiya'],sources:[metro]},
+  {operator:'JR-East',from:'우에노',to:'하마마쓰초',icYen:209,paperTicketYen:210,lineIds:[yamanote.lineId],sources:[jr]},
+  {operator:'TokyoMonorail',from:'모노레일 하마마쓰초',to:'하네다공항 제3터미널',icYen:519,paperTicketYen:520,lineIds:[monorail.lineId],sources:[mono]}
+ ].map(p=>({...p,checkedAt:date,currency:'JPY',status:'exact',basis:'현재 공표 성인 편도 IC 운임'}));
+ const accessFare=fare('JPY',906,mono,'히비야선 178 + JR 209 + 도쿄 모노레일 519 · 2027년 이용 전 재확인',breakdown);
+ accessFare.paperTicketYen=910;accessFare.sources=[metro,jr,mono];
+ accessFare.label='906 JP¥';accessFare.passExtraMin=accessFare.passExtraMax=728;
+ for(const row of breakdown){const p=hndParts.find(p=>p.lineId===row.lineIds[0]);Object.assign(row,{fromJa:p.fromJa,toJa:p.toJa});}
+ const inbound='피치항공 MM809 · 하네다 T3 → 인천 T1';
+ const busBack='공항버스 · 인천 T1 → 동대구';
+ const airBack=leg(hnd,arrival,[flight(hnd,arrival,inbound,peach,165)],fare('KRW',469000,peach,'첨부 화면의 수하물 포함 참고 운임 · 결제액 확인'),165,inbound,
+  travel('1/20 01:55','1/20 04:40',inbound,peach,'1/19 밤 하네다 수속. 첨부 화면 기준 위탁수하물 20 kg · A320 계열. 469,000원 운임 기준.'));
+ airBack.departureLocal='2027-01-20T01:55';
+ const baseLegs=[...ll.slice(0,2)];
+ const routeLegs=[
+  ...baseLegs,
+  leg(lunch,yanaka,[walk('lunchYanaka',lunch,yanaka)],noFare(),rows.lunchYanaka.durationMinutes),
+  leg(yanaka,nezu,[walk('yanakaNezu',yanaka,nezu)],noFare(),rows.yanakaNezu.durationMinutes),
+  leg(nezu,park,[walk('nezuPark',nezu,park)],noFare(),rows.nezuPark.durationMinutes),
+  leg(park,dinner,[walk('parkDinner',park,dinner)],noFare(),rows.parkDinner.durationMinutes),
+  leg(dinner,pickup,[walk('dinnerHotel',dinner,pickup)],noFare(),rows.dinnerHotel.durationMinutes),
+  leg(pickup,hnd,hndParts,accessFare,75,'히비야선 → JR 야마노테선 → 도쿄 모노레일'),
+  airBack,
+  leg(arrival,dong,[part('returnAirportBus',arrival,dong,'bus',busBack,returnBus.timetable,returnBus.minutes)],returnBusFare(),returnBus.minutes,busBack,
+   travel('1/20 '+returnBus.depart,'1/20 '+returnBus.arrive,busBack,returnBus.timetable,'우등 · 인천 T1 기준.'))
+ ];
+ lv.stops=[checkout,market,lunch,yanaka,nezu,park,dinner,pickup,hnd,arrival,dong];
+ const title='우에노·야나카·네즈 · 하네다';
+ Object.assign(lv,{title,summary:title,focus:title});
+ Object.assign(last,{title,shortTitle:title,summary:title,focus:title,mapSummary:title,
+  note:'1/19 시내 관광 후 밤에 하네다 T3로 이동. 1/20 01:55 피치 MM809, 06:50 인천 T1발 동대구행.',
+  meals:[lunch.name,dinner.name],
+  travelBookings:[
+   booking('flight-return-tokyo',12,'피치항공 MM809 · 하네다 T3 → 인천 T1','1/20 01:55 → 04:40',peach,['1/19 밤 공항 이동 · 수속 23:25~01:05 현재 공식 기준','위탁수하물 20 kg 포함 참고 운임 469,000원 · 전자항공권 확인']),
+   booking('airport-bus-back',12,'인천공항 T1 → 동대구 공항버스','1/20 06:50 → 10:56',returnBus.tickets,['우등 · 참고 운임 45,200원'])
+  ]});
+ delete last.pendingReturn;
+ routes.days['12-main']=routeLegs;
+ daySync(last,routeLegs);
+ Object.assign(data.metadata,{end:'2027-01-20',japanEnd:'2027-01-19',calendarDays:13,returnDate:'2027-01-20',returnStatus:'selected'});
+ if(data.nightRows.length){data.nightRows[0]=[out.date,out.title,ov.stops.at(-1).time];data.nightRows[data.nightRows.length-1]=[last.date,last.title,'1/19 밤 하네다 · 1/20 새벽 귀국'];}
+ return finalize(bundle);
+}
+function finalize(bundle){
+ const {data,routes}=bundle,[out]=data.days,last=data.days.at(-1);
+ const first=out.variants[0].stops,outbound=routes.days['1-main'];
+ const sky=outbound.find(l=>l.fare?.displayBlank);
+ const arrival=first.findIndex(s=>s.uid===sky.toUid);
+ const airportRail=first[arrival-1];
+ const keisei='https://www.keisei.co.jp/keisei/tetudou/skyliner/jp/traffic/skyliner_timetable_1123.php';
+ update(airportRail,'15:35~15:59','T2 지하 1층에서 지정석과 승강장을 확인. 평일 시간표 기준 스카이라이너 46호 16:02 출발 → 16:43 게이세이우에노 도착 후보. 입국 수속이 늦어지면 다음 편 확인.');
+ airportRail.details.sources=[...new Set([...airportRail.details.sources,keisei])];
+ update(first[arrival],'16:46','16:43 스카이라이너 하차 후 개찰구로 이동. 16:46은 개찰 통과 목표.');
+ update(first[arrival+1],'16:55','히비야선 기타센주 방향 승차 목표.');
+ update(first[arrival+2],'17:10','이리야역 하차 후 숙소로 도보 이동.');
+ update(first.at(-2),'19:15~20:00',first.at(-2).description);
+ update(first.at(-1),'20:30~20:45',first.at(-1).description);
+ sky.parts.find(p=>p.mode==='rail').durationMinutes=41;
+ sky.durationMinutes=sky.parts.reduce((n,p)=>n+(p.durationMinutes||0),0);
+ sky.durationLabel='약 '+sky.durationMinutes+'분 · 46호 후보';
+ sky.note='평일 공개 시간표 기준. 스카이라이너 46호 16:02 출발 → 16:43 도착. 역내 이동을 포함한 일정이며, 지정석과 이용일 운행을 확인하세요.';
+ daySync(out,outbound);
+
+ const v=last.variants[0],legs=routes.days['12-main'];
+ const pickup=v.stops.find(s=>s.uid==='t27-12-d12-hotelPickup'),dinner=v.stops.find(s=>s.uid==='t27-12-dinner');
+ const park=v.stops[5];
+ const hnd=v.stops.find(s=>s.uid==='t27-12-hanedaT3'),access=legs.find(l=>l.toUid===hnd.uid);
+ const hotelHours='https://www.jalan.net/yad307486/kuchikomi/archive/';
+ update(v.stops[0],'08:00~10:00','10:00까지 체크아웃. 당일 짐 보관과 18:30 수령 가능 여부를 숙소에 미리 확인.');
+ v.stops[0].details.thingsToDo=['체크아웃 전에 프런트에 짐을 맡길 수 있는지와 수령 시간을 확인해요.'];
+ update(pickup,'18:30~19:00','18:30부터 숙소 프런트에서 짐을 찾아요.');
+ pickup.details.thingsToDo=['19:00까지 짐을 찾고 여권과 수하물을 확인해요.'];
+ pickup.details.sources=[...new Set([...(pickup.details.sources||[]),hotelHours])];
+ update(dinner,'19:15~20:45','19:15 마쓰야에서 저녁. 식사 후 이리야역 근처에서 쉬고 20:45 공항으로 출발.');
+ const toHotel=walk('parkHotel',park,pickup);
+ const toDinner=part('dinnerHotel',pickup,dinner,'walk','도보',roads,rows.dinnerHotel.durationMinutes,true);
+ const toIriya=walk('dinnerIriya',dinner,{name:'이리야'});
+ v.stops.splice(6,2,pickup,dinner);
+ legs.splice(5,3,
+  leg(park,pickup,[toHotel],noFare(),toHotel.durationMinutes),
+  leg(pickup,dinner,[toDinner],noFare(),toDinner.durationMinutes),
+  leg(dinner,hnd,[toIriya,...access.parts.slice(1)],access.fare,access.durationMinutes,access.summary));
+ daySync(last,legs);
+ const transport=[
+  [out,outbound,'airport-bus-out','airport-bus-out','1/8 03:55'],
+  [out,outbound,'flight-tokyo','flight-7c1129-20270108','1/8 11:30'],
+  [last,legs,'flight-return-tokyo','flight-mm809-20270120','1/20 01:55']
+ ];
+ for(const [day,connections,oldKey,key,depart] of transport){
+  const item=day.travelBookings.find(b=>b.key===oldKey||b.key===key);
+  const index=connections.findIndex(l=>l.travel?.depart===depart);
+  if(!item||index<0)throw Error('Missing booking or trip leg '+key);
+  Object.assign(item,{key,leg:index+1});
+ }
+ if(data.nightRows.length)data.nightRows[0]=[out.date,out.title,first.at(-1).time];
+ return applyCurrentTrip(bundle);
+}
+function applyCurrentTrip(bundle){
+ const {data,routes}=bundle;
+ const [out,freeDay]=data.days,v=out.variants[0],outbound=routes.days['1-main'];
+ if(v.stops[0]?.kind==='departure'){v.stops.shift();outbound.shift();}
+ const [,airport,naritaStop]=v.stops;
+ const airportGuide='https://www.airport.co.kr/daegu/index.do';
+ const trinity='https://www.trinityairways.com/app/serviceInfo/flightSchedule?showWholeSchedule=Y';
+ const t2Guide='https://www.narita-airport.jp/en/access/train/railway-route-2/';
+ const tae=[35.8941,128.6589],t2=[35.7732,140.3879];
+ const taeStop={...location(airport.uid,'대구국제공항','大邱国際空港','airport','08:20~11:10',tae,'08:20 도착 목표. 국제선 체크인·수하물 위탁·출국 수속 후 11:10 TW251 탑승.',airportGuide),selectionId:airport.selectionId};
+ const nrtStop={...location(naritaStop.uid,'나리타공항 제2터미널','成田空港 第2ターミナル','airport','13:20~14:15',t2,'13:20 T2 도착. 입국심사·수하물·세관 통과 후 도착층에서 지하 1층 철도역으로 이동.',t2Guide),selectionId:naritaStop.selectionId};
+ const rail=v.stops[3];
+ const flightName='트리니티항공 TW251 · 대구 → 나리타 T2';
+ const terminalWalk=connector(pt(nrtStop),pt(rail),nrtStop.name,rail.name,5);
+ Object.assign(terminalWalk,{line:'T2 도착층 → B1 철도역',source:t2Guide,geometrySource:'나리타공항 안내 · 실내 통로 개략 연결'});
+ const flightLeg=leg(taeStop,nrtStop,[flight(taeStop,nrtStop,flightName,trinity,130)],fare('KRW',null,trinity,'확정 결제액 미입력'),130,flightName,
+  travel('1/8 11:10','1/8 13:20',flightName,trinity,'항공사 현재 공개 시간표 기준. 나리타 T2 도착. 수하물과 최종 출발 시각은 전자항공권 확인.'));
+ const railAccess=leg(nrtStop,rail,[terminalWalk],noFare(),5,'T2 내부 철도역 연결');
+ railAccess.distanceLabel='터미널 내부';
+ v.stops.splice(0,3,taeStop,nrtStop);
+ outbound.splice(0,3,flightLeg,railAccess);
+ update(rail,'14:20~14:39','나리타 T2 지하 1층 지정석과 승강장 확인. 현재 평일표 스카이라이너 38호 14:42 출발 → 15:23 게이세이우에노 도착 후보. 수속이 늦으면 다음 편 확인.');
+ update(v.stops[3],'15:26','15:23 스카이라이너 하차. 15:26 개찰 통과 목표.');
+ update(v.stops[4],'15:35','히비야선 기타센주 방향 승차 목표.');
+ update(v.stops[5],'15:50','이리야역 하차 후 숙소로 도보 이동.');
+ update(v.stops[6],'16:05~17:40','숙소 체크인·짐 정리·휴식.');
+ const returnToHotel=v.stops.at(-1);
+ update(returnToHotel,returnToHotel.time,'숙소로 돌아와 휴식합니다.');
+ returnToHotel.details.thingsToDo=['숙소로 돌아와 쉬면서 필요한 물품과 충전 상태를 확인한다.'];
+ const skyliner=outbound.find(l=>l.fare.displayBlank);
+ skyliner.durationLabel='약 '+skyliner.durationMinutes+'분 · 38호 후보';
+ skyliner.note='평일 공개 시간표 기준 스카이라이너 38호 14:42 출발 → 15:23 도착 후보. 역내 이동을 포함한 일정이며 지정석과 이용일 운행 확인.';
+ rail.details.sources=rail.details.sources.filter(url=>!url.includes('railway-route-3'));
+ rail.details.sources=[...new Set([...rail.details.sources,t2Guide])];
+ out.note='08:20 대구공항 도착 목표 · 11:10 대구발 TW251 · 13:20 나리타 T2 도착 · 스카이라이너 요금 입력 보류';
+ out.travelBookings=[{...booking('flight-tw251-20270108',1,flightName,'1/8 11:10 → 13:20',trinity,['대구국제공항 출발 · 나리타 제2터미널 도착','이용일 운항과 위탁수하물 조건은 전자항공권 확인']),leg:1}];
+ daySync(out,outbound);
+ const empty='일정 없음';
+ const mapCenter=pt(freeDay.variants[0].stops[0]);
+ Object.assign(freeDay,{title:empty,shortTitle:empty,summary:empty,focus:empty,mapSummary:empty,cityLabel:'도쿄',cityEn:'Tokyo',
+  mapCenter,mapLabel:{city:'도쿄',places:empty},meals:[],breakfast:'',breakfastNote:'',note:empty,photoDay:1});
+ Object.assign(freeDay.variants[0],{title:empty,summary:empty,focus:empty,stops:[]});
+ routes.days['2-main']=[];
+ daySync(freeDay,[]);
+ if(data.nightRows.length)data.nightRows[1]=[freeDay.date,empty,''];
+ data.metadata.cities=data.metadata.cities.filter(city=>city!=='가마쿠라·에노시마');
+ T.publicAirportTransfers(data,routes);
+ return updateReturnJourney(bundle);
+}
+function returnBusFare(){
+ return fare('KRW',returnBus.price,returnBus.timetable,'첨부 시간표의 우등 참고 운임 · 실제 결제액은 이용일 예매 화면 확인');
+}
+function updateReturnJourney(bundle){
+ const {data,routes}=bundle,last=data.days.at(-1),stops=last.variants[0].stops,legs=routes.days['12-main'];
+ const arrival=stops.find(s=>s.uid==='t27-12-incheonT1');
+ const dong=stops.find(s=>s.uid==='t27-12-dongdaegu');
+ const busIndex=legs.findIndex(l=>l.toUid===dong.uid);
+ const bus=legs[busIndex];
+ const fareHint='직통 우등 · 참고 운임 45,200원';
+ const {boarding,alighting}=returnBus;
+ const departure='1/20 '+returnBus.depart,arrive='1/20 '+returnBus.arrive;
+ update(arrival,'04:40~'+returnBus.depart,'04:40 도착 후 입국심사·수하물 수령·세관 통과. 10번 출구 쪽 '+boarding+'에서 06:50 동대구행 직통 우등버스 탑승.');
+ Object.assign(arrival,{source:returnBus.timetable});
+ arrival.details.sources=[returnBus.timetable,returnBus.tickets];
+ update(dong,returnBus.arrive,'10:56 도착 목표. '+alighting+'에서 짐을 찾고 동대구역 택시 승강장으로 이동.');
+ Object.assign(dong,{source:returnBus.timetable});
+ dong.details.sources=[returnBus.terminal,returnBus.tickets];
+ const busName='공항버스 · 인천 T1 → 동대구 직통';
+ const busPart=part('returnAirportBus',arrival,dong,'bus',busName,returnBus.timetable,returnBus.minutes);
+ busPart.geometryAccuracy='stop-verified-reference';
+ busPart.from=boarding;
+ busPart.to=alighting;
+ legs[busIndex]=leg(arrival,dong,[busPart],returnBusFare(),returnBus.minutes,busName,
+  travel(departure,arrive,busName,returnBus.timetable,boarding+' → '+alighting+' · 중간 승하차 정류장 없음 · '+fareHint+' · 발권 시 예매 시각과 예상 도착 확인.'));
+ legs[busIndex].departureLocal=bus.departureLocal||'2027-01-20T'+returnBus.depart;
+
+ if(!stops.some(s=>s.uid==='t27-12-d12-dongdaegu-taxi')){
+  const stationSource='https://info.korail.com/2007/news/info11.html';
+  const station=location('t27-12-d12-dongdaegu-taxi','동대구역 택시 승강장','','station','11:10',
+   [35.87901,128.62850],'버스 하차 후 동대구역 택시 승강장으로 이동해 11:10 전후 탑승.',stationSource,{dayOffset:1});
+  station.coordinateNote='역 광장 부근 대표 위치 · 승강장은 현장 표지 확인.';
+  const link=connector(pt(dong),pt(station),dong.name,station.name,10);
+  Object.assign(link,{source:stationSource,geometrySource:'동대구터미널과 역 광장 연결 개략선 · 현장 안내 표지 참고'});
+  stops.push(station);
+  legs.push(leg(dong,station,[link],noFare(),10));
+ }
+ Object.assign(last.travelBookings.find(b=>['airport-bus-back','airport-bus-back-0650'].includes(b.key)),{
+  key:'airport-bus-back-0650',date:departure+' → '+returnBus.arrive,url:returnBus.tickets,leg:busIndex+1,
+  details:[fareHint,boarding+' → '+alighting,'항공기 도착 예정 시각과 2시간 10분 간격 · 2027년 이용일 운행과 요금은 승차권 확인']
+ });
+ last.note='1/19 시내 관광 후 밤에 하네다 T3로 이동. 1/20 01:55 피치 MM809, 06:50 인천 T1발 동대구행 버스, 동대구역에서 택시.';
+ last.important='18:30 짐 수령 · 20:45 이리야 출발 · 22:15 하네다 T3 목표 · 1/20 01:55 MM809 · 06:50 인천 T1발 버스 · 동대구역 택시.';
+ daySync(last,legs);
+ bundle.revision=data.version=data.metadata.revision=routes.version=revision;
+ bundle.updatedAt=new Date().toISOString();
+ return bundle;
+}
+if(require.main===module){
+ const file=path.resolve(__dirname,'../japan-2027/trip-update.json');
+ const bundle=apply(JSON.parse(fs.readFileSync(file,'utf8')));
+ T.prepare(bundle.data,bundle.routes);
+ fs.writeFileSync(file,JSON.stringify(bundle)+'\n');
+}
+module.exports={apply,revision};

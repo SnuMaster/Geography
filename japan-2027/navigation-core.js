@@ -26,7 +26,10 @@
    if(!Array.isArray(source.coords)||source.coords.some(p=>!point(p)))continue;
    const coords=[];for(const p of source.coords||[])if(point(p)&&(!coords.length||GPS.distance(coords.at(-1),p)>.5))coords.push([p[0],p[1]]);
    if(coords.length<2)continue;
-   const lengthM=coords.slice(1).reduce((sum,p,i)=>sum+GPS.distance(coords[i],p),0),walkPath=source.mode==='walk'&&GPS.quality(source)==='mapped'&&/(?:OSRM foot|OfflineRoads)/i.test(source.geometrySource||'');
+   const lengthM=coords.slice(1).reduce((sum,p,i)=>sum+GPS.distance(coords[i],p),0),walkPath=source.mode==='walk'&&GPS.quality(source)==='mapped'&&(
+    /(?:OSRM foot|OfflineRoads)|^OpenStreetMap 저장 도로 · 보행 경로 탐색$/i.test(source.geometrySource||'')||
+    (typeof source.source==='string'&&source.source.startsWith('https://routing.openstreetmap.de/routed-foot/'))
+   );
    const part={...source,coords,startM:totalM,endM:totalM+lengthM,lengthM,walkPath,index:parts.length};parts.push(part);
    if(walkPath)cues.push(...turns(coords,totalM,part.index));totalM+=lengthM;
   }
